@@ -227,10 +227,9 @@ def get_with_retry(url: str, headers: dict, timeout: int = 12, retries: int = 4)
             time.sleep(1.3 ** attempt)
     return None
 
-# ====================== CRYPTOCOMPARE FUNCTIONS (FASTER + MORE RELIABLE) ======================
+# ====================== CRYPTOCOMPARE FUNCTIONS ======================
 @st.cache_data(ttl=35, show_spinner=False)
 def get_all_cryptocompare_prices(tickers):
-    """Super fast batch price call – fixes slow loading and $0 issues"""
     prices = {"USDC": 1.0}
     symbols = [CRYPTOCOMPARE_SYMBOL_MAP.get(t.upper()) for t in tickers if t.upper() != "USDC"]
     symbols = [s for s in symbols if s]
@@ -253,7 +252,6 @@ def get_all_cryptocompare_prices(tickers):
     except:
         pass
 
-    # Individual fallback (still very fast)
     for ticker in set(tickers):
         if ticker.upper() == "USDC":
             continue
@@ -273,11 +271,9 @@ def get_all_cryptocompare_prices(tickers):
 
 @st.cache_data(ttl=80, show_spinner=False)
 def get_cryptocompare_ohlc(ticker: str, days: int = 1):
-    """Real volume + reliable historical data"""
     sym = CRYPTOCOMPARE_SYMBOL_MAP.get(ticker.upper())
     if not sym:
         return None
-
     try:
         if days == 1:          # 24H → minute data
             url = f"https://min-api.cryptocompare.com/data/v2/histominute?fsym={sym}&tsym=USD&limit=1440"
@@ -360,7 +356,7 @@ def format_holdings(val, ticker=None):
     except:
         return str(val)
 
-# ====================== PORTFOLIO CALC (with last-known fallback) ======================
+# ====================== PORTFOLIO CALC ======================
 def calculate_portfolio(crypto_df):
     if 'last_known_prices' not in st.session_state:
         st.session_state.last_known_prices = {"USDC": 1.0}
@@ -377,7 +373,6 @@ def calculate_portfolio(crypto_df):
     coin_tickers = [t for t in crypto_df['Ticker'].unique() if t != 'USDC']
     live_prices = get_all_cryptocompare_prices(coin_tickers)
 
-    # Update last-known successful prices
     for t, p in live_prices.items():
         if p > 0:
             st.session_state.last_known_prices[t] = p
@@ -517,15 +512,20 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                     with col1:
                         chart_type = st.selectbox(
                             "Timeframe",
-                            options=["24H", "7D", "30D", "90D"],
+                            options=["24H (1m candles)", "7D (1h candles)", "30D (daily candles)", "90D (daily candles)"],
                             index=0,
                             key=f"chart_select_{coin}_{st.session_state.ui_version}",
                             label_visibility="collapsed"
                         )
                     
-                    days_map = {"24H": 1, "7D": 7, "30D": 30, "90D": 90}
+                    days_map = {
+                        "24H (1m candles)": 1,
+                        "7D (1h candles)": 7,
+                        "30D (daily candles)": 30,
+                        "90D (daily candles)": 90
+                    }
                     days = days_map[chart_type]
-                    title = f"{coin} — {chart_type} Chart"
+                    title = f"{coin} — {chart_type}"
                     
                     data = get_cryptocompare_ohlc(coin, days=days)
                     
@@ -557,7 +557,6 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                                 name=f'Your AVG: ${avg_price:,.2f}'
                             ), row=1, col=1)
                         
-                        # REAL VOLUME from CryptoCompare
                         colors_volume = ['#00ff9d' if o < c else '#ff4d4d' 
                                         for o, c in zip(data_local['open'], data_local['close'])]
                         
