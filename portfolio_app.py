@@ -13,7 +13,7 @@ import hashlib
 # ====================== CONFIG ======================
 st.set_page_config(page_title="Portfolio", layout="wide")
 
-# ====================== GLOBAL CSS (compact + glossy + ZERO table gap) ======================
+# ====================== GLOBAL CSS (compact buttons + tighter tables) ======================
 st.markdown("""
 <style>
 /* Big navigation cards with glossy shine */
@@ -42,7 +42,6 @@ st.markdown("""
     background: #263b5e !important;
     color: white !important;
 }
-
 /* Glossy shine for main content */
 .glossy-header,
 .glossy-box {
@@ -116,34 +115,18 @@ st.markdown("""
     color: #ffffff;
 }
 
-/* TIGHT CUSTOM TABLE - ZERO GAP AFTER LAST ROW */
-.row-inner {
-    margin: 2px auto 3px !important;
-    padding: 7px 14px !important;
-    border-radius: 18px;
-    background: #0f172a;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    transition: transform 0.22s cubic-bezier(0.4,0,0.2,1), box-shadow 0.25s cubic-bezier(0.4,0,0.2,1);
-    font-size: 0.95rem;
-    position: relative;
-    z-index: 1;
-    width: 98%;
+/* COMPACT TABLE FIX - smaller delete/edit buttons */
+[data-testid="stHorizontalBlock"] > div:nth-child(6),
+[data-testid="stHorizontalBlock"] > div:nth-child(7),
+[data-testid="stHorizontalBlock"] > div:nth-child(8) {
+    min-width: 48px !important;
+    max-width: 52px !important;
 }
-.row-inner:hover {
-    transform: translateY(-2px) scale(1.01);
-    box-shadow: 0 0 45px var(--glow) !important;
+.stButton > button {
+    padding: 8px 12px !important;
+    font-size: 1.1rem !important;
+    min-height: 42px !important;
 }
-.clickable-row { cursor: pointer; }
-.scroll-container {
-    max-height: 580px;
-    overflow-y: auto;
-    overflow-x: auto;
-    position: relative;
-    padding-bottom: 8px;
-}
-.scroll-container::-webkit-scrollbar { display: none; }
 </style>
 """, unsafe_allow_html=True)
 
@@ -219,34 +202,37 @@ def save_crypto(df):
 def save_fiat(df):
     df.to_json(FIAT_JSON, orient="records", indent=2)
 
-# ====================== BINANCE FUNCTIONS - FIXED ======================
-@st.cache_data(ttl=45, show_spinner=False)
-def get_all_prices(tickers):
-    prices = {'USDC': 1.0}
+# ====================== BINANCE FUNCTIONS ======================
+@st.cache_data(ttl=30, show_spinner=False)
+def get_binance_price(symbol: str) -> float | None:
     try:
-        r = requests.get("https://api.binance.com/api/v3/ticker/price",
-                         timeout=15,
-                         headers={'User-Agent': 'Mozilla/5.0 (compatible; PortfolioApp/1.0)'})
-        r.raise_for_status()
-        data = r.json()
-        all_prices = {item['symbol']: float(item['price']) for item in data}
-        for t in [x for x in tickers if x != 'USDC']:
-            for pair in [f"{t}USDT", f"{t}USDC"]:
-                if pair in all_prices:
-                    prices[t] = all_prices[pair]
-                    break
-        return prices
-    except Exception:
-        return prices  # fallback
+        url = f"https://api.binance.com/api/v3/ticker/price?symbol={symbol}"
+        resp = requests.get(url, timeout=10)
+        resp.raise_for_status()
+        return float(resp.json()['price'])
+    except:
+        return None
 
-@st.cache_data(ttl=60, show_spinner=False)
+@st.cache_data(ttl=30, show_spinner=False)
+def get_all_binance_prices(tickers):
+    prices = {'USDC': 1.0}
+    for ticker in tickers:
+        if ticker == 'USDC':
+            continue
+        symbol = f"{ticker}USDT"
+        price = get_binance_price(symbol)
+        if price is not None:
+            prices[ticker] = price
+    return prices
+
+@st.cache_data(ttl=30, show_spinner=False)
 def get_binance_ohlc(symbol: str, interval: str):
     try:
-        url = f"https://api.binance.com/api/v3/klines?symbol={symbol}&interval={interval}&limit=300"
+        url = f"https://api.binance.com/api/v3/klines?symbol={symbol}&interval={interval}&limit=260"
         df_ohlc = pd.read_json(url)
         df_ohlc = df_ohlc.iloc[:, :6]
         df_ohlc.columns = ['timestamp', 'open', 'high', 'low', 'close', 'volume']
-        df_ohlc['timestamp'] = pd.to_datetime(df_ohlc['timestamp'], unit='ms', utc=True).tz_convert(None)
+        df_ohlc['timestamp'] = pd.to_datetime(df_ohlc['timestamp'], unit='ms', utc=True)
         df_ohlc.set_index('timestamp', inplace=True)
         return df_ohlc.astype(float)
     except:
@@ -320,7 +306,7 @@ def calculate_portfolio(crypto_df):
     crypto_spent = pd.to_numeric(crypto_df['USDC'], errors='coerce').fillna(0).sum()
     usdc_holdings = fiat_usdc - crypto_spent
     coin_tickers = [t for t in crypto_df['Ticker'].unique() if t != 'USDC']
-    live_prices = get_all_prices(coin_tickers)
+    live_prices = get_all_binance_prices(coin_tickers)
     portfolio = []
     for ticker in coin_tickers:
         sub = crypto_df[crypto_df['Ticker'] == ticker]
@@ -372,20 +358,22 @@ with st.sidebar:
                 "fiat": json.loads(st.session_state.fiat_df.to_json(orient="records"))}
         st.download_button("Download JSON", json.dumps(data, indent=2), "portfolio_backup.json", "application/json")
 
-# ====================== MAIN CONTENT ======================
+# ====================== MAIN CONTENT CONTAINER ======================
 main_container = st.empty()
+
 def glossy_header(title: str, icon_svg: str):
     html = f"""<div class="glossy-header">{icon_svg}<span style="margin-left:12px;">{title}</span></div>"""
     st.markdown(html, unsafe_allow_html=True)
 
 # ====================== PAGES ======================
 main_container.empty()
+
 with main_container.container(key=f"page_{st.session_state.page}_{st.session_state.ui_version}"):
     if st.session_state.page == "Home":
         glossy_header("Portfolio Dashboard", DASHBOARD_ICON)
-      
+       
         df_port, total_value, total_pnl, total_pnl_pct = calculate_portfolio(st.session_state.crypto_df)
-      
+       
         value_box_html = f"""
 <div style="display:flex;gap:25px;margin-bottom:30px;flex-wrap:wrap;">
     <div class="glossy-box"><div>Total Value</div><div>{format_money(total_value)}</div></div>
@@ -394,9 +382,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
 </div>"""
         st.markdown(value_box_html, unsafe_allow_html=True)
 
-        st.caption(f"Last updated: {datetime.now().strftime('%H:%M:%S')} • Binance live prices")
-
-        # TIGHT CUSTOM TABLE
+        # CUSTOM TABLE
         coin_list = [t for t in df_port['Ticker'] if t != 'USDC']
         rows_html = ""
         for _, r in df_port.iterrows():
@@ -409,9 +395,8 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
             onclick = f"onclick=\"switchToTab({coin_list.index(ticker)})\" " if ticker != 'USDC' else ""
             row_class = "clickable-row" if ticker != 'USDC' else ""
             logo_url = get_ticker_logo(ticker)
-            extra_style = 'background: linear-gradient(90deg, #1e2a44, #0f172a);' if ticker == 'USDC' else ''
             rows_html += f"""<tr><td colspan="8" style="padding:0;">
-                <div class="row-inner {row_class}" data-glow="{glow_color}" style="display:flex;justify-content:space-between;align-items:center;{extra_style}" {onclick}>
+                <div class="row-inner {row_class}" data-glow="{glow_color}" style="display:flex;justify-content:space-between;align-items:center;margin:6px auto 6px;" {onclick}>
                     <div style="display:flex;align-items:center;gap:8px;min-width:100px;">
                         <img src="{logo_url}" style="height:36px;width:36px;border-radius:50%;object-fit:contain;" onerror="this.src='https://via.placeholder.com/36/1e2a44/ffffff?text={ticker[0]}';">
                         <span style="font-weight:600;">{ticker}</span>
@@ -425,13 +410,13 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                     <div style="flex:1;text-align:center;">{format_money(r['Value'])}</div>
                 </div>
             </td></tr>"""
-       
-        html = f"""<html><head><style>body{{background:#0b1120;color:white;font-family:sans-serif;margin:0;}}table{{width:100%;border-spacing:0;table-layout:fixed;min-width:1100px;}}thead{{position:sticky;top:0;z-index:9999;background:#0f172a;}}thead th{{padding:12px 8px;text-align:center;font-size:0.95rem;}}td{{padding:0;background:transparent;}}.row-inner{{position:relative;z-index:1;width:98%;}} .clickable-row{{cursor:pointer;}}</style></head><body><div class="scroll-container"><table><thead><tr><th>Ticker</th><th>Holdings</th><th>USDC</th><th>AVG</th><th>Live</th><th>PnL</th><th>PnL %</th><th>Value</th></tr></thead><tbody>{rows_html}</tbody></table></div><script>function switchToTab(index){{const tabs=window.parent.document.querySelectorAll('.stTabs button');if(tabs&&tabs[index])tabs[index].click();}}document.querySelectorAll('.row-inner').forEach(div=>{{div.style.setProperty('--glow',div.getAttribute('data-glow'));}});</script></body></html>"""
-       
-        components.html(html, height=600, scrolling=True)
+        
+        html = f"""<html><head><style>body{{background:#0b1120;color:white;font-family:sans-serif;margin:0;}}table{{width:100%;border-spacing:0;table-layout:fixed;min-width:1100px;}}thead{{position:sticky;top:0;z-index:9999;background:#0f172a;}}thead th{{padding:12px 8px;text-align:center;font-size:0.95rem;}}td{{padding:0;background:transparent;}}.row-inner{{position:relative;z-index:1;width:98%;padding:8px 10px;border-radius:18px;background:#0f172a;display:flex;justify-content:space-between;align-items:center;transition:transform 0.22s cubic-bezier(0.4,0,0.2,1),box-shadow 0.25s cubic-bezier(0.4,0,0.2,1);cursor:default;font-size:0.95rem;}}@media (max-width:900px){{.row-inner{{padding:6px 8px;}}thead th{{font-size:0.85rem;padding:8px 6px;}}}}.clickable-row{{cursor:pointer;}}.row-inner:hover{{transform:translateY(-2px) scale(1.01);box-shadow:0 0 45px var(--glow)!important;z-index:20;}}.scroll-container{{max-height:620px;overflow-y:auto;overflow-x:auto;position:relative;padding-bottom:40px;}} .scroll-container::-webkit-scrollbar{{display:none;}}@media (max-height: 800px) {{ .scroll-container {{ max-height: 520px; }} }}</style></head><body><div class="scroll-container"><table><thead><tr><th>Ticker</th><th>Holdings</th><th>USDC</th><th>AVG</th><th>Live</th><th>PnL</th><th>PnL %</th><th>Value</th></tr></thead><tbody>{rows_html}</tbody></table></div><script>function switchToTab(index){{const tabs=window.parent.document.querySelectorAll('.stTabs button');if(tabs&&tabs[index])tabs[index].click();}}document.querySelectorAll('.row-inner').forEach(div=>{{div.style.setProperty('--glow',div.getAttribute('data-glow'));}});</script><!-- VERSION:{st.session_state.ui_version} --></body></html>"""
+        
+        components.html(html, height=650, scrolling=True)
 
         st.markdown("""<div class="glossy-box" style="background:#1e2a44;padding:22px 30px;border-radius:18px;margin:35px 0 25px 0;"><div style="color:#ffffff;font-weight:700;font-size:26px;text-align:center;">Price Charts + Volume</div></div>""", unsafe_allow_html=True)
-       
+        
         if coin_list:
             selected_tab = st.tabs(coin_list)
             for i, coin in enumerate(coin_list):
@@ -442,18 +427,19 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                     col1, col2 = st.columns([1, 4])
                     with col1:
                         chart_type = st.selectbox("Timeframe", options=["5m", "30m", "1h", "4h", "1D", "1w"], index=1, key=f"chart_select_{coin}_{st.session_state.ui_version}", label_visibility="collapsed")
-                    interval_map = {"5m": ("5m", "%H:%M"), "30m": ("30m", "%H:%M"), "1h": ("1h", "%b %d %H:%M"), "4h": ("4h", "%b %d %H:%M"), "1D": ("1d", "%b %d"), "1w": ("1w", "%b %d")}
-                    interval, x_format = interval_map[chart_type]
+                    interval_map = {"5m": ("5m", "%H:%M", f"{coin} — 5m Chart"), "30m": ("30m", "%H:%M", f"{coin} — 30m Chart"), "1h": ("1h", "%b %d %H:%M", f"{coin} — 1H Chart"), "4h": ("4h", "%b %d %H:%M", f"{coin} — 4H Chart"), "1D": ("1d", "%b %d", f"{coin} — 1D Chart"), "1w": ("1w", "%b %d", f"{coin} — 1W Chart")}
+                    interval, x_format, title = interval_map[chart_type]
                     data = get_binance_ohlc(symbol, interval)
                     if data is not None and not data.empty:
                         data_local = data.copy()
+                        data_local.index = data_local.index.tz_convert(None)
                         fig = make_subplots(rows=2, cols=1, shared_xaxes=True, vertical_spacing=0.08, row_heights=[0.75, 0.25], subplot_titles=("", "Volume"))
                         fig.add_trace(go.Candlestick(x=data_local.index, open=data_local['open'], high=data_local['high'], low=data_local['low'], close=data_local['close'], increasing_line_color='#00ff9d', decreasing_line_color='#ff4d4d', increasing_fillcolor='#00ff9d', decreasing_fillcolor='#ff4d4d', name='Price'), row=1, col=1)
                         if avg_price is not None:
                             fig.add_trace(go.Scatter(x=[data_local.index.min(), data_local.index.max()], y=[avg_price, avg_price], mode='lines', line=dict(color='#ffaa00', width=2, dash='dash'), name=f'Your AVG: ${avg_price:,.2f}'), row=1, col=1)
                         colors_volume = ['#00ff9d' if o < c else '#ff4d4d' for o, c in zip(data_local['open'], data_local['close'])]
                         fig.add_trace(go.Bar(x=data_local.index, y=data_local['volume'], marker_color=colors_volume, name='Volume', opacity=0.85), row=2, col=1)
-                        fig.update_layout(height=820, paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)', font_color='white', hovermode="x unified", xaxis_rangeslider_visible=False, legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="center", x=0.5, bgcolor="rgba(0,0,0,0)"))
+                        fig.update_layout(title=title, height=820, paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)', font_color='white', hovermode="x unified", xaxis_rangeslider_visible=False, legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="center", x=0.5, bgcolor="rgba(0,0,0,0)"))
                         st.plotly_chart(fig, use_container_width=True, key=f"chart_{coin}_{chart_type}_{st.session_state.ui_version}")
 
     elif st.session_state.page == "Crypto Transactions":
@@ -461,11 +447,12 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
         df_display = st.session_state.crypto_df.copy()
         df_display['Date'] = df_display['Datum'].apply(format_datum)
         df_display = df_display.dropna(how='all').reset_index(drop=True)
-       
+        
+        # COMPACT TABLE CONTAINER
         table_container = st.container(key=f"crypto_table_container_{st.session_state.ui_version}")
         with table_container:
             with st.container(height=520, border=True):
-                h = st.columns([1.0, 0.9, 0.7, 1.0, 1.0, 0.4, 0.4])
+                h = st.columns([1.0, 0.9, 0.7, 1.0, 1.0, 0.4, 0.4])   # ← narrower delete/edit
                 h[0].markdown("**Date**")
                 h[1].markdown("**USDC**")
                 h[2].markdown("**Ticker**")
@@ -492,6 +479,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                         if st.button("✏️", key=f"edit_crypto_{i}_{st.session_state.crypto_table_version}_{st.session_state.ui_version}"):
                             st.session_state.editing_row_crypto = i
                             st.rerun()
+
         if 'editing_row_crypto' in st.session_state:
             edit_idx = st.session_state.editing_row_crypto
             row = st.session_state.crypto_df.loc[edit_idx]
@@ -550,9 +538,9 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
         fees_eur = pd.to_numeric(st.session_state.fiat_df['Fee'], errors='coerce').fillna(0).sum()
         fees_czk = (pd.to_numeric(st.session_state.fiat_df['Fee'], errors='coerce').fillna(0) *
                     pd.to_numeric(st.session_state.fiat_df['CZK/EUR'], errors='coerce').fillna(0)).sum()
-     
+      
         glossy_header("Fiat Transactions", FIAT_ICON)
-     
+      
         summary_html = f"""
 <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:20px;margin-bottom:30px;">
     <div class="glossy-box"><div>Total CZK</div><div>{total_czk:,.2f}</div></div>
@@ -561,13 +549,14 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
     <div class="glossy-box"><div>Fees</div><div class="fee-line">{fees_eur:,.2f} EUR</div><div class="fee-line" style="font-size:22px;">{fees_czk:,.2f} CZK</div></div>
 </div>"""
         st.markdown(summary_html, unsafe_allow_html=True)
-       
+        
         df_clean = st.session_state.fiat_df.dropna(how='all').reset_index(drop=True)
-       
+        
+        # COMPACT TABLE CONTAINER
         table_container = st.container(key=f"fiat_table_container_{st.session_state.ui_version}")
         with table_container:
             with st.container(height=520, border=True):
-                h = st.columns([1.0, 0.9, 0.9, 0.6, 0.9, 1.0, 0.4, 0.4])
+                h = st.columns([1.0, 0.9, 0.9, 0.6, 0.9, 1.0, 0.4, 0.4])   # ← narrower delete/edit
                 h[0].markdown("**Date**")
                 h[1].markdown("**CZK**")
                 h[2].markdown("**EUR**")
@@ -596,6 +585,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                         if st.button("✏️", key=f"edit_{i}_{st.session_state.fiat_table_version}_{st.session_state.ui_version}"):
                             st.session_state.editing_row = i
                             st.rerun()
+
         if 'editing_row' in st.session_state:
             edit_idx = st.session_state.editing_row
             row = st.session_state.fiat_df.loc[edit_idx]
