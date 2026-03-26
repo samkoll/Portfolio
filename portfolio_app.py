@@ -338,6 +338,24 @@ def format_money(val):
     except:
         return ""
 
+def format_crypto_price(val):
+    """Smart formatter for live prices:
+       - >= 1     → 2 decimals
+       - 0.01-1   → 4 decimals
+       - < 0.01   → 6 decimals"""
+    try:
+        val = float(val)
+        if pd.isna(val):
+            return ""
+        if val >= 1:
+            return f"${val:,.2f}"
+        elif val >= 0.01:
+            return f"${val:,.4f}"
+        else:
+            return f"${val:,.6f}"
+    except:
+        return ""
+
 def format_percent(val):
     try:
         val = float(val)
@@ -504,7 +522,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                     st.markdown(f"""
                     <div style="background:#0f172a;padding:10px 20px;border-radius:9999px;display:inline-flex;align-items:center;gap:12px;margin-bottom:16px;">
                         <span style="font-size:1.15rem;font-weight:700;">{coin} LIVE</span>
-                        <span style="font-size:1.45rem;font-weight:700;color:{color};">{format_money(live_price)}</span>
+                        <span style="font-size:1.45rem;font-weight:700;color:{color};">{format_crypto_price(live_price)}</span>
                     </div>
                     """, unsafe_allow_html=True)
                     
