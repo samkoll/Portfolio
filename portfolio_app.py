@@ -228,7 +228,7 @@ def get_with_retry(url: str, headers: dict, timeout: int = 12, retries: int = 4)
     return None
 
 # ====================== CRYPTOCOMPARE FUNCTIONS ======================
-@st.cache_data(ttl=35, show_spinner=False)
+@st.cache_data(ttl=15, show_spinner=False)   # ← SHORT TTL so live prices update every ~15 seconds
 def get_all_cryptocompare_prices(tickers):
     prices = {"USDC": 1.0}
     symbols = [CRYPTOCOMPARE_SYMBOL_MAP.get(t.upper()) for t in tickers if t.upper() != "USDC"]
@@ -275,11 +275,11 @@ def get_cryptocompare_ohlc(ticker: str, days: int = 1):
     if not sym:
         return None
     try:
-        if days == 1:          # 24H → minute data
+        if days == 1:
             url = f"https://min-api.cryptocompare.com/data/v2/histominute?fsym={sym}&tsym=USD&limit=1440"
-        elif days <= 7:        # 7D → hour data
+        elif days <= 7:
             url = f"https://min-api.cryptocompare.com/data/v2/histohour?fsym={sym}&tsym=USD&limit=168"
-        else:                  # 30D / 90D → daily data
+        else:
             limit = 90 if days == 90 else 30
             url = f"https://min-api.cryptocompare.com/data/v2/histoday?fsym={sym}&tsym=USD&limit={limit}"
 
@@ -339,10 +339,6 @@ def format_money(val):
         return ""
 
 def format_crypto_price(val):
-    """Smart formatter for live prices:
-       - >= 1     → 2 decimals
-       - 0.01-1   → 4 decimals
-       - < 0.01   → 6 decimals"""
     try:
         val = float(val)
         if pd.isna(val):
@@ -602,6 +598,11 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                     else:
                         st.error(f"📉 Could not load {coin} chart. Try the **Refresh** button in sidebar.")
 
+        # ====================== AUTO LIVE PRICE UPDATE (every 30 seconds) ======================
+        st.caption("🔴 Live prices update automatically every 30 seconds")
+        time.sleep(30)
+        st.rerun()
+
     elif st.session_state.page == "Crypto Transactions":
         glossy_header("Crypto Transactions", CRYPTO_ICON)
         df_display = st.session_state.crypto_df.copy()
@@ -791,6 +792,6 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                 st.session_state.ui_version += 1
                 st.rerun()
 
-# Auto-refresh every 10 minutes
+# Auto-refresh every 10 minutes (only on non-dashboard pages)
 time.sleep(600)
 st.rerun()
