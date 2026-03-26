@@ -214,8 +214,8 @@ COINGECKO_ID_MAP = {
     'USDC': 'usd-coin',
 }
 
-# ====================== HELPER: RETRY WRAPPER (fixes XRP $0 + chart failures) ======================
-def get_with_retry(url: str, headers: dict, timeout: int = 15, retries: int = 3) -> dict | None:
+# ====================== HELPER: RETRY WRAPPER ======================
+def get_with_retry(url: str, headers: dict, timeout: int = 15, retries: int = 4) -> dict | None:
     for attempt in range(retries):
         try:
             resp = requests.get(url, headers=headers, timeout=timeout)
@@ -224,46 +224,55 @@ def get_with_retry(url: str, headers: dict, timeout: int = 15, retries: int = 3)
         except Exception:
             if attempt == retries - 1:
                 return None
-            time.sleep(1.2 ** attempt)  # exponential backoff
+            time.sleep(1.3 ** attempt)
     return None
 
-# ====================== COINGECKO FUNCTIONS (RELIABLE + RETRY) ======================
-@st.cache_data(ttl=45, show_spinner=False)
+# ====================== COINGECKO FUNCTIONS (ULTRA-ROBUST) ======================
+@st.cache_data(ttl=40, show_spinner=False)
 def get_all_coingecko_prices(tickers):
-    """Batch prices with retry – fixes XRP $0 issue"""
+    """Single efficient call using /coins/markets + fallback to individual calls"""
     prices = {"USDC": 1.0}
-    coin_ids = []
-    id_to_ticker = {}
-
-    for ticker in tickers:
-        if ticker.upper() == "USDC":
-            continue
-        coin_id = COINGECKO_ID_MAP.get(ticker.upper())
-        if coin_id:
-            coin_ids.append(coin_id)
-            id_to_ticker[coin_id] = ticker.upper()
+    coin_ids = [COINGECKO_ID_MAP.get(t.upper()) for t in tickers if t.upper() != "USDC"]
+    coin_ids = [cid for cid in coin_ids if cid]
 
     if not coin_ids:
         return prices
 
     try:
-        url = f"https://api.coingecko.com/api/v3/simple/price?ids={','.join(coin_ids)}&vs_currencies=usd"
+        ids_str = ",".join(coin_ids)
+        url = f"https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&ids={ids_str}&order=market_cap_desc&per_page=250&page=1&sparkline=false"
         headers = {"User-Agent": "Mozilla/5.0 (compatible; StreamlitPortfolio/1.0)"}
         data = get_with_retry(url, headers)
-        if data is None:
+        if data:
+            for item in data:
+                ticker = next((k for k, v in COINGECKO_ID_MAP.items() if v == item['id']), None)
+                if ticker:
+                    prices[ticker] = float(item['current_price'])
             return prices
-        for coin_id, price_data in data.items():
-            ticker = id_to_ticker.get(coin_id)
-            if ticker:
-                prices[ticker] = float(price_data["usd"])
-        return prices
     except:
-        return prices
+        pass
+
+    # Fallback: individual calls (very reliable)
+    for ticker in set(tickers):
+        if ticker.upper() == "USDC":
+            continue
+        coin_id = COINGECKO_ID_MAP.get(ticker.upper())
+        if not coin_id:
+            continue
+        try:
+            url = f"https://api.coingecko.com/api/v3/simple/price?ids={coin_id}&vs_currencies=usd"
+            headers = {"User-Agent": "Mozilla/5.0 (compatible; StreamlitPortfolio/1.0)"}
+            data = get_with_retry(url, headers)
+            if data and coin_id in data:
+                prices[ticker] = float(data[coin_id]["usd"])
+        except:
+            continue
+    return prices
 
 
 @st.cache_data(ttl=90, show_spinner=False)
-def get_coingecko_ohlc(ticker: str, days: int = 7):
-    """OHLC with retry – fixes chart loading failures"""
+def get_coingecko_ohlc(ticker: str, days: int = 1):
+    """OHLC with retry"""
     coin_id = COINGECKO_ID_MAP.get(ticker.upper())
     if not coin_id:
         return None
@@ -271,7 +280,7 @@ def get_coingecko_ohlc(ticker: str, days: int = 7):
         url = f"https://api.coingecko.com/api/v3/coins/{coin_id}/ohlc?vs_currency=usd&days={days}"
         headers = {"User-Agent": "Mozilla/5.0 (compatible; StreamlitPortfolio/1.0)"}
         data = get_with_retry(url, headers)
-        if data is None:
+        if not data:
             return None
         df = pd.DataFrame(data, columns=["timestamp", "open", "high", "low", "close"])
         df["timestamp"] = pd.to_datetime(df["timestamp"], unit="ms")
@@ -338,31 +347,47 @@ def format_holdings(val, ticker=None):
     except:
         return str(val)
 
-# ====================== PORTFOLIO CALC ======================
+# ====================== PORTFOLIO CALC (with last-known fallback) ======================
 def calculate_portfolio(crypto_df):
+    if 'last_known_prices' not in st.session_state:
+        st.session_state.last_known_prices = {"USDC": 1.0}
+
     if crypto_df.empty:
         return pd.DataFrame(columns=['Ticker','Holdings','USDC','AVG','Live','PnL','PnL %','Value']), 0, 0, 0
+
     crypto_df = crypto_df.copy()
     crypto_df['Ticker'] = crypto_df['Ticker'].astype(str).str.upper()
     fiat_usdc = pd.to_numeric(st.session_state.fiat_df['USDC'], errors='coerce').fillna(0).sum()
     crypto_spent = pd.to_numeric(crypto_df['USDC'], errors='coerce').fillna(0).sum()
     usdc_holdings = fiat_usdc - crypto_spent
+
     coin_tickers = [t for t in crypto_df['Ticker'].unique() if t != 'USDC']
     live_prices = get_all_coingecko_prices(coin_tickers)
+
+    # Update last-known successful prices
+    for t, p in live_prices.items():
+        if p > 0:
+            st.session_state.last_known_prices[t] = p
+
     portfolio = []
     for ticker in coin_tickers:
         sub = crypto_df[crypto_df['Ticker'] == ticker]
         total_holdings = sub['Amount'].sum()
         total_invested = sub['USDC'].sum()
         avg_price = total_invested / total_holdings if total_holdings > 0 else 0
-        live_price = live_prices.get(ticker, 0)
+
+        # Use fresh price OR last known good price (prevents total collapse on refresh)
+        live_price = live_prices.get(ticker, st.session_state.last_known_prices.get(ticker, 0))
+
         value = total_holdings * live_price
         pnl = value - total_invested
         pnl_pct = (pnl / total_invested * 100) if total_invested > 0 else 0
         portfolio.append({'Ticker':ticker,'Holdings':total_holdings,'USDC':total_invested,'AVG':avg_price,'Live':live_price,'PnL':pnl,'PnL %':pnl_pct,'Value':value})
+
     portfolio.append({'Ticker':'USDC','Holdings':usdc_holdings,'USDC':usdc_holdings,'AVG':1.0,'Live':1.0,'PnL':0,'PnL %':0,'Value':usdc_holdings})
     df_port = pd.DataFrame(portfolio)
     df_port = df_port.sort_values(by='USDC', ascending=False).reset_index(drop=True)
+
     total_value = df_port['Value'].sum()
     total_pnl = df_port['PnL'].sum()
     total_pnl_pct = (total_pnl / (total_value - total_pnl) * 100) if (total_value - total_pnl) != 0 else 0
@@ -381,6 +406,8 @@ if 'ui_version' not in st.session_state:
     st.session_state.ui_version = 0
 if 'page' not in st.session_state:
     st.session_state.page = "Home"
+if 'last_known_prices' not in st.session_state:
+    st.session_state.last_known_prices = {"USDC": 1.0}
 
 # ====================== SIDEBAR ======================
 with st.sidebar:
@@ -396,9 +423,8 @@ with st.sidebar:
             st.rerun()
     st.divider()
     if st.button("🔄 Refresh All Prices & Charts", use_container_width=True):
-        st.cache_data.clear()
         st.session_state.ui_version += 1
-        st.success("✅ Prices & charts refreshed!")
+        st.success("✅ Refreshing prices & charts...")
         st.rerun()
     if st.button("💾 Download Backup", use_container_width=True):
         data = {"crypto": json.loads(st.session_state.crypto_df.to_json(orient="records")),
@@ -470,10 +496,11 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                     live_price = df_port.loc[df_port['Ticker'] == coin, 'Live'].iloc[0] if not df_port.loc[df_port['Ticker'] == coin].empty else 0
                     
                     # Live price pill
+                    color = "#00ff9d" if live_price > 0 else "#ff4d4d"
                     st.markdown(f"""
-                    <div style="background:#0f172a;padding:8px 16px;border-radius:9999px;display:inline-flex;align-items:center;gap:8px;margin-bottom:12px;">
-                        <span style="font-size:1.1rem;font-weight:700;">{coin} LIVE</span>
-                        <span style="font-size:1.3rem;font-weight:700;color:#00ff9d;">{format_money(live_price)}</span>
+                    <div style="background:#0f172a;padding:10px 20px;border-radius:9999px;display:inline-flex;align-items:center;gap:12px;margin-bottom:16px;">
+                        <span style="font-size:1.15rem;font-weight:700;">{coin} LIVE</span>
+                        <span style="font-size:1.45rem;font-weight:700;color:{color};">{format_money(live_price)}</span>
                     </div>
                     """, unsafe_allow_html=True)
                     
@@ -545,7 +572,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                         st.plotly_chart(fig, use_container_width=True,
                                         key=f"chart_{coin}_{chart_type}_{st.session_state.ui_version}")
                     else:
-                        st.error(f"📉 Could not load {coin} chart data. Click **Refresh All Prices & Charts** in sidebar.")
+                        st.error(f"📉 Could not load {coin} chart. Try the **Refresh** button in sidebar.")
 
     elif st.session_state.page == "Crypto Transactions":
         glossy_header("Crypto Transactions", CRYPTO_ICON)
@@ -553,7 +580,6 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
         df_display['Date'] = df_display['Datum'].apply(format_datum)
         df_display = df_display.dropna(how='all').reset_index(drop=True)
       
-        # COMPACT TABLE CONTAINER
         table_container = st.container(key=f"crypto_table_container_{st.session_state.ui_version}")
         with table_container:
             with st.container(height=520, border=True):
@@ -656,7 +682,6 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
       
         df_clean = st.session_state.fiat_df.dropna(how='all').reset_index(drop=True)
       
-        # COMPACT TABLE CONTAINER
         table_container = st.container(key=f"fiat_table_container_{st.session_state.ui_version}")
         with table_container:
             with st.container(height=520, border=True):
