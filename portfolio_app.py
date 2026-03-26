@@ -232,21 +232,37 @@ def save_crypto(df):
 def save_fiat(df):
     df.to_json(FIAT_JSON, orient="records", indent=2)
 
-# ====================== BINANCE FUNCTIONS (FIXED FOR STREAMLIT CLOUD) ======================
+# ====================== COINGECKO LIVE PRICES (RELIABLE ON STREAMLIT CLOUD) ======================
 @st.cache_data(ttl=30, show_spinner=False)
-def get_binance_price(symbol: str) -> float | None:
-    """Fetch live price using Binance public data endpoint (works perfectly on Streamlit Cloud)"""
+def get_all_live_prices(tickers):
+    prices = {'USDC': 1.0}
     try:
-        url = f"https://data.binance.com/api/v3/ticker/price?symbol={symbol}"
+        id_map = {
+            'BTC': 'bitcoin', 'ETH': 'ethereum', 'SOL': 'solana',
+            'HBAR': 'hedera-hashgraph', 'XRP': 'xrp', 'SUI': 'sui',
+            'LINK': 'chainlink', 'BNB': 'binancecoin', 'TRX': 'tron'
+        }
+        coin_ids = [id_map.get(t.upper(), t.lower()) for t in tickers if t.upper() != 'USDC']
+        if not coin_ids:
+            return prices
+        ids_str = ','.join(coin_ids)
+        url = f"https://api.coingecko.com/api/v3/simple/price?ids={ids_str}&vs_currencies=usd"
         resp = requests.get(url, timeout=12)
         resp.raise_for_status()
-        return float(resp.json()['price'])
+        data = resp.json()
+        for t in tickers:
+            if t.upper() == 'USDC':
+                continue
+            coin_id = id_map.get(t.upper(), t.lower())
+            if coin_id in data and 'usd' in data[coin_id]:
+                prices[t.upper()] = float(data[coin_id]['usd'])
+        return prices
     except:
-        return None
+        return prices
 
+# ====================== BINANCE CHARTS ======================
 @st.cache_data(ttl=30, show_spinner=False)
 def get_binance_ohlc(symbol: str, interval: str):
-    """Fetch OHLC chart data using Binance public data endpoint"""
     try:
         url = f"https://data.binance.com/api/v3/klines?symbol={symbol}&interval={interval}&limit=260"
         df_ohlc = pd.read_json(url)
@@ -326,7 +342,7 @@ def calculate_portfolio(crypto_df):
     crypto_spent = pd.to_numeric(crypto_df['USDC'], errors='coerce').fillna(0).sum()
     usdc_holdings = fiat_usdc - crypto_spent
     coin_tickers = [t for t in crypto_df['Ticker'].unique() if t != 'USDC']
-    live_prices = get_all_binance_prices(coin_tickers)
+    live_prices = get_all_live_prices(coin_tickers)
     portfolio = []
     for ticker in coin_tickers:
         sub = crypto_df[crypto_df['Ticker'] == ticker]
@@ -345,18 +361,6 @@ def calculate_portfolio(crypto_df):
     total_pnl = df_port['PnL'].sum()
     total_pnl_pct = (total_pnl / (total_value - total_pnl) * 100) if (total_value - total_pnl) != 0 else 0
     return df_port, total_value, total_pnl, total_pnl_pct
-
-@st.cache_data(ttl=30, show_spinner=False)
-def get_all_binance_prices(tickers):
-    prices = {'USDC': 1.0}
-    for ticker in tickers:
-        if ticker == 'USDC':
-            continue
-        symbol = f"{ticker}USDT"
-        price = get_binance_price(symbol)
-        if price is not None:
-            prices[ticker] = price
-    return prices
 
 # ====================== SESSION STATE ======================
 if 'crypto_df' not in st.session_state:
@@ -481,7 +485,6 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
         df_display['Date'] = df_display['Datum'].apply(format_datum)
         df_display = df_display.dropna(how='all').reset_index(drop=True)
       
-        # COMPACT TABLE CONTAINER
         table_container = st.container(key=f"crypto_table_container_{st.session_state.ui_version}")
         with table_container:
             with st.container(height=520, border=True):
@@ -584,7 +587,6 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
       
         df_clean = st.session_state.fiat_df.dropna(how='all').reset_index(drop=True)
       
-        # COMPACT TABLE CONTAINER
         table_container = st.container(key=f"fiat_table_container_{st.session_state.ui_version}")
         with table_container:
             with st.container(height=520, border=True):
