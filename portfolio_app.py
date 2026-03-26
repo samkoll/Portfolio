@@ -13,7 +13,7 @@ import hashlib
 # ====================== CONFIG ======================
 st.set_page_config(page_title="Portfolio", layout="wide")
 
-# ====================== GLOBAL CSS (compact buttons + tighter tables) ======================
+# ====================== GLOBAL CSS ======================
 st.markdown("""
 <style>
 /* Big navigation cards with glossy shine */
@@ -114,7 +114,7 @@ st.markdown("""
     line-height: 1.05;
     color: #ffffff;
 }
-/* COMPACT TABLE FIX - smaller delete/edit buttons */
+/* COMPACT TABLE FIX */
 [data-testid="stHorizontalBlock"] > div:nth-child(6),
 [data-testid="stHorizontalBlock"] > div:nth-child(7),
 [data-testid="stHorizontalBlock"] > div:nth-child(8) {
@@ -202,16 +202,9 @@ def save_fiat(df):
 
 # ====================== CRYPTOCOMPARE MAPPING ======================
 CRYPTOCOMPARE_SYMBOL_MAP = {
-    'BTC': 'BTC',
-    'ETH': 'ETH',
-    'SOL': 'SOL',
-    'HBAR': 'HBAR',
-    'XRP': 'XRP',
-    'BNB': 'BNB',
-    'TRX': 'TRX',
-    'LINK': 'LINK',
-    'SUI': 'SUI',
-    'USDC': 'USDC',
+    'BTC': 'BTC', 'ETH': 'ETH', 'SOL': 'SOL', 'HBAR': 'HBAR',
+    'XRP': 'XRP', 'BNB': 'BNB', 'TRX': 'TRX', 'LINK': 'LINK',
+    'SUI': 'SUI', 'USDC': 'USDC',
 }
 
 # ====================== HELPER: RETRY WRAPPER ======================
@@ -227,8 +220,8 @@ def get_with_retry(url: str, headers: dict, timeout: int = 12, retries: int = 4)
             time.sleep(1.3 ** attempt)
     return None
 
-# ====================== CRYPTOCOMPARE FUNCTIONS ======================
-@st.cache_data(ttl=15, show_spinner=False)   # ← SHORT TTL so live prices update every ~15 seconds
+# ====================== LIVE PRICE FUNCTION ======================
+@st.cache_data(ttl=15, show_spinner=False)
 def get_all_cryptocompare_prices(tickers):
     prices = {"USDC": 1.0}
     symbols = [CRYPTOCOMPARE_SYMBOL_MAP.get(t.upper()) for t in tickers if t.upper() != "USDC"]
@@ -268,7 +261,7 @@ def get_all_cryptocompare_prices(tickers):
             continue
     return prices
 
-
+# ====================== CHART FUNCTION ======================
 @st.cache_data(ttl=80, show_spinner=False)
 def get_cryptocompare_ohlc(ticker: str, days: int = 1):
     sym = CRYPTOCOMPARE_SYMBOL_MAP.get(ticker.upper())
@@ -526,7 +519,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                     with col1:
                         chart_type = st.selectbox(
                             "Timeframe",
-                            options=["24H (1m candles)", "7D (1h candles)", "30D (daily candles)", "90D (daily candles)"],
+                            options=["24H (1m candles)", "7D (1h candles)", "30D (4h candles)", "30D (1D candles)", "90D (1D candles)"],
                             index=0,
                             key=f"chart_select_{coin}_{st.session_state.ui_version}",
                             label_visibility="collapsed"
@@ -535,8 +528,9 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                     days_map = {
                         "24H (1m candles)": 1,
                         "7D (1h candles)": 7,
-                        "30D (daily candles)": 30,
-                        "90D (daily candles)": 90
+                        "30D (4h candles)": 7,     # 4h granularity over 30 days
+                        "30D (1D candles)": 30,
+                        "90D (1D candles)": 90
                     }
                     days = days_map[chart_type]
                     title = f"{coin} — {chart_type}"
@@ -598,7 +592,6 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                     else:
                         st.error(f"📉 Could not load {coin} chart. Try the **Refresh** button in sidebar.")
 
-        # ====================== AUTO LIVE PRICE UPDATE (every 30 seconds) ======================
         st.caption("🔴 Live prices update automatically every 30 seconds")
         time.sleep(30)
         st.rerun()
