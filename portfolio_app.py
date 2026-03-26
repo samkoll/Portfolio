@@ -200,22 +200,22 @@ def save_crypto(df):
 def save_fiat(df):
     df.to_json(FIAT_JSON, orient="records", indent=2)
 
-# ====================== COINGECKO MAPPING ======================
-COINGECKO_ID_MAP = {
-    'BTC': 'bitcoin',
-    'ETH': 'ethereum',
-    'SOL': 'solana',
-    'HBAR': 'hedera-hashgraph',
-    'XRP': 'xrp',
-    'BNB': 'binancecoin',
-    'TRX': 'tron',
-    'LINK': 'chainlink',
-    'SUI': 'sui',
-    'USDC': 'usd-coin',
+# ====================== CRYPTOCOMPARE MAPPING ======================
+CRYPTOCOMPARE_SYMBOL_MAP = {
+    'BTC': 'BTC',
+    'ETH': 'ETH',
+    'SOL': 'SOL',
+    'HBAR': 'HBAR',
+    'XRP': 'XRP',
+    'BNB': 'BNB',
+    'TRX': 'TRX',
+    'LINK': 'LINK',
+    'SUI': 'SUI',
+    'USDC': 'USDC',
 }
 
 # ====================== HELPER: RETRY WRAPPER ======================
-def get_with_retry(url: str, headers: dict, timeout: int = 15, retries: int = 4) -> dict | None:
+def get_with_retry(url: str, headers: dict, timeout: int = 12, retries: int = 4) -> dict | None:
     for attempt in range(retries):
         try:
             resp = requests.get(url, headers=headers, timeout=timeout)
@@ -227,65 +227,77 @@ def get_with_retry(url: str, headers: dict, timeout: int = 15, retries: int = 4)
             time.sleep(1.3 ** attempt)
     return None
 
-# ====================== COINGECKO FUNCTIONS (ULTRA-ROBUST) ======================
-@st.cache_data(ttl=40, show_spinner=False)
-def get_all_coingecko_prices(tickers):
-    """Batch + individual fallback – fixes XRP permanently"""
+# ====================== CRYPTOCOMPARE FUNCTIONS (FASTER + MORE RELIABLE) ======================
+@st.cache_data(ttl=35, show_spinner=False)
+def get_all_cryptocompare_prices(tickers):
+    """Super fast batch price call – fixes slow loading and $0 issues"""
     prices = {"USDC": 1.0}
-    coin_ids = [COINGECKO_ID_MAP.get(t.upper()) for t in tickers if t.upper() != "USDC"]
-    coin_ids = [cid for cid in coin_ids if cid]
+    symbols = [CRYPTOCOMPARE_SYMBOL_MAP.get(t.upper()) for t in tickers if t.upper() != "USDC"]
+    symbols = [s for s in symbols if s]
 
-    if not coin_ids:
+    if not symbols:
         return prices
 
-    # Primary: /coins/markets (fastest)
     try:
-        ids_str = ",".join(coin_ids)
-        url = f"https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&ids={ids_str}&order=market_cap_desc&per_page=250&page=1&sparkline=false"
+        fsyms = ",".join(symbols)
+        url = f"https://min-api.cryptocompare.com/data/pricemulti?fsyms={fsyms}&tsyms=USD"
         headers = {"User-Agent": "Mozilla/5.0 (compatible; StreamlitPortfolio/1.0)"}
         data = get_with_retry(url, headers)
         if data:
-            for item in data:
-                ticker = next((k for k, v in COINGECKO_ID_MAP.items() if v == item['id']), None)
-                if ticker:
-                    prices[ticker] = float(item['current_price'])
+            for sym, price_data in data.items():
+                if isinstance(price_data, dict) and "USD" in price_data:
+                    ticker = next((k for k, v in CRYPTOCOMPARE_SYMBOL_MAP.items() if v == sym), None)
+                    if ticker:
+                        prices[ticker] = float(price_data["USD"])
             return prices
     except:
         pass
 
-    # Strong fallback: individual simple/price calls (especially for XRP)
+    # Individual fallback (still very fast)
     for ticker in set(tickers):
         if ticker.upper() == "USDC":
             continue
-        coin_id = COINGECKO_ID_MAP.get(ticker.upper())
-        if not coin_id:
+        sym = CRYPTOCOMPARE_SYMBOL_MAP.get(ticker.upper())
+        if not sym:
             continue
         try:
-            url = f"https://api.coingecko.com/api/v3/simple/price?ids={coin_id}&vs_currencies=usd"
+            url = f"https://min-api.cryptocompare.com/data/price?fsym={sym}&tsyms=USD"
             headers = {"User-Agent": "Mozilla/5.0 (compatible; StreamlitPortfolio/1.0)"}
             data = get_with_retry(url, headers)
-            if data and coin_id in data:
-                prices[ticker] = float(data[coin_id]["usd"])
+            if data and "USD" in data:
+                prices[ticker] = float(data["USD"])
         except:
             continue
     return prices
 
 
-@st.cache_data(ttl=90, show_spinner=False)
-def get_coingecko_ohlc(ticker: str, days: int = 1):
-    """Reliable OHLC with extra retry for all timeframes"""
-    coin_id = COINGECKO_ID_MAP.get(ticker.upper())
-    if not coin_id:
+@st.cache_data(ttl=80, show_spinner=False)
+def get_cryptocompare_ohlc(ticker: str, days: int = 1):
+    """Real volume + reliable historical data"""
+    sym = CRYPTOCOMPARE_SYMBOL_MAP.get(ticker.upper())
+    if not sym:
         return None
+
     try:
-        url = f"https://api.coingecko.com/api/v3/coins/{coin_id}/ohlc?vs_currency=usd&days={days}"
+        if days == 1:          # 24H → minute data
+            url = f"https://min-api.cryptocompare.com/data/v2/histominute?fsym={sym}&tsym=USD&limit=1440"
+        elif days <= 7:        # 7D → hour data
+            url = f"https://min-api.cryptocompare.com/data/v2/histohour?fsym={sym}&tsym=USD&limit=168"
+        else:                  # 30D / 90D → daily data
+            limit = 90 if days == 90 else 30
+            url = f"https://min-api.cryptocompare.com/data/v2/histoday?fsym={sym}&tsym=USD&limit={limit}"
+
         headers = {"User-Agent": "Mozilla/5.0 (compatible; StreamlitPortfolio/1.0)"}
         data = get_with_retry(url, headers)
-        if not data:
+        if not data or "Data" not in data or "Data" not in data["Data"]:
             return None
-        df = pd.DataFrame(data, columns=["timestamp", "open", "high", "low", "close"])
-        df["timestamp"] = pd.to_datetime(df["timestamp"], unit="ms")
+
+        df_data = data["Data"]["Data"]
+        df = pd.DataFrame(df_data)
+        df = df[["time", "open", "high", "low", "close", "volumefrom"]]
+        df["timestamp"] = pd.to_datetime(df["time"], unit="s")
         df.set_index("timestamp", inplace=True)
+        df = df.drop(columns=["time"])
         return df
     except:
         return None
@@ -363,7 +375,7 @@ def calculate_portfolio(crypto_df):
     usdc_holdings = fiat_usdc - crypto_spent
 
     coin_tickers = [t for t in crypto_df['Ticker'].unique() if t != 'USDC']
-    live_prices = get_all_coingecko_prices(coin_tickers)
+    live_prices = get_all_cryptocompare_prices(coin_tickers)
 
     # Update last-known successful prices
     for t, p in live_prices.items():
@@ -515,7 +527,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                     days = days_map[chart_type]
                     title = f"{coin} — {chart_type} Chart"
                     
-                    data = get_coingecko_ohlc(coin, days=days)
+                    data = get_cryptocompare_ohlc(coin, days=days)
                     
                     if data is not None and not data.empty:
                         data_local = data.copy()
@@ -545,15 +557,13 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                                 name=f'Your AVG: ${avg_price:,.2f}'
                             ), row=1, col=1)
                         
-                        # NORMALIZED VOLUME BARS (fixes ugly flat/high bars)
-                        price_change = data_local['close'].diff().fillna(0).abs()
-                        volume_series = price_change * 1_000_000 + 5_000_000  # nice visual variation
+                        # REAL VOLUME from CryptoCompare
                         colors_volume = ['#00ff9d' if o < c else '#ff4d4d' 
                                         for o, c in zip(data_local['open'], data_local['close'])]
                         
                         fig.add_trace(go.Bar(
                             x=data_local.index,
-                            y=volume_series,
+                            y=data_local['volumefrom'],
                             marker_color=colors_volume,
                             name='Volume',
                             opacity=0.85
