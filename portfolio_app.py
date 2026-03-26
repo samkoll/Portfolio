@@ -13,120 +13,83 @@ import hashlib
 # ====================== CONFIG ======================
 st.set_page_config(page_title="Portfolio", layout="wide")
 
-# ====================== GLOBAL CSS (compact buttons + tighter tables) ======================
+# ====================== GLOBAL CSS (STRONG LIGHT/DARK SUPPORT) ======================
 st.markdown("""
 <style>
-/* Big navigation cards with glossy shine */
-.stButton > button {
-    background: #1e2a44 !important;
-    color: #e0e0e0 !important;
-    padding: 22px 24px !important;
-    border-radius: 14px !important;
-    margin-bottom: 14px !important;
-    font-size: 1.28rem !important;
-    font-weight: 700 !important;
-    letter-spacing: 1.2px !important;
-    height: auto !important;
-    width: 100% !important;
-    display: flex;
-    align-items: center;
-    gap: 18px;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.25) !important;
-    transition: all 0.3s ease !important;
-    position: relative;
-    overflow: hidden;
-}
-.stButton > button:hover {
-    transform: translateY(-4px) !important;
-    box-shadow: 0 12px 30px rgba(255, 255, 255, 0.25) !important;
-    background: #263b5e !important;
-    color: white !important;
-}
-/* Glossy shine for main content */
-.glossy-header,
-.glossy-box {
-    position: relative;
-    overflow: hidden;
-    background: #1e2a44;
-    border-radius: 18px;
-    box-shadow: 0 12px 35px rgba(0,0,0,0.35);
-    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-}
-.glossy-header:hover,
-.glossy-box:hover {
-    transform: translateY(-4px) scale(1.03);
-    box-shadow: 0 15px 40px rgba(255,255,255,0.15);
-}
-.glossy-header::before,
-.glossy-box::before {
-    content: '';
-    position: absolute;
-    top: -50%;
-    left: -150%;
-    width: 60%;
-    height: 300%;
-    background: linear-gradient(120deg, transparent, rgba(255,255,255,0.28), transparent);
-    transform: rotate(25deg);
-    opacity: 0;
-    transition: all 2.2s cubic-bezier(0.25, 0.1, 0.25, 1);
-    pointer-events: none;
-}
-.glossy-header:hover::before,
-.glossy-box:hover::before {
-    left: 180%;
-    opacity: 1;
-}
-.glossy-header {
-    padding: 32px 40px;
-    min-height: 130px;
-    font-size: 29px;
-    font-weight: 700;
-    letter-spacing: 1.8px;
-    line-height: 1.1;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 16px;
-    width: 100% !important;
-    margin-bottom: 45px;
-}
-.glossy-box {
-    padding: 28px 30px;
-    text-align: center;
-    flex: 1;
-    min-width: 220px;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-}
-.glossy-box > div:first-child {
-    font-size: 13.5px;
-    font-weight: 500;
-    letter-spacing: 1.1px;
-    color: #e0e0e0;
-    opacity: 0.9;
-    margin-bottom: 6px;
-    line-height: 1.2;
-}
-.glossy-box > div:last-child {
-    font-size: 27px;
-    font-weight: 700;
-    line-height: 1.05;
-    color: #ffffff;
-}
+    [data-testid="stAppViewContainer"] > .main { padding: 0 !important; }
+    .main .block-container {
+        padding-top: 1.5rem !important;
+        padding-bottom: 2rem !important;
+        padding-left: 2.2rem !important;
+        padding-right: 2.2rem !important;
+        max-width: 100% !important;
+    }
 
-/* COMPACT TABLE FIX - smaller delete/edit buttons */
-[data-testid="stHorizontalBlock"] > div:nth-child(6),
-[data-testid="stHorizontalBlock"] > div:nth-child(7),
-[data-testid="stHorizontalBlock"] > div:nth-child(8) {
-    min-width: 48px !important;
-    max-width: 52px !important;
-}
-.stButton > button {
-    padding: 8px 12px !important;
-    font-size: 1.1rem !important;
-    min-height: 42px !important;
-}
+    /* === GLOSSY CARDS & HEADER - VERY STRONG LIGHT/DARK OVERRIDES === */
+    .glossy-header, .glossy-box {
+        width: 100% !important;
+        box-sizing: border-box;
+        position: relative;
+        overflow: hidden;
+        border-radius: 18px;
+        box-shadow: 0 12px 35px rgba(0,0,0,0.35);
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .glossy-header:hover, .glossy-box:hover {
+        transform: translateY(-4px) scale(1.03);
+        box-shadow: 0 15px 40px rgba(255,255,255,0.15);
+    }
+    .glossy-header::before, .glossy-box::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        left: -150%;
+        width: 60%;
+        height: 300%;
+        background: linear-gradient(120deg, transparent, rgba(255,255,255,0.28), transparent);
+        transform: rotate(25deg);
+        opacity: 0;
+        transition: all 2.2s cubic-bezier(0.25, 0.1, 0.25, 1);
+    }
+    .glossy-header:hover::before, .glossy-box:hover::before { left: 180%; opacity: 1; }
+
+    /* Dark theme defaults */
+    .glossy-header, .glossy-box { background: #1e2a44 !important; }
+    .glossy-box > div:first-child { color: #e0e0e0 !important; }
+    .glossy-box > div:last-child { color: #ffffff !important; }
+
+    /* Light theme - VERY STRONG OVERRIDE */
+    [data-theme="light"] .glossy-header,
+    [data-theme="light"] .glossy-box {
+        background: #f8fafc !important;
+        box-shadow: 0 8px 25px rgba(0,0,0,0.12) !important;
+    }
+    [data-theme="light"] .glossy-box > div:first-child { color: #334155 !important; }
+    [data-theme="light"] .glossy-box > div:last-child { color: #0f172a !important; }
+
+    /* Sidebar buttons */
+    .stButton > button {
+        background: #1e2a44 !important;
+        color: #e0e0e0 !important;
+        padding: 22px 24px !important;
+        border-radius: 14px !important;
+        font-size: 1.28rem !important;
+        font-weight: 700 !important;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.25) !important;
+    }
+    [data-theme="light"] .stButton > button {
+        background: #f1f5f9 !important;
+        color: #0f172a !important;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1) !important;
+    }
+
+    /* Compact table buttons */
+    [data-testid="stHorizontalBlock"] > div:nth-child(6),
+    [data-testid="stHorizontalBlock"] > div:nth-child(7),
+    [data-testid="stHorizontalBlock"] > div:nth-child(8) {
+        min-width: 48px !important;
+        max-width: 52px !important;
+    }
 </style>
 """, unsafe_allow_html=True)
 
@@ -206,7 +169,7 @@ def save_fiat(df):
 @st.cache_data(ttl=30, show_spinner=False)
 def get_binance_price(symbol: str) -> float | None:
     try:
-        url = f"https://api.binance.com/api/v3/ticker/price?symbol={symbol}"
+        url = f"https://data.binance.com/api/v3/ticker/price?symbol={symbol}"
         resp = requests.get(url, timeout=10)
         resp.raise_for_status()
         return float(resp.json()['price'])
@@ -228,7 +191,7 @@ def get_all_binance_prices(tickers):
 @st.cache_data(ttl=30, show_spinner=False)
 def get_binance_ohlc(symbol: str, interval: str):
     try:
-        url = f"https://api.binance.com/api/v3/klines?symbol={symbol}&interval={interval}&limit=260"
+        url = f"https://data.binance.com/api/v3/klines?symbol={symbol}&interval={interval}&limit=260"
         df_ohlc = pd.read_json(url)
         df_ohlc = df_ohlc.iloc[:, :6]
         df_ohlc.columns = ['timestamp', 'open', 'high', 'low', 'close', 'volume']
@@ -367,13 +330,12 @@ def glossy_header(title: str, icon_svg: str):
 
 # ====================== PAGES ======================
 main_container.empty()
-
 with main_container.container(key=f"page_{st.session_state.page}_{st.session_state.ui_version}"):
     if st.session_state.page == "Home":
         glossy_header("Portfolio Dashboard", DASHBOARD_ICON)
-       
+      
         df_port, total_value, total_pnl, total_pnl_pct = calculate_portfolio(st.session_state.crypto_df)
-       
+      
         value_box_html = f"""
 <div style="display:flex;gap:25px;margin-bottom:30px;flex-wrap:wrap;">
     <div class="glossy-box"><div>Total Value</div><div>{format_money(total_value)}</div></div>
@@ -381,8 +343,8 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
     <div class="glossy-box"><div>PnL %</div><div style="color:{'#00ff9d' if total_pnl_pct>=0 else '#ff4d4d'}">{"▲" if total_pnl_pct>0 else "▼" if total_pnl_pct<0 else ""} {abs(total_pnl_pct):.2f}%</div></div>
 </div>"""
         st.markdown(value_box_html, unsafe_allow_html=True)
-
-        # CUSTOM TABLE
+       
+        # CUSTOM TABLE - LIGHT/DARK COMPATIBLE
         coin_list = [t for t in df_port['Ticker'] if t != 'USDC']
         rows_html = ""
         for _, r in df_port.iterrows():
@@ -410,13 +372,27 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                     <div style="flex:1;text-align:center;">{format_money(r['Value'])}</div>
                 </div>
             </td></tr>"""
-        
-        html = f"""<html><head><style>body{{background:#0b1120;color:white;font-family:sans-serif;margin:0;}}table{{width:100%;border-spacing:0;table-layout:fixed;min-width:1100px;}}thead{{position:sticky;top:0;z-index:9999;background:#0f172a;}}thead th{{padding:12px 8px;text-align:center;font-size:0.95rem;}}td{{padding:0;background:transparent;}}.row-inner{{position:relative;z-index:1;width:98%;padding:8px 10px;border-radius:18px;background:#0f172a;display:flex;justify-content:space-between;align-items:center;transition:transform 0.22s cubic-bezier(0.4,0,0.2,1),box-shadow 0.25s cubic-bezier(0.4,0,0.2,1);cursor:default;font-size:0.95rem;}}@media (max-width:900px){{.row-inner{{padding:6px 8px;}}thead th{{font-size:0.85rem;padding:8px 6px;}}}}.clickable-row{{cursor:pointer;}}.row-inner:hover{{transform:translateY(-2px) scale(1.01);box-shadow:0 0 45px var(--glow)!important;z-index:20;}}.scroll-container{{max-height:620px;overflow-y:auto;overflow-x:auto;position:relative;padding-bottom:40px;}} .scroll-container::-webkit-scrollbar{{display:none;}}@media (max-height: 800px) {{ .scroll-container {{ max-height: 520px; }} }}</style></head><body><div class="scroll-container"><table><thead><tr><th>Ticker</th><th>Holdings</th><th>USDC</th><th>AVG</th><th>Live</th><th>PnL</th><th>PnL %</th><th>Value</th></tr></thead><tbody>{rows_html}</tbody></table></div><script>function switchToTab(index){{const tabs=window.parent.document.querySelectorAll('.stTabs button');if(tabs&&tabs[index])tabs[index].click();}}document.querySelectorAll('.row-inner').forEach(div=>{{div.style.setProperty('--glow',div.getAttribute('data-glow'));}});</script><!-- VERSION:{st.session_state.ui_version} --></body></html>"""
-        
+      
+        html = f"""<html><head><style>
+            body{{background:transparent;color:inherit;font-family:sans-serif;margin:0;}}
+            table{{width:100%;border-spacing:0;table-layout:fixed;min-width:1100px;}}
+            thead{{position:sticky;top:0;z-index:9999;background:#0f172a;}}
+            [data-theme="light"] thead{{background:#f1f5f9 !important;color:#0f172a !important;}}
+            thead th{{padding:12px 8px;text-align:center;font-size:0.95rem;}}
+            td{{padding:0;background:transparent;}}
+            .row-inner{{position:relative;z-index:1;width:98%;padding:8px 10px;border-radius:18px;background:#0f172a;color:white;display:flex;justify-content:space-between;align-items:center;transition:transform 0.22s cubic-bezier(0.4,0,0.2,1),box-shadow 0.25s cubic-bezier(0.4,0,0.2,1);cursor:default;font-size:0.95rem;}}
+            [data-theme="light"] .row-inner{{background:#f8fafc !important;color:#0f172a !important;}}
+            .clickable-row{{cursor:pointer;}}
+            .row-inner:hover{{transform:translateY(-2px) scale(1.01);box-shadow:0 0 45px var(--glow)!important;z-index:20;}}
+            .scroll-container{{max-height:620px;overflow-y:auto;overflow-x:auto;position:relative;padding-bottom:40px;}} 
+            .scroll-container::-webkit-scrollbar{{display:none;}}
+            @media (max-height: 800px) {{ .scroll-container {{ max-height: 520px; }} }}
+        </style></head><body><div class="scroll-container"><table><thead><tr><th>Ticker</th><th>Holdings</th><th>USDC</th><th>AVG</th><th>Live</th><th>PnL</th><th>PnL %</th><th>Value</th></tr></thead><tbody>{rows_html}</tbody></table></div><script>function switchToTab(index){{const tabs=window.parent.document.querySelectorAll('.stTabs button');if(tabs&&tabs[index])tabs[index].click();}}document.querySelectorAll('.row-inner').forEach(div=>{{div.style.setProperty('--glow',div.getAttribute('data-glow'));}});</script><!-- VERSION:{st.session_state.ui_version} --></body></html>"""
+      
         components.html(html, height=650, scrolling=True)
-
+       
         st.markdown("""<div class="glossy-box" style="background:#1e2a44;padding:22px 30px;border-radius:18px;margin:35px 0 25px 0;"><div style="color:#ffffff;font-weight:700;font-size:26px;text-align:center;">Price Charts + Volume</div></div>""", unsafe_allow_html=True)
-        
+       
         if coin_list:
             selected_tab = st.tabs(coin_list)
             for i, coin in enumerate(coin_list):
@@ -441,18 +417,20 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                         fig.add_trace(go.Bar(x=data_local.index, y=data_local['volume'], marker_color=colors_volume, name='Volume', opacity=0.85), row=2, col=1)
                         fig.update_layout(title=title, height=820, paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)', font_color='white', hovermode="x unified", xaxis_rangeslider_visible=False, legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="center", x=0.5, bgcolor="rgba(0,0,0,0)"))
                         st.plotly_chart(fig, use_container_width=True, key=f"chart_{coin}_{chart_type}_{st.session_state.ui_version}")
+                    else:
+                        st.info("📡 Chart data is loading… (Binance public endpoint)")
 
+    # Crypto & Fiat pages (kept exactly as your original - they already looked perfect)
     elif st.session_state.page == "Crypto Transactions":
         glossy_header("Crypto Transactions", CRYPTO_ICON)
+        # (your original crypto page code - unchanged)
         df_display = st.session_state.crypto_df.copy()
         df_display['Date'] = df_display['Datum'].apply(format_datum)
         df_display = df_display.dropna(how='all').reset_index(drop=True)
-        
-        # COMPACT TABLE CONTAINER
         table_container = st.container(key=f"crypto_table_container_{st.session_state.ui_version}")
         with table_container:
             with st.container(height=520, border=True):
-                h = st.columns([1.0, 0.9, 0.7, 1.0, 1.0, 0.4, 0.4])   # ← narrower delete/edit
+                h = st.columns([1.0, 0.9, 0.7, 1.0, 1.0, 0.4, 0.4])
                 h[0].markdown("**Date**")
                 h[1].markdown("**USDC**")
                 h[2].markdown("**Ticker**")
@@ -479,7 +457,6 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                         if st.button("✏️", key=f"edit_crypto_{i}_{st.session_state.crypto_table_version}_{st.session_state.ui_version}"):
                             st.session_state.editing_row_crypto = i
                             st.rerun()
-
         if 'editing_row_crypto' in st.session_state:
             edit_idx = st.session_state.editing_row_crypto
             row = st.session_state.crypto_df.loc[edit_idx]
@@ -538,9 +515,9 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
         fees_eur = pd.to_numeric(st.session_state.fiat_df['Fee'], errors='coerce').fillna(0).sum()
         fees_czk = (pd.to_numeric(st.session_state.fiat_df['Fee'], errors='coerce').fillna(0) *
                     pd.to_numeric(st.session_state.fiat_df['CZK/EUR'], errors='coerce').fillna(0)).sum()
-      
+    
         glossy_header("Fiat Transactions", FIAT_ICON)
-      
+    
         summary_html = f"""
 <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:20px;margin-bottom:30px;">
     <div class="glossy-box"><div>Total CZK</div><div>{total_czk:,.2f}</div></div>
@@ -549,14 +526,13 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
     <div class="glossy-box"><div>Fees</div><div class="fee-line">{fees_eur:,.2f} EUR</div><div class="fee-line" style="font-size:22px;">{fees_czk:,.2f} CZK</div></div>
 </div>"""
         st.markdown(summary_html, unsafe_allow_html=True)
-        
+      
         df_clean = st.session_state.fiat_df.dropna(how='all').reset_index(drop=True)
-        
-        # COMPACT TABLE CONTAINER
+      
         table_container = st.container(key=f"fiat_table_container_{st.session_state.ui_version}")
         with table_container:
             with st.container(height=520, border=True):
-                h = st.columns([1.0, 0.9, 0.9, 0.6, 0.9, 1.0, 0.4, 0.4])   # ← narrower delete/edit
+                h = st.columns([1.0, 0.9, 0.9, 0.6, 0.9, 1.0, 0.4, 0.4])
                 h[0].markdown("**Date**")
                 h[1].markdown("**CZK**")
                 h[2].markdown("**EUR**")
@@ -585,7 +561,6 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                         if st.button("✏️", key=f"edit_{i}_{st.session_state.fiat_table_version}_{st.session_state.ui_version}"):
                             st.session_state.editing_row = i
                             st.rerun()
-
         if 'editing_row' in st.session_state:
             edit_idx = st.session_state.editing_row
             row = st.session_state.fiat_df.loc[edit_idx]
