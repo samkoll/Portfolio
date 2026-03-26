@@ -261,20 +261,23 @@ def get_all_cryptocompare_prices(tickers):
             continue
     return prices
 
-# ====================== CHART FUNCTION ======================
+# ====================== CHART FUNCTION (supports separate period + candle) ======================
 @st.cache_data(ttl=80, show_spinner=False)
-def get_cryptocompare_ohlc(ticker: str, days: int = 1):
+def get_cryptocompare_ohlc(ticker: str, period: str, candle: str):
     sym = CRYPTOCOMPARE_SYMBOL_MAP.get(ticker.upper())
     if not sym:
         return None
     try:
-        if days == 1:
-            url = f"https://min-api.cryptocompare.com/data/v2/histominute?fsym={sym}&tsym=USD&limit=1440"
-        elif days <= 7:
-            url = f"https://min-api.cryptocompare.com/data/v2/histohour?fsym={sym}&tsym=USD&limit=168"
-        else:
-            limit = 90 if days == 90 else 30
+        if candle == "1D":
+            limit = {"24H": 1, "7D": 7, "30D": 30, "90D": 90}[period]
             url = f"https://min-api.cryptocompare.com/data/v2/histoday?fsym={sym}&tsym=USD&limit={limit}"
+        elif candle.endswith("m") or candle.endswith("h"):
+            if candle.endswith("m"):
+                url = f"https://min-api.cryptocompare.com/data/v2/histominute?fsym={sym}&tsym=USD&limit=2000"
+            else:
+                url = f"https://min-api.cryptocompare.com/data/v2/histohour?fsym={sym}&tsym=USD&limit=2000"
+        else:
+            url = f"https://min-api.cryptocompare.com/data/v2/histoday?fsym={sym}&tsym=USD&limit=90"
 
         headers = {"User-Agent": "Mozilla/5.0 (compatible; StreamlitPortfolio/1.0)"}
         data = get_with_retry(url, headers)
@@ -334,8 +337,7 @@ def format_money(val):
 def format_crypto_price(val):
     try:
         val = float(val)
-        if pd.isna(val):
-            return ""
+        if pd.isna(val): return ""
         if val >= 1:
             return f"${val:,.2f}"
         elif val >= 0.01:
@@ -517,25 +519,25 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                     
                     col1, col2 = st.columns([1, 4])
                     with col1:
-                        chart_type = st.selectbox(
-                            "Timeframe",
-                            options=["24H (1m candles)", "7D (1h candles)", "30D (4h candles)", "30D (1D candles)", "90D (1D candles)"],
+                        period = st.selectbox(
+                            "Period",
+                            options=["24H", "7D", "30D", "90D"],
                             index=0,
-                            key=f"chart_select_{coin}_{st.session_state.ui_version}",
+                            key=f"period_select_{coin}_{st.session_state.ui_version}",
+                            label_visibility="collapsed"
+                        )
+                    with col2:
+                        candle = st.selectbox(
+                            "Candle Interval",
+                            options=["5m", "30m", "1h", "4h", "1D"],
+                            index=2,
+                            key=f"candle_select_{coin}_{st.session_state.ui_version}",
                             label_visibility="collapsed"
                         )
                     
-                    days_map = {
-                        "24H (1m candles)": 1,
-                        "7D (1h candles)": 7,
-                        "30D (4h candles)": 7,     # 4h granularity over 30 days
-                        "30D (1D candles)": 30,
-                        "90D (1D candles)": 90
-                    }
-                    days = days_map[chart_type]
-                    title = f"{coin} — {chart_type}"
+                    title = f"{coin} — {period} ({candle} candles)"
                     
-                    data = get_cryptocompare_ohlc(coin, days=days)
+                    data = get_cryptocompare_ohlc(coin, period, candle)
                     
                     if data is not None and not data.empty:
                         data_local = data.copy()
@@ -588,7 +590,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                                         xanchor="center", x=0.5, bgcolor="rgba(0,0,0,0)")
                         )
                         st.plotly_chart(fig, use_container_width=True,
-                                        key=f"chart_{coin}_{chart_type}_{st.session_state.ui_version}")
+                                        key=f"chart_{coin}_{period}_{candle}_{st.session_state.ui_version}")
                     else:
                         st.error(f"📉 Could not load {coin} chart. Try the **Refresh** button in sidebar.")
 
@@ -596,6 +598,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
         time.sleep(30)
         st.rerun()
 
+    # Crypto Transactions & Fiat pages remain unchanged (same as your last stable version)
     elif st.session_state.page == "Crypto Transactions":
         glossy_header("Crypto Transactions", CRYPTO_ICON)
         df_display = st.session_state.crypto_df.copy()
