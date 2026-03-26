@@ -214,27 +214,23 @@ COINGECKO_ID_MAP = {
     'USDC': 'usd-coin',
 }
 
-# ====================== COINGECKO FUNCTIONS (RELIABLE ON STREAMLIT CLOUD) ======================
+# ====================== HELPER: RETRY WRAPPER (fixes XRP $0 + chart failures) ======================
+def get_with_retry(url: str, headers: dict, timeout: int = 15, retries: int = 3) -> dict | None:
+    for attempt in range(retries):
+        try:
+            resp = requests.get(url, headers=headers, timeout=timeout)
+            resp.raise_for_status()
+            return resp.json()
+        except Exception:
+            if attempt == retries - 1:
+                return None
+            time.sleep(1.2 ** attempt)  # exponential backoff
+    return None
+
+# ====================== COINGECKO FUNCTIONS (RELIABLE + RETRY) ======================
 @st.cache_data(ttl=45, show_spinner=False)
-def get_coingecko_price(ticker: str) -> float | None:
-    """Single ticker price"""
-    coin_id = COINGECKO_ID_MAP.get(ticker.upper())
-    if not coin_id:
-        return None
-    try:
-        url = f"https://api.coingecko.com/api/v3/simple/price?ids={coin_id}&vs_currencies=usd"
-        headers = {"User-Agent": "Mozilla/5.0 (compatible; StreamlitPortfolio/1.0)"}
-        resp = requests.get(url, headers=headers, timeout=12)
-        resp.raise_for_status()
-        data = resp.json()
-        return float(data[coin_id]["usd"])
-    except:
-        return None
-
-
-@st.cache_data(ttl=60, show_spinner=False)
 def get_all_coingecko_prices(tickers):
-    """Batch prices — most efficient"""
+    """Batch prices with retry – fixes XRP $0 issue"""
     prices = {"USDC": 1.0}
     coin_ids = []
     id_to_ticker = {}
@@ -253,10 +249,9 @@ def get_all_coingecko_prices(tickers):
     try:
         url = f"https://api.coingecko.com/api/v3/simple/price?ids={','.join(coin_ids)}&vs_currencies=usd"
         headers = {"User-Agent": "Mozilla/5.0 (compatible; StreamlitPortfolio/1.0)"}
-        resp = requests.get(url, headers=headers, timeout=15)
-        resp.raise_for_status()
-        data = resp.json()
-
+        data = get_with_retry(url, headers)
+        if data is None:
+            return prices
         for coin_id, price_data in data.items():
             ticker = id_to_ticker.get(coin_id)
             if ticker:
@@ -266,20 +261,19 @@ def get_all_coingecko_prices(tickers):
         return prices
 
 
-@st.cache_data(ttl=120, show_spinner=False)
+@st.cache_data(ttl=90, show_spinner=False)
 def get_coingecko_ohlc(ticker: str, days: int = 7):
-    """OHLC for candlesticks (CoinGecko granularity)"""
+    """OHLC with retry – fixes chart loading failures"""
     coin_id = COINGECKO_ID_MAP.get(ticker.upper())
     if not coin_id:
         return None
     try:
         url = f"https://api.coingecko.com/api/v3/coins/{coin_id}/ohlc?vs_currency=usd&days={days}"
         headers = {"User-Agent": "Mozilla/5.0 (compatible; StreamlitPortfolio/1.0)"}
-        resp = requests.get(url, headers=headers, timeout=15)
-        resp.raise_for_status()
-        ohlc_data = resp.json()
-
-        df = pd.DataFrame(ohlc_data, columns=["timestamp", "open", "high", "low", "close"])
+        data = get_with_retry(url, headers)
+        if data is None:
+            return None
+        df = pd.DataFrame(data, columns=["timestamp", "open", "high", "low", "close"])
         df["timestamp"] = pd.to_datetime(df["timestamp"], unit="ms")
         df.set_index("timestamp", inplace=True)
         return df
@@ -401,6 +395,11 @@ with st.sidebar:
             st.session_state.ui_version += 1
             st.rerun()
     st.divider()
+    if st.button("🔄 Refresh All Prices & Charts", use_container_width=True):
+        st.cache_data.clear()
+        st.session_state.ui_version += 1
+        st.success("✅ Prices & charts refreshed!")
+        st.rerun()
     if st.button("💾 Download Backup", use_container_width=True):
         data = {"crypto": json.loads(st.session_state.crypto_df.to_json(orient="records")),
                 "fiat": json.loads(st.session_state.fiat_df.to_json(orient="records"))}
@@ -468,23 +467,27 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                 with selected_tab[i]:
                     avg_row = df_port.loc[df_port['Ticker'] == coin, 'AVG']
                     avg_price = avg_row.iloc[0] if not avg_row.empty and pd.notna(avg_row.iloc[0]) else None
+                    live_price = df_port.loc[df_port['Ticker'] == coin, 'Live'].iloc[0] if not df_port.loc[df_port['Ticker'] == coin].empty else 0
+                    
+                    # Live price pill
+                    st.markdown(f"""
+                    <div style="background:#0f172a;padding:8px 16px;border-radius:9999px;display:inline-flex;align-items:center;gap:8px;margin-bottom:12px;">
+                        <span style="font-size:1.1rem;font-weight:700;">{coin} LIVE</span>
+                        <span style="font-size:1.3rem;font-weight:700;color:#00ff9d;">{format_money(live_price)}</span>
+                    </div>
+                    """, unsafe_allow_html=True)
                     
                     col1, col2 = st.columns([1, 4])
                     with col1:
                         chart_type = st.selectbox(
                             "Timeframe",
-                            options=["1D (30m)", "7D (4h)", "30D (daily)", "90D"],
+                            options=["24H", "7D", "30D", "90D"],
                             index=0,
                             key=f"chart_select_{coin}_{st.session_state.ui_version}",
                             label_visibility="collapsed"
                         )
                     
-                    days_map = {
-                        "1D (30m)": 2,
-                        "7D (4h)": 7,
-                        "30D (daily)": 30,
-                        "90D": 90
-                    }
+                    days_map = {"24H": 1, "7D": 7, "30D": 30, "90D": 90}
                     days = days_map[chart_type]
                     title = f"{coin} — {chart_type} Chart"
                     
@@ -542,7 +545,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                         st.plotly_chart(fig, use_container_width=True,
                                         key=f"chart_{coin}_{chart_type}_{st.session_state.ui_version}")
                     else:
-                        st.warning(f"📉 Could not load chart data for {coin} right now. Try again in a few seconds.")
+                        st.error(f"📉 Could not load {coin} chart data. Click **Refresh All Prices & Charts** in sidebar.")
 
     elif st.session_state.page == "Crypto Transactions":
         glossy_header("Crypto Transactions", CRYPTO_ICON)
