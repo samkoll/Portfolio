@@ -4,7 +4,6 @@ from datetime import datetime, timedelta, date
 import time
 import streamlit.components.v1 as components
 import plotly.graph_objects as go
-from plotly.subplots import make_subplots
 import requests
 import json
 from pathlib import Path
@@ -459,7 +458,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
         html = f"""<html><head><style>body{{background:#0b1120;color:white;font-family:sans-serif;margin:0;}}table{{width:100%;border-spacing:0;table-layout:fixed;min-width:850px;}}thead{{position:sticky;top:0;z-index:9999;background:#0f172a;}}thead th{{padding:12px 8px;text-align:center;font-size:0.95rem;}}td{{padding:0;background:transparent;}}.row-inner{{position:relative;z-index:1;width:98%;padding:8px 10px;border-radius:18px;background:#0f172a;display:flex;justify-content:space-between;align-items:center;transition:transform 0.22s cubic-bezier(0.4,0,0.2,1),box-shadow 0.25s cubic-bezier(0.4,0,0.2,1);cursor:default;font-size:0.95rem;}}@media (max-width:900px){{.row-inner{{padding:6px 8px;}}thead th{{font-size:0.85rem;padding:8px 6px;}}}}.clickable-row{{cursor:pointer;}}.row-inner:hover{{transform:translateY(-2px) scale(1.01);box-shadow:0 0 45px var(--glow)!important;z-index:20;}}.scroll-container{{max-height:460px;overflow-y:auto;overflow-x:auto;position:relative;}} .scroll-container::-webkit-scrollbar{{display:none;}}@media (max-height: 800px) {{ .scroll-container {{ max-height: 460px; }} }}</style></head><body><div class="scroll-container"><table><thead><tr><th>Ticker</th><th>Holdings</th><th>USDC</th><th>PnL</th><th>PnL %</th><th>Value</th></tr></thead><tbody>{rows_html}</tbody></table></div><script>function switchToTab(index){{const tabs=window.parent.document.querySelectorAll('.stTabs button');if(tabs&&tabs[index])tabs[index].click();}}document.querySelectorAll('.row-inner').forEach(div=>{{div.style.setProperty('--glow',div.getAttribute('data-glow'));}});</script><!-- VERSION:{st.session_state.ui_version} --></body></html>"""
       
         components.html(html, height=485, scrolling=True)
-        st.markdown("""<div class="glossy-box" style="background:#1e2a44;padding:22px 30px;border-radius:18px;margin:35px 0 25px 0;"><div style="color:#ffffff;font-weight:700;font-size:26px;text-align:center;">Price Charts + Volume</div></div>""", unsafe_allow_html=True)
+        st.markdown("""<div class="glossy-box" style="background:#1e2a44;padding:22px 30px;border-radius:18px;margin:35px 0 25px 0;"><div style="color:#ffffff;font-weight:700;font-size:26px;text-align:center;">Price Charts</div></div>""", unsafe_allow_html=True)
       
         if coin_list:
             selected_tab = st.tabs(coin_list)
@@ -505,15 +504,9 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                     if data is not None and not data.empty:
                         data_local = data.copy()
                         
-                        # SEPARATE SUBPLOTS AGAIN - with the smallest possible gap
-                        fig = make_subplots(
-                            rows=2, cols=1,
-                            shared_xaxes=True,
-                            vertical_spacing=0.01,          # minimal gap between charts
-                            row_heights=[0.88, 0.12]
-                        )
+                        # CLEAN SINGLE CHART - NO VOLUME
+                        fig = go.Figure()
                         
-                        # Candlestick (top chart)
                         fig.add_trace(go.Candlestick(
                             x=data_local.index,
                             open=data_local['open'],
@@ -525,9 +518,8 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                             increasing_fillcolor='#00ff9d',
                             decreasing_fillcolor='#ff4d4d',
                             name='Price'
-                        ), row=1, col=1)
+                        ))
                         
-                        # AVG line (top chart)
                         if avg_price is not None:
                             fig.add_trace(go.Scatter(
                                 x=[data_local.index.min(), data_local.index.max()],
@@ -535,18 +527,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                                 mode='lines',
                                 line=dict(color='#ffaa00', width=2, dash='dash'),
                                 name=f'Your AVG: ${avg_price:,.2f}'
-                            ), row=1, col=1)
-                        
-                        # Volume (bottom chart - separate but almost touching)
-                        colors_volume = ['#00ff9d' if o < c else '#ff4d4d' for o, c in zip(data_local['open'], data_local['close'])]
-                        max_vol = data_local['volumefrom'].max() or 1
-                        fig.add_trace(go.Bar(
-                            x=data_local.index,
-                            y=data_local['volumefrom'],
-                            marker_color=colors_volume,
-                            name='Volume',
-                            opacity=0.85
-                        ), row=2, col=1)
+                            ))
                         
                         fig.update_layout(
                             title=title,
@@ -560,17 +541,6 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                             dragmode='pan'
                         )
                         
-                        # VOLUME AXIS LOCKED - 0 always at bottom, no negatives ever
-                        fig.update_yaxes(
-                            rangemode='nonnegative',
-                            range=[0, max_vol * 80],
-                            fixedrange=True,
-                            showticklabels=False,
-                            showgrid=False,
-                            row=2, col=1
-                        )
-                        
-                        # STRICT X-AXIS ZOOM LOCK
                         if len(data_local) > 0:
                             min_time = data_local.index.min()
                             max_time = data_local.index.max()
