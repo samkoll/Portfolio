@@ -20,14 +20,12 @@ st.markdown("""
 /* Whole app background - lighter elegant navy gradient */
 .stApp {
     background: linear-gradient(180deg, #0f1724 0%, #0a0f1c 100%) !important;
-    padding-top: 95px !important;   /* generous top breathing space so the full card is visible */
+    padding-top: 95px !important;
 }
-
 /* Clean top spacing */
 .main, .block-container, .stMain {
     padding-top: 0px !important;
 }
-
 /* Big navigation cards with glossy shine */
 .stButton > button {
     background: #1e2a44 !important;
@@ -54,7 +52,6 @@ st.markdown("""
     background: #263b5e !important;
     color: white !important;
 }
-
 /* Glossy shine for main content */
 .glossy-header,
 .glossy-box {
@@ -101,7 +98,7 @@ st.markdown("""
     justify-content: center;
     gap: 16px;
     width: 100% !important;
-    margin-top: 72px;      /* same generous space above as below the card */
+    margin-top: 72px;
     margin-bottom: 45px;
 }
 .glossy-box {
@@ -128,7 +125,6 @@ st.markdown("""
     line-height: 1.05;
     color: #ffffff;
 }
-
 /* Fee lines in Fiat summary */
 .fee-line {
     font-size: 1.35rem;
@@ -137,7 +133,6 @@ st.markdown("""
     line-height: 1.1;
     margin-bottom: 4px;
 }
-
 /* MOBILE: Make header smaller */
 @media (max-width: 700px) {
     .stApp {
@@ -151,7 +146,6 @@ st.markdown("""
         min-height: 100px;
     }
 }
-
 /* MOBILE RESPONSIVE FIX FOR THE 3 SUMMARY CARDS */
 @media (max-width: 600px) {
     .glossy-box {
@@ -165,7 +159,6 @@ st.markdown("""
         font-size: 21px !important;
     }
 }
-
 /* PRICE PILLS */
 .price-pills-container {
     display: flex !important;
@@ -174,6 +167,8 @@ st.markdown("""
     overflow-x: auto !important;
     padding-bottom: 4px;
     scrollbar-width: none;
+    margin-top: 4px !important;
+    margin-bottom: 8px !important;
 }
 .price-pills-container::-webkit-scrollbar {
     display: none;
@@ -210,7 +205,6 @@ st.markdown("""
     .price-pill span:last-child,
     .avg-pill span:last-child { font-size: 1.18rem !important; }
 }
-
 /* TIMEFRAME PILL */
 div[data-baseweb="select"] {
     background: linear-gradient(90deg, #26334f, #1e2a44) !important;
@@ -254,7 +248,6 @@ div[data-baseweb="select"] svg {
     fill: #e0e0e0 !important;
     margin-top: 0 !important;
 }
-
 /* Open menu */
 [data-baseweb="popover"] [data-baseweb="menu"] {
     background-color: #26334f !important;
@@ -277,7 +270,6 @@ div[data-baseweb="select"] svg {
 [data-baseweb="option"]:hover {
     background-color: #1e2a44 !important;
 }
-
 /* CURSOR FIX */
 .glossy-header *,
 .glossy-box *,
@@ -289,7 +281,6 @@ div[data-baseweb="select"] *,
 .charts-header * {
     cursor: pointer !important;
 }
-
 /* CHARTS HEADER */
 .charts-header {
     display: flex;
@@ -300,6 +291,25 @@ div[data-baseweb="select"] *,
     font-weight: 700;
     font-size: 23px;
 }
+
+/* TIGHTENED CHARTS SECTION - REMOVED EXTRA SPACE */
+.stTabs {
+    margin-top: 0 !important;
+    padding-top: 0 !important;
+}
+.stTabs [data-baseweb="tab-list"] {
+    margin-top: 0 !important;
+    padding-top: 0 !important;
+    gap: 4px !important;
+}
+.stTabs [data-baseweb="tab"] {
+    padding: 8px 16px !important;
+}
+div[data-testid="stVerticalBlock"] > div:has(> div.stPlotlyChart) {
+    padding-top: 0 !important;
+    margin-top: 0 !important;
+}
+
 @media (max-width: 700px) {
     div[data-baseweb="select"] {
         min-width: 142px !important;
@@ -314,9 +324,7 @@ div[data-baseweb="select"] *,
 """, unsafe_allow_html=True)
 
 # ====================== SVG ICONS ======================
-# Teal 4-square grid logo (exact match to your screenshot)
 DASHBOARD_ICON = '''<svg xmlns="http://www.w3.org/2000/svg" width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="#00ff9d" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>'''
-
 CRYPTO_ICON = '''<svg xmlns="http://www.w3.org/2000/svg" width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="#00ff9d" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M14.5 8.5L9.5 13.5"/><path d="M9.5 8.5L14.5 13.5"/></svg>'''
 FIAT_ICON = '''<svg xmlns="http://www.w3.org/2000/svg" width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="#00ff9d" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M6 8h12"/><path d="M6 12h12"/><path d="M6 16h12"/></svg>'''
 CHARTS_ICON = '''<svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#00ff9d" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M17 17l-4-4-3 3-4-4"/></svg>'''
@@ -717,15 +725,17 @@ document.querySelectorAll('.coin-card').forEach(div => {{
     div.style.setProperty('--glow', div.getAttribute('data-glow'));
 }});
 </script><!-- VERSION:{st.session_state.ui_version} --></body></html>"""
-        components.html(html, height=580, scrolling=True)
+        components.html(html, height=520, scrolling=True)  # tightened height for perfect flow
+
         st.markdown(f"""
-<div id="price-charts-section" class="glossy-box" style="background:#1e2a44;padding:18px 30px;border-radius:18px;margin:28px 0 18px 0;">
+<div id="price-charts-section" class="glossy-box" style="background:#1e2a44;padding:14px 24px;border-radius:18px;margin:12px 0 8px 0;">
     <div class="charts-header">
         {CHARTS_ICON}
         <span>Charts</span>
     </div>
 </div>
 """, unsafe_allow_html=True)
+
         if coin_list:
             selected_tab = st.tabs(coin_list)
             for i, coin in enumerate(coin_list):
@@ -733,11 +743,11 @@ document.querySelectorAll('.coin-card').forEach(div => {{
                     avg_row = df_port.loc[df_port['Ticker'] == coin, 'AVG']
                     avg_price = avg_row.iloc[0] if not avg_row.empty and pd.notna(avg_row.iloc[0]) else None
                     live_price = df_port.loc[df_port['Ticker'] == coin, 'Live'].iloc[0] if not df_port.loc[df_port['Ticker'] == coin].empty else 0
-              
+
                     daily_open = get_daily_open(coin, st.session_state.refresh_key)
                     daily_change_pct = ((live_price - daily_open) / daily_open * 100) if daily_open > 0 else 0
                     daily_arrow = "▲" if daily_change_pct > 0 else "▼" if daily_change_pct < 0 else ""
-              
+
                     color = "#00ff9d" if live_price > 0 else "#ff4d4d"
                     st.markdown(f"""
                     <div class="price-pills-container">
@@ -749,7 +759,7 @@ document.querySelectorAll('.coin-card').forEach(div => {{
                         {f'<div class="price-pill avg-pill"><span>AVG</span><span style="color:#ffaa00;">{format_crypto_price(avg_price)}</span></div>' if avg_price is not None else ''}
                     </div>
                     """, unsafe_allow_html=True)
-              
+
                     col1, col2 = st.columns([0.95, 4.05])
                     with col1:
                         candle = st.selectbox(
@@ -759,12 +769,12 @@ document.querySelectorAll('.coin-card').forEach(div => {{
                             key=f"candle_select_{coin}_{st.session_state.ui_version}",
                             label_visibility="collapsed"
                         )
-              
+
                     data = get_cryptocompare_ohlc(coin, candle, st.session_state.refresh_key)
-              
+
                     if data is not None and not data.empty:
                         data_local = data.copy()
-                  
+
                         fig = make_subplots(rows=2, cols=1, shared_xaxes=True, vertical_spacing=0.08,
                                             row_heights=[0.75, 0.25], subplot_titles=("", ""))
                         fig.add_trace(go.Candlestick(
