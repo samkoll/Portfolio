@@ -300,29 +300,11 @@ def get_cryptocompare_ohlc(ticker: str, candle: str):
         df = df.drop(columns=["time"])
 
         if candle == "5m":
-            df = df.resample('5T').agg({
-                'open': 'first',
-                'high': 'max',
-                'low': 'min',
-                'close': 'last',
-                'volumefrom': 'sum'
-            }).dropna()
+            df = df.resample('5T').agg({'open': 'first', 'high': 'max', 'low': 'min', 'close': 'last', 'volumefrom': 'sum'}).dropna()
         elif candle == "30m":
-            df = df.resample('30T').agg({
-                'open': 'first',
-                'high': 'max',
-                'low': 'min',
-                'close': 'last',
-                'volumefrom': 'sum'
-            }).dropna()
+            df = df.resample('30T').agg({'open': 'first', 'high': 'max', 'low': 'min', 'close': 'last', 'volumefrom': 'sum'}).dropna()
         elif candle == "4h":
-            df = df.resample('4H').agg({
-                'open': 'first',
-                'high': 'max',
-                'low': 'min',
-                'close': 'last',
-                'volumefrom': 'sum'
-            }).dropna()
+            df = df.resample('4H').agg({'open': 'first', 'high': 'max', 'low': 'min', 'close': 'last', 'volumefrom': 'sum'}).dropna()
 
         return df
     except:
@@ -617,7 +599,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                         
                         fig.update_layout(
                             title=title,
-                            height=820,
+                            height=700,  # optimized for mobile portrait
                             paper_bgcolor='rgba(0,0,0,0)',
                             plot_bgcolor='rgba(0,0,0,0)',
                             font_color='white',
@@ -626,8 +608,21 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                             legend=dict(orientation="h", yanchor="bottom", y=1.02,
                                         xanchor="center", x=0.5, bgcolor="rgba(0,0,0,0)")
                         )
-                        st.plotly_chart(fig, use_container_width=True,
-                                        key=f"chart_{coin}_{candle}_{st.session_state.ui_version}")
+                        
+                        # Force maximal zoom-out (full range) as default
+                        if len(data_local) > 0:
+                            fig.update_xaxes(range=[data_local.index.min(), data_local.index.max()])
+                        
+                        st.plotly_chart(
+                            fig,
+                            use_container_width=True,
+                            config={
+                                'scrollZoom': True,      # enables pinch-to-zoom on phone + scroll zoom
+                                'responsive': True,
+                                'displayModeBar': True
+                            },
+                            key=f"chart_{coin}_{candle}_{st.session_state.ui_version}"
+                        )
                     else:
                         st.error(f"📉 Could not load {coin} chart. Try the **Refresh** button in sidebar.")
 
