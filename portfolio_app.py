@@ -115,6 +115,19 @@ st.markdown("""
     line-height: 1.05;
     color: #ffffff;
 }
+
+/* COMPACT TABLE FIX */
+[data-testid="stHorizontalBlock"] > div:nth-child(6),
+[data-testid="stHorizontalBlock"] > div:nth-child(7),
+[data-testid="stHorizontalBlock"] > div:nth-child(8) {
+    min-width: 48px !important;
+    max-width: 52px !important;
+}
+.stButton > button {
+    padding: 8px 12px !important;
+    font-size: 1.1rem !important;
+    min-height: 42px !important;
+}
 </style>
 """, unsafe_allow_html=True)
 
@@ -454,36 +467,11 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
     
         df_port, total_value, total_pnl, total_pnl_pct = calculate_portfolio(st.session_state.crypto_df)
     
-        # MOBILE-FRIENDLY LAYOUT: 1 big card at the top + 3 smaller cards side-by-side underneath (they shrink on mobile)
         value_box_html = f"""
-<div style="display: flex; flex-direction: column; gap: 25px; margin-bottom: 35px;">
-    <!-- BIG TOTAL VALUE CARD -->
-    <div class="glossy-box" style="min-height: 160px; font-size: 1.6rem;">
-        <div>Total Value</div>
-        <div style="font-size: 2.4rem; margin-top: 12px;">{format_money(total_value)}</div>
-    </div>
-    
-    <!-- 3 SMALLER CARDS IN A ROW (shrink on mobile) -->
-    <div style="display: grid; 
-                grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); 
-                gap: 18px;">
-        <div class="glossy-box" style="min-height: 110px;">
-            <div>PnL</div>
-            <div style="color:{'#00ff9d' if total_pnl>=0 else '#ff4d4d'}; font-size: 1.65rem; margin-top: 8px;">
-                {"▲" if total_pnl>0 else "▼" if total_pnl<0 else ""} {format_money(abs(total_pnl))}
-            </div>
-        </div>
-        <div class="glossy-box" style="min-height: 110px;">
-            <div>PnL %</div>
-            <div style="color:{'#00ff9d' if total_pnl_pct>=0 else '#ff4d4d'}; font-size: 1.65rem; margin-top: 8px;">
-                {"▲" if total_pnl_pct>0 else "▼" if total_pnl_pct<0 else ""} {abs(total_pnl_pct):.2f}%
-            </div>
-        </div>
-        <!-- Third smaller card (placeholder for future metrics or empty space - you can remove if you want only 2) -->
-        <div class="glossy-box" style="min-height: 110px; opacity: 0.6;">
-            <div style="color:#888;">More metrics coming</div>
-        </div>
-    </div>
+<div style="display:flex;gap:25px;margin-bottom:30px;flex-wrap:wrap;">
+    <div class="glossy-box"><div>Total Value</div><div>{format_money(total_value)}</div></div>
+    <div class="glossy-box"><div>PnL</div><div style="color:{'#00ff9d' if total_pnl>=0 else '#ff4d4d'}">{"▲" if total_pnl>0 else "▼" if total_pnl<0 else ""} {format_money(abs(total_pnl))}</div></div>
+    <div class="glossy-box"><div>PnL %</div><div style="color:{'#00ff9d' if total_pnl_pct>=0 else '#ff4d4d'}">{"▲" if total_pnl_pct>0 else "▼" if total_pnl_pct<0 else ""} {abs(total_pnl_pct):.2f}%</div></div>
 </div>"""
         st.markdown(value_box_html, unsafe_allow_html=True)
 
@@ -615,7 +603,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                                         xanchor="center", x=0.5, bgcolor="rgba(0,0,0,0)"),
                             dragmode='pan',
                             margin=dict(t=40, b=20, l=20, r=20),
-                            # FULLY CONNECTED VERTICAL CROSSHAIR
+                            # FULLY CONNECTED VERTICAL CROSSHAIR (one single continuous line across both panels)
                             xaxis=dict(
                                 showspikes=True,
                                 spikecolor="rgba(255,255,255,0.95)",
@@ -638,7 +626,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                             spikecolor="rgba(255,255,255,0.85)",
                             spikethickness=1.5,
                             spikesnap="cursor",
-                            spikemode="across",
+                            spikemode="across",   # <-- this makes the horizontal line span the full width
                             row=1, col=1
                         )
                         # No horizontal spike on volume panel
@@ -668,7 +656,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                         )
                     else:
                         st.error(f"📉 Could not load {coin} chart. Try the **Refresh** button in sidebar.")
-        st.caption("🔴 Live prices update automatically every 30 seconds • Fully connected vertical crosshair across both panels + full-length horizontal crosshair on candlestick")
+        st.caption("🔴 Live prices update automatically every 30 seconds • Fully connected vertical crosshair across both panels + full-length horizontal crosshair on candlestick (price shown in hover tooltip)")
         time.sleep(30)
         st.rerun()
 
