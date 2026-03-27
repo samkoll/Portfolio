@@ -607,24 +607,28 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                             xaxis_rangeslider_visible=False,
                             legend=dict(orientation="h", yanchor="bottom", y=1.02,
                                         xanchor="center", x=0.5, bgcolor="rgba(0,0,0,0)"),
-                            dragmode='pan'   # disables box-zoom, only pan
+                            dragmode='pan'   # no box-zoom
                         )
                         
-                        # Lock maximal zoom-out to exact candle range (no empty borders)
+                        # STRICT ZOOM LOCK: cannot zoom out beyond the actual candle data
                         if len(data_local) > 0:
+                            min_time = data_local.index.min()
+                            max_time = data_local.index.max()
                             fig.update_xaxes(
-                                range=[data_local.index.min(), data_local.index.max()],
-                                autorange=False
+                                range=[min_time, max_time],
+                                autorange=False,
+                                minallowed=min_time,      # ← prevents zooming out further
+                                maxallowed=max_time       # ← prevents zooming out further
                             )
                         
                         st.plotly_chart(
                             fig,
                             use_container_width=True,
                             config={
-                                'scrollZoom': True,          # keeps pinch / scroll zoom on phone
+                                'scrollZoom': True,
                                 'responsive': True,
                                 'displayModeBar': True,
-                                'modeBarButtonsToRemove': ['zoom2d', 'select2d', 'lasso2d']  # removes box-zoom option
+                                'modeBarButtonsToRemove': ['zoom2d', 'select2d', 'lasso2d']
                             },
                             key=f"chart_{coin}_{candle}_{st.session_state.ui_version}"
                         )
