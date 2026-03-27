@@ -20,7 +20,6 @@ st.markdown("""
 .stApp {
     background: linear-gradient(180deg, #0f1724 0%, #0a0f1c 100%) !important;
 }
-
 /* Big navigation cards with glossy shine */
 .stButton > button {
     background: #1e2a44 !important;
@@ -119,7 +118,6 @@ st.markdown("""
     line-height: 1.05;
     color: #ffffff;
 }
-
 /* MOBILE: Make header smaller */
 @media (max-width: 700px) {
     .glossy-header {
@@ -128,7 +126,6 @@ st.markdown("""
         min-height: 100px;
     }
 }
-
 /* MOBILE RESPONSIVE FIX FOR THE 3 SUMMARY CARDS */
 @media (max-width: 600px) {
     .glossy-box {
@@ -142,7 +139,6 @@ st.markdown("""
         font-size: 21px !important;
     }
 }
-
 /* PRICE PILLS - PERFECT AS THEY ARE */
 .price-pills-container {
     display: flex !important;
@@ -187,74 +183,6 @@ st.markdown("""
     .price-pill span:last-child,
     .avg-pill span:last-child { font-size: 1.18rem !important; }
 }
-
-/* TIMEFRAME SELECTBOX - WHITE TEXT ALWAYS VISIBLE IN CLOSED PILL */
-div[data-baseweb="select"] {
-    background-color: #1e2a44 !important;
-    border-radius: 9999px !important;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.4) !important;
-    min-width: 195px !important;
-    max-width: 205px !important;
-    transition: all 0.2s ease;
-}
-div[data-baseweb="select"] > div {
-    background: transparent !important;
-    border: none !important;
-    padding: 13px 22px !important;
-    line-height: 1.4 !important;
-}
-
-/* FORCE SELECTED VALUE TEXT TO BE WHITE AND VISIBLE */
-div[data-baseweb="select"] [role="button"] span,
-div[data-baseweb="select"] [data-baseweb="select-value"] span,
-div[data-baseweb="select"] > div > div > div > div > div > span,
-div[data-baseweb="select"] > div > div > div > div > span,
-div[data-baseweb="select"] span {
-    color: #ffffff !important;
-    font-weight: 700 !important;
-    font-size: 1.13rem !important;
-    text-align: center !important;
-    white-space: nowrap !important;
-    display: inline-block !important;
-    visibility: visible !important;
-    opacity: 1 !important;
-}
-div[data-baseweb="select"] svg {
-    fill: #ffffff !important;
-}
-
-/* OPEN ROLLOUT MENU - EXACTLY SAME STYLE AS THE PILL BUTTON */
-[data-baseweb="popover"] [data-baseweb="menu"] {
-    background-color: #1e2a44 !important;
-    border-radius: 9999px !important;
-    box-shadow: 0 12px 30px rgba(0,0,0,0.6) !important;
-    padding: 6px 4px !important;
-    margin-top: 4px !important;
-    border: none !important;
-}
-[data-baseweb="option"] {
-    color: #e0e0e0 !important;
-    padding: 12px 20px !important;
-    border-radius: 9999px !important;
-    margin: 2px 4px !important;
-}
-[data-baseweb="option"][aria-selected="true"] {
-    background-color: #263b5e !important;
-    color: #ffffff !important;
-}
-[data-baseweb="option"]:hover {
-    background-color: #263b5e !important;
-}
-@media (max-width: 700px) {
-    div[data-baseweb="select"] {
-        min-width: 185px !important;
-        max-width: 195px !important;
-    }
-    div[data-baseweb="select"] > div {
-        padding: 12px 20px !important;
-    }
-}
-
 /* CURSOR FIX - NO TEXT-FIELD CURSOR ON ANY TEXT ANYWHERE */
 .glossy-header *,
 .glossy-box *,
@@ -262,12 +190,9 @@ div[data-baseweb="select"] svg {
 .price-pill *,
 .avg-pill *,
 .daily-pill *,
-div[data-baseweb="select"] *,
-div[data-baseweb="select"] span,
 .charts-header * {
     cursor: pointer !important;
 }
-
 /* CHARTS HEADER */
 .charts-header {
     display: flex;
@@ -278,7 +203,6 @@ div[data-baseweb="select"] span,
     font-weight: 700;
     font-size: 23px;
 }
-
 /* CHART IMPROVEMENTS FOR PHONE */
 .stPlotlyChart {
     width: 100% !important;
@@ -628,9 +552,9 @@ main_container.empty()
 with main_container.container(key=f"page_{st.session_state.page}_{st.session_state.ui_version}"):
     if st.session_state.page == "Home":
         glossy_header("Portfolio Dashboard", DASHBOARD_ICON)
-  
+ 
         df_port, total_value, total_pnl, total_pnl_pct = calculate_portfolio(st.session_state.crypto_df)
-  
+ 
         # 3 CARDS – STAY SIDE-BY-SIDE ON MOBILE
         value_box_html = f"""
 <div style="display: grid;
@@ -670,7 +594,6 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
         <div class="label-value-row total"><span class="label">Value</span><span class="value total-value">{format_money(r['Value'])}</span></div>
     </div>
 </div>"""
-
         html = f"""<html><head><style>
 body{{background:transparent;color:white;font-family:sans-serif;margin:0;padding:0;}}
 .coin-grid {{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px;padding:32px 26px;box-sizing:border-box;max-height:520px;overflow-y:auto;scrollbar-width:none;-ms-overflow-style:none;background:transparent !important;}}
@@ -703,7 +626,7 @@ document.querySelectorAll('.coin-card').forEach(div => {{
     div.style.setProperty('--glow', div.getAttribute('data-glow'));
 }});
 </script><!-- VERSION:{st.session_state.ui_version} --></body></html>"""
-   
+  
         components.html(html, height=580, scrolling=True)
 
         # ====================== CHARTS SECTION ======================
@@ -715,7 +638,7 @@ document.querySelectorAll('.coin-card').forEach(div => {{
     </div>
 </div>
 """, unsafe_allow_html=True)
-   
+  
         if coin_list:
             selected_tab = st.tabs(coin_list)
             for i, coin in enumerate(coin_list):
@@ -723,12 +646,12 @@ document.querySelectorAll('.coin-card').forEach(div => {{
                     avg_row = df_port.loc[df_port['Ticker'] == coin, 'AVG']
                     avg_price = avg_row.iloc[0] if not avg_row.empty and pd.notna(avg_row.iloc[0]) else None
                     live_price = df_port.loc[df_port['Ticker'] == coin, 'Live'].iloc[0] if not df_port.loc[df_port['Ticker'] == coin].empty else 0
-                 
+                
                     daily_open = get_daily_open(coin)
                     daily_change_pct = ((live_price - daily_open) / daily_open * 100) if daily_open > 0 else 0
                     daily_arrow = "▲" if daily_change_pct > 0 else "▼" if daily_change_pct < 0 else ""
                     daily_color = "#00ff9d" if daily_change_pct > 0 else "#ff4d4d" if daily_change_pct < 0 else "#aaaaaa"
-                 
+                
                     color = "#00ff9d" if live_price > 0 else "#ff4d4d"
                     st.markdown(f"""
                     <div class="price-pills-container">
@@ -740,7 +663,7 @@ document.querySelectorAll('.coin-card').forEach(div => {{
                         {f'<div class="price-pill avg-pill"><span>AVG</span><span style="color:#ffaa00;">{format_crypto_price(avg_price)}</span></div>' if avg_price is not None else ''}
                     </div>
                     """, unsafe_allow_html=True)
-                 
+                
                     col1, col2 = st.columns([0.95, 4.05])
                     with col1:
                         candle = st.selectbox(
@@ -750,14 +673,14 @@ document.querySelectorAll('.coin-card').forEach(div => {{
                             key=f"candle_select_{coin}_{st.session_state.ui_version}",
                             label_visibility="collapsed"
                         )
-                 
+                
                     title = f"{coin} — {candle} candles"
-                 
+                
                     data = get_cryptocompare_ohlc(coin, candle)
-                 
+                
                     if data is not None and not data.empty:
                         data_local = data.copy()
-                     
+                    
                         fig = make_subplots(rows=2, cols=1, shared_xaxes=True, vertical_spacing=0.08,
                                             row_heights=[0.75, 0.25], subplot_titles=("", ""))
                         fig.add_trace(go.Candlestick(
@@ -825,7 +748,7 @@ document.querySelectorAll('.coin-card').forEach(div => {{
         df_display = st.session_state.crypto_df.copy()
         df_display['Date'] = df_display['Datum'].apply(format_datum)
         df_display = df_display.dropna(how='all').reset_index(drop=True)
-   
+  
         table_container = st.container(key=f"crypto_table_container_{st.session_state.ui_version}")
         with table_container:
             with st.container(height=520, border=True):
@@ -915,9 +838,7 @@ document.querySelectorAll('.coin-card').forEach(div => {{
         fees_eur = pd.to_numeric(st.session_state.fiat_df['Fee'], errors='coerce').fillna(0).sum()
         fees_czk = (pd.to_numeric(st.session_state.fiat_df['Fee'], errors='coerce').fillna(0) *
                     pd.to_numeric(st.session_state.fiat_df['CZK/EUR'], errors='coerce').fillna(0)).sum()
- 
         glossy_header("Fiat Transactions", FIAT_ICON)
- 
         summary_html = f"""
 <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:20px;margin-bottom:30px;">
     <div class="glossy-box"><div>Total CZK</div><div>{total_czk:,.2f}</div></div>
@@ -926,9 +847,9 @@ document.querySelectorAll('.coin-card').forEach(div => {{
     <div class="glossy-box"><div>Fees</div><div class="fee-line">{fees_eur:,.2f} EUR</div><div class="fee-line" style="font-size:22px;">{fees_czk:,.2f} CZK</div></div>
 </div>"""
         st.markdown(summary_html, unsafe_allow_html=True)
-   
+  
         df_clean = st.session_state.fiat_df.dropna(how='all').reset_index(drop=True)
-   
+  
         table_container = st.container(key=f"fiat_table_container_{st.session_state.ui_version}")
         with table_container:
             with st.container(height=520, border=True):
