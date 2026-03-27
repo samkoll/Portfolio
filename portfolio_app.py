@@ -13,6 +13,37 @@ import hashlib
 # ====================== CONFIG ======================
 st.set_page_config(page_title="Portfolio", layout="wide", page_icon="💎")
 
+# ====================== PULL-TO-REFRESH JS ======================
+PULL_REFRESH_HTML = """
+<div style="height:55px;background:transparent;display:flex;align-items:center;justify-content:center;color:#888;font-size:13px;user-select:none;">
+    <span id="pullhint">↓ Pull down to refresh</span>
+</div>
+<script>
+let startY = 0;
+let isPulling = false;
+const hint = document.getElementById('pullhint');
+
+document.addEventListener('touchstart', e => {
+    if (window.scrollY === 0) {
+        startY = e.touches[0].clientY;
+        isPulling = true;
+    }
+}, {passive: true});
+
+document.addEventListener('touchend', e => {
+    if (!isPulling) return;
+    const endY = e.changedTouches[0].clientY;
+    if (endY - startY > 140) {
+        hint.textContent = 'Refreshing...';
+        window.location.reload();
+    } else {
+        hint.textContent = '↓ Pull down to refresh';
+    }
+    isPulling = false;
+}, {passive: true});
+</script>
+"""
+
 # ====================== GLOBAL CSS ======================
 st.markdown("""
 <style>
@@ -184,27 +215,27 @@ st.markdown("""
     .avg-pill span:last-child { font-size: 1.18rem !important; }
 }
 
-/* TIMEFRAME PILL SELECTOR - EVEN SMALLER + PERFECTLY CENTERED TEXT */
+/* TIMEFRAME PILL - COMPACT + TEXT & ARROW PERFECTLY ALIGNED ON SAME LEVEL */
 div[data-baseweb="select"] {
     background: linear-gradient(90deg, #26334f, #1e2a44) !important;
     border-radius: 9999px !important;
-    box-shadow: 0 6px 22px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.18) !important;
-    min-width: 152px !important;
-    max-width: 165px !important;
+    box-shadow: 0 6px 20px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.15) !important;
+    min-width: 148px !important;
+    max-width: 160px !important;
+    height: 39px !important;
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
-    height: 40px !important;
 }
 div[data-baseweb="select"] > div {
     background: transparent !important;
     border: none !important;
-    padding: 9px 18px !important;
+    padding: 0 18px !important;
     line-height: 1.35 !important;
     display: flex !important;
     align-items: center !important;
-    justify-content: center !important;
+    justify-content: space-between !important;
     height: 100% !important;
 }
-/* PERFECT TEXT CENTERING + CRISP LOOK */
+/* Text and arrow perfectly on the same horizontal level */
 div[data-baseweb="select"] *,
 div[data-baseweb="select"] span,
 div[data-baseweb="select"] [role="button"] span,
@@ -222,12 +253,13 @@ div[data-baseweb="select"] > div > div > div > div > span {
     letter-spacing: 0.4px !important;
     text-shadow: 0 1px 2px rgba(0,0,0,0.5) !important;
     caret-color: transparent !important;
+    vertical-align: middle !important;
 }
-/* Arrow color - matches the teal accent */
 div[data-baseweb="select"] svg {
-    fill: #00ff9d !important;
+    fill: #e0e0e0 !important;
+    margin-top: 0 !important;
 }
-/* Open menu - elegant matching pill style */
+/* Open menu */
 [data-baseweb="popover"] [data-baseweb="menu"] {
     background-color: #26334f !important;
     border-radius: 9999px !important;
@@ -250,7 +282,7 @@ div[data-baseweb="select"] svg {
     background-color: #1e2a44 !important;
 }
 
-/* CURSOR FIX - NO TEXT-FIELD CURSOR ON ANY TEXT ANYWHERE */
+/* CURSOR FIX */
 .glossy-header *,
 .glossy-box *,
 .coin-card *,
@@ -271,24 +303,14 @@ div[data-baseweb="select"] *,
     font-weight: 700;
     font-size: 23px;
 }
-/* CHART IMPROVEMENTS FOR PHONE */
-.stPlotlyChart {
-    width: 100% !important;
-}
 @media (max-width: 700px) {
-    .stPlotlyChart {
-        margin-bottom: 20px;
-    }
-    .plotly .modebar {
-        padding: 4px 8px !important;
-    }
     div[data-baseweb="select"] {
-        min-width: 145px !important;
-        max-width: 158px !important;
-        height: 38px !important;
+        min-width: 142px !important;
+        max-width: 155px !important;
+        height: 37px !important;
     }
     div[data-baseweb="select"] > div {
-        padding: 8px 16px !important;
+        padding: 0 16px !important;
     }
 }
 </style>
@@ -626,24 +648,21 @@ def glossy_header(title: str, icon_svg: str):
 # ====================== PAGES ======================
 main_container.empty()
 with main_container.container(key=f"page_{st.session_state.page}_{st.session_state.ui_version}"):
+    components.html(PULL_REFRESH_HTML, height=60)
+    
     if st.session_state.page == "Home":
         glossy_header("Portfolio Dashboard", DASHBOARD_ICON)
  
         df_port, total_value, total_pnl, total_pnl_pct = calculate_portfolio(st.session_state.crypto_df)
  
-        # 3 CARDS – STAY SIDE-BY-SIDE ON MOBILE
         value_box_html = f"""
-<div style="display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(98px, 1fr));
-            gap: 14px;
-            margin-bottom: 30px;">
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(98px, 1fr)); gap: 14px; margin-bottom: 30px;">
     <div class="glossy-box"><div>Total Value</div><div>{format_money(total_value)}</div></div>
     <div class="glossy-box"><div>PnL</div><div style="color:{'#00ff9d' if total_pnl>=0 else '#ff4d4d'}">{"▲" if total_pnl>0 else "▼" if total_pnl<0 else ""} {format_money(abs(total_pnl))}</div></div>
     <div class="glossy-box"><div>PnL %</div><div style="color:{'#00ff9d' if total_pnl_pct>=0 else '#ff4d4d'}">{"▲" if total_pnl_pct>0 else "▼" if total_pnl_pct<0 else ""} {abs(total_pnl_pct):.2f}%</div></div>
 </div>"""
         st.markdown(value_box_html, unsafe_allow_html=True)
 
-        # ====================== COMPACT COIN CARDS ======================
         coin_list = [t for t in df_port['Ticker'] if t != 'USDC']
         cards_html = ""
         for _, r in df_port.iterrows():
@@ -672,7 +691,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
 </div>"""
         html = f"""<html><head><style>
 body{{background:transparent;color:white;font-family:sans-serif;margin:0;padding:0;}}
-.coin-grid {{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px;padding:32px 26px;box-sizing:border-box;max-height:520px;overflow-y:auto;scrollbar-width:none;-ms-overflow-style:none;background:transparent !important;}}
+.coin-grid {{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px;padding:32px 26px;box-sizing:border-box;max-height:520px;overflow-y:auto;scrollbar-width:none;background:transparent !important;}}
 .coin-grid::-webkit-scrollbar {{display:none;}}
 .coin-card {{background:#0f172a;padding:16px;border-radius:20px;box-shadow:0 6px 20px rgba(0,0,0,0.3);transition:all 0.25s ease;cursor:pointer;position:relative;z-index:1;outline:none !important;-webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none;}}
 .coin-card:hover {{transform:translateY(-3px);box-shadow:0 0 22px 6px var(--glow) !important;z-index:10;}}
@@ -702,10 +721,8 @@ document.querySelectorAll('.coin-card').forEach(div => {{
     div.style.setProperty('--glow', div.getAttribute('data-glow'));
 }});
 </script><!-- VERSION:{st.session_state.ui_version} --></body></html>"""
-  
         components.html(html, height=580, scrolling=True)
 
-        # ====================== CHARTS SECTION ======================
         st.markdown(f"""
 <div id="price-charts-section" class="glossy-box" style="background:#1e2a44;padding:18px 30px;border-radius:18px;margin:28px 0 18px 0;">
     <div class="charts-header">
@@ -749,8 +766,6 @@ document.querySelectorAll('.coin-card').forEach(div => {{
                             label_visibility="collapsed"
                         )
                 
-                    # No title anymore
-                
                     data = get_cryptocompare_ohlc(coin, candle)
                 
                     if data is not None and not data.empty:
@@ -793,7 +808,7 @@ document.querySelectorAll('.coin-card').forEach(div => {{
                             font_color='white',
                             hovermode="x unified",
                             xaxis_rangeslider_visible=False,
-                            showlegend=False,  # legend removed
+                            showlegend=False,
                             dragmode='pan',
                             margin=dict(t=20, b=20, l=20, r=20),
                             xaxis=dict(showspikes=True, spikecolor="rgba(255,255,255,0.95)", spikethickness=1.8, spikesnap="cursor", spikemode="across"),
@@ -1004,4 +1019,4 @@ document.querySelectorAll('.coin-card').forEach(div => {{
                 st.session_state.ui_version += 1
                 st.rerun()
 
-# Auto-refresh is now handled silently by cache TTLs (no more visible rerun)
+# Auto-refresh is now handled silently by cache TTLs
