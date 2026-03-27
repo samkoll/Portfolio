@@ -188,33 +188,37 @@ st.markdown("""
     .avg-pill span:last-child { font-size: 1.18rem !important; }
 }
 
-/* TIMEFRAME SELECTBOX - TEXT COMPLETELY REMOVED (ONLY ▼ ARROW) */
+/* TIMEFRAME SELECTBOX - WHITE TEXT ALWAYS VISIBLE IN CLOSED PILL */
 div[data-baseweb="select"] {
     background-color: #1e2a44 !important;
     border-radius: 9999px !important;
     box-shadow: 0 4px 15px rgba(0,0,0,0.4) !important;
-    min-width: 68px !important;
-    max-width: 68px !important;
+    min-width: 195px !important;
+    max-width: 205px !important;
     transition: all 0.2s ease;
 }
 div[data-baseweb="select"] > div {
     background: transparent !important;
     border: none !important;
-    padding: 13px 14px !important;
+    padding: 13px 22px !important;
     line-height: 1.4 !important;
 }
 
-/* HIDE ALL TEXT IN CLOSED PILL - ONLY ARROW REMAINS */
+/* FORCE SELECTED VALUE TEXT TO BE WHITE AND VISIBLE */
 div[data-baseweb="select"] [role="button"] span,
 div[data-baseweb="select"] [data-baseweb="select-value"],
 div[data-baseweb="select"] > div > div > div > div,
 div[data-baseweb="select"] > div > div > div > div > div {
-    display: none !important;
+    color: #ffffff !important;
+    font-weight: 700 !important;
+    font-size: 1.13rem !important;
+    text-align: center !important;
+    white-space: nowrap !important;
+    display: inline-block !important;
+    padding: 0 8px !important;
 }
 div[data-baseweb="select"] svg {
     fill: #ffffff !important;
-    width: 22px;
-    height: 22px;
 }
 
 /* OPEN ROLLOUT MENU - EXACTLY SAME STYLE AS THE PILL BUTTON */
@@ -241,11 +245,11 @@ div[data-baseweb="select"] svg {
 }
 @media (max-width: 700px) {
     div[data-baseweb="select"] {
-        min-width: 64px !important;
-        max-width: 64px !important;
+        min-width: 185px !important;
+        max-width: 195px !important;
     }
     div[data-baseweb="select"] > div {
-        padding: 12px 13px !important;
+        padding: 12px 20px !important;
     }
 }
 
