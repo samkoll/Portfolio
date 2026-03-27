@@ -143,10 +143,10 @@ st.markdown("""
     }
 }
 
-/* PRICE PILLS - PERFECT AS THEY ARE */
+/* PRICE PILLS - NICER PREMIUM LOOK (distinct from timeframe) */
 .price-pills-container {
     display: flex !important;
-    gap: 6px !important;
+    gap: 8px !important;
     flex-wrap: nowrap !important;
     overflow-x: auto !important;
     padding-bottom: 4px;
@@ -156,61 +156,63 @@ st.markdown("""
     display: none;
 }
 .price-pill, .avg-pill, .daily-pill {
-    padding: 7px 14px !important;
+    padding: 9px 18px !important;
     border-radius: 9999px !important;
     white-space: nowrap !important;
     flex-shrink: 0;
     background: #0f172a !important;
     display: inline-flex;
     align-items: center;
-    gap: 5px;
-    font-size: 1.05rem;
+    gap: 6px;
+    font-size: 1.08rem;
     font-weight: 700;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.35),
+                inset 0 1px 0 rgba(255,255,255,0.12);
 }
 .price-pill span:last-child,
 .avg-pill span:last-child {
-    font-size: 1.26rem;
+    font-size: 1.29rem;
 }
 .daily-pill {
     color: #ff4d4d;
     font-weight: 700;
-    padding: 4px 8px !important;
-    font-size: 0.88rem !important;
+    padding: 6px 11px !important;
+    font-size: 0.92rem !important;
 }
 @media (max-width: 700px) {
-    .price-pills-container { gap: 4px !important; }
-    .price-pill, .avg-pill, .daily-pill { padding: 5px 10px !important; }
-    .daily-pill { padding: 3px 7px !important; font-size: 0.82rem !important; }
+    .price-pills-container { gap: 6px !important; }
+    .price-pill, .avg-pill, .daily-pill { padding: 7px 14px !important; }
+    .daily-pill { padding: 4px 9px !important; font-size: 0.85rem !important; }
     .price-pill span:first-child,
-    .avg-pill span:first-child { font-size: 0.92rem !important; }
+    .avg-pill span:first-child { font-size: 0.95rem !important; }
     .price-pill span:last-child,
-    .avg-pill span:last-child { font-size: 1.18rem !important; }
+    .avg-pill span:last-child { font-size: 1.22rem !important; }
 }
 
-/* TIMEFRAME SELECTBOX - CLEAN PREMIUM PILL (full text visible) */
+/* TIMEFRAME SELECTBOX - FULL TEXT VISIBLE, CLEAN PILL */
 div[data-baseweb="select"] {
     background-color: #1e2a44 !important;
     border-radius: 9999px !important;
     box-shadow: 0 4px 15px rgba(0,0,0,0.4) !important;
-    min-width: 118px !important;
-    max-width: 135px !important;
+    min-width: 138px !important;
+    max-width: 148px !important;
     transition: all 0.2s ease;
 }
 div[data-baseweb="select"] > div {
     background: transparent !important;
     border: none !important;
-    padding: 8px 16px !important;
+    padding: 8px 18px !important;
 }
 div[data-baseweb="select"] input {
     color: #ffffff !important;
     font-weight: 700 !important;
-    font-size: 1.05rem !important;
+    font-size: 1.08rem !important;
     white-space: nowrap !important;
 }
 div[data-baseweb="select"] svg {
     fill: #ffffff !important;
 }
-/* Remove any blue/active highlight */
+/* No blue highlight */
 div[data-baseweb="select"] [aria-selected="true"],
 div[data-baseweb="select"]:focus-within {
     background: #1e2a44 !important;
@@ -218,11 +220,11 @@ div[data-baseweb="select"]:focus-within {
 }
 @media (max-width: 700px) {
     div[data-baseweb="select"] {
-        min-width: 108px !important;
-        max-width: 125px !important;
+        min-width: 128px !important;
+        max-width: 138px !important;
     }
     div[data-baseweb="select"] > div {
-        padding: 7px 13px !important;
+        padding: 7px 14px !important;
     }
 }
 
@@ -680,7 +682,7 @@ document.querySelectorAll('.coin-card').forEach(div => {{
                     </div>
                     """, unsafe_allow_html=True)
                  
-                    col1, col2 = st.columns([0.55, 4.45])   # wider for full label
+                    col1, col2 = st.columns([0.55, 4.45])
                     with col1:
                         candle = st.selectbox(
                             "Timeframe",
