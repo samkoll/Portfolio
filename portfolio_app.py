@@ -200,15 +200,10 @@ def save_crypto(df):
 def save_fiat(df):
     df.to_json(FIAT_JSON, orient="records", indent=2)
 
-# ====================== CRYPTOCOMPARE MAPPING ======================
-CRYPTOCOMPARE_SYMBOL_MAP = {
-    'BTC': 'BTC', 'ETH': 'ETH', 'SOL': 'SOL', 'HBAR': 'HBAR',
-    'XRP': 'XRP', 'BNB': 'BNB', 'TRX': 'TRX', 'LINK': 'LINK',
-    'SUI': 'SUI', 'USDC': 'USDC',
-}
+# ====================== BINANCE API (gold standard for crypto candles) ======================
+BINANCE_BASE = "https://api.binance.com/api/v3"
 
-# ====================== HELPER: RETRY WRAPPER ======================
-def get_with_retry(url: str, headers: dict, timeout: int = 12, retries: int = 4) -> dict | None:
+def get_with_retry(url: str, headers: dict, timeout: int = 12, retries: int = 5) -> dict | None:
     for attempt in range(retries):
         try:
             resp = requests.get(url, headers=headers, timeout=timeout)
@@ -217,95 +212,57 @@ def get_with_retry(url: str, headers: dict, timeout: int = 12, retries: int = 4)
         except Exception:
             if attempt == retries - 1:
                 return None
-            time.sleep(1.3 ** attempt)
+            time.sleep(1.4 ** attempt)
     return None
 
-# ====================== LIVE PRICE FUNCTION ======================
 @st.cache_data(ttl=15, show_spinner=False)
-def get_all_cryptocompare_prices(tickers):
+def get_all_binance_prices(tickers):
     prices = {"USDC": 1.0}
-    symbols = [CRYPTOCOMPARE_SYMBOL_MAP.get(t.upper()) for t in tickers if t.upper() != "USDC"]
-    symbols = [s for s in symbols if s]
-    if not symbols:
-        return prices
-    try:
-        fsyms = ",".join(symbols)
-        url = f"https://min-api.cryptocompare.com/data/pricemulti?fsyms={fsyms}&tsyms=USD"
-        headers = {"User-Agent": "Mozilla/5.0 (compatible; StreamlitPortfolio/1.0)"}
-        data = get_with_retry(url, headers)
-        if data:
-            for sym, price_data in data.items():
-                if isinstance(price_data, dict) and "USD" in price_data:
-                    ticker = next((k for k, v in CRYPTOCOMPARE_SYMBOL_MAP.items() if v == sym), None)
-                    if ticker:
-                        prices[ticker] = float(price_data["USD"])
-            return prices
-    except:
-        pass
+    headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"}
     for ticker in set(tickers):
         if ticker.upper() == "USDC":
             continue
-        sym = CRYPTOCOMPARE_SYMBOL_MAP.get(ticker.upper())
-        if not sym:
-            continue
+        symbol = ticker.upper() + "USDT"
         try:
-            url = f"https://min-api.cryptocompare.com/data/price?fsym={sym}&tsyms=USD"
-            headers = {"User-Agent": "Mozilla/5.0 (compatible; StreamlitPortfolio/1.0)"}
+            url = f"{BINANCE_BASE}/ticker/price?symbol={symbol}"
             data = get_with_retry(url, headers)
-            if data and "USD" in data:
-                prices[ticker] = float(data["USD"])
+            if data and "price" in data:
+                prices[ticker] = float(data["price"])
         except:
             continue
     return prices
 
-# ====================== DAILY OPEN PRICE FUNCTION ======================
 @st.cache_data(ttl=300, show_spinner=False)
 def get_daily_open(ticker: str):
-    sym = CRYPTOCOMPARE_SYMBOL_MAP.get(ticker.upper())
-    if not sym:
-        return 0.0
+    symbol = ticker.upper() + "USDT"
+    headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"}
     try:
-        url = f"https://min-api.cryptocompare.com/data/v2/histoday?fsym={sym}&tsym=USD&limit=1"
-        headers = {"User-Agent": "Mozilla/5.0 (compatible; StreamlitPortfolio/1.0)"}
+        url = f"{BINANCE_BASE}/klines?symbol={symbol}&interval=1d&limit=2"
         data = get_with_retry(url, headers)
-        if data and "Data" in data and "Data" in data["Data"] and len(data["Data"]["Data"]) > 0:
-            return float(data["Data"]["Data"][-1]["open"])
+        if data and len(data) >= 2:
+            return float(data[-2][1])
         return 0.0
     except:
         return 0.0
 
-# ====================== CHART FUNCTION ======================
 @st.cache_data(ttl=80, show_spinner=False)
-def get_cryptocompare_ohlc(ticker: str, candle: str):
-    sym = CRYPTOCOMPARE_SYMBOL_MAP.get(ticker.upper())
-    if not sym:
-        return None
+def get_binance_ohlc(ticker: str, candle: str):
+    symbol = ticker.upper() + "USDT"
+    interval_map = {"5m": "5m", "30m": "30m", "1h": "1h", "4h": "4h", "1D": "1d"}
+    interval = interval_map.get(candle, "4h")
+    limit = 1000 if candle != "1D" else 90
+    headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"}
     try:
-        if candle in ["5m", "30m"]:
-            url = f"https://min-api.cryptocompare.com/data/v2/histominute?fsym={sym}&tsym=USD&limit=2000"
-        else:
-            url = f"https://min-api.cryptocompare.com/data/v2/histohour?fsym={sym}&tsym=USD&limit=2000" if candle != "1D" else \
-                  f"https://min-api.cryptocompare.com/data/v2/histoday?fsym={sym}&tsym=USD&limit=90"
-
-        headers = {"User-Agent": "Mozilla/5.0 (compatible; StreamlitPortfolio/1.0)"}
+        url = f"{BINANCE_BASE}/klines?symbol={symbol}&interval={interval}&limit={limit}"
         data = get_with_retry(url, headers)
-        if not data or "Data" not in data or "Data" not in data["Data"]:
+        if not data:
             return None
-
-        df_data = data["Data"]["Data"]
-        df = pd.DataFrame(df_data)
-        df = df[["time", "open", "high", "low", "close", "volumefrom"]]
-        df["timestamp"] = pd.to_datetime(df["time"], unit="s")
-        df.set_index("timestamp", inplace=True)
-        df = df.drop(columns=["time"])
-
-        if candle == "5m":
-            df = df.resample('5T').agg({'open': 'first', 'high': 'max', 'low': 'min', 'close': 'last', 'volumefrom': 'sum'}).dropna()
-        elif candle == "30m":
-            df = df.resample('30T').agg({'open': 'first', 'high': 'max', 'low': 'min', 'close': 'last', 'volumefrom': 'sum'}).dropna()
-        elif candle == "4h":
-            df = df.resample('4H').agg({'open': 'first', 'high': 'max', 'low': 'min', 'close': 'last', 'volumefrom': 'sum'}).dropna()
-
+        df = pd.DataFrame(data, columns=['open_time', 'open', 'high', 'low', 'close', 'volume', 'close_time', 'qav', 'n', 'taker_base', 'taker_quote', 'ignore'])
+        df = df[['open_time', 'open', 'high', 'low', 'close', 'volume']].copy()
+        df['open_time'] = pd.to_datetime(df['open_time'], unit='ms')
+        df.set_index('open_time', inplace=True)
+        df = df.astype(float)
+        df.rename(columns={'volume': 'volumefrom'}, inplace=True)
         return df
     except:
         return None
@@ -320,7 +277,6 @@ def get_ticker_logo(ticker: str) -> str:
         'SOL': 'https://assets.coingecko.com/coins/images/4128/small/Solana.png',
         'HBAR': 'https://assets.coingecko.com/coins/images/3688/small/hbar.png',
         'XRP': 'https://assets.coingecko.com/coins/images/44/small/xrp-symbol-white-128.png',
-        'SUI': 'https://logo.svgcdn.com/token-branded/sui.svg',
         'LINK': 'https://assets.coingecko.com/coins/images/877/small/chainlink-new-logo.png',
         'BNB': 'https://assets.coingecko.com/coins/images/825/small/binance-coin-logo.png',
         'TRX': 'https://assets.coingecko.com/coins/images/1094/small/tron-logo.png',
@@ -331,12 +287,7 @@ def get_ticker_logo(ticker: str) -> str:
 
 def get_ticker_color(ticker: str) -> str:
     ticker = ticker.upper()
-    known = {
-        'USDC': '#2775ca', 'BTC': '#f7931a', 'ETH': '#627eea',
-        'SOL': '#9b59b6', 'HBAR': '#000000', 'XRP': '#000000',
-        'SUI': '#60a5fa', 'LINK': '#1e3a8a', 'BNB': '#f4c430',
-        'TRX': '#ff2d55'
-    }
+    known = {'USDC': '#2775ca', 'BTC': '#f7931a', 'ETH': '#627eea', 'SOL': '#9b59b6', 'HBAR': '#000000', 'XRP': '#000000', 'LINK': '#1e3a8a', 'BNB': '#f4c430', 'TRX': '#ff2d55'}
     if ticker in known:
         return known[ticker]
     return f"#{hashlib.md5(ticker.encode()).hexdigest()[:6]}"
@@ -395,7 +346,7 @@ def calculate_portfolio(crypto_df):
     usdc_holdings = fiat_usdc - crypto_spent
 
     coin_tickers = [t for t in crypto_df['Ticker'].unique() if t != 'USDC']
-    live_prices = get_all_cryptocompare_prices(coin_tickers)
+    live_prices = get_all_binance_prices(coin_tickers)
 
     for t, p in live_prices.items():
         if p > 0:
@@ -455,10 +406,6 @@ with st.sidebar:
         st.session_state.ui_version += 1
         st.success("✅ Refreshing prices & charts...")
         st.rerun()
-    if st.button("💾 Download Backup", use_container_width=True):
-        data = {"crypto": json.loads(st.session_state.crypto_df.to_json(orient="records")),
-                "fiat": json.loads(st.session_state.fiat_df.to_json(orient="records"))}
-        st.download_button("Download JSON", json.dumps(data, indent=2), "portfolio_backup.json", "application/json")
 
 # ====================== MAIN CONTENT ======================
 main_container = st.empty()
@@ -483,7 +430,6 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
 </div>"""
         st.markdown(value_box_html, unsafe_allow_html=True)
 
-        # CUSTOM TABLE (AVG column removed)
         coin_list = [t for t in df_port['Ticker'] if t != 'USDC']
         rows_html = ""
         for _, r in df_port.iterrows():
@@ -523,7 +469,6 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                     avg_price = avg_row.iloc[0] if not avg_row.empty and pd.notna(avg_row.iloc[0]) else None
                     live_price = df_port.loc[df_port['Ticker'] == coin, 'Live'].iloc[0] if not df_port.loc[df_port['Ticker'] == coin].empty else 0
                     
-                    # DAILY OPEN PILL (half the size - really small elegant side note)
                     daily_open = get_daily_open(coin)
                     daily_change_pct = ((live_price - daily_open) / daily_open * 100) if daily_open > 0 else 0
                     daily_arrow = "▲" if daily_change_pct > 0 else "▼" if daily_change_pct < 0 else ""
@@ -543,7 +488,6 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                     </div>
                     """, unsafe_allow_html=True)
                     
-                    # TIMEFRAME SELECTOR
                     col1, col2 = st.columns([0.8, 4.2])
                     with col1:
                         candle = st.selectbox(
@@ -556,16 +500,15 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                     
                     title = f"{coin} — {candle} candles"
                     
-                    data = get_cryptocompare_ohlc(coin, candle)
+                    data = get_binance_ohlc(coin, candle)
                     
                     if data is not None and not data.empty:
                         data_local = data.copy()
                         
-                        # VOLUME PANEL: extremely thin (12% height) at the very bottom
-                        fig = make_subplots(rows=2, cols=1, shared_xaxes=True, vertical_spacing=0.1,
-                                            row_heights=[0.88, 0.12], subplot_titles=("", "Volume"))
+                        # EXTREMELY THIN VOLUME PANEL + LOCKED AXIS
+                        fig = make_subplots(rows=2, cols=1, shared_xaxes=True, vertical_spacing=0.08,
+                                            row_heights=[0.90, 0.10], subplot_titles=("", "Volume"))
                         
-                        # Candlestick (top)
                         fig.add_trace(go.Candlestick(
                             x=data_local.index,
                             open=data_local['open'],
@@ -579,7 +522,6 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                             name='Price'
                         ), row=1, col=1)
                         
-                        # Your AVG line (top)
                         if avg_price is not None:
                             fig.add_trace(go.Scatter(
                                 x=[data_local.index.min(), data_local.index.max()],
@@ -589,7 +531,6 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                                 name=f'Your AVG: ${avg_price:,.2f}'
                             ), row=1, col=1)
                         
-                        # Volume bars at the very bottom (thin panel)
                         colors_volume = ['#00ff9d' if o < c else '#ff4d4d' for o, c in zip(data_local['open'], data_local['close'])]
                         fig.add_trace(go.Bar(
                             x=data_local.index,
@@ -607,16 +548,21 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                             font_color='white',
                             hovermode="x unified",
                             xaxis_rangeslider_visible=False,
-                            legend=dict(orientation="h", yanchor="bottom", y=1.02,
-                                        xanchor="center", x=0.5, bgcolor="rgba(0,0,0,0)"),
+                            legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="center", x=0.5, bgcolor="rgba(0,0,0,0)"),
                             dragmode='pan'
                         )
                         
-                        # Volume axis: 0 always at bottom + heavily compressed scale
+                        # VOLUME AXIS: 0 ALWAYS AT BOTTOM + HEAVILY COMPRESSED
                         max_vol = data_local['volumefrom'].max() or 1
-                        fig.update_yaxes(rangemode='nonnegative', range=[0, max_vol * 8], row=2, col=1)
+                        fig.update_yaxes(
+                            rangemode='nonnegative',
+                            range=[0, max_vol * 40],      # extreme compression → tiny bars
+                            fixedrange=True,               # lock the axis completely
+                            showticklabels=False,          # clean TradingView look
+                            showgrid=False,
+                            row=2, col=1
+                        )
                         
-                        # STRICT ZOOM LOCK - cannot zoom out beyond actual candles
                         if len(data_local) > 0:
                             min_time = data_local.index.min()
                             max_time = data_local.index.max()
