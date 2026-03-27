@@ -188,7 +188,7 @@ st.markdown("""
     .avg-pill span:last-child { font-size: 1.18rem !important; }
 }
 
-/* TIMEFRAME SELECTBOX - ALWAYS SHOWS SELECTED VALUE + DARK MENU */
+/* TIMEFRAME SELECTBOX - TEXT ALWAYS VISIBLE + ROLLOUT MATCHES PILL */
 div[data-baseweb="select"] {
     background-color: #1e2a44 !important;
     border-radius: 9999px !important;
@@ -203,30 +203,34 @@ div[data-baseweb="select"] > div {
     padding: 13px 20px !important;
     line-height: 1.4 !important;
 }
-div[data-baseweb="select"] input {
+/* FORCE SELECTED VALUE TEXT TO SHOW IN CLOSED PILL */
+div[data-baseweb="select"] [role="button"],
+div[data-baseweb="select"] [data-baseweb="select-value"],
+div[data-baseweb="select"] > div > div > div > div {
     color: #ffffff !important;
     font-weight: 700 !important;
     font-size: 1.12rem !important;
-    white-space: nowrap !important;
     text-align: center !important;
-    padding: 0 12px !important;
+    white-space: nowrap !important;
 }
 div[data-baseweb="select"] svg {
     fill: #ffffff !important;
 }
 
-/* OPEN DROPDOWN MENU - FULLY DARK + PREMIUM */
+/* OPEN ROLLOUT MENU - EXACTLY SAME STYLE AS THE PILL BUTTON */
 [data-baseweb="popover"] [data-baseweb="menu"] {
     background-color: #1e2a44 !important;
-    border-radius: 16px !important;
+    border-radius: 9999px !important;
     box-shadow: 0 12px 30px rgba(0,0,0,0.6) !important;
-    padding: 6px !important;
+    padding: 6px 4px !important;
     margin-top: 4px !important;
+    border: none !important;
 }
 [data-baseweb="option"] {
     color: #e0e0e0 !important;
     padding: 12px 20px !important;
-    border-radius: 12px !important;
+    border-radius: 9999px !important;
+    margin: 2px 4px !important;
 }
 [data-baseweb="option"][aria-selected="true"] {
     background-color: #263b5e !important;
@@ -718,7 +722,7 @@ document.querySelectorAll('.coin-card').forEach(div => {{
                     </div>
                     """, unsafe_allow_html=True)
                  
-                    col1, col2 = st.columns([0.9, 4.1])   # wider column so the pill always has enough space to display the text
+                    col1, col2 = st.columns([0.9, 4.1])
                     with col1:
                         candle = st.selectbox(
                             "Timeframe",
