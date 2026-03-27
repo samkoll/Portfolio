@@ -512,7 +512,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
 </div>"""
         st.markdown(value_box_html, unsafe_allow_html=True)
 
-        # ====================== COIN CARDS IN RESPONSIVE GRID (2 columns on mobile) ======================
+        # ====================== COIN CARDS IN RESPONSIVE GRID (2+ columns on PC + mobile) ======================
         coin_list = [t for t in df_port['Ticker'] if t != 'USDC']
         cards_html = ""
         for _, r in df_port.iterrows():
@@ -542,12 +542,12 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
 
         html = f"""<html><head><style>
 body{{background:#0b1120;color:white;font-family:sans-serif;margin:0;padding:0;}}
-.coin-grid {{display:grid;grid-template-columns:1fr;gap:16px;}}
-.coin-card {{background:#0f172a;padding:20px;border-radius:24px;box-shadow:0 8px 25px rgba(0,0,0,0.35);transition:all 0.3s ease;cursor:pointer;}}
+.coin-grid {{display:grid;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:18px;}}
+.coin-card {{background:#0f172a;padding:22px;border-radius:24px;box-shadow:0 8px 25px rgba(0,0,0,0.35);transition:all 0.3s ease;cursor:pointer;}}
 .coin-card:hover {{transform:translateY(-4px);box-shadow:0 0 40px var(--glow);}}
 @media (max-width: 700px) {{
     .coin-grid {{grid-template-columns:repeat(2,1fr);gap:12px;}}
-    .coin-card {{padding:16px;}}
+    .coin-card {{padding:18px;}}
 }}
 @media (max-width: 500px) {{
     .coin-grid {{grid-template-columns:1fr;}}
