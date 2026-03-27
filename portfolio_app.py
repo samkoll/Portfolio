@@ -4,7 +4,6 @@ from datetime import datetime, timedelta, date
 import time
 import streamlit.components.v1 as components
 import plotly.graph_objects as go
-from plotly.subplots import make_subplots
 import requests
 import json
 from pathlib import Path
@@ -283,7 +282,7 @@ def get_cryptocompare_ohlc(ticker: str, candle: str):
     try:
         if candle in ["5m", "30m"]:
             url = f"https://min-api.cryptocompare.com/data/v2/histominute?fsym={sym}&tsym=USD&limit=2000"
-        else:  # 1h, 4h, 1D
+        else:
             url = f"https://min-api.cryptocompare.com/data/v2/histohour?fsym={sym}&tsym=USD&limit=2000" if candle != "1D" else \
                   f"https://min-api.cryptocompare.com/data/v2/histoday?fsym={sym}&tsym=USD&limit=90"
 
@@ -561,9 +560,10 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                     if data is not None and not data.empty:
                         data_local = data.copy()
                         
-                        fig = make_subplots(rows=2, cols=1, shared_xaxes=True, vertical_spacing=0.08,
-                                            row_heights=[0.68, 0.32], subplot_titles=("", "Volume"))  # more space for volume
+                        # SINGLE CHART with volume on secondary y-axis
+                        fig = go.Figure()
                         
+                        # Candlestick
                         fig.add_trace(go.Candlestick(
                             x=data_local.index,
                             open=data_local['open'],
@@ -575,8 +575,9 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                             increasing_fillcolor='#00ff9d',
                             decreasing_fillcolor='#ff4d4d',
                             name='Price'
-                        ), row=1, col=1)
+                        ))
                         
+                        # Your AVG line
                         if avg_price is not None:
                             fig.add_trace(go.Scatter(
                                 x=[data_local.index.min(), data_local.index.max()],
@@ -584,19 +585,18 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                                 mode='lines',
                                 line=dict(color='#ffaa00', width=2, dash='dash'),
                                 name=f'Your AVG: ${avg_price:,.2f}'
-                            ), row=1, col=1)
+                            ))
                         
-                        # Volume bars colored exactly like price candles
-                        colors_volume = ['#00ff9d' if o < c else '#ff4d4d' 
-                                        for o, c in zip(data_local['open'], data_local['close'])]
-                        
+                        # Volume bars on secondary y-axis (colored exactly like candles)
+                        colors_volume = ['#00ff9d' if o < c else '#ff4d4d' for o, c in zip(data_local['open'], data_local['close'])]
                         fig.add_trace(go.Bar(
                             x=data_local.index,
                             y=data_local['volumefrom'],
                             marker_color=colors_volume,
                             name='Volume',
-                            opacity=0.9
-                        ), row=2, col=1)
+                            opacity=0.75,
+                            yaxis='y2'
+                        ))
                         
                         fig.update_layout(
                             title=title,
@@ -606,12 +606,13 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                             font_color='white',
                             hovermode="x unified",
                             xaxis_rangeslider_visible=False,
-                            legend=dict(orientation="h", yanchor="bottom", y=1.02,
-                                        xanchor="center", x=0.5, bgcolor="rgba(0,0,0,0)"),
-                            dragmode='pan'
+                            legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="center", x=0.5, bgcolor="rgba(0,0,0,0)"),
+                            dragmode='pan',
+                            yaxis=dict(title="Price", side="left"),
+                            yaxis2=dict(title="Volume", overlaying='y', side='right', showgrid=False, zeroline=False)
                         )
                         
-                        # STRICT ZOOM LOCK - cannot zoom out beyond actual candles
+                        # STRICT ZOOM LOCK: cannot zoom out beyond actual candles
                         if len(data_local) > 0:
                             min_time = data_local.index.min()
                             max_time = data_local.index.max()
@@ -626,7 +627,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                             fig,
                             use_container_width=True,
                             config={
-                                'scrollZoom': True,      # enables both scroll + pinch-to-zoom on phone
+                                'scrollZoom': True,
                                 'responsive': True,
                                 'displayModeBar': True,
                                 'modeBarButtonsToRemove': ['zoom2d', 'select2d', 'lasso2d'],
