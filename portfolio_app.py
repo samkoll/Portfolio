@@ -187,12 +187,13 @@ st.markdown("""
     .avg-pill span:last-child { font-size: 1.18rem !important; }
 }
 
-/* TIMEFRAME SELECTBOX - CLEAN PREMIUM PILL (no blue highlight) */
+/* TIMEFRAME SELECTBOX - CLEAN PREMIUM PILL (full text visible) */
 div[data-baseweb="select"] {
     background-color: #1e2a44 !important;
     border-radius: 9999px !important;
     box-shadow: 0 4px 15px rgba(0,0,0,0.4) !important;
-    max-width: 110px !important;
+    min-width: 118px !important;
+    max-width: 135px !important;
     transition: all 0.2s ease;
 }
 div[data-baseweb="select"] > div {
@@ -204,6 +205,7 @@ div[data-baseweb="select"] input {
     color: #ffffff !important;
     font-weight: 700 !important;
     font-size: 1.05rem !important;
+    white-space: nowrap !important;
 }
 div[data-baseweb="select"] svg {
     fill: #ffffff !important;
@@ -216,10 +218,11 @@ div[data-baseweb="select"]:focus-within {
 }
 @media (max-width: 700px) {
     div[data-baseweb="select"] {
-        max-width: 92px !important;
+        min-width: 108px !important;
+        max-width: 125px !important;
     }
     div[data-baseweb="select"] > div {
-        padding: 6px 12px !important;
+        padding: 7px 13px !important;
     }
 }
 
@@ -677,7 +680,7 @@ document.querySelectorAll('.coin-card').forEach(div => {{
                     </div>
                     """, unsafe_allow_html=True)
                  
-                    col1, col2 = st.columns([0.38, 4.62])
+                    col1, col2 = st.columns([0.55, 4.45])   # wider for full label
                     with col1:
                         candle = st.selectbox(
                             "Timeframe",
