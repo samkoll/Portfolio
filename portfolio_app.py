@@ -609,7 +609,7 @@ def glossy_header(title: str, icon_svg: str):
 # ====================== PAGES ======================
 with main_container.container(key=f"page_{st.session_state.page}_{st.session_state.ui_version}"):
     if st.session_state.page == "Home":
-        # === ONLY CHANGE: header now uses your uploaded PNG logo ===
+        # === YOUR CUSTOM LOGO NOW IN THE HEADER CARD ===
         st.markdown(f"""
         <div class="glossy-header">
             <img src="logo.png" width="42" style="margin-top:-2px;">
