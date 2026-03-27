@@ -13,13 +13,7 @@ import hashlib
 # ====================== CONFIG ======================
 st.set_page_config(page_title="Portfolio", layout="wide", page_icon="📊")
 
-# ====================== FORCE EXACT SIDEBAR REFRESH FROM SWIPE ======================
-if st.query_params.get("swipe_refresh"):
-    st.session_state.ui_version = st.session_state.get("ui_version", 0) + 1
-    st.query_params.clear()
-    st.rerun()
-
-# ====================== PULL-TO-REFRESH (ANYWHERE + SLOW ROLL + EXACT REFRESH) ======================
+# ====================== PULL-TO-REFRESH (ANYWHERE + SAME SLOW ROLL ANIMATION ON SUCCESS + CACHE-BUST REFRESH) ======================
 PULL_REFRESH_HTML = """
 <style>
 .pull-to-refresh {
@@ -65,9 +59,6 @@ PULL_REFRESH_HTML = """
 }
 @keyframes spin { to { transform: rotate(360deg); } }
 @keyframes checkDraw { to { stroke-dashoffset: 0; } }
-
-/* HIDE STREAMLIT WHITE TOP BAR COMPLETELY */
-header[data-testid="stHeader"], .stApp > header { display: none !important; }
 </style>
 
 <div id="pullrefresh" class="pull-to-refresh">
@@ -127,11 +118,14 @@ document.documentElement.addEventListener('touchend', e => {
         loader.style.display = 'none';
         success.style.display = 'block';
         container.style.transform = 'translateY(0)';
+        // Slow roll-back animation even on success, then full reload with cache-bust
         setTimeout(() => {
             container.style.transition = 'transform 0.8s cubic-bezier(0.25, 0.1, 0.25, 1)';
             container.style.transform = 'translateY(-100%)';
             setTimeout(() => {
-                window.location.href = window.location.pathname + '?swipe_refresh=1';
+                // Force real API refresh
+                const url = window.location.href.split('?')[0] + '?t=' + Date.now();
+                window.location.href = url;
             }, 820);
         }, 520);
     } else {
