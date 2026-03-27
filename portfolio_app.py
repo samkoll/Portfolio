@@ -258,7 +258,23 @@ def get_all_cryptocompare_prices(tickers):
             continue
     return prices
 
-# ====================== CHART FUNCTION (true 5m/30m candles) ======================
+# ====================== DAILY OPEN PRICE FUNCTION ======================
+@st.cache_data(ttl=300, show_spinner=False)
+def get_daily_open(ticker: str):
+    sym = CRYPTOCOMPARE_SYMBOL_MAP.get(ticker.upper())
+    if not sym:
+        return 0.0
+    try:
+        url = f"https://min-api.cryptocompare.com/data/v2/histoday?fsym={sym}&tsym=USD&limit=1"
+        headers = {"User-Agent": "Mozilla/5.0 (compatible; StreamlitPortfolio/1.0)"}
+        data = get_with_retry(url, headers)
+        if data and "Data" in data and "Data" in data["Data"] and len(data["Data"]["Data"]) > 0:
+            return float(data["Data"]["Data"][-1]["open"])
+        return 0.0
+    except:
+        return 0.0
+
+# ====================== CHART FUNCTION (more candles on 30m/5m) ======================
 @st.cache_data(ttl=80, show_spinner=False)
 def get_cryptocompare_ohlc(ticker: str, candle: str):
     sym = CRYPTOCOMPARE_SYMBOL_MAP.get(ticker.upper())
@@ -266,7 +282,8 @@ def get_cryptocompare_ohlc(ticker: str, candle: str):
         return None
     try:
         if candle in ["5m", "30m"]:
-            url = f"https://min-api.cryptocompare.com/data/v2/histominute?fsym={sym}&tsym=USD&limit=2000"
+            # Increased limit for more candles on 5m/30m charts
+            url = f"https://min-api.cryptocompare.com/data/v2/histominute?fsym={sym}&tsym=USD&limit=5000"
         else:  # 1h, 4h, 1D
             url = f"https://min-api.cryptocompare.com/data/v2/histohour?fsym={sym}&tsym=USD&limit=2000" if candle != "1D" else \
                   f"https://min-api.cryptocompare.com/data/v2/histoday?fsym={sym}&tsym=USD&limit=90"
@@ -283,7 +300,7 @@ def get_cryptocompare_ohlc(ticker: str, candle: str):
         df.set_index("timestamp", inplace=True)
         df = df.drop(columns=["time"])
 
-        # TRUE CANDLE RESAMPLING
+        # TRUE CANDLE RESAMPLING (ensures exact 5m / 30m candles)
         if candle == "5m":
             df = df.resample('5T').agg({
                 'open': 'first',
@@ -526,12 +543,22 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                     avg_price = avg_row.iloc[0] if not avg_row.empty and pd.notna(avg_row.iloc[0]) else None
                     live_price = df_port.loc[df_port['Ticker'] == coin, 'Live'].iloc[0] if not df_port.loc[df_port['Ticker'] == coin].empty else 0
                     
+                    # NEW DAILY OPEN PILL
+                    daily_open = get_daily_open(coin)
+                    daily_change_pct = ((live_price - daily_open) / daily_open * 100) if daily_open > 0 else 0
+                    daily_arrow = "▲" if daily_change_pct > 0 else "▼" if daily_change_pct < 0 else ""
+                    daily_color = "#00ff9d" if daily_change_pct > 0 else "#ff4d4d" if daily_change_pct < 0 else "#aaaaaa"
+                    
                     color = "#00ff9d" if live_price > 0 else "#ff4d4d"
                     st.markdown(f"""
                     <div style="display:flex;gap:12px;margin-bottom:16px;">
                         <div style="background:#0f172a;padding:10px 20px;border-radius:9999px;display:inline-flex;align-items:center;gap:12px;">
                             <span style="font-size:1.15rem;font-weight:700;">LIVE</span>
                             <span style="font-size:1.45rem;font-weight:700;color:{color};">{format_crypto_price(live_price)}</span>
+                        </div>
+                        <div style="background:#0f172a;padding:10px 20px;border-radius:9999px;display:inline-flex;align-items:center;gap:12px;">
+                            <span style="font-size:1.15rem;font-weight:700;">24H</span>
+                            <span style="font-size:1.45rem;font-weight:700;color:{daily_color};">{daily_arrow} {abs(daily_change_pct):.2f}%</span>
                         </div>
                         {f'<div style="background:#0f172a;padding:10px 20px;border-radius:9999px;display:inline-flex;align-items:center;gap:8px;"><span style="font-size:1.15rem;font-weight:700;color:#ffffff;">AVG</span><span style="font-size:1.45rem;font-weight:700;color:#ffaa00;">{format_crypto_price(avg_price)}</span></div>' if avg_price is not None else ''}
                     </div>
