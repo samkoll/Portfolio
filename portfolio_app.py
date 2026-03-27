@@ -193,25 +193,28 @@ div[data-baseweb="select"] {
     background-color: #1e2a44 !important;
     border-radius: 9999px !important;
     box-shadow: 0 4px 15px rgba(0,0,0,0.4) !important;
-    min-width: 180px !important;
-    max-width: 190px !important;
+    min-width: 195px !important;
+    max-width: 205px !important;
     transition: all 0.2s ease;
 }
 div[data-baseweb="select"] > div {
     background: transparent !important;
     border: none !important;
-    padding: 13px 20px !important;
+    padding: 13px 22px !important;
     line-height: 1.4 !important;
 }
-/* FORCE SELECTED VALUE TEXT TO SHOW IN CLOSED PILL */
+
+/* FORCE SELECTED VALUE TO ALWAYS SHOW IN CLOSED PILL */
 div[data-baseweb="select"] [role="button"],
 div[data-baseweb="select"] [data-baseweb="select-value"],
-div[data-baseweb="select"] > div > div > div > div {
+div[data-baseweb="select"] > div > div > div > div,
+div[data-baseweb="select"] > div > div > div > div > div {
     color: #ffffff !important;
     font-weight: 700 !important;
-    font-size: 1.12rem !important;
+    font-size: 1.13rem !important;
     text-align: center !important;
     white-space: nowrap !important;
+    padding: 0 8px !important;
 }
 div[data-baseweb="select"] svg {
     fill: #ffffff !important;
@@ -241,11 +244,11 @@ div[data-baseweb="select"] svg {
 }
 @media (max-width: 700px) {
     div[data-baseweb="select"] {
-        min-width: 170px !important;
-        max-width: 180px !important;
+        min-width: 185px !important;
+        max-width: 195px !important;
     }
     div[data-baseweb="select"] > div {
-        padding: 12px 18px !important;
+        padding: 12px 20px !important;
     }
 }
 
@@ -722,7 +725,7 @@ document.querySelectorAll('.coin-card').forEach(div => {{
                     </div>
                     """, unsafe_allow_html=True)
                  
-                    col1, col2 = st.columns([0.9, 4.1])
+                    col1, col2 = st.columns([0.95, 4.05])
                     with col1:
                         candle = st.selectbox(
                             "Timeframe",
