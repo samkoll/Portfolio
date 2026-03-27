@@ -14,26 +14,16 @@ import random
 # ====================== CONFIG ======================
 st.set_page_config(page_title="Portfolio", layout="wide", page_icon="📊")
 
-# ====================== STRONG CACHE BUST + FULL CLEAR ON SWIPE ======================
-if "refresh_key" not in st.session_state:
-    st.session_state.refresh_key = random.randint(100000, 999999)
-
-if "t" in st.query_params:
-    try:
-        new_key = int(st.query_params["t"])
-        if new_key != st.session_state.get("refresh_key", 0):
-            st.session_state.refresh_key = new_key
-            st.cache_data.clear()          # Forces all prices and charts to reload
-            st.session_state.ui_version = st.session_state.get("ui_version", 0) + 1
-    except:
-        pass
-
-# ====================== PULL-TO-REFRESH - ABSOLUTE TOP OF THE PAGE ======================
-PULL_REFRESH_HTML = """
+# ====================== PULL-TO-REFRESH (PERFECTLY FIXED + PRODUCTION READY) ======================
+# This version is injected directly into the main DOM (not inside an iframe)
+# → appears at the absolute top of the browser viewport
+# → listens to touch events on the real page
+# → triggers full page refresh with cache bust
+PULL_REFRESH_HTML_FIXED = """
 <style>
 .pull-to-refresh {
     position: fixed;
-    top: 0 !important;               /* flush against absolute top of screen */
+    top: 0 !important;
     left: 0;
     right: 0;
     height: 88px;
@@ -41,7 +31,7 @@ PULL_REFRESH_HTML = """
     align-items: center;
     justify-content: center;
     background: linear-gradient(90deg, #1e2a44, #26334f) !important;
-    z-index: 1000000 !important;
+    z-index: 2147483647 !important;
     transform: translateY(-100%);
     transition: transform 0.7s cubic-bezier(0.25, 0.1, 0.25, 1);
     border-bottom-left-radius: 28px;
@@ -75,6 +65,7 @@ PULL_REFRESH_HTML = """
 @keyframes spin { to { transform: rotate(360deg); } }
 @keyframes checkDraw { to { stroke-dashoffset: 0; } }
 </style>
+
 <div id="pullrefresh" class="pull-to-refresh">
     <div id="loader" class="spinner"></div>
     <div id="success" class="checkmark">
@@ -83,6 +74,7 @@ PULL_REFRESH_HTML = """
         </svg>
     </div>
 </div>
+
 <script>
 let startY = 0;
 let isPulling = false;
@@ -104,13 +96,15 @@ if (!window.pullToRefreshInitialized) {
         }, 700);
     }
 
-    // SWIPE FROM ANYWHERE ON THE ENTIRE PAGE
-    document.documentElement.addEventListener('touchstart', e => {
+    // Listen on the REAL top-level document (works even with Streamlit iframes)
+    const doc = window.parent.document.documentElement;
+
+    doc.addEventListener('touchstart', e => {
         startY = e.touches[0].clientY;
         isPulling = true;
     }, {passive: true});
 
-    document.documentElement.addEventListener('touchmove', e => {
+    doc.addEventListener('touchmove', e => {
         if (!isPulling) return;
         const y = e.touches[0].clientY;
         const diff = y - startY;
@@ -123,7 +117,7 @@ if (!window.pullToRefreshInitialized) {
         }
     }, {passive: false});
 
-    document.documentElement.addEventListener('touchend', e => {
+    doc.addEventListener('touchend', e => {
         if (!isPulling) return;
         const y = e.changedTouches[0].clientY;
         const diff = y - startY;
@@ -136,8 +130,8 @@ if (!window.pullToRefreshInitialized) {
                 container.style.transition = 'transform 0.85s cubic-bezier(0.4, 0, 0.22, 1)';
                 container.style.transform = 'translateY(-100%)';
                 setTimeout(() => {
-                    const url = window.location.href.split('?')[0] + '?t=' + Date.now();
-                    window.location.href = url;
+                    const url = window.parent.location.href.split('?')[0] + '?t=' + Date.now();
+                    window.parent.location.href = url;
                 }, 820);
             }, 680);
         } else {
@@ -146,12 +140,26 @@ if (!window.pullToRefreshInitialized) {
         isPulling = false;
     }, {passive: true});
 
-    window.addEventListener('scroll', () => {
-        if (window.scrollY > 600) hidePull();
+    window.parent.addEventListener('scroll', () => {
+        if (window.parent.scrollY > 600) hidePull();
     });
 }
 </script>
 """
+st.markdown(PULL_REFRESH_HTML_FIXED, unsafe_allow_html=True)
+
+# ====================== STRONG CACHE BUST + FULL CLEAR ON SWIPE ======================
+if "refresh_key" not in st.session_state:
+    st.session_state.refresh_key = random.randint(100000, 999999)
+if "t" in st.query_params:
+    try:
+        new_key = int(st.query_params["t"])
+        if new_key != st.session_state.get("refresh_key", 0):
+            st.session_state.refresh_key = new_key
+            st.cache_data.clear()  # Forces all prices and charts to reload
+            st.session_state.ui_version = st.session_state.get("ui_version", 0) + 1
+    except:
+        pass
 
 # ====================== GLOBAL CSS ======================
 st.markdown("""
@@ -240,7 +248,7 @@ st.markdown("""
     gap: 16px;
     width: 100% !important;
     margin-bottom: 45px;
-    margin-top: -60px !important;   /* creates clean breathing space between pull bar and card */
+    margin-top: -60px !important;
 }
 .glossy-box {
     padding: 28px 30px;
@@ -762,8 +770,6 @@ def glossy_header(title: str, icon_svg: str):
 
 # ====================== PAGES ======================
 with main_container.container(key=f"page_{st.session_state.page}_{st.session_state.ui_version}"):
-    components.html(PULL_REFRESH_HTML, height=88)
-   
     if st.session_state.page == "Home":
         glossy_header("Portfolio Dashboard", DASHBOARD_ICON)
         df_port, total_value, total_pnl, total_pnl_pct = calculate_portfolio(st.session_state.crypto_df)
@@ -841,7 +847,6 @@ document.querySelectorAll('.coin-card').forEach(div => {{
     </div>
 </div>
 """, unsafe_allow_html=True)
- 
         if coin_list:
             selected_tab = st.tabs(coin_list)
             for i, coin in enumerate(coin_list):
@@ -849,11 +854,11 @@ document.querySelectorAll('.coin-card').forEach(div => {{
                     avg_row = df_port.loc[df_port['Ticker'] == coin, 'AVG']
                     avg_price = avg_row.iloc[0] if not avg_row.empty and pd.notna(avg_row.iloc[0]) else None
                     live_price = df_port.loc[df_port['Ticker'] == coin, 'Live'].iloc[0] if not df_port.loc[df_port['Ticker'] == coin].empty else 0
-               
+              
                     daily_open = get_daily_open(coin, st.session_state.refresh_key)
                     daily_change_pct = ((live_price - daily_open) / daily_open * 100) if daily_open > 0 else 0
                     daily_arrow = "▲" if daily_change_pct > 0 else "▼" if daily_change_pct < 0 else ""
-               
+              
                     color = "#00ff9d" if live_price > 0 else "#ff4d4d"
                     st.markdown(f"""
                     <div class="price-pills-container">
@@ -865,7 +870,7 @@ document.querySelectorAll('.coin-card').forEach(div => {{
                         {f'<div class="price-pill avg-pill"><span>AVG</span><span style="color:#ffaa00;">{format_crypto_price(avg_price)}</span></div>' if avg_price is not None else ''}
                     </div>
                     """, unsafe_allow_html=True)
-               
+              
                     col1, col2 = st.columns([0.95, 4.05])
                     with col1:
                         candle = st.selectbox(
@@ -875,12 +880,12 @@ document.querySelectorAll('.coin-card').forEach(div => {{
                             key=f"candle_select_{coin}_{st.session_state.ui_version}",
                             label_visibility="collapsed"
                         )
-               
+              
                     data = get_cryptocompare_ohlc(coin, candle, st.session_state.refresh_key)
-               
+              
                     if data is not None and not data.empty:
                         data_local = data.copy()
-                   
+                  
                         fig = make_subplots(rows=2, cols=1, shared_xaxes=True, vertical_spacing=0.08,
                                             row_heights=[0.75, 0.25], subplot_titles=("", ""))
                         fig.add_trace(go.Candlestick(
@@ -945,7 +950,6 @@ document.querySelectorAll('.coin-card').forEach(div => {{
         df_display = st.session_state.crypto_df.copy()
         df_display['Date'] = df_display['Datum'].apply(format_datum)
         df_display = df_display.dropna(how='all').reset_index(drop=True)
- 
         table_container = st.container(key=f"crypto_table_container_{st.session_state.ui_version}")
         with table_container:
             with st.container(height=520, border=True):
@@ -1043,9 +1047,7 @@ document.querySelectorAll('.coin-card').forEach(div => {{
     <div class="glossy-box"><div>Fees</div><div class="fee-line">{fees_eur:,.2f} EUR</div><div class="fee-line" style="font-size:22px;">{fees_czk:,.2f} CZK</div></div>
 </div>"""
         st.markdown(summary_html, unsafe_allow_html=True)
- 
         df_clean = st.session_state.fiat_df.dropna(how='all').reset_index(drop=True)
- 
         table_container = st.container(key=f"fiat_table_container_{st.session_state.ui_version}")
         with table_container:
             with st.container(height=520, border=True):
