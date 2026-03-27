@@ -193,22 +193,23 @@ div[data-baseweb="select"] {
     background-color: #1e2a44 !important;
     border-radius: 9999px !important;
     box-shadow: 0 4px 15px rgba(0,0,0,0.4) !important;
-    min-width: 165px !important;
-    max-width: 175px !important;
+    min-width: 180px !important;
+    max-width: 190px !important;
     transition: all 0.2s ease;
 }
 div[data-baseweb="select"] > div {
     background: transparent !important;
     border: none !important;
-    padding: 13px 18px !important;
+    padding: 13px 20px !important;
     line-height: 1.4 !important;
 }
 div[data-baseweb="select"] input {
     color: #ffffff !important;
     font-weight: 700 !important;
-    font-size: 1.08rem !important;
+    font-size: 1.12rem !important;
     white-space: nowrap !important;
     text-align: center !important;
+    padding: 0 12px !important;
 }
 div[data-baseweb="select"] svg {
     fill: #ffffff !important;
@@ -236,11 +237,11 @@ div[data-baseweb="select"] svg {
 }
 @media (max-width: 700px) {
     div[data-baseweb="select"] {
-        min-width: 155px !important;
-        max-width: 165px !important;
+        min-width: 170px !important;
+        max-width: 180px !important;
     }
     div[data-baseweb="select"] > div {
-        padding: 12px 16px !important;
+        padding: 12px 18px !important;
     }
 }
 
@@ -717,7 +718,7 @@ document.querySelectorAll('.coin-card').forEach(div => {{
                     </div>
                     """, unsafe_allow_html=True)
                  
-                    col1, col2 = st.columns([0.68, 4.32])
+                    col1, col2 = st.columns([0.9, 4.1])   # wider column so the pill always has enough space to display the text
                     with col1:
                         candle = st.selectbox(
                             "Timeframe",
