@@ -114,6 +114,21 @@ st.markdown("""
     line-height: 1.05;
     color: #ffffff;
 }
+
+/* MOBILE RESPONSIVE FIX FOR THE 3 SUMMARY CARDS */
+@media (max-width: 600px) {
+    .glossy-box {
+        min-width: 98px !important;
+        padding: 18px 14px !important;
+    }
+    .glossy-box > div:first-child {
+        font-size: 12px !important;
+    }
+    .glossy-box > div:last-child {
+        font-size: 21px !important;
+    }
+}
+
 /* COMPACT TABLE FIX */
 [data-testid="stHorizontalBlock"] > div:nth-child(6),
 [data-testid="stHorizontalBlock"] > div:nth-child(7),
@@ -465,24 +480,15 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
     
         df_port, total_value, total_pnl, total_pnl_pct = calculate_portfolio(st.session_state.crypto_df)
     
-        # 3 CARDS – FORCE SIDE-BY-SIDE ON PHONE (shrink aggressively)
+        # 3 CARDS – STAY SIDE-BY-SIDE ON MOBILE (shrink to fit phone screen perfectly)
         value_box_html = f"""
 <div style="display: grid; 
-            grid-template-columns: repeat(auto-fit, minmax(105px, 1fr)); 
-            gap: 16px; 
+            grid-template-columns: repeat(auto-fit, minmax(98px, 1fr)); 
+            gap: 14px; 
             margin-bottom: 30px;">
-    <div class="glossy-box" style="min-width:105px !important;">
-        <div>Total Value</div>
-        <div>{format_money(total_value)}</div>
-    </div>
-    <div class="glossy-box" style="min-width:105px !important;">
-        <div>PnL</div>
-        <div style="color:{'#00ff9d' if total_pnl>=0 else '#ff4d4d'}">{"▲" if total_pnl>0 else "▼" if total_pnl<0 else ""} {format_money(abs(total_pnl))}</div>
-    </div>
-    <div class="glossy-box" style="min-width:105px !important;">
-        <div>PnL %</div>
-        <div style="color:{'#00ff9d' if total_pnl_pct>=0 else '#ff4d4d'}">{"▲" if total_pnl_pct>0 else "▼" if total_pnl_pct<0 else ""} {abs(total_pnl_pct):.2f}%</div>
-    </div>
+    <div class="glossy-box"><div>Total Value</div><div>{format_money(total_value)}</div></div>
+    <div class="glossy-box"><div>PnL</div><div style="color:{'#00ff9d' if total_pnl>=0 else '#ff4d4d'}">{"▲" if total_pnl>0 else "▼" if total_pnl<0 else ""} {format_money(abs(total_pnl))}</div></div>
+    <div class="glossy-box"><div>PnL %</div><div style="color:{'#00ff9d' if total_pnl_pct>=0 else '#ff4d4d'}">{"▲" if total_pnl_pct>0 else "▼" if total_pnl_pct<0 else ""} {abs(total_pnl_pct):.2f}%</div></div>
 </div>"""
         st.markdown(value_box_html, unsafe_allow_html=True)
 
