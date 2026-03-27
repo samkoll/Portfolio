@@ -465,21 +465,21 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
     
         df_port, total_value, total_pnl, total_pnl_pct = calculate_portfolio(st.session_state.crypto_df)
     
-        # 3 CARDS – STAY SIDE-BY-SIDE ON PHONE (shrink instead of stacking)
+        # 3 CARDS – FORCE SIDE-BY-SIDE ON PHONE (shrink aggressively)
         value_box_html = f"""
 <div style="display: grid; 
-            grid-template-columns: repeat(auto-fit, minmax(115px, 1fr)); 
-            gap: 18px; 
+            grid-template-columns: repeat(auto-fit, minmax(105px, 1fr)); 
+            gap: 16px; 
             margin-bottom: 30px;">
-    <div class="glossy-box" style="min-width:115px !important;">
+    <div class="glossy-box" style="min-width:105px !important;">
         <div>Total Value</div>
         <div>{format_money(total_value)}</div>
     </div>
-    <div class="glossy-box" style="min-width:115px !important;">
+    <div class="glossy-box" style="min-width:105px !important;">
         <div>PnL</div>
         <div style="color:{'#00ff9d' if total_pnl>=0 else '#ff4d4d'}">{"▲" if total_pnl>0 else "▼" if total_pnl<0 else ""} {format_money(abs(total_pnl))}</div>
     </div>
-    <div class="glossy-box" style="min-width:115px !important;">
+    <div class="glossy-box" style="min-width:105px !important;">
         <div>PnL %</div>
         <div style="color:{'#00ff9d' if total_pnl_pct>=0 else '#ff4d4d'}">{"▲" if total_pnl_pct>0 else "▼" if total_pnl_pct<0 else ""} {abs(total_pnl_pct):.2f}%</div>
     </div>
