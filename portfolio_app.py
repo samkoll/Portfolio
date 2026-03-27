@@ -13,34 +13,97 @@ import hashlib
 # ====================== CONFIG ======================
 st.set_page_config(page_title="Portfolio", layout="wide", page_icon="💎")
 
-# ====================== PULL-TO-REFRESH JS ======================
+# ====================== PULL-TO-REFRESH WITH SPINNER ======================
 PULL_REFRESH_HTML = """
-<div style="height:55px;background:transparent;display:flex;align-items:center;justify-content:center;color:#888;font-size:13px;user-select:none;">
-    <span id="pullhint">↓ Pull down to refresh</span>
+<style>
+.pull-to-refresh {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(15, 23, 36, 0.95);
+    z-index: 9999;
+    transform: translateY(-100%);
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    overflow: hidden;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+}
+.pull-to-refresh.active {
+    transform: translateY(0);
+}
+.spinner {
+    width: 28px;
+    height: 28px;
+    border: 3px solid rgba(0, 255, 157, 0.3);
+    border-top: 3px solid #00ff9d;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+</style>
+
+<div id="pullrefresh" class="pull-to-refresh">
+    <div class="spinner"></div>
 </div>
+
 <script>
 let startY = 0;
+let currentY = 0;
 let isPulling = false;
-const hint = document.getElementById('pullhint');
+const pullContainer = document.getElementById('pullrefresh');
 
-document.addEventListener('touchstart', e => {
+function resetPull() {
+    pullContainer.classList.remove('active');
+    isPulling = false;
+}
+
+document.addEventListener('touchstart', function(e) {
     if (window.scrollY === 0) {
         startY = e.touches[0].clientY;
         isPulling = true;
     }
-}, {passive: true});
+}, { passive: true });
 
-document.addEventListener('touchend', e => {
+document.addEventListener('touchmove', function(e) {
     if (!isPulling) return;
-    const endY = e.changedTouches[0].clientY;
-    if (endY - startY > 140) {
-        hint.textContent = 'Refreshing...';
-        window.location.reload();
-    } else {
-        hint.textContent = '↓ Pull down to refresh';
+    currentY = e.touches[0].clientY;
+    const diff = currentY - startY;
+    
+    if (diff > 0) {
+        const progress = Math.min(diff / 2, 60);
+        pullContainer.style.transform = `translateY(${progress - 60}px)`;
+        pullContainer.classList.add('active');
     }
-    isPulling = false;
-}, {passive: true});
+}, { passive: true });
+
+document.addEventListener('touchend', function(e) {
+    if (!isPulling) return;
+    
+    const diff = currentY - startY;
+    
+    if (diff > 120) {
+        // Full refresh
+        pullContainer.style.transform = `translateY(0)`;
+        setTimeout(() => {
+            window.location.reload();
+        }, 300);
+    } else {
+        resetPull();
+    }
+}, { passive: true });
+
+window.addEventListener('scroll', function() {
+    if (window.scrollY > 10) {
+        resetPull();
+    }
+});
 </script>
 """
 
@@ -215,7 +278,7 @@ st.markdown("""
     .avg-pill span:last-child { font-size: 1.18rem !important; }
 }
 
-/* TIMEFRAME PILL - COMPACT + TEXT & ARROW PERFECTLY ALIGNED ON SAME LEVEL */
+/* TIMEFRAME PILL - COMPACT + TEXT & ARROW PERFECTLY ALIGNED */
 div[data-baseweb="select"] {
     background: linear-gradient(90deg, #26334f, #1e2a44) !important;
     border-radius: 9999px !important;
@@ -235,7 +298,6 @@ div[data-baseweb="select"] > div {
     justify-content: space-between !important;
     height: 100% !important;
 }
-/* Text and arrow perfectly on the same horizontal level */
 div[data-baseweb="select"] *,
 div[data-baseweb="select"] span,
 div[data-baseweb="select"] [role="button"] span,
