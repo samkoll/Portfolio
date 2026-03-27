@@ -11,9 +11,9 @@ from pathlib import Path
 import hashlib
 
 # ====================== CONFIG ======================
-st.set_page_config(page_title="Portfolio", layout="wide", page_icon="💎")
+st.set_page_config(page_title="Portfolio", layout="wide", page_icon="📊")
 
-# ====================== PULL-TO-REFRESH (ANYWHERE + SPINNER → CHECKMARK + GLOSSY CARD STYLE) ======================
+# ====================== PULL-TO-REFRESH (ANYWHERE + SLOW SMOOTH ROLL + CHECKMARK) ======================
 PULL_REFRESH_HTML = """
 <style>
 .pull-to-refresh {
@@ -21,61 +21,50 @@ PULL_REFRESH_HTML = """
     top: 0;
     left: 0;
     right: 0;
-    height: 70px;
+    height: 72px;
     display: flex;
     align-items: center;
     justify-content: center;
     background: linear-gradient(90deg, #26334f, #1e2a44) !important;
-    z-index: 9999;
+    z-index: 99999;
     transform: translateY(-100%);
-    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    border-bottom-left-radius: 24px;
-    border-bottom-right-radius: 24px;
-    box-shadow: 0 8px 25px rgba(0,0,0,0.35);
+    transition: transform 0.55s cubic-bezier(0.25, 0.1, 0.25, 1);
+    border-bottom-left-radius: 26px;
+    border-bottom-right-radius: 26px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.4);
     overflow: hidden;
 }
 .pull-to-refresh.active {
     transform: translateY(0);
 }
 .spinner {
-    width: 32px;
-    height: 32px;
-    border: 4px solid rgba(0, 255, 157, 0.3);
+    width: 34px;
+    height: 34px;
+    border: 4px solid rgba(0,255,157,0.25);
     border-top: 4px solid #00ff9d;
     border-radius: 50%;
-    animation: spin 1s linear infinite;
+    animation: spin 0.95s linear infinite;
 }
 .checkmark {
-    width: 32px;
-    height: 32px;
     display: none;
-    animation: checkPop 0.4s ease forwards;
+    width: 34px;
+    height: 34px;
 }
 .checkmark svg {
     stroke: #00ff9d;
-    stroke-width: 4;
-    stroke-dasharray: 40;
-    stroke-dashoffset: 40;
-    animation: checkDraw 0.6s ease forwards 0.1s;
+    stroke-width: 3.5;
+    stroke-dasharray: 45;
+    stroke-dashoffset: 45;
+    animation: checkDraw 0.65s ease forwards;
 }
-@keyframes spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
-}
-@keyframes checkPop {
-    0% { transform: scale(0.6); opacity: 0; }
-    60% { transform: scale(1.15); }
-    100% { transform: scale(1); opacity: 1; }
-}
-@keyframes checkDraw {
-    to { stroke-dashoffset: 0; }
-}
+@keyframes spin { to { transform: rotate(360deg); } }
+@keyframes checkDraw { to { stroke-dashoffset: 0; } }
 </style>
 
 <div id="pullrefresh" class="pull-to-refresh">
-    <div id="spinner" class="spinner"></div>
-    <div id="checkmark" class="checkmark">
-        <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+    <div id="loader" class="spinner"></div>
+    <div id="success" class="checkmark">
+        <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="#00ff9d" stroke-width="3.5">
             <path d="M20 6L9 17l-5-5"/>
         </svg>
     </div>
@@ -85,53 +74,58 @@ PULL_REFRESH_HTML = """
 let startY = 0;
 let isPulling = false;
 const container = document.getElementById('pullrefresh');
-const spinner = document.getElementById('spinner');
-const checkmark = document.getElementById('checkmark');
+const loader = document.getElementById('loader');
+const success = document.getElementById('success');
 
-function resetPull() {
-    container.classList.remove('active');
-    spinner.style.display = 'block';
-    checkmark.style.display = 'none';
-    isPulling = false;
+function hidePull() {
+    container.style.transition = 'transform 0.55s cubic-bezier(0.4, 0, 0.2, 1)';
+    container.style.transform = 'translateY(-100%)';
+    setTimeout(() => {
+        container.classList.remove('active');
+        loader.style.display = 'block';
+        success.style.display = 'none';
+        isPulling = false;
+    }, 560);
 }
 
-document.addEventListener('touchstart', function(e) {
-    if (window.scrollY === 0) {
+document.addEventListener('touchstart', e => {
+    if (window.scrollY <= 5) {
         startY = e.touches[0].clientY;
         isPulling = true;
     }
-}, { passive: true });
+}, {passive: true});
 
-document.addEventListener('touchmove', function(e) {
+document.addEventListener('touchmove', e => {
     if (!isPulling) return;
-    const currentY = e.touches[0].clientY;
-    const diff = currentY - startY;
+    const y = e.touches[0].clientY;
+    const diff = y - startY;
     if (diff > 0) {
-        const progress = Math.min(diff / 2.2, 70);
-        container.style.transform = `translateY(${progress - 70}px)`;
+        const progress = Math.min(diff * 0.65, 72);
+        container.style.transition = 'none';
+        container.style.transform = `translateY(${progress - 72}px)`;
         container.classList.add('active');
     }
-}, { passive: true });
+}, {passive: true});
 
-document.addEventListener('touchend', function(e) {
+document.addEventListener('touchend', e => {
     if (!isPulling) return;
-    const currentY = e.changedTouches[0].clientY;
-    const diff = currentY - startY;
-    
-    if (diff > 120) {
-        // Success - show checkmark
-        spinner.style.display = 'none';
-        checkmark.style.display = 'block';
-        setTimeout(() => {
-            window.location.reload();
-        }, 420);
-    } else {
-        resetPull();
-    }
-}, { passive: true });
+    const y = e.changedTouches[0].clientY;
+    const diff = y - startY;
 
-window.addEventListener('scroll', function() {
-    if (window.scrollY > 20) resetPull();
+    container.style.transition = 'transform 0.55s cubic-bezier(0.25, 0.1, 0.25, 1)';
+
+    if (diff > 130) {
+        loader.style.display = 'none';
+        success.style.display = 'block';
+        container.style.transform = 'translateY(0)';
+        setTimeout(() => window.location.reload(), 480);
+    } else {
+        hidePull();
+    }
+}, {passive: true});
+
+window.addEventListener('scroll', () => {
+    if (window.scrollY > 30) hidePull();
 });
 </script>
 """
@@ -739,7 +733,7 @@ def glossy_header(title: str, icon_svg: str):
 # ====================== PAGES ======================
 main_container.empty()
 with main_container.container(key=f"page_{st.session_state.page}_{st.session_state.ui_version}"):
-    components.html(PULL_REFRESH_HTML, height=70)
+    components.html(PULL_REFRESH_HTML, height=72)
     
     if st.session_state.page == "Home":
         glossy_header("Portfolio Dashboard", DASHBOARD_ICON)
