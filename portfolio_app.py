@@ -188,19 +188,20 @@ st.markdown("""
     .avg-pill span:last-child { font-size: 1.18rem !important; }
 }
 
-/* TIMEFRAME SELECTBOX - FULL TEXT VISIBLE, CLEAN PILL */
+/* TIMEFRAME SELECTBOX - FULL TEXT VISIBLE, NO BOTTOM CUTOFF */
 div[data-baseweb="select"] {
     background-color: #1e2a44 !important;
     border-radius: 9999px !important;
     box-shadow: 0 4px 15px rgba(0,0,0,0.4) !important;
-    min-width: 138px !important;
-    max-width: 148px !important;
+    min-width: 148px !important;
+    max-width: 158px !important;
     transition: all 0.2s ease;
 }
 div[data-baseweb="select"] > div {
     background: transparent !important;
     border: none !important;
-    padding: 8px 16px !important;
+    padding: 11px 18px !important; /* extra vertical padding to prevent bottom cutoff */
+    line-height: 1.2 !important;
 }
 div[data-baseweb="select"] input {
     color: #ffffff !important;
@@ -219,11 +220,11 @@ div[data-baseweb="select"]:focus-within {
 }
 @media (max-width: 700px) {
     div[data-baseweb="select"] {
-        min-width: 128px !important;
-        max-width: 138px !important;
+        min-width: 138px !important;
+        max-width: 148px !important;
     }
     div[data-baseweb="select"] > div {
-        padding: 7px 13px !important;
+        padding: 10px 14px !important;
     }
 }
 
@@ -654,7 +655,7 @@ document.querySelectorAll('.coin-card').forEach(div => {{
         components.html(html, height=580, scrolling=True)
 
         # ====================== CHARTS SECTION ======================
-        st.markdown("""<div id="price-charts-section" class="glossy-box" style="background:#1e2a44;padding:18px 30px;border-radius:18px;margin:28px 0 18px 0;"><div style="color:#ffffff;font-weight:700;font-size:23px;text-align:center;">Price Charts + Volume</div></div>""", unsafe_allow_html=True)
+        st.markdown("""<div id="price-charts-section" class="glossy-box" style="background:#1e2a44;padding:18px 30px;border-radius:18px;margin:28px 0 18px 0;"><div style="color:#ffffff;font-weight:700;font-size:23px;text-align:center;">Charts</div></div>""", unsafe_allow_html=True)
    
         if coin_list:
             selected_tab = st.tabs(coin_list)
@@ -758,7 +759,6 @@ document.querySelectorAll('.coin-card').forEach(div => {{
                         )
                     else:
                         st.error(f"📉 Could not load {coin} chart. Try the **Refresh** button in sidebar.")
-        st.caption("🔴 Live prices update automatically every 15 seconds • Fully connected vertical crosshair across both panels + full-length horizontal crosshair on candlestick")
 
     # ====================== CRYPTO TRANSACTIONS ======================
     elif st.session_state.page == "Crypto Transactions":
