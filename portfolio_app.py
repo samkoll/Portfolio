@@ -4,6 +4,7 @@ from datetime import datetime, timedelta, date
 import time
 import streamlit.components.v1 as components
 import plotly.graph_objects as go
+from plotly.subplots import make_subplots
 import requests
 import json
 from pathlib import Path
@@ -504,8 +505,15 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                     if data is not None and not data.empty:
                         data_local = data.copy()
                         
-                        fig = go.Figure()
+                        # SEPARATE SUBPLOTS AGAIN - with the smallest possible gap
+                        fig = make_subplots(
+                            rows=2, cols=1,
+                            shared_xaxes=True,
+                            vertical_spacing=0.01,          # minimal gap between charts
+                            row_heights=[0.88, 0.12]
+                        )
                         
+                        # Candlestick (top chart)
                         fig.add_trace(go.Candlestick(
                             x=data_local.index,
                             open=data_local['open'],
@@ -517,8 +525,9 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                             increasing_fillcolor='#00ff9d',
                             decreasing_fillcolor='#ff4d4d',
                             name='Price'
-                        ))
+                        ), row=1, col=1)
                         
+                        # AVG line (top chart)
                         if avg_price is not None:
                             fig.add_trace(go.Scatter(
                                 x=[data_local.index.min(), data_local.index.max()],
@@ -526,8 +535,9 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                                 mode='lines',
                                 line=dict(color='#ffaa00', width=2, dash='dash'),
                                 name=f'Your AVG: ${avg_price:,.2f}'
-                            ))
+                            ), row=1, col=1)
                         
+                        # Volume (bottom chart - separate but almost touching)
                         colors_volume = ['#00ff9d' if o < c else '#ff4d4d' for o, c in zip(data_local['open'], data_local['close'])]
                         max_vol = data_local['volumefrom'].max() or 1
                         fig.add_trace(go.Bar(
@@ -535,9 +545,8 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                             y=data_local['volumefrom'],
                             marker_color=colors_volume,
                             name='Volume',
-                            opacity=0.85,
-                            yaxis='y2'
-                        ))
+                            opacity=0.85
+                        ), row=2, col=1)
                         
                         fig.update_layout(
                             title=title,
@@ -548,25 +557,20 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                             hovermode="x unified",
                             xaxis_rangeslider_visible=False,
                             legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="center", x=0.5, bgcolor="rgba(0,0,0,0)"),
-                            dragmode='pan',
-                            yaxis=dict(
-                                domain=[0.22, 1.0],
-                                rangemode='nonnegative'
-                            ),
-                            yaxis2=dict(
-                                domain=[0, 0.14],
-                                overlaying='y',
-                                side='right',
-                                rangemode='nonnegative',
-                                range=[0, max_vol * 100],
-                                fixedrange=True,
-                                autorange=False,
-                                showticklabels=False,
-                                showgrid=False,
-                                zeroline=False
-                            )
+                            dragmode='pan'
                         )
                         
+                        # VOLUME AXIS LOCKED - 0 always at bottom, no negatives ever
+                        fig.update_yaxes(
+                            rangemode='nonnegative',
+                            range=[0, max_vol * 80],
+                            fixedrange=True,
+                            showticklabels=False,
+                            showgrid=False,
+                            row=2, col=1
+                        )
+                        
+                        # STRICT X-AXIS ZOOM LOCK
                         if len(data_local) > 0:
                             min_time = data_local.index.min()
                             max_time = data_local.index.max()
