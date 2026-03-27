@@ -184,21 +184,20 @@ st.markdown("""
     .avg-pill span:last-child { font-size: 1.18rem !important; }
 }
 
-/* TIMEFRAME PILL SELECTOR - SMALLER + TEXT MOVED SLIGHTLY LOWER */
+/* TIMEFRAME PILL SELECTOR - EVEN SMALLER + PERFECTLY CENTERED TEXT */
 div[data-baseweb="select"] {
     background: linear-gradient(90deg, #26334f, #1e2a44) !important;
     border-radius: 9999px !important;
     box-shadow: 0 6px 22px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.18) !important;
-    min-width: 165px !important;
-    max-width: 180px !important;
+    min-width: 152px !important;
+    max-width: 165px !important;
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
-    border: 2px solid #00ff9d !important;
-    height: 42px !important;
+    height: 40px !important;
 }
 div[data-baseweb="select"] > div {
     background: transparent !important;
     border: none !important;
-    padding: 8px 20px 12px 20px !important; /* top reduced, bottom increased → text sits slightly lower */
+    padding: 9px 18px !important;
     line-height: 1.35 !important;
     display: flex !important;
     align-items: center !important;
@@ -284,12 +283,12 @@ div[data-baseweb="select"] *,
         padding: 4px 8px !important;
     }
     div[data-baseweb="select"] {
-        min-width: 155px !important;
-        max-width: 170px !important;
-        height: 40px !important;
+        min-width: 145px !important;
+        max-width: 158px !important;
+        height: 38px !important;
     }
     div[data-baseweb="select"] > div {
-        padding: 7px 18px 11px 18px !important;
+        padding: 8px 16px !important;
     }
 }
 </style>
@@ -750,7 +749,7 @@ document.querySelectorAll('.coin-card').forEach(div => {{
                             label_visibility="collapsed"
                         )
                 
-                    title = f"{coin} — {candle} candles"
+                    # No title anymore
                 
                     data = get_cryptocompare_ohlc(coin, candle)
                 
@@ -788,17 +787,15 @@ document.querySelectorAll('.coin-card').forEach(div => {{
                             opacity=0.85
                         ), row=2, col=1)
                         fig.update_layout(
-                            title=title,
                             height=700,
                             paper_bgcolor='rgba(0,0,0,0)',
                             plot_bgcolor='rgba(0,0,0,0)',
                             font_color='white',
                             hovermode="x unified",
                             xaxis_rangeslider_visible=False,
-                            legend=dict(orientation="h", yanchor="bottom", y=1.02,
-                                        xanchor="center", x=0.5, bgcolor="rgba(0,0,0,0)"),
+                            showlegend=False,  # legend removed
                             dragmode='pan',
-                            margin=dict(t=40, b=20, l=20, r=20),
+                            margin=dict(t=20, b=20, l=20, r=20),
                             xaxis=dict(showspikes=True, spikecolor="rgba(255,255,255,0.95)", spikethickness=1.8, spikesnap="cursor", spikemode="across"),
                             xaxis2=dict(showspikes=True, spikecolor="rgba(255,255,255,0.95)", spikethickness=1.8, spikesnap="cursor", spikemode="across")
                         )
