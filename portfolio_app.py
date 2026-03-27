@@ -561,11 +561,11 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                     if data is not None and not data.empty:
                         data_local = data.copy()
                         
-                        # TWO-SUBPLOT LAYOUT: price on top (75%), volume clearly at the bottom (25%)
+                        # VOLUME LIMITED TO ~1/8 HEIGHT AT THE VERY BOTTOM
                         fig = make_subplots(rows=2, cols=1, shared_xaxes=True, vertical_spacing=0.08,
-                                            row_heights=[0.75, 0.25], subplot_titles=("", "Volume"))
+                                            row_heights=[0.88, 0.12], subplot_titles=("", "Volume"))
                         
-                        # Candlestick (top)
+                        # Candlestick (top 88%)
                         fig.add_trace(go.Candlestick(
                             x=data_local.index,
                             open=data_local['open'],
@@ -589,7 +589,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                                 name=f'Your AVG: ${avg_price:,.2f}'
                             ), row=1, col=1)
                         
-                        # Volume bars at the very bottom (colored like candles)
+                        # Volume bars at the very bottom (12% height, colored like candles)
                         colors_volume = ['#00ff9d' if o < c else '#ff4d4d' for o, c in zip(data_local['open'], data_local['close'])]
                         fig.add_trace(go.Bar(
                             x=data_local.index,
@@ -622,7 +622,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                             fig,
                             use_container_width=True,
                             config={
-                                'scrollZoom': True,
+                                'scrollZoom': True,      # enables both mouse scroll + phone pinch-to-zoom
                                 'responsive': True,
                                 'displayModeBar': True,
                                 'modeBarButtonsToRemove': ['zoom2d', 'select2d', 'lasso2d'],
