@@ -196,8 +196,6 @@ div[data-baseweb="select"] {
     min-width: 195px !important;
     max-width: 205px !important;
     transition: all 0.2s ease;
-    position: relative;
-    z-index: 10;
 }
 div[data-baseweb="select"] > div {
     background: transparent !important;
@@ -225,10 +223,7 @@ div[data-baseweb="select"] svg {
     fill: #ffffff !important;
 }
 
-/* OPEN ROLLOUT MENU - NOT COVERED BY PILL */
-[data-baseweb="popover"] {
-    z-index: 99999 !important;
-}
+/* OPEN ROLLOUT MENU - EXACTLY SAME STYLE AS THE PILL BUTTON */
 [data-baseweb="popover"] [data-baseweb="menu"] {
     background-color: #1e2a44 !important;
     border-radius: 9999px !important;
@@ -268,6 +263,7 @@ div[data-baseweb="select"] svg {
 .avg-pill *,
 .daily-pill *,
 div[data-baseweb="select"] *,
+div[data-baseweb="select"] span,
 .charts-header * {
     cursor: pointer !important;
 }
@@ -370,29 +366,108 @@ def save_crypto(df):
 def save_fiat(df):
     df.to_json(FIAT_JSON, orient="records", indent=2)
 
-# ====================== BINANCE KLINE (REAL EXCHANGE CHART DATA) ======================
-@st.cache_data(ttl=80, show_spinner=False)
-def get_binance_ohlc(symbol: str, interval: str):
+# ====================== CRYPTOCOMPARE MAPPING ======================
+CRYPTOCOMPARE_SYMBOL_MAP = {
+    'BTC': 'BTC', 'ETH': 'ETH', 'SOL': 'SOL', 'HBAR': 'HBAR',
+    'XRP': 'XRP', 'BNB': 'BNB', 'TRX': 'TRX', 'LINK': 'LINK',
+    'SUI': 'SUI', 'USDC': 'USDC',
+}
+
+# ====================== HELPER: RETRY WRAPPER ======================
+def get_with_retry(url: str, headers: dict, timeout: int = 12, retries: int = 4) -> dict | None:
+    for attempt in range(retries):
+        try:
+            resp = requests.get(url, headers=headers, timeout=timeout)
+            resp.raise_for_status()
+            return resp.json()
+        except Exception:
+            if attempt == retries - 1:
+                return None
+            time.sleep(1.3 ** attempt)
+    return None
+
+# ====================== LIVE PRICE FUNCTION ======================
+@st.cache_data(ttl=15, show_spinner=False)
+def get_all_cryptocompare_prices(tickers):
+    prices = {"USDC": 1.0}
+    symbols = [CRYPTOCOMPARE_SYMBOL_MAP.get(t.upper()) for t in tickers if t.upper() != "USDC"]
+    symbols = [s for s in symbols if s]
+    if not symbols:
+        return prices
     try:
-        url = f"https://api.binance.com/api/v3/klines?symbol={symbol}USDT&interval={interval}&limit=1000"
-        resp = requests.get(url, timeout=12)
-        resp.raise_for_status()
-        data = resp.json()
-        df = pd.DataFrame(data, columns=['time', 'open', 'high', 'low', 'close', 'volume', 'close_time', 'quote_asset_volume', 'number_of_trades', 'taker_buy_base', 'taker_buy_quote', 'ignore'])
-        df = df[['time', 'open', 'high', 'low', 'close', 'volume']].copy()
-        df['time'] = pd.to_datetime(df['time'], unit='ms')
-        df.set_index('time', inplace=True)
-        df = df.astype(float)
-        df = df.rename(columns={'volume': 'volumefrom'})
-        # Resample to match original timeframes
-        if interval == "5m":
+        fsyms = ",".join(symbols)
+        url = f"https://min-api.cryptocompare.com/data/pricemulti?fsyms={fsyms}&tsyms=USD"
+        headers = {"User-Agent": "Mozilla/5.0 (compatible; StreamlitPortfolio/1.0)"}
+        data = get_with_retry(url, headers)
+        if data:
+            for sym, price_data in data.items():
+                if isinstance(price_data, dict) and "USD" in price_data:
+                    ticker = next((k for k, v in CRYPTOCOMPARE_SYMBOL_MAP.items() if v == sym), None)
+                    if ticker:
+                        prices[ticker] = float(price_data["USD"])
+            return prices
+    except:
+        pass
+    for ticker in set(tickers):
+        if ticker.upper() == "USDC":
+            continue
+        sym = CRYPTOCOMPARE_SYMBOL_MAP.get(ticker.upper())
+        if not sym:
+            continue
+        try:
+            url = f"https://min-api.cryptocompare.com/data/price?fsym={sym}&tsyms=USD"
+            headers = {"User-Agent": "Mozilla/5.0 (compatible; StreamlitPortfolio/1.0)"}
+            data = get_with_retry(url, headers)
+            if data and "USD" in data:
+                prices[ticker] = float(data["USD"])
+        except:
+            continue
+    return prices
+
+# ====================== DAILY OPEN PRICE FUNCTION ======================
+@st.cache_data(ttl=300, show_spinner=False)
+def get_daily_open(ticker: str):
+    sym = CRYPTOCOMPARE_SYMBOL_MAP.get(ticker.upper())
+    if not sym:
+        return 0.0
+    try:
+        url = f"https://min-api.cryptocompare.com/data/v2/histoday?fsym={sym}&tsym=USD&limit=1"
+        headers = {"User-Agent": "Mozilla/5.0 (compatible; StreamlitPortfolio/1.0)"}
+        data = get_with_retry(url, headers)
+        if data and "Data" in data and "Data" in data["Data"] and len(data["Data"]["Data"]) > 0:
+            return float(data["Data"]["Data"][-1]["open"])
+        return 0.0
+    except:
+        return 0.0
+
+# ====================== CHART FUNCTION ======================
+@st.cache_data(ttl=80, show_spinner=False)
+def get_cryptocompare_ohlc(ticker: str, candle: str):
+    sym = CRYPTOCOMPARE_SYMBOL_MAP.get(ticker.upper())
+    if not sym:
+        return None
+    try:
+        if candle in ["5m", "30m"]:
+            url = f"https://min-api.cryptocompare.com/data/v2/histominute?fsym={sym}&tsym=USD&limit=2000"
+        else:
+            url = f"https://min-api.cryptocompare.com/data/v2/histohour?fsym={sym}&tsym=USD&limit=2000" if candle != "1D" else \
+                  f"https://min-api.cryptocompare.com/data/v2/histoday?fsym={sym}&tsym=USD&limit=90"
+        headers = {"User-Agent": "Mozilla/5.0 (compatible; StreamlitPortfolio/1.0)"}
+        data = get_with_retry(url, headers)
+        if not data or "Data" not in data or "Data" not in data["Data"]:
+            return None
+        df_data = data["Data"]["Data"]
+        df = pd.DataFrame(df_data)
+        df = df[["time", "open", "high", "low", "close", "volumefrom"]]
+        df["timestamp"] = pd.to_datetime(df["time"], unit="s")
+        df.set_index("timestamp", inplace=True)
+        df = df.drop(columns=["time"])
+        if candle == "5m":
             df = df.resample('5T').agg({'open': 'first', 'high': 'max', 'low': 'min', 'close': 'last', 'volumefrom': 'sum'}).dropna()
-        elif interval == "30m":
+        elif candle == "30m":
             df = df.resample('30T').agg({'open': 'first', 'high': 'max', 'low': 'min', 'close': 'last', 'volumefrom': 'sum'}).dropna()
-        elif interval == "4h":
+        elif candle == "4h":
             df = df.resample('4H').agg({'open': 'first', 'high': 'max', 'low': 'min', 'close': 'last', 'volumefrom': 'sum'}).dropna()
-        elif interval == "1d":
-            df = df.resample('1D').agg({'open': 'first', 'high': 'max', 'low': 'min', 'close': 'last', 'volumefrom': 'sum'}).dropna()
         return df
     except:
         return None
@@ -480,7 +555,7 @@ def calculate_portfolio(crypto_df):
     crypto_spent = pd.to_numeric(crypto_df['USDC'], errors='coerce').fillna(0).sum()
     usdc_holdings = fiat_usdc - crypto_spent
     coin_tickers = [t for t in crypto_df['Ticker'].unique() if t != 'USDC']
-    live_prices = get_all_cryptocompare_prices(coin_tickers)  # keep live prices as before
+    live_prices = get_all_cryptocompare_prices(coin_tickers)
     for t, p in live_prices.items():
         if p > 0:
             st.session_state.last_known_prices[t] = p
@@ -678,9 +753,7 @@ document.querySelectorAll('.coin-card').forEach(div => {{
                  
                     title = f"{coin} — {candle} candles"
                  
-                    # Binance data
-                    binance_interval = {"5m": "5m", "30m": "30m", "1h": "1h", "4h": "4h", "1D": "1d"}[candle]
-                    data = get_binance_ohlc(coin, binance_interval)
+                    data = get_cryptocompare_ohlc(coin, candle)
                  
                     if data is not None and not data.empty:
                         data_local = data.copy()
@@ -744,7 +817,7 @@ document.querySelectorAll('.coin-card').forEach(div => {{
                             key=f"chart_{coin}_{candle}_{st.session_state.ui_version}"
                         )
                     else:
-                        st.error(f"📉 Could not load {coin} chart from Binance. Try the **Refresh** button in sidebar.")
+                        st.error(f"📉 Could not load {coin} chart. Try the **Refresh** button in sidebar.")
 
     # ====================== CRYPTO TRANSACTIONS ======================
     elif st.session_state.page == "Crypto Transactions":
