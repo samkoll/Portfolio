@@ -184,7 +184,7 @@ st.markdown("""
     .avg-pill span:last-child { font-size: 1.18rem !important; }
 }
 
-/* TIMEFRAME PILL SELECTOR - DISTINCT FROM PRICE PILLS */
+/* TIMEFRAME PILL SELECTOR - DISTINCT FROM PRICE PILLS + FIXED TEXT VISIBILITY */
 div[data-baseweb="select"] {
     background: linear-gradient(90deg, #26334f, #1e2a44) !important;
     border-radius: 9999px !important;
@@ -192,7 +192,7 @@ div[data-baseweb="select"] {
     min-width: 185px !important;
     max-width: 200px !important;
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
-    border: 2px solid #00ff9d !important; /* teal accent - makes it clearly different */
+    border: 2px solid #00ff9d !important;
 }
 div[data-baseweb="select"] > div {
     background: transparent !important;
@@ -200,14 +200,20 @@ div[data-baseweb="select"] > div {
     padding: 14px 24px !important;
     line-height: 1.35 !important;
 }
-/* Selected value text - crisp white */
+/* FORCE SELECTED VALUE TEXT TO BE WHITE AND VISIBLE (stronger selectors) */
 div[data-baseweb="select"] [role="button"] span,
 div[data-baseweb="select"] [data-baseweb="select-value"] span,
+div[data-baseweb="select"] > div > div > div > div > div > span,
+div[data-baseweb="select"] > div > div > div > div > span,
 div[data-baseweb="select"] span {
     color: #ffffff !important;
     font-weight: 700 !important;
-    font-size: 1.15rem !important;
+    font-size: 1.18rem !important;
     text-align: center !important;
+    white-space: nowrap !important;
+    display: inline-block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
 }
 /* Arrow color - matches the teal accent */
 div[data-baseweb="select"] svg {
@@ -708,7 +714,6 @@ document.querySelectorAll('.coin-card').forEach(div => {{
                     daily_open = get_daily_open(coin)
                     daily_change_pct = ((live_price - daily_open) / daily_open * 100) if daily_open > 0 else 0
                     daily_arrow = "▲" if daily_change_pct > 0 else "▼" if daily_change_pct < 0 else ""
-                    daily_color = "#00ff9d" if daily_change_pct > 0 else "#ff4d4d" if daily_change_pct < 0 else "#aaaaaa"
                 
                     color = "#00ff9d" if live_price > 0 else "#ff4d4d"
                     st.markdown(f"""
