@@ -183,6 +183,59 @@ st.markdown("""
     .price-pill span:last-child,
     .avg-pill span:last-child { font-size: 1.18rem !important; }
 }
+
+/* TIMEFRAME PILL SELECTOR - DISTINCT FROM PRICE PILLS */
+div[data-baseweb="select"] {
+    background: linear-gradient(90deg, #26334f, #1e2a44) !important;
+    border-radius: 9999px !important;
+    box-shadow: 0 6px 22px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.18) !important;
+    min-width: 185px !important;
+    max-width: 200px !important;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    border: 2px solid #00ff9d !important; /* teal accent - makes it clearly different */
+}
+div[data-baseweb="select"] > div {
+    background: transparent !important;
+    border: none !important;
+    padding: 14px 24px !important;
+    line-height: 1.35 !important;
+}
+/* Selected value text - crisp white */
+div[data-baseweb="select"] [role="button"] span,
+div[data-baseweb="select"] [data-baseweb="select-value"] span,
+div[data-baseweb="select"] span {
+    color: #ffffff !important;
+    font-weight: 700 !important;
+    font-size: 1.15rem !important;
+    text-align: center !important;
+}
+/* Arrow color - matches the teal accent */
+div[data-baseweb="select"] svg {
+    fill: #00ff9d !important;
+}
+/* Open menu - elegant matching pill style */
+[data-baseweb="popover"] [data-baseweb="menu"] {
+    background-color: #26334f !important;
+    border-radius: 9999px !important;
+    box-shadow: 0 12px 30px rgba(0,0,0,0.6) !important;
+    padding: 8px 6px !important;
+    margin-top: 6px !important;
+    border: 2px solid #00ff9d !important;
+}
+[data-baseweb="option"] {
+    color: #e0e0e0 !important;
+    padding: 12px 24px !important;
+    border-radius: 9999px !important;
+    margin: 3px 4px !important;
+}
+[data-baseweb="option"][aria-selected="true"] {
+    background-color: #00ff9d !important;
+    color: #0f1724 !important;
+}
+[data-baseweb="option"]:hover {
+    background-color: #1e2a44 !important;
+}
+
 /* CURSOR FIX - NO TEXT-FIELD CURSOR ON ANY TEXT ANYWHERE */
 .glossy-header *,
 .glossy-box *,
@@ -190,6 +243,7 @@ st.markdown("""
 .price-pill *,
 .avg-pill *,
 .daily-pill *,
+div[data-baseweb="select"] *,
 .charts-header * {
     cursor: pointer !important;
 }
@@ -213,6 +267,10 @@ st.markdown("""
     }
     .plotly .modebar {
         padding: 4px 8px !important;
+    }
+    div[data-baseweb="select"] {
+        min-width: 175px !important;
+        max-width: 190px !important;
     }
 }
 </style>
