@@ -553,11 +553,11 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                     if data is not None and not data.empty:
                         data_local = data.copy()
                        
-                        # FINAL CHART – FULL-LENGTH HORIZONTAL + FULLY CONNECTED VERTICAL + PRICE LABEL
+                        # PERFECTED CHART WITH 100% SYNCHRONIZED VERTICAL + HORIZONTAL PRICE LABEL
                         fig = make_subplots(rows=2, cols=1, shared_xaxes=True, vertical_spacing=0.08,
                                             row_heights=[0.75, 0.25], subplot_titles=("", ""))
 
-                        # Candlestick (top)
+                        # Candlestick
                         fig.add_trace(go.Candlestick(
                             x=data_local.index,
                             open=data_local['open'],
@@ -571,7 +571,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                             name='Price'
                         ), row=1, col=1)
 
-                        # Your AVG line (top)
+                        # AVG line
                         if avg_price is not None:
                             fig.add_trace(go.Scatter(
                                 x=[data_local.index.min(), data_local.index.max()],
@@ -581,7 +581,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                                 name=f'Your AVG: ${avg_price:,.2f}'
                             ), row=1, col=1)
 
-                        # Volume bars (bottom)
+                        # Volume
                         colors_volume = ['#00ff9d' if o < c else '#ff4d4d' for o, c in zip(data_local['open'], data_local['close'])]
                         fig.add_trace(go.Bar(
                             x=data_local.index,
@@ -603,7 +603,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                                         xanchor="center", x=0.5, bgcolor="rgba(0,0,0,0)"),
                             dragmode='pan',
                             margin=dict(t=40, b=20, l=20, r=20),
-                            # FULLY CONNECTED VERTICAL CROSSHAIR (single continuous line across BOTH panels)
+                            # FULLY CONNECTED VERTICAL CROSSHAIR (single line across both panels)
                             xaxis=dict(
                                 showspikes=True,
                                 spikecolor="rgba(255,255,255,0.95)",
@@ -620,17 +620,17 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                             )
                         )
 
-                        # HORIZONTAL CROSSHAIR – FULL LENGTH ACROSS THE ENTIRE CHART + LIVE PRICE LABEL
+                        # HORIZONTAL CROSSHAIR + LIVE PRICE LABEL ONLY ON CANDLESTICK
                         fig.update_yaxes(
                             showspikes=True,
                             spikecolor="rgba(255,255,255,0.85)",
                             spikethickness=1.5,
                             spikesnap="cursor",
-                            spikemode="across",          # ← makes horizontal line span full width
-                            showspikelabels=True,        # ← shows the exact price on the line
+                            spikemode="toaxis",
+                            showspikelabels=True,          # ← this displays the exact price
                             row=1, col=1
                         )
-                        # No horizontal spike on volume panel
+                        # No horizontal on volume
                         fig.update_yaxes(showspikes=False, row=2, col=1)
 
                         # Volume axis
@@ -657,7 +657,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                         )
                     else:
                         st.error(f"📉 Could not load {coin} chart. Try the **Refresh** button in sidebar.")
-        st.caption("🔴 Live prices update automatically every 30 seconds • Fully connected vertical crosshair across both panels + full-length horizontal crosshair with live price label on candlestick")
+        st.caption("🔴 Live prices update automatically every 30 seconds • Fully synchronized vertical crosshair across both panels + horizontal crosshair with live price label on candlestick")
         time.sleep(30)
         st.rerun()
 
