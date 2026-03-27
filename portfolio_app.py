@@ -16,9 +16,9 @@ st.set_page_config(page_title="Portfolio", layout="wide", page_icon="💎")
 # ====================== GLOBAL CSS ======================
 st.markdown("""
 <style>
-/* Whole app background - deep elegant navy gradient, perfect match for the cards */
+/* Whole app background - lighter elegant navy gradient */
 .stApp {
-    background: linear-gradient(180deg, #0a0f1c 0%, #05080f 100%) !important;
+    background: linear-gradient(180deg, #0f1724 0%, #0a0f1c 100%) !important;
 }
 
 /* Big navigation cards with glossy shine */
@@ -47,12 +47,12 @@ st.markdown("""
     background: #263b5e !important;
     color: white !important;
 }
-/* Glossy shine for main content */
+/* Glossy shine for main content + slightly lighter top summary cards */
 .glossy-header,
 .glossy-box {
     position: relative;
     overflow: hidden;
-    background: #1e2a44;
+    background: #26334f;
     border-radius: 18px;
     box-shadow: 0 12px 35px rgba(0,0,0,0.35);
     transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
@@ -527,7 +527,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
 </div>"""
         st.markdown(value_box_html, unsafe_allow_html=True)
 
-        # ====================== COMPACT COIN CARDS (softer glow, padding unchanged) ======================
+        # ====================== COMPACT COIN CARDS ======================
         coin_list = [t for t in df_port['Ticker'] if t != 'USDC']
         cards_html = ""
         for _, r in df_port.iterrows():
@@ -697,9 +697,7 @@ document.querySelectorAll('.coin-card').forEach(div => {{
                         )
                     else:
                         st.error(f"📉 Could not load {coin} chart. Try the **Refresh** button in sidebar.")
-        st.caption("🔴 Live prices update automatically every 30 seconds • Fully connected vertical crosshair across both panels + full-length horizontal crosshair on candlestick")
-        time.sleep(30)
-        st.rerun()
+        st.caption("🔴 Live prices update automatically every 15 seconds • Fully connected vertical crosshair across both panels + full-length horizontal crosshair on candlestick")
 
     # ====================== CRYPTO TRANSACTIONS ======================
     elif st.session_state.page == "Crypto Transactions":
@@ -892,6 +890,4 @@ document.querySelectorAll('.coin-card').forEach(div => {{
                 st.session_state.ui_version += 1
                 st.rerun()
 
-# Auto-refresh
-time.sleep(600)
-st.rerun()
+# Auto-refresh is now handled silently by cache TTLs (no more visible rerun)
