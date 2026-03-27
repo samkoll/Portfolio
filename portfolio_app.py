@@ -4,6 +4,7 @@ from datetime import datetime, timedelta, date
 import time
 import streamlit.components.v1 as components
 import plotly.graph_objects as go
+from plotly.subplots import make_subplots
 import requests
 import json
 from pathlib import Path
@@ -560,10 +561,11 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                     if data is not None and not data.empty:
                         data_local = data.copy()
                         
-                        # SINGLE CHART with volume on secondary y-axis
-                        fig = go.Figure()
+                        # TWO-SUBPLOT LAYOUT: price on top (75%), volume clearly at the bottom (25%)
+                        fig = make_subplots(rows=2, cols=1, shared_xaxes=True, vertical_spacing=0.08,
+                                            row_heights=[0.75, 0.25], subplot_titles=("", "Volume"))
                         
-                        # Candlestick
+                        # Candlestick (top)
                         fig.add_trace(go.Candlestick(
                             x=data_local.index,
                             open=data_local['open'],
@@ -575,9 +577,9 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                             increasing_fillcolor='#00ff9d',
                             decreasing_fillcolor='#ff4d4d',
                             name='Price'
-                        ))
+                        ), row=1, col=1)
                         
-                        # Your AVG line
+                        # Your AVG line (top)
                         if avg_price is not None:
                             fig.add_trace(go.Scatter(
                                 x=[data_local.index.min(), data_local.index.max()],
@@ -585,18 +587,17 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                                 mode='lines',
                                 line=dict(color='#ffaa00', width=2, dash='dash'),
                                 name=f'Your AVG: ${avg_price:,.2f}'
-                            ))
+                            ), row=1, col=1)
                         
-                        # Volume bars on secondary y-axis (colored exactly like candles)
+                        # Volume bars at the very bottom (colored like candles)
                         colors_volume = ['#00ff9d' if o < c else '#ff4d4d' for o, c in zip(data_local['open'], data_local['close'])]
                         fig.add_trace(go.Bar(
                             x=data_local.index,
                             y=data_local['volumefrom'],
                             marker_color=colors_volume,
                             name='Volume',
-                            opacity=0.75,
-                            yaxis='y2'
-                        ))
+                            opacity=0.85
+                        ), row=2, col=1)
                         
                         fig.update_layout(
                             title=title,
@@ -606,22 +607,16 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                             font_color='white',
                             hovermode="x unified",
                             xaxis_rangeslider_visible=False,
-                            legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="center", x=0.5, bgcolor="rgba(0,0,0,0)"),
-                            dragmode='pan',
-                            yaxis=dict(title="Price", side="left"),
-                            yaxis2=dict(title="Volume", overlaying='y', side='right', showgrid=False, zeroline=False)
+                            legend=dict(orientation="h", yanchor="bottom", y=1.02,
+                                        xanchor="center", x=0.5, bgcolor="rgba(0,0,0,0)"),
+                            dragmode='pan'
                         )
                         
-                        # STRICT ZOOM LOCK: cannot zoom out beyond actual candles
+                        # STRICT ZOOM LOCK - cannot zoom out beyond actual candles
                         if len(data_local) > 0:
                             min_time = data_local.index.min()
                             max_time = data_local.index.max()
-                            fig.update_xaxes(
-                                range=[min_time, max_time],
-                                autorange=False,
-                                minallowed=min_time,
-                                maxallowed=max_time
-                            )
+                            fig.update_xaxes(range=[min_time, max_time], autorange=False, minallowed=min_time, maxallowed=max_time)
                         
                         st.plotly_chart(
                             fig,
