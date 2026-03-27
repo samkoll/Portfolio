@@ -200,8 +200,8 @@ div[data-baseweb="select"] {
 div[data-baseweb="select"] > div {
     background: transparent !important;
     border: none !important;
-    padding: 11px 18px !important; /* extra vertical padding to prevent bottom cutoff */
-    line-height: 1.2 !important;
+    padding: 13px 18px !important; /* extra vertical space to prevent bottom cutoff */
+    line-height: 1.35 !important;
 }
 div[data-baseweb="select"] input {
     color: #ffffff !important;
@@ -224,8 +224,19 @@ div[data-baseweb="select"]:focus-within {
         max-width: 148px !important;
     }
     div[data-baseweb="select"] > div {
-        padding: 10px 14px !important;
+        padding: 12px 15px !important;
     }
+}
+
+/* CHARTS HEADER WITH NICE FITTING ICON */
+.charts-header {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 14px;
+    color: #ffffff;
+    font-weight: 700;
+    font-size: 23px;
 }
 
 /* CHART IMPROVEMENTS FOR PHONE */
@@ -247,6 +258,7 @@ div[data-baseweb="select"]:focus-within {
 DASHBOARD_ICON = '''<svg xmlns="http://www.w3.org/2000/svg" width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="#00ff9d" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>'''
 CRYPTO_ICON = '''<svg xmlns="http://www.w3.org/2000/svg" width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="#00ff9d" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M14.5 8.5L9.5 13.5"/><path d="M9.5 8.5L14.5 13.5"/></svg>'''
 FIAT_ICON = '''<svg xmlns="http://www.w3.org/2000/svg" width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="#00ff9d" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M6 8h12"/><path d="M6 12h12"/><path d="M6 16h12"/></svg>'''
+CHARTS_ICON = '''<svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#00ff9d" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M17 17l-4-4-3 3-4-4"/></svg>'''
 
 DATA_DIR = Path("data")
 DATA_DIR.mkdir(exist_ok=True)
@@ -655,7 +667,14 @@ document.querySelectorAll('.coin-card').forEach(div => {{
         components.html(html, height=580, scrolling=True)
 
         # ====================== CHARTS SECTION ======================
-        st.markdown("""<div id="price-charts-section" class="glossy-box" style="background:#1e2a44;padding:18px 30px;border-radius:18px;margin:28px 0 18px 0;"><div style="color:#ffffff;font-weight:700;font-size:23px;text-align:center;">Charts</div></div>""", unsafe_allow_html=True)
+        st.markdown(f"""
+<div id="price-charts-section" class="glossy-box" style="background:#1e2a44;padding:18px 30px;border-radius:18px;margin:28px 0 18px 0;">
+    <div class="charts-header">
+        {CHARTS_ICON}
+        <span>Charts</span>
+    </div>
+</div>
+""", unsafe_allow_html=True)
    
         if coin_list:
             selected_tab = st.tabs(coin_list)
