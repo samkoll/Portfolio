@@ -184,7 +184,7 @@ st.markdown("""
     .avg-pill span:last-child { font-size: 1.18rem !important; }
 }
 
-/* TIMEFRAME PILL SELECTOR - PERFECTLY POLISHED TEXT FIT */
+/* TIMEFRAME PILL SELECTOR - PERFECTLY CENTERED TEXT + NO BLINKING CURSOR */
 div[data-baseweb="select"] {
     background: linear-gradient(90deg, #26334f, #1e2a44) !important;
     border-radius: 9999px !important;
@@ -193,17 +193,19 @@ div[data-baseweb="select"] {
     max-width: 195px !important;
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
     border: 2px solid #00ff9d !important;
+    height: 48px !important; /* fixed height for perfect centering */
 }
 div[data-baseweb="select"] > div {
     background: transparent !important;
     border: none !important;
-    padding: 12px 22px !important;
+    padding: 13px 24px !important;
     line-height: 1.35 !important;
     display: flex !important;
     align-items: center !important;
     justify-content: center !important;
+    height: 100% !important;
 }
-/* PERFECT TEXT PLACEMENT + CRISP LOOK */
+/* PERFECT TEXT CENTERING + CRISP LOOK */
 div[data-baseweb="select"] *,
 div[data-baseweb="select"] span,
 div[data-baseweb="select"] [role="button"] span,
@@ -220,6 +222,7 @@ div[data-baseweb="select"] > div > div > div > div > span {
     opacity: 1 !important;
     letter-spacing: 0.4px !important;
     text-shadow: 0 1px 2px rgba(0,0,0,0.5) !important;
+    caret-color: transparent !important; /* removes blinking I cursor */
 }
 /* Arrow color - matches the teal accent */
 div[data-baseweb="select"] svg {
@@ -283,6 +286,7 @@ div[data-baseweb="select"] *,
     div[data-baseweb="select"] {
         min-width: 168px !important;
         max-width: 182px !important;
+        height: 46px !important;
     }
 }
 </style>
