@@ -522,7 +522,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
 </div>"""
         st.markdown(value_box_html, unsafe_allow_html=True)
 
-        # ====================== COMPACT COIN CARDS (softer glow + increased padding on all sides) ======================
+        # ====================== COMPACT COIN CARDS (softer glow, padding unchanged) ======================
         coin_list = [t for t in df_port['Ticker'] if t != 'USDC']
         cards_html = ""
         for _, r in df_port.iterrows():
@@ -530,7 +530,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
             pnl_color = "#00ff9d" if pnl > 0 else "#ff4d4d" if pnl < 0 else "#aaaaaa"
             arrow = "▲" if pnl > 0 else "▼" if pnl < 0 else ""
             base_color = get_ticker_color(r['Ticker'])
-            glow_color = '#ffffffaa' if base_color == '#000000' else base_color + '99'
+            glow_color = '#ffffff77' if base_color == '#000000' else base_color + '77'
             ticker = r['Ticker']
             onclick = f"onclick=\"switchToTab({coin_list.index(ticker)})\" " if ticker != 'USDC' else ""
             row_class = "clickable-row" if ticker != 'USDC' else ""
@@ -555,7 +555,7 @@ body{{background:transparent;color:white;font-family:sans-serif;margin:0;padding
 .coin-grid {{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px;padding:32px 26px;box-sizing:border-box;max-height:520px;overflow-y:auto;scrollbar-width:none;-ms-overflow-style:none;background:transparent !important;}}
 .coin-grid::-webkit-scrollbar {{display:none;}}
 .coin-card {{background:#0f172a;padding:16px;border-radius:20px;box-shadow:0 6px 20px rgba(0,0,0,0.3);transition:all 0.25s ease;cursor:pointer;position:relative;z-index:1;outline:none !important;-webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none;}}
-.coin-card:hover {{transform:translateY(-3px);box-shadow:0 0 30px 8px var(--glow) !important;z-index:10;}}
+.coin-card:hover {{transform:translateY(-3px);box-shadow:0 0 22px 6px var(--glow) !important;z-index:10;}}
 .card-header {{display:flex;align-items:center;margin-bottom:14px;}}
 .card-content {{display:flex;flex-direction:column;gap:8px;}}
 .label-value-row {{display:flex;justify-content:space-between;align-items:center;font-size:0.95rem;}}
