@@ -142,38 +142,53 @@ st.markdown("""
         font-size: 21px !important;
     }
 }
-/* NEW: PERFECT MOBILE FIX FOR LIVE / AVG PRICE PILLS */
-@media (max-width: 600px) {
-    .price-pills-container {
-        flex-wrap: wrap !important;
-        gap: 6px !important;
-        margin-bottom: 12px !important;
-        justify-content: flex-start !important;
+
+/* PRICE PILLS - FORCE ONE ROW ON MOBILE */
+.price-pills-container {
+    display: flex !important;
+    gap: 8px !important;
+    flex-wrap: nowrap !important;
+    overflow-x: auto !important;
+    padding-bottom: 4px;
+    scrollbar-width: none;
+}
+.price-pills-container::-webkit-scrollbar {
+    display: none;
+}
+.price-pill, .avg-pill {
+    padding: 7px 16px !important;
+    border-radius: 9999px !important;
+    white-space: nowrap !important;
+    flex-shrink: 0;
+}
+@media (max-width: 700px) {
+    .price-pill, .avg-pill {
+        padding: 6px 13px !important;
     }
-    .price-pill {
-        padding: 6px 12px !important;
-        border-radius: 9999px !important;
-    }
-    .price-pill span:first-child {
+    .price-pill span:first-child,
+    .avg-pill span:first-child {
         font-size: 0.95rem !important;
-        font-weight: 700 !important;
     }
-    .price-pill span:last-child {
-        font-size: 1.15rem !important;
-        font-weight: 700 !important;
+    .price-pill span:last-child,
+    .avg-pill span:last-child {
+        font-size: 1.22rem !important;
     }
     .daily-pill {
-        padding: 2px 5px !important;
-        border-radius: 9999px !important;
+        padding: 4px 9px !important;
+        font-size: 0.78rem !important;
     }
-    .daily-pill span {
-        font-size: 0.72rem !important;
-        font-weight: 600 !important;
+}
+
+/* CHART IMPROVEMENTS FOR PHONE */
+.stPlotlyChart {
+    width: 100% !important;
+}
+@media (max-width: 700px) {
+    .stPlotlyChart {
+        margin-bottom: 20px;
     }
-    .avg-pill {
-        padding: 6px 12px !important;
-        border-radius: 9999px !important;
-        margin-left: 0 !important;
+    .plotly .modebar {
+        padding: 4px 8px !important;
     }
 }
 </style>
@@ -590,7 +605,7 @@ document.querySelectorAll('.coin-card').forEach(div => {{
    
         components.html(html, height=580, scrolling=True)
 
-        # ====================== CHARTS SECTION (with scroll target) ======================
+        # ====================== CHARTS SECTION ======================
         st.markdown("""<div id="price-charts-section" class="glossy-box" style="background:#1e2a44;padding:22px 30px;border-radius:18px;margin:35px 0 25px 0;"><div style="color:#ffffff;font-weight:700;font-size:26px;text-align:center;">Price Charts + Volume</div></div>""", unsafe_allow_html=True)
    
         if coin_list:
@@ -608,15 +623,13 @@ document.querySelectorAll('.coin-card').forEach(div => {{
                  
                     color = "#00ff9d" if live_price > 0 else "#ff4d4d"
                     st.markdown(f"""
-                    <div class="price-pills-container" style="display:flex;gap:4px;margin-bottom:16px;">
-                        <div class="price-pill" style="background:#0f172a;padding:8px 18px;border-radius:9999px;display:inline-flex;align-items:center;gap:10px;">
-                            <span style="font-size:1.15rem;font-weight:700;">LIVE</span>
-                            <span style="font-size:1.45rem;font-weight:700;color:{color};">{format_crypto_price(live_price)}</span>
+                    <div class="price-pills-container">
+                        <div class="price-pill" style="background:#0f172a;color:#ffffff;">
+                            <span>LIVE</span>
+                            <span style="color:{color};">{format_crypto_price(live_price)}</span>
                         </div>
-                        <div class="daily-pill" style="background:#0f172a;padding:2px 7px;border-radius:9999px;display:inline-flex;align-items:center;gap:2px;">
-                            <span style="font-size:0.85rem;font-weight:600;color:{daily_color};">{daily_arrow} {abs(daily_change_pct):.2f}%</span>
-                        </div>
-                        {f'<div class="price-pill avg-pill" style="background:#0f172a;padding:8px 18px;border-radius:9999px;display:inline-flex;align-items:center;gap:10px;margin-left:16px;"><span style="font-size:1.15rem;font-weight:700;color:#ffffff;">AVG</span><span style="font-size:1.45rem;font-weight:700;color:#ffaa00;">{format_crypto_price(avg_price)}</span></div>' if avg_price is not None else ''}
+                        <div class="daily-pill" style="background:#0f172a;color:{daily_color};">{daily_arrow} {abs(daily_change_pct):.2f}%</div>
+                        {f'<div class="price-pill avg-pill" style="background:#0f172a;color:#ffffff;"><span>AVG</span><span style="color:#ffaa00;">{format_crypto_price(avg_price)}</span></div>' if avg_price is not None else ''}
                     </div>
                     """, unsafe_allow_html=True)
                  
