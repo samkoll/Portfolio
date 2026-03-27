@@ -561,7 +561,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                     if data is not None and not data.empty:
                         data_local = data.copy()
                         
-                        # VOLUME LIMITED TO ~12% HEIGHT AT THE VERY BOTTOM
+                        # VOLUME PANEL: extremely thin (12% height) at the very bottom
                         fig = make_subplots(rows=2, cols=1, shared_xaxes=True, vertical_spacing=0.1,
                                             row_heights=[0.88, 0.12], subplot_titles=("", "Volume"))
                         
@@ -589,14 +589,14 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                                 name=f'Your AVG: ${avg_price:,.2f}'
                             ), row=1, col=1)
                         
-                        # Volume bars at the very bottom (thin panel, colored like candles)
+                        # Volume bars at the very bottom (thin panel)
                         colors_volume = ['#00ff9d' if o < c else '#ff4d4d' for o, c in zip(data_local['open'], data_local['close'])]
                         fig.add_trace(go.Bar(
                             x=data_local.index,
                             y=data_local['volumefrom'],
                             marker_color=colors_volume,
                             name='Volume',
-                            opacity=0.75
+                            opacity=0.85
                         ), row=2, col=1)
                         
                         fig.update_layout(
@@ -612,8 +612,9 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                             dragmode='pan'
                         )
                         
-                        # Volume y-axis starts from 0 and stays small
-                        fig.update_yaxes(rangemode='nonnegative', row=2, col=1)
+                        # Volume axis: 0 always at bottom + heavily compressed scale
+                        max_vol = data_local['volumefrom'].max() or 1
+                        fig.update_yaxes(rangemode='nonnegative', range=[0, max_vol * 8], row=2, col=1)
                         
                         # STRICT ZOOM LOCK - cannot zoom out beyond actual candles
                         if len(data_local) > 0:
