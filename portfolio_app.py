@@ -120,7 +120,7 @@ st.markdown("""
     color: #ffffff;
 }
 
-/* MOBILE: Make header smaller so "Portfolio Dashboard" fits perfectly */
+/* MOBILE: Make header smaller */
 @media (max-width: 700px) {
     .glossy-header {
         padding: 24px 20px !important;
@@ -143,10 +143,10 @@ st.markdown("""
     }
 }
 
-/* PRICE PILLS - FORCE ONE ROW ON MOBILE + FIXED STYLING */
+/* PRICE PILLS - ULTRA COMPACT ON MOBILE */
 .price-pills-container {
     display: flex !important;
-    gap: 8px !important;
+    gap: 6px !important;
     flex-wrap: nowrap !important;
     overflow-x: auto !important;
     padding-bottom: 4px;
@@ -156,37 +156,67 @@ st.markdown("""
     display: none;
 }
 .price-pill, .avg-pill, .daily-pill {
-    padding: 7px 16px !important;
+    padding: 7px 14px !important;
     border-radius: 9999px !important;
     white-space: nowrap !important;
     flex-shrink: 0;
     background: #0f172a !important;
     display: inline-flex;
     align-items: center;
-    gap: 6px;
+    gap: 5px;
     font-size: 1.05rem;
     font-weight: 700;
 }
 .price-pill span:last-child,
 .avg-pill span:last-child {
-    font-size: 1.28rem;
+    font-size: 1.26rem;
 }
 .daily-pill {
     color: #ff4d4d;
     font-weight: 700;
+    padding: 4px 8px !important; /* MAXIMALLY shrunk */
+    font-size: 0.88rem !important;
 }
 @media (max-width: 700px) {
+    .price-pills-container {
+        gap: 4px !important;
+    }
     .price-pill, .avg-pill, .daily-pill {
-        padding: 6px 13px !important;
+        padding: 5px 10px !important;
+    }
+    .daily-pill {
+        padding: 3px 7px !important;
+        font-size: 0.82rem !important;
     }
     .price-pill span:first-child,
-    .avg-pill span:first-child,
-    .daily-pill {
-        font-size: 0.95rem !important;
+    .avg-pill span:first-child {
+        font-size: 0.92rem !important;
     }
     .price-pill span:last-child,
     .avg-pill span:last-child {
-        font-size: 1.22rem !important;
+        font-size: 1.18rem !important;
+    }
+}
+
+/* TIMEFRAME SELECTBOX - SHORTER + SAME COLOR AS CARDS */
+.stSelectbox > div > div > div > div {
+    background: #1e2a44 !important;
+    border-radius: 14px !important;
+    color: #ffffff !important;
+    font-weight: 600;
+    padding: 8px 12px !important;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+}
+.stSelectbox label {
+    display: none !important;
+}
+@media (max-width: 700px) {
+    .stSelectbox {
+        min-width: 82px !important;
+    }
+    .stSelectbox > div > div > div > div {
+        padding: 6px 10px !important;
+        font-size: 1.05rem !important;
     }
 }
 
@@ -644,7 +674,7 @@ document.querySelectorAll('.coin-card').forEach(div => {{
                     </div>
                     """, unsafe_allow_html=True)
                  
-                    col1, col2 = st.columns([0.8, 4.2])
+                    col1, col2 = st.columns([0.5, 4.5])  # shortened timeframe column
                     with col1:
                         candle = st.selectbox(
                             "Timeframe",
