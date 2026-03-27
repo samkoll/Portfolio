@@ -128,11 +128,13 @@ st.markdown("""
         font-size: 21px !important;
     }
     /* Pills shrink on mobile */
-    .pill-container {
-        grid-template-columns: repeat(auto-fit, minmax(98px, 1fr)) !important;
+    .pill-row {
+        flex-wrap: wrap !important;
         gap: 10px !important;
     }
-    .pill-container > div {
+    .pill-row > div {
+        flex: 1 !important;
+        min-width: 98px !important;
         padding: 10px 14px !important;
         font-size: 1.05rem !important;
     }
@@ -541,30 +543,25 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                     avg_price = avg_row.iloc[0] if not avg_row.empty and pd.notna(avg_row.iloc[0]) else None
                     live_price = df_port.loc[df_port['Ticker'] == coin, 'Live'].iloc[0] if not df_port.loc[df_port['Ticker'] == coin].empty else 0
                    
-                    # DAILY OPEN PILL
+                    # DAILY OPEN PILL - REVERTED TO ORIGINAL FLEX LAYOUT ON PC, SHRINKS ON MOBILE
                     daily_open = get_daily_open(coin)
                     daily_change_pct = ((live_price - daily_open) / daily_open * 100) if daily_open > 0 else 0
                     daily_arrow = "▲" if daily_change_pct > 0 else "▼" if daily_change_pct < 0 else ""
                     daily_color = "#00ff9d" if daily_change_pct > 0 else "#ff4d4d" if daily_change_pct < 0 else "#aaaaaa"
                    
                     color = "#00ff9d" if live_price > 0 else "#ff4d4d"
-                   
-                    # RESPONSIVE PILLS ABOVE CHART (same treatment as summary cards)
-                    pills_html = f"""
-<div class="pill-container" style="display: grid; 
-            grid-template-columns: repeat(auto-fit, minmax(105px, 1fr)); 
-            gap: 12px; 
-            margin-bottom:16px;">
-    <div style="background:#0f172a;padding:8px 18px;border-radius:9999px;display:flex;align-items:center;justify-content:center;gap:10px;">
+                    st.markdown(f"""
+<div style="display:flex;gap:4px;margin-bottom:16px;" class="pill-row">
+    <div style="background:#0f172a;padding:8px 18px;border-radius:9999px;display:inline-flex;align-items:center;gap:10px;flex:1;">
         <span style="font-size:1.15rem;font-weight:700;">LIVE</span>
         <span style="font-size:1.45rem;font-weight:700;color:{color};">{format_crypto_price(live_price)}</span>
     </div>
-    <div style="background:#0f172a;padding:2px 7px;border-radius:9999px;display:flex;align-items:center;justify-content:center;gap:2px;">
-        <span style="font-size:0.85rem;font-weight:600;color:{daily_color};">{daily_arrow} {abs(daily_change_pct):.2f}%</span>
+    <div style="background:#0f172a;padding:8px 18px;border-radius:9999px;display:inline-flex;align-items:center;gap:10px;flex:1;">
+        <span style="font-size:0.95rem;font-weight:600;color:{daily_color};">{daily_arrow} {abs(daily_change_pct):.2f}%</span>
     </div>
-    {f'<div style="background:#0f172a;padding:8px 18px;border-radius:9999px;display:flex;align-items:center;justify-content:center;gap:10px;"><span style="font-size:1.15rem;font-weight:700;color:#ffffff;">AVG</span><span style="font-size:1.45rem;font-weight:700;color:#ffaa00;">{format_crypto_price(avg_price)}</span></div>' if avg_price is not None else ''}
-</div>"""
-                    st.markdown(pills_html, unsafe_allow_html=True)
+    {f'<div style="background:#0f172a;padding:8px 18px;border-radius:9999px;display:inline-flex;align-items:center;gap:10px;flex:1;"><span style="font-size:1.15rem;font-weight:700;color:#ffffff;">AVG</span><span style="font-size:1.45rem;font-weight:700;color:#ffaa00;">{format_crypto_price(avg_price)}</span></div>' if avg_price is not None else ''}
+</div>
+                    """, unsafe_allow_html=True)
                    
                     # TIMEFRAME SELECTOR
                     col1, col2 = st.columns([0.8, 4.2])
