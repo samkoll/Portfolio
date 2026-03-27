@@ -28,12 +28,12 @@ if "t" in st.query_params:
     except:
         pass
 
-# ====================== PULL-TO-REFRESH - NOW AT ABSOLUTE TOP OF THE PAGE ======================
+# ====================== PULL-TO-REFRESH - ABSOLUTE TOP OF THE PAGE ======================
 PULL_REFRESH_HTML = """
 <style>
 .pull-to-refresh {
     position: fixed;
-    top: -8px !important;          /* moved higher to the absolute top edge */
+    top: 0 !important;               /* absolute top edge */
     left: 0;
     right: 0;
     height: 88px;
@@ -159,7 +159,7 @@ st.markdown("""
 /* Whole app background - lighter elegant navy gradient */
 .stApp {
     background: linear-gradient(180deg, #0f1724 0%, #0a0f1c 100%) !important;
-    padding-top: 0px !important;     /* removes any Streamlit top padding */
+    padding-top: 0px !important;
     margin-top: 0px !important;
 }
 /* Big navigation cards with glossy shine */
@@ -235,7 +235,7 @@ st.markdown("""
     gap: 16px;
     width: 100% !important;
     margin-bottom: 45px;
-    margin-top: -72px !important;   /* pulls the card right up under the pull bar */
+    margin-top: -88px !important;   /* pulls the card flush under the pull bar */
 }
 .glossy-box {
     padding: 28px 30px;
@@ -267,7 +267,7 @@ st.markdown("""
         padding: 24px 20px !important;
         font-size: 24px !important;
         min-height: 100px;
-        margin-top: -62px !important;
+        margin-top: -78px !important;
     }
 }
 /* MOBILE RESPONSIVE FIX FOR THE 3 SUMMARY CARDS */
