@@ -10,15 +10,17 @@ import json
 from pathlib import Path
 import hashlib
 import random
+
 # ====================== CONFIG ======================
 st.set_page_config(page_title="Portfolio", layout="wide", page_icon="logo.png")
+
 # ====================== GLOBAL CSS (polished & clean) ======================
 st.markdown("""
 <style>
 /* Whole app background - lighter elegant navy gradient */
 .stApp {
     background: linear-gradient(180deg, #0f1724 0%, #0a0f1c 100%) !important;
-    padding-top: 95px !important; /* generous top breathing space so the full card is visible */
+    padding-top: 95px !important;
 }
 /* Clean top spacing */
 .main, .block-container, .stMain {
@@ -96,7 +98,7 @@ st.markdown("""
     justify-content: center;
     gap: 16px;
     width: 100% !important;
-    margin-top: 72px; /* same generous space above as below the card */
+    margin-top: 72px;
     margin-bottom: 45px;
 }
 .glossy-box {
@@ -299,16 +301,18 @@ div[data-baseweb="select"] *,
 }
 </style>
 """, unsafe_allow_html=True)
+
 # ====================== SVG ICONS ======================
-# Teal 4-square grid logo (exact match to your screenshot)
 DASHBOARD_ICON = '''<svg xmlns="http://www.w3.org/2000/svg" width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="#00ff9d" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>'''
 CRYPTO_ICON = '''<svg xmlns="http://www.w3.org/2000/svg" width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="#00ff9d" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M14.5 8.5L9.5 13.5"/><path d="M9.5 8.5L14.5 13.5"/></svg>'''
 FIAT_ICON = '''<svg xmlns="http://www.w3.org/2000/svg" width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="#00ff9d" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M6 8h12"/><path d="M6 12h12"/><path d="M6 16h12"/></svg>'''
 CHARTS_ICON = '''<svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#00ff9d" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M17 17l-4-4-3 3-4-4"/></svg>'''
+
 DATA_DIR = Path("data")
 DATA_DIR.mkdir(exist_ok=True)
 CRYPTO_JSON = DATA_DIR / "crypto_transactions.json"
 FIAT_JSON = DATA_DIR / "fiat_transactions.json"
+
 # ====================== DATE HELPERS ======================
 def format_datum(datum_val):
     if pd.isna(datum_val) or datum_val == "":
@@ -319,10 +323,12 @@ def format_datum(datum_val):
         return date_obj.strftime("%d.%m.%Y")
     except:
         return str(datum_val)
+
 def date_to_excel_serial(selected_date: date) -> int:
     base = datetime(1899, 12, 30).date()
     delta = selected_date - base
     return delta.days
+
 # ====================== INITIAL DATA ======================
 def get_initial_crypto_df():
     return pd.DataFrame([
@@ -338,6 +344,7 @@ def get_initial_crypto_df():
         {"Datum": 46100, "USDC": 15.0, "Ticker": "ETH", "Amount": 0.00707709, "Price": 2119.515224},
         {"Datum": 46100, "USDC": 10.0, "Ticker": "SOL", "Amount": 0.11363518, "Price": 88.00091662},
     ])
+
 def get_initial_fiat_df():
     return pd.DataFrame([
         {"Datum": 46098, "CZK": 1010.16, "EUR": 40.0, "Fee": 1.0, "CZK/EUR": 25.254, "USDC": 44.67, "NI": "CZK", "GG": "", "ER": "8972.72"},
@@ -345,6 +352,7 @@ def get_initial_fiat_df():
         {"Datum": 46098, "CZK": 4174.67, "EUR": 165.0, "Fee": 1.0, "CZK/EUR": 25.3010303, "USDC": 188.188, "NI": "EUR", "GG": "", "ER": "355"},
         {"Datum": 46099, "CZK": 631.13, "EUR": 25.0, "Fee": 1.0, "CZK/EUR": 25.2452, "USDC": 27.42, "NI": "FEEs", "GG": "4", "ER": "101.0543103"},
     ])
+
 # ====================== LOAD / SAVE ======================
 def load_or_init_crypto():
     if CRYPTO_JSON.exists():
@@ -352,22 +360,27 @@ def load_or_init_crypto():
     df = get_initial_crypto_df()
     save_crypto(df)
     return df
+
 def load_or_init_fiat():
     if FIAT_JSON.exists():
         return pd.read_json(FIAT_JSON)
     df = get_initial_fiat_df()
     save_fiat(df)
     return df
+
 def save_crypto(df):
     df.to_json(CRYPTO_JSON, orient="records", indent=2)
+
 def save_fiat(df):
     df.to_json(FIAT_JSON, orient="records", indent=2)
+
 # ====================== CRYPTOCOMPARE MAPPING ======================
 CRYPTOCOMPARE_SYMBOL_MAP = {
     'BTC': 'BTC', 'ETH': 'ETH', 'SOL': 'SOL', 'HBAR': 'HBAR',
     'XRP': 'XRP', 'BNB': 'BNB', 'TRX': 'TRX', 'LINK': 'LINK',
     'SUI': 'SUI', 'USDC': 'USDC',
 }
+
 # ====================== HELPER: RETRY WRAPPER ======================
 def get_with_retry(url: str, headers: dict, timeout: int = 12, retries: int = 4) -> dict | None:
     for attempt in range(retries):
@@ -380,6 +393,7 @@ def get_with_retry(url: str, headers: dict, timeout: int = 12, retries: int = 4)
                 return None
             time.sleep(1.3 ** attempt)
     return None
+
 # ====================== LIVE PRICE FUNCTION ======================
 @st.cache_data(ttl=15, show_spinner=False)
 def get_all_cryptocompare_prices(tickers, refresh_key=0):
@@ -417,6 +431,7 @@ def get_all_cryptocompare_prices(tickers, refresh_key=0):
         except:
             continue
     return prices
+
 # ====================== DAILY OPEN PRICE FUNCTION ======================
 @st.cache_data(ttl=300, show_spinner=False)
 def get_daily_open(ticker: str, refresh_key=0):
@@ -432,6 +447,7 @@ def get_daily_open(ticker: str, refresh_key=0):
         return 0.0
     except:
         return 0.0
+
 # ====================== CHART FUNCTION ======================
 @st.cache_data(ttl=80, show_spinner=False)
 def get_cryptocompare_ohlc(ticker: str, candle: str, refresh_key=0):
@@ -463,6 +479,7 @@ def get_cryptocompare_ohlc(ticker: str, candle: str, refresh_key=0):
         return df
     except:
         return None
+
 # ====================== LOGOS & COLORS ======================
 def get_ticker_logo(ticker: str) -> str:
     ticker = ticker.upper()
@@ -481,6 +498,7 @@ def get_ticker_logo(ticker: str) -> str:
     if ticker in known:
         return known[ticker]
     return f"https://cryptologos.cc/logos/{ticker.lower()}-logo.png"
+
 def get_ticker_color(ticker: str) -> str:
     ticker = ticker.upper()
     known = {
@@ -492,6 +510,7 @@ def get_ticker_color(ticker: str) -> str:
     if ticker in known:
         return known[ticker]
     return f"#{hashlib.md5(ticker.encode()).hexdigest()[:6]}"
+
 # ====================== FORMATTING ======================
 def format_money(val):
     try:
@@ -500,6 +519,7 @@ def format_money(val):
         return f"${val:,.2f}" if val >= 0 else f"-${-val:,.2f}"
     except:
         return ""
+
 def format_crypto_price(val):
     try:
         val = float(val)
@@ -512,6 +532,7 @@ def format_crypto_price(val):
             return f"${val:,.6f}"
     except:
         return ""
+
 def format_percent(val):
     try:
         val = float(val)
@@ -519,6 +540,7 @@ def format_percent(val):
         return f"{val:.2f}%"
     except:
         return ""
+
 def format_holdings(val, ticker=None):
     try:
         val = float(val)
@@ -528,6 +550,7 @@ def format_holdings(val, ticker=None):
         return f"{val:,.4f}".replace(',', '.')
     except:
         return str(val)
+
 # ====================== PORTFOLIO CALC ======================
 def calculate_portfolio(crypto_df):
     if 'last_known_prices' not in st.session_state:
@@ -562,6 +585,7 @@ def calculate_portfolio(crypto_df):
     total_pnl = df_port['PnL'].sum()
     total_pnl_pct = (total_pnl / (total_value - total_pnl) * 100) if (total_value - total_pnl) != 0 else 0
     return df_port, total_value, total_pnl, total_pnl_pct
+
 # ====================== SESSION STATE ======================
 if 'crypto_df' not in st.session_state:
     st.session_state.crypto_df = load_or_init_crypto()
@@ -579,6 +603,7 @@ if 'last_known_prices' not in st.session_state:
     st.session_state.last_known_prices = {"USDC": 1.0}
 if 'refresh_key' not in st.session_state:
     st.session_state.refresh_key = random.randint(100000, 999999)
+
 # ====================== SIDEBAR ======================
 with st.sidebar:
     nav_items = [
@@ -601,21 +626,23 @@ with st.sidebar:
         data = {"crypto": json.loads(st.session_state.crypto_df.to_json(orient="records")),
                 "fiat": json.loads(st.session_state.fiat_df.to_json(orient="records"))}
         st.download_button("Download JSON", json.dumps(data, indent=2), "portfolio_backup.json", "application/json")
+
 # ====================== MAIN CONTENT ======================
 main_container = st.empty()
+
 def glossy_header(title: str, icon_svg: str):
     html = f"""<div class="glossy-header">{icon_svg}<span style="margin-left:12px;">{title}</span></div>"""
     st.markdown(html, unsafe_allow_html=True)
+
 # ====================== PAGES ======================
 with main_container.container(key=f"page_{st.session_state.page}_{st.session_state.ui_version}"):
     if st.session_state.page == "Home":
-        # === YOUR CUSTOM LOGO NOW IN THE HEADER CARD ===
-        st.markdown(f"""
-        <div class="glossy-header">
-            <img src="logo.png" width="42" style="margin-top:-2px;">
-            <span style="margin-left:12px;">Portfolio Dashboard</span>
-        </div>
-        """, unsafe_allow_html=True)
+        # === FIXED: your logo.png is now displayed reliably in the card ===
+        st.markdown('<div class="glossy-header" style="display:flex;align-items:center;justify-content:center;gap:14px;">', unsafe_allow_html=True)
+        st.image("logo.png", width=42)
+        st.markdown('<span style="margin-left:12px;">Portfolio Dashboard</span>', unsafe_allow_html=True)
+        st.markdown('</div>', unsafe_allow_html=True)
+
         df_port, total_value, total_pnl, total_pnl_pct = calculate_portfolio(st.session_state.crypto_df)
         value_box_html = f"""
 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(98px, 1fr)); gap: 14px; margin-bottom: 30px;">
@@ -624,6 +651,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
     <div class="glossy-box"><div>PnL %</div><div style="color:{'#00ff9d' if total_pnl_pct>=0 else '#ff4d4d'}">{"▲" if total_pnl_pct>0 else "▼" if total_pnl_pct<0 else ""} {abs(total_pnl_pct):.2f}%</div></div>
 </div>"""
         st.markdown(value_box_html, unsafe_allow_html=True)
+
         coin_list = [t for t in df_port['Ticker'] if t != 'USDC']
         cards_html = ""
         for _, r in df_port.iterrows():
@@ -683,6 +711,7 @@ document.querySelectorAll('.coin-card').forEach(div => {{
 }});
 </script><!-- VERSION:{st.session_state.ui_version} --></body></html>"""
         components.html(html, height=580, scrolling=True)
+
         st.markdown(f"""
 <div id="price-charts-section" class="glossy-box" style="background:#1e2a44;padding:18px 30px;border-radius:18px;margin:28px 0 18px 0;">
     <div class="charts-header">
@@ -691,6 +720,7 @@ document.querySelectorAll('.coin-card').forEach(div => {{
     </div>
 </div>
 """, unsafe_allow_html=True)
+
         if coin_list:
             selected_tab = st.tabs(coin_list)
             for i, coin in enumerate(coin_list):
@@ -698,11 +728,9 @@ document.querySelectorAll('.coin-card').forEach(div => {{
                     avg_row = df_port.loc[df_port['Ticker'] == coin, 'AVG']
                     avg_price = avg_row.iloc[0] if not avg_row.empty and pd.notna(avg_row.iloc[0]) else None
                     live_price = df_port.loc[df_port['Ticker'] == coin, 'Live'].iloc[0] if not df_port.loc[df_port['Ticker'] == coin].empty else 0
-             
                     daily_open = get_daily_open(coin, st.session_state.refresh_key)
                     daily_change_pct = ((live_price - daily_open) / daily_open * 100) if daily_open > 0 else 0
                     daily_arrow = "▲" if daily_change_pct > 0 else "▼" if daily_change_pct < 0 else ""
-             
                     color = "#00ff9d" if live_price > 0 else "#ff4d4d"
                     st.markdown(f"""
                     <div class="price-pills-container">
@@ -714,7 +742,7 @@ document.querySelectorAll('.coin-card').forEach(div => {{
                         {f'<div class="price-pill avg-pill"><span>AVG</span><span style="color:#ffaa00;">{format_crypto_price(avg_price)}</span></div>' if avg_price is not None else ''}
                     </div>
                     """, unsafe_allow_html=True)
-             
+
                     col1, col2 = st.columns([0.95, 4.05])
                     with col1:
                         candle = st.selectbox(
@@ -724,12 +752,11 @@ document.querySelectorAll('.coin-card').forEach(div => {{
                             key=f"candle_select_{coin}_{st.session_state.ui_version}",
                             label_visibility="collapsed"
                         )
-             
+
                     data = get_cryptocompare_ohlc(coin, candle, st.session_state.refresh_key)
-             
+
                     if data is not None and not data.empty:
                         data_local = data.copy()
-                 
                         fig = make_subplots(rows=2, cols=1, shared_xaxes=True, vertical_spacing=0.08,
                                             row_heights=[0.75, 0.25], subplot_titles=("", ""))
                         fig.add_trace(go.Candlestick(
@@ -788,9 +815,11 @@ document.querySelectorAll('.coin-card').forEach(div => {{
                         )
                     else:
                         st.error(f"📉 Could not load {coin} chart. Try the **Refresh** button in sidebar.")
+
     # ====================== CRYPTO TRANSACTIONS ======================
     elif st.session_state.page == "Crypto Transactions":
         glossy_header("Crypto Transactions", CRYPTO_ICON)
+        # (rest of your original Crypto Transactions page - unchanged)
         df_display = st.session_state.crypto_df.copy()
         df_display['Date'] = df_display['Datum'].apply(format_datum)
         df_display = df_display.dropna(how='all').reset_index(drop=True)
@@ -874,6 +903,7 @@ document.querySelectorAll('.coin-card').forEach(div => {{
                     st.session_state.ui_version += 1
                     st.success(f"✅ Added {amount} {ticker}")
                     st.rerun()
+
     # ====================== FIAT TRANSACTIONS ======================
     elif st.session_state.page == "Fiat Transactions":
         total_czk = pd.to_numeric(st.session_state.fiat_df['CZK'], errors='coerce').fillna(0).sum()
