@@ -553,7 +553,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                     if data is not None and not data.empty:
                         data_local = data.copy()
                        
-                        # PERFECTED CHART WITH FULLY CONNECTED VERTICAL + HORIZONTAL PRICE LABEL
+                        # PERFECTED CHART WITH FULLY SYNCHRONIZED VERTICAL + HORIZONTAL-ONLY-ON-CANDLE CROSSHAIR
                         fig = make_subplots(rows=2, cols=1, shared_xaxes=True, vertical_spacing=0.08,
                                             row_heights=[0.75, 0.25], subplot_titles=("", ""))
                        
@@ -603,43 +603,36 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                                         xanchor="center", x=0.5, bgcolor="rgba(0,0,0,0)"),
                             dragmode='pan',
                             margin=dict(t=40, b=20, l=20, r=20),
-                            # FULLY CONNECTED VERTICAL CROSSHAIR (single line across both panels)
+                            # FULLY SYNCHRONIZED VERTICAL CROSSHAIR (appears on BOTH panels instantly)
                             xaxis=dict(
                                 showspikes=True,
-                                spikecolor="rgba(255,255,255,0.95)",
+                                spikecolor="rgba(255,255,255,0.85)",
                                 spikethickness=1.8,
                                 spikesnap="cursor",
                                 spikemode="across"
                             ),
                             xaxis2=dict(
                                 showspikes=True,
-                                spikecolor="rgba(255,255,255,0.95)",
+                                spikecolor="rgba(255,255,255,0.85)",
                                 spikethickness=1.8,
                                 spikesnap="cursor",
                                 spikemode="across"
                             )
                         )
                        
-                        # HORIZONTAL CROSSHAIR ONLY ON CANDLESTICK + LIVE PRICE LABEL
+                        # HORIZONTAL CROSSHAIR ONLY ON CANDLESTICK (price) CHART
                         fig.update_yaxes(
                             showspikes=True,
-                            spikecolor="rgba(255,255,255,0.95)",
-                            spikethickness=1.5,
+                            spikecolor="rgba(255,255,255,0.85)",
+                            spikethickness=1.8,
                             spikesnap="cursor",
                             spikemode="toaxis",
-                            showspikelabels=True,
-                            spikelabel=dict(
-                                backgroundcolor="#1e2a44",
-                                color="#00ff9d",
-                                bordercolor="#00ff9d",
-                                padding=4
-                            ),
                             row=1, col=1
                         )
-                        # No horizontal spike on volume
+                        # No horizontal spike on volume panel
                         fig.update_yaxes(showspikes=False, row=2, col=1)
                        
-                        # Volume axis
+                        # VOLUME AXIS
                         fig.update_yaxes(title="Volume", rangemode='nonnegative', row=2, col=1,
                                          showgrid=True, gridwidth=1, gridcolor='rgba(255,255,255,0.08)')
                        
@@ -663,7 +656,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                         )
                     else:
                         st.error(f"📉 Could not load {coin} chart. Try the **Refresh** button in sidebar.")
-        st.caption("🔴 Live prices update automatically every 30 seconds • Fully connected vertical crosshair on both panels + horizontal crosshair with live price label on candlestick")
+        st.caption("🔴 Live prices update automatically every 30 seconds • Fully synchronized vertical crosshair on both panels + horizontal crosshair only on candlestick")
         time.sleep(30)
         st.rerun()
 
