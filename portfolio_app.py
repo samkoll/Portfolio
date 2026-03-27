@@ -187,27 +187,39 @@ st.markdown("""
     .avg-pill span:last-child { font-size: 1.18rem !important; }
 }
 
-/* TIMEFRAME SELECTBOX - CLEAN DARK MATCHING CARDS (fixed strange look) */
+/* TIMEFRAME SELECTBOX - CLEAN PREMIUM PILL (no blue highlight) */
 div[data-baseweb="select"] {
     background-color: #1e2a44 !important;
-    border-radius: 14px !important;
-    box-shadow: 0 6px 16px rgba(0,0,0,0.35) !important;
+    border-radius: 9999px !important;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.4) !important;
+    max-width: 110px !important;
+    transition: all 0.2s ease;
 }
 div[data-baseweb="select"] > div {
     background: transparent !important;
     border: none !important;
+    padding: 8px 16px !important;
 }
 div[data-baseweb="select"] input {
     color: #ffffff !important;
-    font-weight: 600 !important;
+    font-weight: 700 !important;
+    font-size: 1.05rem !important;
 }
 div[data-baseweb="select"] svg {
     fill: #ffffff !important;
 }
+/* Remove any blue/active highlight */
+div[data-baseweb="select"] [aria-selected="true"],
+div[data-baseweb="select"]:focus-within {
+    background: #1e2a44 !important;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.4) !important;
+}
 @media (max-width: 700px) {
     div[data-baseweb="select"] {
-        border-radius: 12px !important;
-        padding: 4px 8px !important;
+        max-width: 92px !important;
+    }
+    div[data-baseweb="select"] > div {
+        padding: 6px 12px !important;
     }
 }
 
@@ -638,7 +650,7 @@ document.querySelectorAll('.coin-card').forEach(div => {{
         components.html(html, height=580, scrolling=True)
 
         # ====================== CHARTS SECTION ======================
-        st.markdown("""<div id="price-charts-section" class="glossy-box" style="background:#1e2a44;padding:22px 30px;border-radius:18px;margin:35px 0 25px 0;"><div style="color:#ffffff;font-weight:700;font-size:26px;text-align:center;">Price Charts + Volume</div></div>""", unsafe_allow_html=True)
+        st.markdown("""<div id="price-charts-section" class="glossy-box" style="background:#1e2a44;padding:18px 30px;border-radius:18px;margin:28px 0 18px 0;"><div style="color:#ffffff;font-weight:700;font-size:23px;text-align:center;">Price Charts + Volume</div></div>""", unsafe_allow_html=True)
    
         if coin_list:
             selected_tab = st.tabs(coin_list)
@@ -665,7 +677,7 @@ document.querySelectorAll('.coin-card').forEach(div => {{
                     </div>
                     """, unsafe_allow_html=True)
                  
-                    col1, col2 = st.columns([0.5, 4.5])
+                    col1, col2 = st.columns([0.38, 4.62])
                     with col1:
                         candle = st.selectbox(
                             "Timeframe",
