@@ -173,14 +173,6 @@ st.markdown("""
     font-size: 1.1rem !important;
     min-height: 42px !important;
 }
-
-/* POLISHED FULL-WIDTH COIN CARDS ON MOBILE */
-@media (max-width: 700px) {
-    [data-testid="stMarkdownContainer"] > div > div > div > div > div {
-        padding-left: 8px !important;
-        padding-right: 8px !important;
-    }
-}
 </style>
 """, unsafe_allow_html=True)
 
@@ -692,7 +684,7 @@ td{{padding:0;background:transparent;}}
                             y=data_local['volumefrom'],
                             marker_color=colors_volume,
                             name='Volume',
-                            opacity:0.85
+                            opacity=0.85
                         ), row=2, col=1)
                         fig.update_layout(
                             title=title,
