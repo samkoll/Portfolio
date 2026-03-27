@@ -18,31 +18,30 @@ st.set_page_config(page_title="Portfolio", layout="wide", page_icon="📊")
 if "refresh_key" not in st.session_state:
     st.session_state.refresh_key = random.randint(100000, 999999)
 
-# Read timestamp from query param → FORCE full cache clear + new key
 if "t" in st.query_params:
     try:
         new_key = int(st.query_params["t"])
         if new_key != st.session_state.get("refresh_key", 0):
             st.session_state.refresh_key = new_key
-            st.cache_data.clear()          # This makes prices actually update
+            st.cache_data.clear()
             st.session_state.ui_version = st.session_state.get("ui_version", 0) + 1
     except:
         pass
 
-# ====================== PULL-TO-REFRESH - SWIPE FROM ANYWHERE ON THE WHOLE PAGE ======================
+# ====================== PULL-TO-REFRESH - NOW AT ABSOLUTE TOP OF THE PAGE ======================
 PULL_REFRESH_HTML = """
 <style>
 .pull-to-refresh {
     position: fixed;
-    top: 0;
+    top: -8px !important;          /* moved higher to the absolute top edge */
     left: 0;
     right: 0;
-    height: 80px;
+    height: 88px;
     display: flex;
     align-items: center;
     justify-content: center;
     background: linear-gradient(90deg, #1e2a44, #26334f) !important;
-    z-index: 99999;
+    z-index: 1000000 !important;
     transform: translateY(-100%);
     transition: transform 0.7s cubic-bezier(0.25, 0.1, 0.25, 1);
     border-bottom-left-radius: 28px;
@@ -116,9 +115,9 @@ if (!window.pullToRefreshInitialized) {
         const y = e.touches[0].clientY;
         const diff = y - startY;
         if (diff > 0) {
-            const progress = Math.min(diff * 0.68, 80);
+            const progress = Math.min(diff * 0.68, 88);
             container.style.transition = 'none';
-            container.style.transform = `translateY(${progress - 80}px)`;
+            container.style.transform = `translateY(${progress - 88}px)`;
             container.classList.add('active');
             if (diff > 35) e.preventDefault();
         }
@@ -160,6 +159,8 @@ st.markdown("""
 /* Whole app background - lighter elegant navy gradient */
 .stApp {
     background: linear-gradient(180deg, #0f1724 0%, #0a0f1c 100%) !important;
+    padding-top: 0px !important;     /* removes any Streamlit top padding */
+    margin-top: 0px !important;
 }
 /* Big navigation cards with glossy shine */
 .stButton > button {
@@ -234,7 +235,7 @@ st.markdown("""
     gap: 16px;
     width: 100% !important;
     margin-bottom: 45px;
-    margin-top: -65px !important;   /* This removes the extra space above the card */
+    margin-top: -72px !important;   /* pulls the card right up under the pull bar */
 }
 .glossy-box {
     padding: 28px 30px;
@@ -266,7 +267,7 @@ st.markdown("""
         padding: 24px 20px !important;
         font-size: 24px !important;
         min-height: 100px;
-        margin-top: -55px !important;
+        margin-top: -62px !important;
     }
 }
 /* MOBILE RESPONSIVE FIX FOR THE 3 SUMMARY CARDS */
@@ -756,7 +757,7 @@ def glossy_header(title: str, icon_svg: str):
 
 # ====================== PAGES ======================
 with main_container.container(key=f"page_{st.session_state.page}_{st.session_state.ui_version}"):
-    components.html(PULL_REFRESH_HTML, height=80)   # ← restored so the pull tab is visible again
+    components.html(PULL_REFRESH_HTML, height=88)
    
     if st.session_state.page == "Home":
         glossy_header("Portfolio Dashboard", DASHBOARD_ICON)
