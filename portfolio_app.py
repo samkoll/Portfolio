@@ -14,22 +14,21 @@ import random
 # ====================== CONFIG ======================
 st.set_page_config(page_title="Portfolio", layout="wide", page_icon="📊")
 
-# ====================== STRONG CACHE BUST + FULL CLEAR ON SWIPE ======================
+# ====================== STRONG CACHE BUST FOR PULL-TO-REFRESH ======================
 if "refresh_key" not in st.session_state:
     st.session_state.refresh_key = random.randint(100000, 999999)
 
-# Read timestamp from query param → FORCE full cache clear + new key
+# Read timestamp from query param and FORCE cache clear on swipe
 if "t" in st.query_params:
     try:
         new_key = int(st.query_params["t"])
-        if new_key != st.session_state.get("refresh_key", 0):
+        if new_key != st.session_state.refresh_key:
             st.session_state.refresh_key = new_key
-            st.cache_data.clear()          # This is the missing piece that makes prices update
-            st.session_state.ui_version = st.session_state.get("ui_version", 0) + 1
+            st.cache_data.clear()   # This is the key fix - clears ALL cached prices & charts
     except:
         pass
 
-# ====================== PULL-TO-REFRESH - NOW TRULY FROM ANYWHERE ON THE WHOLE PAGE ======================
+# ====================== PULL-TO-REFRESH - NOW FROM ANYWHERE ON THE WHOLE PAGE ======================
 PULL_REFRESH_HTML = """
 <style>
 .pull-to-refresh {
@@ -105,10 +104,10 @@ if (!window.pullToRefreshInitialized) {
         }, 700);
     }
 
-    // SWIPE FROM ANYWHERE ON THE ENTIRE PAGE (exactly what you asked for)
+    // === SWIPE FROM ANYWHERE ON THE PAGE (exactly what you asked for) ===
     document.documentElement.addEventListener('touchstart', e => {
         startY = e.touches[0].clientY;
-        isPulling = true;
+        isPulling = true;   // No scrollY check → works everywhere on the screen
     }, {passive: true});
 
     document.documentElement.addEventListener('touchmove', e => {
@@ -148,7 +147,7 @@ if (!window.pullToRefreshInitialized) {
     }, {passive: true});
 
     window.addEventListener('scroll', () => {
-        if (window.scrollY > 600) hidePull();
+        if (window.scrollY > 400) hidePull();
     });
 }
 </script>
@@ -419,10 +418,6 @@ div[data-baseweb="select"] *,
     div[data-baseweb="select"] > div {
         padding: 0 16px !important;
     }
-}
-/* REMOVE ANY EXTRA SPACE ABOVE DASHBOARD CARD */
-.glossy-header {
-    margin-top: -8px !important;
 }
 </style>
 """, unsafe_allow_html=True)
@@ -758,7 +753,7 @@ def glossy_header(title: str, icon_svg: str):
 
 # ====================== PAGES ======================
 with main_container.container(key=f"page_{st.session_state.page}_{st.session_state.ui_version}"):
-    components.html(PULL_REFRESH_HTML, height=0)   # height=0 removes the extra space you saw
+    components.html(PULL_REFRESH_HTML, height=80)
    
     if st.session_state.page == "Home":
         glossy_header("Portfolio Dashboard", DASHBOARD_ICON)
