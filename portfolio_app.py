@@ -512,7 +512,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
 </div>"""
         st.markdown(value_box_html, unsafe_allow_html=True)
 
-        # ====================== COIN CARDS IN RESPONSIVE GRID (2+ columns on PC + mobile) ======================
+        # ====================== COMPACT COIN CARDS (smaller + labels left / values right) ======================
         coin_list = [t for t in df_port['Ticker'] if t != 'USDC']
         cards_html = ""
         for _, r in df_port.iterrows():
@@ -527,34 +527,38 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
             logo_url = get_ticker_logo(ticker)
             cards_html += f"""
 <div class="coin-card {row_class}" data-glow="{glow_color}" {onclick}>
-    <div style="display:flex;align-items:center;gap:12px;">
-        <img src="{logo_url}" style="height:42px;width:42px;border-radius:50%;object-fit:contain;" onerror="this.src='https://via.placeholder.com/42/1e2a44/ffffff?text={ticker[0]}';">
-        <span style="font-weight:700;font-size:1.25rem;">{ticker}</span>
+    <div class="card-header">
+        <img src="{logo_url}" style="height:38px;width:38px;border-radius:50%;object-fit:contain;" onerror="this.src='https://via.placeholder.com/38/1e2a44/ffffff?text={ticker[0]}';">
+        <span style="font-weight:700;font-size:1.22rem;margin-left:10px;">{ticker}</span>
     </div>
-    <div style="margin-top:12px;">
-        <div style="font-size:1.05rem;color:#aaa;">{format_holdings(r['Holdings'], r['Ticker'])}</div>
-        <div style="font-size:1.05rem;color:#aaa;">{format_money(r['USDC'])}</div>
-        <div style="margin-top:8px;color:{pnl_color};font-weight:600;font-size:1.1rem;">{arrow} {format_money(abs(pnl) if pd.notna(pnl) else "")}</div>
-        <div style="color:{pnl_color};font-weight:600;font-size:1.05rem;">{arrow} {format_percent(abs(r['PnL %']) if pd.notna(r['PnL %']) else "")}</div>
-        <div style="margin-top:16px;border-top:1px solid rgba(255,255,255,0.15);padding-top:12px;font-size:1.35rem;font-weight:700;">{format_money(r['Value'])}</div>
+    <div class="card-content">
+        <div class="label-value-row"><span class="label">Holdings</span><span class="value">{format_holdings(r['Holdings'], r['Ticker'])}</span></div>
+        <div class="label-value-row"><span class="label">Invested</span><span class="value">{format_money(r['USDC'])}</span></div>
+        <div class="label-value-row"><span class="label">PnL</span><span class="value" style="color:{pnl_color};">{arrow} {format_money(abs(pnl) if pd.notna(pnl) else "")}</span></div>
+        <div class="label-value-row"><span class="label">PnL %</span><span class="value" style="color:{pnl_color};">{arrow} {format_percent(abs(r['PnL %']) if pd.notna(r['PnL %']) else "")}</span></div>
+        <div class="label-value-row total"><span class="label">Value</span><span class="value total-value">{format_money(r['Value'])}</span></div>
     </div>
 </div>"""
 
         html = f"""<html><head><style>
 body{{background:#0b1120;color:white;font-family:sans-serif;margin:0;padding:0;}}
-.coin-grid {{display:grid;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:18px;}}
-.coin-card {{background:#0f172a;padding:22px;border-radius:24px;box-shadow:0 8px 25px rgba(0,0,0,0.35);transition:all 0.3s ease;cursor:pointer;}}
-.coin-card:hover {{transform:translateY(-4px);box-shadow:0 0 40px var(--glow);}}
+.coin-grid {{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px;}}
+.coin-card {{background:#0f172a;padding:16px;border-radius:20px;box-shadow:0 6px 20px rgba(0,0,0,0.3);transition:all 0.25s ease;cursor:pointer;}}
+.coin-card:hover {{transform:translateY(-3px);box-shadow:0 0 30px var(--glow);}}
+.card-header {{display:flex;align-items:center;margin-bottom:14px;}}
+.card-content {{display:flex;flex-direction:column;gap:8px;}}
+.label-value-row {{display:flex;justify-content:space-between;align-items:center;font-size:0.95rem;}}
+.label {{color:#aaa;font-weight:500;}}
+.value {{font-weight:600;}}
+.total {{font-size:1.18rem;margin-top:8px;border-top:1px solid rgba(255,255,255,0.12);padding-top:8px;}}
+.total-value {{font-size:1.28rem;}}
 @media (max-width: 700px) {{
-    .coin-grid {{grid-template-columns:repeat(2,1fr);gap:12px;}}
-    .coin-card {{padding:18px;}}
-}}
-@media (max-width: 500px) {{
-    .coin-grid {{grid-template-columns:1fr;}}
+    .coin-grid {{grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px;}}
+    .coin-card {{padding:14px;}}
 }}
 </style></head><body><div class="coin-grid">{cards_html}</div><script>function switchToTab(index){{const tabs=window.parent.document.querySelectorAll('.stTabs button');if(tabs&&tabs[index])tabs[index].click();}}document.querySelectorAll('.coin-card').forEach(div=>{{div.style.setProperty('--glow',div.getAttribute('data-glow'));}});</script><!-- VERSION:{st.session_state.ui_version} --></body></html>"""
    
-        components.html(html, height=620, scrolling=True)
+        components.html(html, height=580, scrolling=True)
 
         st.markdown("""<div class="glossy-box" style="background:#1e2a44;padding:22px 30px;border-radius:18px;margin:35px 0 25px 0;"><div style="color:#ffffff;font-weight:700;font-size:26px;text-align:center;">Price Charts + Volume</div></div>""", unsafe_allow_html=True)
    
