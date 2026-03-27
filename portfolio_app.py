@@ -11,14 +11,6 @@ from pathlib import Path
 import hashlib
 import random
 
-# ====================== IMPORTANT - LOGO SETUP ======================
-# 1. Save your teal grid image as EXACTLY "logo.png" (lowercase, no spaces)
-# 2. Put it in the ROOT folder of your GitHub repo (same place as this file)
-# 3. Commit and push the image file
-# 4. Redeploy the app on Streamlit Cloud
-# 5. Hard refresh the page (Ctrl + Shift + R)
-# This is the most reliable way Streamlit Cloud serves static files.
-
 # ====================== CONFIG ======================
 st.set_page_config(page_title="Portfolio", layout="wide", page_icon="logo.png")
 
@@ -645,14 +637,8 @@ def glossy_header(title: str, icon_svg: str):
 # ====================== PAGES ======================
 with main_container.container(key=f"page_{st.session_state.page}_{st.session_state.ui_version}"):
     if st.session_state.page == "Home":
-        # === FINAL HEADER - pure HTML with cache-busting + onerror fallback ===
-        # This keeps the exact position you want and will never show broken icon again
-        st.markdown("""
-        <div class="glossy-header" style="display:flex;align-items:center;justify-content:center;gap:18px;">
-            <img src="logo.png?v=2026" width="52" style="flex-shrink:0;border-radius:4px;" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%2238%22 height=%2238%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%2300ff9d%22 stroke-width=%222%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22%3E%3Crect x=%223%22 y=%223%22 width=%227%22 height=%227%22/%3E%3Crect x=%2214%22 y=%223%22 width=%227%22 height=%227%22/%3E%3Crect x=%2214%22 y=%2214%22 width=%227%22 height=%227%22/%3E%3Crect x=%223%22 y=%2214%22 width=%227%22 height=%227%22/%3E%3C/svg%3E';">
-            <span style="font-size:29px;font-weight:700;letter-spacing:1.8px;">Portfolio Dashboard</span>
-        </div>
-        """, unsafe_allow_html=True)
+        # === ORIGINAL HEADER RESTORED: using the green grid SVG icon (no custom logo.png in the card) ===
+        glossy_header("Portfolio Dashboard", DASHBOARD_ICON)
 
         df_port, total_value, total_pnl, total_pnl_pct = calculate_portfolio(st.session_state.crypto_df)
         value_box_html = f"""
