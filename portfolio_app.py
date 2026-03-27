@@ -258,7 +258,7 @@ def get_all_cryptocompare_prices(tickers):
             continue
     return prices
 
-# ====================== CHART FUNCTION ======================
+# ====================== CHART FUNCTION (true 5m/30m candles) ======================
 @st.cache_data(ttl=80, show_spinner=False)
 def get_cryptocompare_ohlc(ticker: str, candle: str):
     sym = CRYPTOCOMPARE_SYMBOL_MAP.get(ticker.upper())
@@ -283,7 +283,24 @@ def get_cryptocompare_ohlc(ticker: str, candle: str):
         df.set_index("timestamp", inplace=True)
         df = df.drop(columns=["time"])
 
-        if candle == "4h":
+        # TRUE CANDLE RESAMPLING
+        if candle == "5m":
+            df = df.resample('5T').agg({
+                'open': 'first',
+                'high': 'max',
+                'low': 'min',
+                'close': 'last',
+                'volumefrom': 'sum'
+            }).dropna()
+        elif candle == "30m":
+            df = df.resample('30T').agg({
+                'open': 'first',
+                'high': 'max',
+                'low': 'min',
+                'close': 'last',
+                'volumefrom': 'sum'
+            }).dropna()
+        elif candle == "4h":
             df = df.resample('4H').agg({
                 'open': 'first',
                 'high': 'max',
@@ -516,7 +533,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                             <span style="font-size:1.15rem;font-weight:700;">LIVE</span>
                             <span style="font-size:1.45rem;font-weight:700;color:{color};">{format_crypto_price(live_price)}</span>
                         </div>
-                        {f'<div style="background:#0f172a;padding:10px 20px;border-radius:9999px;display:inline-flex;align-items:center;gap:8px;"><span style="font-size:1.15rem;font-weight:700;color:#ffaa00;">AVG</span><span style="font-size:1.45rem;font-weight:700;">{format_crypto_price(avg_price)}</span></div>' if avg_price is not None else ''}
+                        {f'<div style="background:#0f172a;padding:10px 20px;border-radius:9999px;display:inline-flex;align-items:center;gap:8px;"><span style="font-size:1.15rem;font-weight:700;color:#ffffff;">AVG</span><span style="font-size:1.45rem;font-weight:700;color:#ffaa00;">{format_crypto_price(avg_price)}</span></div>' if avg_price is not None else ''}
                     </div>
                     """, unsafe_allow_html=True)
                     
