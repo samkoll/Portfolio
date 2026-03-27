@@ -173,6 +173,14 @@ st.markdown("""
     font-size: 1.1rem !important;
     min-height: 42px !important;
 }
+
+/* POLISHED FULL-WIDTH COIN CARDS ON MOBILE */
+@media (max-width: 700px) {
+    [data-testid="stMarkdownContainer"] > div > div > div > div > div {
+        padding-left: 8px !important;
+        padding-right: 8px !important;
+    }
+}
 </style>
 """, unsafe_allow_html=True)
 
@@ -524,7 +532,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
 </div>"""
         st.markdown(value_box_html, unsafe_allow_html=True)
 
-        # ====================== OPTIMIZED RESPONSIVE TABLE (FULL-WIDTH COIN CARDS ON MOBILE) ======================
+        # ====================== OPTIMIZED RESPONSIVE TABLE (FULL-WIDTH POLISHED COIN CARDS ON MOBILE) ======================
         coin_list = [t for t in df_port['Ticker'] if t != 'USDC']
         rows_html = ""
         for _, r in df_port.iterrows():
@@ -552,8 +560,8 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
             </td></tr>"""
    
         html = f"""<html><head><style>
-body{{background:#0b1120;color:white;font-family:sans-serif;margin:0;}}
-table{{width:100%;border-spacing:0;table-layout:fixed;min-width:850px;}}
+body{{background:#0b1120;color:white;font-family:sans-serif;margin:0;padding:0;}}
+table{{width:100%;border-spacing:0;table-layout:fixed;min-width:100%;}}
 thead{{position:sticky;top:0;z-index:9999;background:#0f172a;}}
 thead th{{padding:12px 8px;text-align:center;font-size:0.95rem;}}
 td{{padding:0;background:transparent;}}
@@ -561,23 +569,23 @@ td{{padding:0;background:transparent;}}
 @media (max-width:900px){{.row-inner{{padding:6px 8px;}}thead th{{font-size:0.85rem;padding:8px 6px;}}}}
 .clickable-row{{cursor:pointer;}}
 .row-inner:hover{{transform:translateY(-2px) scale(1.01);box-shadow:0 0 45px var(--glow)!important;z-index:20;}}
-.scroll-container{{max-height:460px;overflow-y:auto;overflow-x:auto;position:relative;}}
+.scroll-container{{max-height:520px;overflow-y:auto;overflow-x:auto;position:relative;}}
 .scroll-container::-webkit-scrollbar{{display:none;}}
-/* ====================== PERFECT MOBILE OPTIMIZATION ====================== */
+/* ====================== PERFECT MOBILE OPTIMIZATION - FULL-WIDTH POLISHED COIN CARDS ====================== */
 @media (max-width: 700px) {{
-    .scroll-container {{width:100% !important;padding:0 !important;}}
+    .scroll-container {{width:100% !important;padding:0 8px !important;margin:0 !important;box-sizing:border-box;}}
     table {{width:100% !important;min-width:100% !important;border-spacing:0 12px !important;}}
     thead {{display:none;}}
-    tbody tr {{display:block;margin-bottom:14px;}}
+    tbody tr {{display:block;margin-bottom:12px;}}
     .row-inner {{
         width:100% !important;
         margin:0 !important;
+        padding:22px 24px !important;
+        border-radius:24px !important;
         flex-direction:column !important;
         align-items:flex-start !important;
-        padding:18px 20px !important;
-        gap:12px;
-        box-shadow:0 8px 25px rgba(0,0,0,0.3);
-        border-radius:20px;
+        gap:14px;
+        box-shadow:0 12px 35px rgba(0,0,0,0.4) !important;
     }}
     .row-inner > div {{
         width:100% !important;
@@ -588,25 +596,25 @@ td{{padding:0;background:transparent;}}
     .row-inner > div:first-child {{
         display:flex;
         align-items:center;
-        gap:14px;
-        font-size:1.15rem !important;
+        gap:16px;
+        font-size:1.22rem !important;
         font-weight:700;
     }}
-    .row-inner > div:first-child img {{height:32px !important;width:32px !important;}}
+    .row-inner > div:first-child img {{height:38px !important;width:38px !important;}}
     .row-inner > div:nth-child(2) {{color:#aaa;font-size:0.9rem;}}
     .row-inner > div:nth-child(3) {{color:#aaa;font-size:0.9rem;}}
     .row-inner > div:nth-child(6) {{
-        font-size:1.3rem !important;
+        font-size:1.4rem !important;
         font-weight:700;
         text-align:right !important;
-        margin-top:6px;
-        border-top:1px solid rgba(255,255,255,0.1);
-        padding-top:8px;
+        margin-top:8px;
+        border-top:1px solid rgba(255,255,255,0.12);
+        padding-top:12px;
     }}
 }}
 </style></head><body><div class="scroll-container"><table><thead><tr><th>Ticker</th><th>Holdings</th><th>USDC</th><th>PnL</th><th>PnL %</th><th>Value</th></tr></thead><tbody>{rows_html}</tbody></table></div><script>function switchToTab(index){{const tabs=window.parent.document.querySelectorAll('.stTabs button');if(tabs&&tabs[index])tabs[index].click();}}document.querySelectorAll('.row-inner').forEach(div=>{{div.style.setProperty('--glow',div.getAttribute('data-glow'));}});</script><!-- VERSION:{st.session_state.ui_version} --></body></html>"""
    
-        components.html(html, height=520, scrolling=True)
+        components.html(html, height=560, scrolling=True)
 
         st.markdown("""<div class="glossy-box" style="background:#1e2a44;padding:22px 30px;border-radius:18px;margin:35px 0 25px 0;"><div style="color:#ffffff;font-weight:700;font-size:26px;text-align:center;">Price Charts + Volume</div></div>""", unsafe_allow_html=True)
    
@@ -684,7 +692,7 @@ td{{padding:0;background:transparent;}}
                             y=data_local['volumefrom'],
                             marker_color=colors_volume,
                             name='Volume',
-                            opacity=0.85
+                            opacity:0.85
                         ), row=2, col=1)
                         fig.update_layout(
                             title=title,
