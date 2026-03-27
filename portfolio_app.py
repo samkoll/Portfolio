@@ -20,7 +20,7 @@ st.markdown("""
 /* Whole app background - lighter elegant navy gradient */
 .stApp {
     background: linear-gradient(180deg, #0f1724 0%, #0a0f1c 100%) !important;
-    padding-top: 28px !important;   /* increased for clean breathing space at very top */
+    padding-top: 95px !important;   /* BIGGER TOP SPACE - full card is now 100% visible */
 }
 
 /* Clean top spacing */
@@ -28,34 +28,28 @@ st.markdown("""
     padding-top: 0px !important;
 }
 
-/* Big navigation cards with glossy shine */
-.stButton > button {
-    background: #1e2a44 !important;
-    color: #e0e0e0 !important;
-    padding: 22px 24px !important;
-    border-radius: 14px !important;
-    margin-bottom: 14px !important;
-    font-size: 1.28rem !important;
-    font-weight: 700 !important;
-    letter-spacing: 1.2px !important;
-    height: auto !important;
-    width: 100% !important;
+/* === SITE LOGO (teal 4-square grid from your screenshot) === */
+.site-logo {
     display: flex;
     align-items: center;
-    gap: 18px;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.25) !important;
-    transition: all 0.3s ease !important;
-    position: relative;
-    overflow: hidden;
+    justify-content: center;
+    gap: 22px;
+    margin-bottom: 28px;
 }
-.stButton > button:hover {
-    transform: translateY(-4px) !important;
-    box-shadow: 0 12px 30px rgba(255, 255, 255, 0.25) !important;
-    background: #263b5e !important;
-    color: white !important;
+.site-logo svg {
+    width: 68px;
+    height: 68px;
+}
+.site-logo h1 {
+    font-size: 2.35rem;
+    font-weight: 800;
+    letter-spacing: 3px;
+    margin: 0;
+    color: #ffffff;
+    text-shadow: 0 2px 8px rgba(0, 255, 157, 0.3);
 }
 
-/* Glossy shine for main content + slightly lighter top summary cards */
+/* Glossy shine for main content */
 .glossy-header,
 .glossy-box {
     position: relative;
@@ -101,8 +95,8 @@ st.markdown("""
     justify-content: center;
     gap: 16px;
     width: 100% !important;
-    margin-top: 45px;      /* NEW: same space above as below */
-    margin-bottom: 45px;   /* existing space below → now perfectly symmetric */
+    margin-top: 72px;      /* BIGGER SPACE ABOVE (same size as space below the card) */
+    margin-bottom: 45px;
 }
 .glossy-box {
     padding: 28px 30px;
@@ -140,12 +134,22 @@ st.markdown("""
 
 /* MOBILE: Make header smaller */
 @media (max-width: 700px) {
+    .stApp {
+        padding-top: 75px !important;
+    }
     .glossy-header {
+        margin-top: 52px !important;
+        margin-bottom: 35px !important;
         padding: 24px 20px !important;
         font-size: 24px !important;
         min-height: 100px;
-        margin-top: 35px !important;   /* slightly reduced on mobile for perfect balance */
-        margin-bottom: 35px !important;
+    }
+    .site-logo svg {
+        width: 54px;
+        height: 54px;
+    }
+    .site-logo h1 {
+        font-size: 1.85rem;
     }
 }
 
@@ -163,7 +167,7 @@ st.markdown("""
     }
 }
 
-/* PRICE PILLS */
+/* PRICE PILLS - PERFECT AS THEY ARE */
 .price-pills-container {
     display: flex !important;
     gap: 6px !important;
@@ -208,7 +212,7 @@ st.markdown("""
     .avg-pill span:last-child { font-size: 1.18rem !important; }
 }
 
-/* TIMEFRAME PILL */
+/* TIMEFRAME PILL - COMPACT + TEXT & ARROW PERFECTLY ALIGNED */
 div[data-baseweb="select"] {
     background: linear-gradient(90deg, #26334f, #1e2a44) !important;
     border-radius: 9999px !important;
@@ -311,7 +315,10 @@ div[data-baseweb="select"] *,
 """, unsafe_allow_html=True)
 
 # ====================== SVG ICONS ======================
-DASHBOARD_ICON = '''<svg xmlns="http://www.w3.org/2000/svg" width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="#00ff9d" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>'''
+# Teal 4-square grid logo (exact match to your screenshot)
+SITE_LOGO = '''<svg xmlns="http://www.w3.org/2000/svg" width="68" height="68" viewBox="0 0 24 24" fill="none" stroke="#00ff9d" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>'''
+
+DASHBOARD_ICON = SITE_LOGO  # reuse the same exact logo on the dashboard card
 CRYPTO_ICON = '''<svg xmlns="http://www.w3.org/2000/svg" width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="#00ff9d" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M14.5 8.5L9.5 13.5"/><path d="M9.5 8.5L14.5 13.5"/></svg>'''
 FIAT_ICON = '''<svg xmlns="http://www.w3.org/2000/svg" width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="#00ff9d" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M6 8h12"/><path d="M6 12h12"/><path d="M6 16h12"/></svg>'''
 CHARTS_ICON = '''<svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#00ff9d" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M17 17l-4-4-3 3-4-4"/></svg>'''
@@ -645,6 +652,14 @@ def glossy_header(title: str, icon_svg: str):
 # ====================== PAGES ======================
 with main_container.container(key=f"page_{st.session_state.page}_{st.session_state.ui_version}"):
     if st.session_state.page == "Home":
+        # SITE LOGO (teal 4-square grid from your screenshot)
+        st.markdown(f"""
+        <div class="site-logo">
+            {SITE_LOGO}
+            <h1>PORTFOLIO</h1>
+        </div>
+        """, unsafe_allow_html=True)
+        
         glossy_header("Portfolio Dashboard", DASHBOARD_ICON)
         df_port, total_value, total_pnl, total_pnl_pct = calculate_portfolio(st.session_state.crypto_df)
         value_box_html = f"""
