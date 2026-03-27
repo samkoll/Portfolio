@@ -13,13 +13,7 @@ import hashlib
 # ====================== CONFIG ======================
 st.set_page_config(page_title="Portfolio", layout="wide", page_icon="📊")
 
-# ====================== FORCE REFRESH FROM SWIPE (EXACTLY LIKE SIDEBAR BUTTON) ======================
-if st.query_params.get("refresh"):
-    st.session_state.ui_version = st.session_state.get("ui_version", 0) + 1
-    st.query_params.clear()
-    st.rerun()
-
-# ====================== PULL-TO-REFRESH (ANYWHERE + SAME SLOW ROLL ANIMATION ON SUCCESS) ======================
+# ====================== PULL-TO-REFRESH (ANYWHERE + SAME SLOW ROLL ANIMATION ON SUCCESS + CACHE-BUST REFRESH) ======================
 PULL_REFRESH_HTML = """
 <style>
 .pull-to-refresh {
@@ -124,12 +118,13 @@ document.documentElement.addEventListener('touchend', e => {
         loader.style.display = 'none';
         success.style.display = 'block';
         container.style.transform = 'translateY(0)';
+        // Slow roll-back animation even on success, then full reload with cache-bust
         setTimeout(() => {
-            // Same slow roll-back as cancel, then trigger exact sidebar refresh
             container.style.transition = 'transform 0.8s cubic-bezier(0.25, 0.1, 0.25, 1)';
             container.style.transform = 'translateY(-100%)';
             setTimeout(() => {
-                const url = window.location.pathname + '?refresh=1';
+                // Force real API refresh
+                const url = window.location.href.split('?')[0] + '?t=' + Date.now();
                 window.location.href = url;
             }, 820);
         }, 520);
