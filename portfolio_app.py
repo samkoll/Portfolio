@@ -146,19 +146,6 @@ st.markdown("""
         min-height: 100px;
     }
 }
-/* MOBILE RESPONSIVE FIX FOR THE 3 SUMMARY CARDS */
-@media (max-width: 600px) {
-    .glossy-box {
-        min-width: 98px !important;
-        padding: 18px 14px !important;
-    }
-    .glossy-box > div:first-child {
-        font-size: 12px !important;
-    }
-    .glossy-box > div:last-child {
-        font-size: 21px !important;
-    }
-}
 /* PRICE PILLS */
 .price-pills-container {
     display: flex !important;
@@ -292,7 +279,7 @@ div[data-baseweb="select"] *,
     font-size: 23px;
 }
 
-/* TIGHTENED CHARTS SECTION - REMOVED EXTRA SPACE */
+/* TIGHTENED CHARTS SECTION */
 .stTabs {
     margin-top: 0 !important;
     padding-top: 0 !important;
@@ -658,15 +645,26 @@ def glossy_header(title: str, icon_svg: str):
 # ====================== PAGES ======================
 with main_container.container(key=f"page_{st.session_state.page}_{st.session_state.ui_version}"):
     if st.session_state.page == "Home":
-        glossy_header("Portfolio Dashboard", DASHBOARD_ICON)
+        # === NEW PERFECT HEADER (matches your latest screenshot) ===
+        st.markdown(f"""
+        <div style="background:#1e2a44;border-radius:18px;padding:20px 0;text-align:center;font-size:28px;font-weight:700;letter-spacing:1.5px;color:#ffffff;display:flex;align-items:center;justify-content:center;gap:14px;margin-bottom:24px;">
+            {DASHBOARD_ICON}
+            Portfolio Dashboard
+        </div>
+        """, unsafe_allow_html=True)
+
         df_port, total_value, total_pnl, total_pnl_pct = calculate_portfolio(st.session_state.crypto_df)
+
+        # === IMPROVED SUMMARY CARDS (fixed spacing on vertical PC) ===
         value_box_html = f"""
-<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(98px, 1fr)); gap: 14px; margin-bottom: 30px;">
-    <div class="glossy-box"><div>Total Value</div><div>{format_money(total_value)}</div></div>
-    <div class="glossy-box"><div>PnL</div><div style="color:{'#00ff9d' if total_pnl>=0 else '#ff4d4d'}">{"▲" if total_pnl>0 else "▼" if total_pnl<0 else ""} {format_money(abs(total_pnl))}</div></div>
-    <div class="glossy-box"><div>PnL %</div><div style="color:{'#00ff9d' if total_pnl_pct>=0 else '#ff4d4d'}">{"▲" if total_pnl_pct>0 else "▼" if total_pnl_pct<0 else ""} {abs(total_pnl_pct):.2f}%</div></div>
-</div>"""
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(122px, 1fr)); gap: 18px; margin-bottom: 34px;">
+            <div class="glossy-box"><div>Total Value</div><div style="font-size:28px;">{format_money(total_value)}</div></div>
+            <div class="glossy-box"><div>PnL</div><div style="color:{'#00ff9d' if total_pnl>=0 else '#ff4d4d'};font-size:28px;">{"▲" if total_pnl>0 else "▼" if total_pnl<0 else ""} {format_money(abs(total_pnl))}</div></div>
+            <div class="glossy-box"><div>PnL %</div><div style="color:{'#00ff9d' if total_pnl_pct>=0 else '#ff4d4d'};font-size:28px;">{"▲" if total_pnl_pct>0 else "▼" if total_pnl_pct<0 else ""} {abs(total_pnl_pct):.2f}%</div></div>
+        </div>"""
         st.markdown(value_box_html, unsafe_allow_html=True)
+
+        # (rest of your Home page code remains exactly the same - coin cards, charts, etc.)
         coin_list = [t for t in df_port['Ticker'] if t != 'USDC']
         cards_html = ""
         for _, r in df_port.iterrows():
@@ -725,7 +723,7 @@ document.querySelectorAll('.coin-card').forEach(div => {{
     div.style.setProperty('--glow', div.getAttribute('data-glow'));
 }});
 </script><!-- VERSION:{st.session_state.ui_version} --></body></html>"""
-        components.html(html, height=520, scrolling=True)  # tightened height for perfect flow
+        components.html(html, height=520, scrolling=True)
 
         st.markdown(f"""
 <div id="price-charts-section" class="glossy-box" style="background:#1e2a44;padding:14px 24px;border-radius:18px;margin:12px 0 8px 0;">
@@ -837,6 +835,7 @@ document.querySelectorAll('.coin-card').forEach(div => {{
     # ====================== CRYPTO TRANSACTIONS ======================
     elif st.session_state.page == "Crypto Transactions":
         glossy_header("Crypto Transactions", CRYPTO_ICON)
+        # ... (rest of your Crypto Transactions page - unchanged) ...
         df_display = st.session_state.crypto_df.copy()
         df_display['Date'] = df_display['Datum'].apply(format_datum)
         df_display = df_display.dropna(how='all').reset_index(drop=True)
@@ -923,6 +922,7 @@ document.querySelectorAll('.coin-card').forEach(div => {{
 
     # ====================== FIAT TRANSACTIONS ======================
     elif st.session_state.page == "Fiat Transactions":
+        # ... (your Fiat page - unchanged) ...
         total_czk = pd.to_numeric(st.session_state.fiat_df['CZK'], errors='coerce').fillna(0).sum()
         total_eur = pd.to_numeric(st.session_state.fiat_df['EUR'], errors='coerce').fillna(0).sum()
         total_usdc = pd.to_numeric(st.session_state.fiat_df['USDC'], errors='coerce').fillna(0).sum()
