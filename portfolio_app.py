@@ -512,9 +512,9 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
 </div>"""
         st.markdown(value_box_html, unsafe_allow_html=True)
 
-        # ====================== COIN CARDS – FULL-VIEWPORT WIDTH ON MOBILE (strongest fix) ======================
+        # ====================== COIN CARDS IN RESPONSIVE GRID (2 columns on mobile) ======================
         coin_list = [t for t in df_port['Ticker'] if t != 'USDC']
-        rows_html = ""
+        cards_html = ""
         for _, r in df_port.iterrows():
             pnl = r['PnL']
             pnl_color = "#00ff9d" if pnl > 0 else "#ff4d4d" if pnl < 0 else "#aaaaaa"
@@ -525,81 +525,36 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
             onclick = f"onclick=\"switchToTab({coin_list.index(ticker)})\" " if ticker != 'USDC' else ""
             row_class = "clickable-row" if ticker != 'USDC' else ""
             logo_url = get_ticker_logo(ticker)
-            rows_html += f"""<tr><td colspan="6" style="padding:0;">
-                <div class="row-inner {row_class}" data-glow="{glow_color}" style="display:flex;justify-content:space-between;align-items:center;margin:6px auto 6px;" {onclick}>
-                    <div style="display:flex;align-items:center;gap:8px;min-width:100px;">
-                        <img src="{logo_url}" style="height:36px;width:36px;border-radius:50%;object-fit:contain;" onerror="this.src='https://via.placeholder.com/36/1e2a44/ffffff?text={ticker[0]}';">
-                        <span style="font-weight:600;">{ticker}</span>
-                    </div>
-                    <div style="flex:1;text-align:center;">{format_holdings(r['Holdings'], r['Ticker'])}</div>
-                    <div style="flex:1;text-align:center;">{format_money(r['USDC'])}</div>
-                    <div style="flex:1;text-align:center;color:{pnl_color};font-weight:600;">{arrow} {format_money(abs(pnl) if pd.notna(pnl) else "")}</div>
-                    <div style="flex:1;text-align:center;color:{pnl_color};font-weight:600;">{arrow} {format_percent(abs(r['PnL %']) if pd.notna(r['PnL %']) else "")}</div>
-                    <div style="flex:1;text-align:center;">{format_money(r['Value'])}</div>
-                </div>
-            </td></tr>"""
-   
+            cards_html += f"""
+<div class="coin-card {row_class}" data-glow="{glow_color}" {onclick}>
+    <div style="display:flex;align-items:center;gap:12px;">
+        <img src="{logo_url}" style="height:42px;width:42px;border-radius:50%;object-fit:contain;" onerror="this.src='https://via.placeholder.com/42/1e2a44/ffffff?text={ticker[0]}';">
+        <span style="font-weight:700;font-size:1.25rem;">{ticker}</span>
+    </div>
+    <div style="margin-top:12px;">
+        <div style="font-size:1.05rem;color:#aaa;">{format_holdings(r['Holdings'], r['Ticker'])}</div>
+        <div style="font-size:1.05rem;color:#aaa;">{format_money(r['USDC'])}</div>
+        <div style="margin-top:8px;color:{pnl_color};font-weight:600;font-size:1.1rem;">{arrow} {format_money(abs(pnl) if pd.notna(pnl) else "")}</div>
+        <div style="color:{pnl_color};font-weight:600;font-size:1.05rem;">{arrow} {format_percent(abs(r['PnL %']) if pd.notna(r['PnL %']) else "")}</div>
+        <div style="margin-top:16px;border-top:1px solid rgba(255,255,255,0.15);padding-top:12px;font-size:1.35rem;font-weight:700;">{format_money(r['Value'])}</div>
+    </div>
+</div>"""
+
         html = f"""<html><head><style>
 body{{background:#0b1120;color:white;font-family:sans-serif;margin:0;padding:0;}}
-table{{width:100%;border-spacing:0;table-layout:fixed;min-width:100%;}}
-thead{{position:sticky;top:0;z-index:9999;background:#0f172a;}}
-thead th{{padding:12px 8px;text-align:center;font-size:0.95rem;}}
-td{{padding:0;background:transparent;}}
-.row-inner{{position:relative;z-index:1;width:98%;padding:8px 10px;border-radius:18px;background:#0f172a;display:flex;justify-content:space-between;align-items:center;transition:transform 0.22s cubic-bezier(0.4,0,0.2,1),box-shadow 0.25s cubic-bezier(0.4,0,0.2,1);cursor:default;font-size:0.95rem;}}
-@media (max-width:900px){{.row-inner{{padding:6px 8px;}}thead th{{font-size:0.85rem;padding:8px 6px;}}}}
-.clickable-row{{cursor:pointer;}}
-.row-inner:hover{{transform:translateY(-2px) scale(1.01);box-shadow:0 0 45px var(--glow)!important;z-index:20;}}
-.scroll-container{{max-height:520px;overflow-y:auto;overflow-x:auto;position:relative;}}
-.scroll-container::-webkit-scrollbar{{display:none;}}
-/* ====================== STRONGEST FULL-WIDTH FIX ON MOBILE ====================== */
+.coin-grid {{display:grid;grid-template-columns:1fr;gap:16px;}}
+.coin-card {{background:#0f172a;padding:20px;border-radius:24px;box-shadow:0 8px 25px rgba(0,0,0,0.35);transition:all 0.3s ease;cursor:pointer;}}
+.coin-card:hover {{transform:translateY(-4px);box-shadow:0 0 40px var(--glow);}}
 @media (max-width: 700px) {{
-    .scroll-container {{
-        width: 100vw !important;
-        margin-left: calc(-50vw + 50%) !important;
-        padding: 0 16px !important;
-        box-sizing: border-box;
-    }}
-    table {{width:100% !important;min-width:100% !important;border-spacing:0 12px !important;}}
-    thead {{display:none;}}
-    tbody tr {{display:block;margin-bottom:12px;}}
-    .row-inner {{
-        width:100% !important;
-        margin:0 !important;
-        padding:22px 24px !important;
-        border-radius:24px !important;
-        flex-direction:column !important;
-        align-items:flex-start !important;
-        gap:14px;
-        box-shadow:0 12px 35px rgba(0,0,0,0.4) !important;
-    }}
-    .row-inner > div {{
-        width:100% !important;
-        text-align:left !important;
-        font-size:0.98rem !important;
-        padding:2px 0;
-    }}
-    .row-inner > div:first-child {{
-        display:flex;
-        align-items:center;
-        gap:16px;
-        font-size:1.22rem !important;
-        font-weight:700;
-    }}
-    .row-inner > div:first-child img {{height:38px !important;width:38px !important;}}
-    .row-inner > div:nth-child(2) {{color:#aaa;font-size:0.9rem;}}
-    .row-inner > div:nth-child(3) {{color:#aaa;font-size:0.9rem;}}
-    .row-inner > div:nth-child(6) {{
-        font-size:1.4rem !important;
-        font-weight:700;
-        text-align:right !important;
-        margin-top:8px;
-        border-top:1px solid rgba(255,255,255,0.12);
-        padding-top:12px;
-    }}
+    .coin-grid {{grid-template-columns:repeat(2,1fr);gap:12px;}}
+    .coin-card {{padding:16px;}}
 }}
-</style></head><body><div class="scroll-container"><table><thead><tr><th>Ticker</th><th>Holdings</th><th>USDC</th><th>PnL</th><th>PnL %</th><th>Value</th></tr></thead><tbody>{rows_html}</tbody></table></div><script>function switchToTab(index){{const tabs=window.parent.document.querySelectorAll('.stTabs button');if(tabs&&tabs[index])tabs[index].click();}}document.querySelectorAll('.row-inner').forEach(div=>{{div.style.setProperty('--glow',div.getAttribute('data-glow'));}});</script><!-- VERSION:{st.session_state.ui_version} --></body></html>"""
+@media (max-width: 500px) {{
+    .coin-grid {{grid-template-columns:1fr;}}
+}}
+</style></head><body><div class="coin-grid">{cards_html}</div><script>function switchToTab(index){{const tabs=window.parent.document.querySelectorAll('.stTabs button');if(tabs&&tabs[index])tabs[index].click();}}document.querySelectorAll('.coin-card').forEach(div=>{{div.style.setProperty('--glow',div.getAttribute('data-glow'));}});</script><!-- VERSION:{st.session_state.ui_version} --></body></html>"""
    
-        components.html(html, height=560, scrolling=True)
+        components.html(html, height=620, scrolling=True)
 
         st.markdown("""<div class="glossy-box" style="background:#1e2a44;padding:22px 30px;border-radius:18px;margin:35px 0 25px 0;"><div style="color:#ffffff;font-weight:700;font-size:26px;text-align:center;">Price Charts + Volume</div></div>""", unsafe_allow_html=True)
    
