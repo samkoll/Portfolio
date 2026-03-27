@@ -512,7 +512,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
 </div>"""
         st.markdown(value_box_html, unsafe_allow_html=True)
 
-        # ====================== COIN CARDS – FULL-VIEWPORT WIDTH ON MOBILE ======================
+        # ====================== COIN CARDS – FULL-VIEWPORT WIDTH ON MOBILE (strongest fix) ======================
         coin_list = [t for t in df_port['Ticker'] if t != 'USDC']
         rows_html = ""
         for _, r in df_port.iterrows():
@@ -551,7 +551,7 @@ td{{padding:0;background:transparent;}}
 .row-inner:hover{{transform:translateY(-2px) scale(1.01);box-shadow:0 0 45px var(--glow)!important;z-index:20;}}
 .scroll-container{{max-height:520px;overflow-y:auto;overflow-x:auto;position:relative;}}
 .scroll-container::-webkit-scrollbar{{display:none;}}
-/* ====================== FULL-VIEWPORT WIDTH ON MOBILE (best fix) ====================== */
+/* ====================== STRONGEST FULL-WIDTH FIX ON MOBILE ====================== */
 @media (max-width: 700px) {{
     .scroll-container {{
         width: 100vw !important;
