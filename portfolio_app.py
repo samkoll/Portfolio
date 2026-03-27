@@ -143,7 +143,7 @@ st.markdown("""
     }
 }
 
-/* PRICE PILLS - FORCE ONE ROW ON MOBILE */
+/* PRICE PILLS - FORCE ONE ROW ON MOBILE + FIXED STYLING */
 .price-pills-container {
     display: flex !important;
     gap: 8px !important;
@@ -155,27 +155,38 @@ st.markdown("""
 .price-pills-container::-webkit-scrollbar {
     display: none;
 }
-.price-pill, .avg-pill {
+.price-pill, .avg-pill, .daily-pill {
     padding: 7px 16px !important;
     border-radius: 9999px !important;
     white-space: nowrap !important;
     flex-shrink: 0;
+    background: #0f172a !important;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 1.05rem;
+    font-weight: 700;
+}
+.price-pill span:last-child,
+.avg-pill span:last-child {
+    font-size: 1.28rem;
+}
+.daily-pill {
+    color: #ff4d4d;
+    font-weight: 700;
 }
 @media (max-width: 700px) {
-    .price-pill, .avg-pill {
+    .price-pill, .avg-pill, .daily-pill {
         padding: 6px 13px !important;
     }
     .price-pill span:first-child,
-    .avg-pill span:first-child {
+    .avg-pill span:first-child,
+    .daily-pill {
         font-size: 0.95rem !important;
     }
     .price-pill span:last-child,
     .avg-pill span:last-child {
         font-size: 1.22rem !important;
-    }
-    .daily-pill {
-        padding: 4px 9px !important;
-        font-size: 0.78rem !important;
     }
 }
 
@@ -624,12 +635,12 @@ document.querySelectorAll('.coin-card').forEach(div => {{
                     color = "#00ff9d" if live_price > 0 else "#ff4d4d"
                     st.markdown(f"""
                     <div class="price-pills-container">
-                        <div class="price-pill" style="background:#0f172a;color:#ffffff;">
+                        <div class="price-pill">
                             <span>LIVE</span>
                             <span style="color:{color};">{format_crypto_price(live_price)}</span>
                         </div>
-                        <div class="daily-pill" style="background:#0f172a;color:{daily_color};">{daily_arrow} {abs(daily_change_pct):.2f}%</div>
-                        {f'<div class="price-pill avg-pill" style="background:#0f172a;color:#ffffff;"><span>AVG</span><span style="color:#ffaa00;">{format_crypto_price(avg_price)}</span></div>' if avg_price is not None else ''}
+                        <div class="daily-pill">{daily_arrow} {abs(daily_change_pct):.2f}%</div>
+                        {f'<div class="price-pill avg-pill"><span>AVG</span><span style="color:#ffaa00;">{format_crypto_price(avg_price)}</span></div>' if avg_price is not None else ''}
                     </div>
                     """, unsafe_allow_html=True)
                  
