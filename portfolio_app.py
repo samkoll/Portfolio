@@ -553,7 +553,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                     if data is not None and not data.empty:
                         data_local = data.copy()
                        
-                        # PERFECTED CHART WITH SYNCHRONIZED CROSSHAIR
+                        # PERFECTED CHART WITH FULLY SYNCHRONIZED CROSSHAIR
                         fig = make_subplots(rows=2, cols=1, shared_xaxes=True, vertical_spacing=0.08,
                                             row_heights=[0.75, 0.25], subplot_titles=("", ""))
                        
@@ -591,6 +591,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                             opacity=0.85
                         ), row=2, col=1)
                        
+                        # FULLY SYNCHRONIZED CROSSHAIR (xaxis + xaxis2)
                         fig.update_layout(
                             title=title,
                             height=700,
@@ -602,7 +603,22 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                             legend=dict(orientation="h", yanchor="bottom", y=1.02,
                                         xanchor="center", x=0.5, bgcolor="rgba(0,0,0,0)"),
                             dragmode='pan',
-                            margin=dict(t=40, b=20, l=20, r=20)
+                            margin=dict(t=40, b=20, l=20, r=20),
+                            # SYNCHRONIZED CROSSHAIR CONFIGURATION
+                            xaxis=dict(
+                                showspikes=True,
+                                spikecolor="rgba(255,255,255,0.85)",
+                                spikethickness=1.8,
+                                spikesnap="cursor",
+                                spikemode="across"
+                            ),
+                            xaxis2=dict(
+                                showspikes=True,
+                                spikecolor="rgba(255,255,255,0.85)",
+                                spikethickness=1.8,
+                                spikesnap="cursor",
+                                spikemode="across"
+                            )
                         )
                        
                         # VOLUME AXIS
@@ -614,16 +630,6 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                             min_time = data_local.index.min()
                             max_time = data_local.index.max()
                             fig.update_xaxes(range=[min_time, max_time], autorange=False, minallowed=min_time, maxallowed=max_time)
-                       
-                        # SYNCHRONIZED CROSSHAIR (the magic line you asked for)
-                        # When you hover on the candlestick, the exact same vertical line appears on the volume panel
-                        fig.update_xaxes(
-                            showspikes=True,
-                            spikecolor="rgba(255,255,255,0.85)",
-                            spikesnap="cursor",
-                            spikemode="across",      # ← this makes the line span BOTH panels
-                            spikethickness=1.5
-                        )
                        
                         st.plotly_chart(
                             fig,
@@ -639,7 +645,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                         )
                     else:
                         st.error(f"📉 Could not load {coin} chart. Try the **Refresh** button in sidebar.")
-        st.caption("🔴 Live prices update automatically every 30 seconds • Hover anywhere on the chart to see synchronized crosshair on both price & volume")
+        st.caption("🔴 Live prices update automatically every 30 seconds • Fully synchronized crosshair: hover anywhere on price or volume and see the line on both panels instantly")
         time.sleep(30)
         st.rerun()
 
