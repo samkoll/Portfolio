@@ -206,16 +206,18 @@ div[data-baseweb="select"] > div {
 
 /* FORCE SELECTED VALUE TEXT TO BE WHITE AND VISIBLE */
 div[data-baseweb="select"] [role="button"] span,
-div[data-baseweb="select"] [data-baseweb="select-value"],
-div[data-baseweb="select"] > div > div > div > div,
-div[data-baseweb="select"] > div > div > div > div > div {
+div[data-baseweb="select"] [data-baseweb="select-value"] span,
+div[data-baseweb="select"] > div > div > div > div > div > span,
+div[data-baseweb="select"] > div > div > div > div > span,
+div[data-baseweb="select"] span {
     color: #ffffff !important;
     font-weight: 700 !important;
     font-size: 1.13rem !important;
     text-align: center !important;
     white-space: nowrap !important;
     display: inline-block !important;
-    padding: 0 8px !important;
+    visibility: visible !important;
+    opacity: 1 !important;
 }
 div[data-baseweb="select"] svg {
     fill: #ffffff !important;
@@ -251,6 +253,16 @@ div[data-baseweb="select"] svg {
     div[data-baseweb="select"] > div {
         padding: 12px 20px !important;
     }
+}
+
+/* CURSOR FIX - NO TEXT-FIELD CURSOR ON CARDS OR PILLS */
+.coin-card,
+.price-pill,
+.avg-pill,
+.daily-pill,
+div[data-baseweb="select"],
+div[data-baseweb="select"] > div {
+    cursor: pointer !important;
 }
 
 /* CHARTS HEADER */
