@@ -541,7 +541,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                     avg_price = avg_row.iloc[0] if not avg_row.empty and pd.notna(avg_row.iloc[0]) else None
                     live_price = df_port.loc[df_port['Ticker'] == coin, 'Live'].iloc[0] if not df_port.loc[df_port['Ticker'] == coin].empty else 0
                     
-                    # DAILY OPEN PILL (smaller, no "24H" text, very close to LIVE)
+                    # DAILY OPEN PILL (way smaller, side info)
                     daily_open = get_daily_open(coin)
                     daily_change_pct = ((live_price - daily_open) / daily_open * 100) if daily_open > 0 else 0
                     daily_arrow = "▲" if daily_change_pct > 0 else "▼" if daily_change_pct < 0 else ""
@@ -550,14 +550,14 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                     color = "#00ff9d" if live_price > 0 else "#ff4d4d"
                     st.markdown(f"""
                     <div style="display:flex;gap:6px;margin-bottom:16px;">
-                        <div style="background:#0f172a;padding:8px 16px;border-radius:9999px;display:inline-flex;align-items:center;gap:8px;">
+                        <div style="background:#0f172a;padding:8px 18px;border-radius:9999px;display:inline-flex;align-items:center;gap:10px;">
                             <span style="font-size:1.15rem;font-weight:700;">LIVE</span>
                             <span style="font-size:1.45rem;font-weight:700;color:{color};">{format_crypto_price(live_price)}</span>
                         </div>
-                        <div style="background:#0f172a;padding:6px 12px;border-radius:9999px;display:inline-flex;align-items:center;gap:6px;">
-                            <span style="font-size:1.35rem;font-weight:700;color:{daily_color};">{daily_arrow} {abs(daily_change_pct):.2f}%</span>
+                        <div style="background:#0f172a;padding:4px 10px;border-radius:9999px;display:inline-flex;align-items:center;gap:4px;">
+                            <span style="font-size:1.05rem;font-weight:600;color:{daily_color};">{daily_arrow} {abs(daily_change_pct):.2f}%</span>
                         </div>
-                        {f'<div style="background:#0f172a;padding:8px 16px;border-radius:9999px;display:inline-flex;align-items:center;gap:8px;margin-left:16px;"><span style="font-size:1.15rem;font-weight:700;color:#ffffff;">AVG</span><span style="font-size:1.45rem;font-weight:700;color:#ffaa00;">{format_crypto_price(avg_price)}</span></div>' if avg_price is not None else ''}
+                        {f'<div style="background:#0f172a;padding:8px 18px;border-radius:9999px;display:inline-flex;align-items:center;gap:10px;margin-left:18px;"><span style="font-size:1.15rem;font-weight:700;color:#ffffff;">AVG</span><span style="font-size:1.45rem;font-weight:700;color:#ffaa00;">{format_crypto_price(avg_price)}</span></div>' if avg_price is not None else ''}
                     </div>
                     """, unsafe_allow_html=True)
                     
