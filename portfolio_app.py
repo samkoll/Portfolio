@@ -504,7 +504,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                     if data is not None and not data.empty:
                         data_local = data.copy()
                         
-                        # CLEAN SINGLE CHART - NO VOLUME
+                        # CLEAN SINGLE CHART - NO VOLUME ANYWHERE
                         fig = go.Figure()
                         
                         fig.add_trace(go.Candlestick(
