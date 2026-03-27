@@ -496,10 +496,10 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                    
                     if data is not None and not data.empty:
                         data_local = data.copy()
-                       
-                        # CLEAN SINGLE CHART - NO VOLUME ANYWHERE
+                        
                         fig = go.Figure()
-                       
+                        
+                        # ONLY CANDLESTICK — VOLUME 100% REMOVED
                         fig.add_trace(go.Candlestick(
                             x=data_local.index,
                             open=data_local['open'],
@@ -512,37 +512,58 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                             decreasing_fillcolor='#ff4d4d',
                             name='Price'
                         ))
-                       
+                        
+                        # Average price line
                         if avg_price is not None:
                             fig.add_trace(go.Scatter(
                                 x=[data_local.index.min(), data_local.index.max()],
                                 y=[avg_price, avg_price],
                                 mode='lines',
-                                line=dict(color='#ffaa00', width=2, dash='dash'),
+                                line=dict(color='#ffaa00', width=2.5, dash='dash'),
                                 name=f'Your AVG: ${avg_price:,.2f}'
                             ))
-                       
+                        
                         fig.update_layout(
                             title=title,
-                            height=620,
+                            height=680,
                             paper_bgcolor='rgba(0,0,0,0)',
                             plot_bgcolor='rgba(0,0,0,0)',
                             font_color='white',
                             hovermode="x unified",
                             xaxis_rangeslider_visible=False,
-                            legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="center", x=0.5, bgcolor="rgba(0,0,0,0)"),
-                            dragmode='pan'
+                            legend=dict(
+                                orientation="h", 
+                                yanchor="bottom", 
+                                y=1.02, 
+                                xanchor="center", 
+                                x=0.5, 
+                                bgcolor="rgba(0,0,0,0)",
+                                font=dict(size=13)
+                            ),
+                            dragmode='pan',
+                            # Force no secondary y-axis (volume axis) ever
+                            yaxis=dict(
+                                title="Price",
+                                side="left",
+                                showgrid=True,
+                                gridcolor='rgba(255,255,255,0.08)'
+                            ),
+                            yaxis2=dict(
+                                visible=False,
+                                overlaying='y',
+                                side='right'
+                            )
                         )
-                       
-                        # PINCH ZOOM FIX FOR PHONE + PERFECT MOBILE EXPERIENCE
-                        fig.update_xaxes(fixedrange=False)
+                        
+                        # CRITICAL FIX FOR PINCH ZOOM ON PHONES
+                        fig.update_xaxes(fixedrange=False, rangeslider=dict(visible=False))
                         fig.update_yaxes(fixedrange=False)
-                       
+                        
                         if len(data_local) > 0:
                             min_time = data_local.index.min()
                             max_time = data_local.index.max()
-                            fig.update_xaxes(range=[min_time, max_time], autorange=False, minallowed=min_time, maxallowed=max_time)
-                       
+                            fig.update_xaxes(range=[min_time, max_time], autorange=False)
+                        
                         st.plotly_chart(
                             fig,
                             use_container_width=True,
