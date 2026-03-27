@@ -4,7 +4,6 @@ from datetime import datetime, timedelta, date
 import time
 import streamlit.components.v1 as components
 import plotly.graph_objects as go
-from plotly.subplots import make_subplots
 import requests
 import json
 from pathlib import Path
@@ -200,7 +199,7 @@ def save_crypto(df):
 def save_fiat(df):
     df.to_json(FIAT_JSON, orient="records", indent=2)
 
-# ====================== BINANCE API (gold standard for crypto candles) ======================
+# ====================== BINANCE API ======================
 BINANCE_BASE = "https://api.binance.com/api/v3"
 
 def get_with_retry(url: str, headers: dict, timeout: int = 12, retries: int = 5) -> dict | None:
@@ -505,10 +504,10 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                     if data is not None and not data.empty:
                         data_local = data.copy()
                         
-                        # EXTREMELY THIN VOLUME PANEL + LOCKED AXIS
-                        fig = make_subplots(rows=2, cols=1, shared_xaxes=True, vertical_spacing=0.08,
-                                            row_heights=[0.90, 0.10], subplot_titles=("", "Volume"))
+                        # SINGLE CHART with volume confined to thin bottom strip
+                        fig = go.Figure()
                         
+                        # Candlestick + AVG on primary y-axis (top 88% of chart)
                         fig.add_trace(go.Candlestick(
                             x=data_local.index,
                             open=data_local['open'],
@@ -520,7 +519,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                             increasing_fillcolor='#00ff9d',
                             decreasing_fillcolor='#ff4d4d',
                             name='Price'
-                        ), row=1, col=1)
+                        ))
                         
                         if avg_price is not None:
                             fig.add_trace(go.Scatter(
@@ -529,16 +528,18 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                                 mode='lines',
                                 line=dict(color='#ffaa00', width=2, dash='dash'),
                                 name=f'Your AVG: ${avg_price:,.2f}'
-                            ), row=1, col=1)
+                            ))
                         
+                        # Volume on secondary y-axis, restricted to tiny bottom area only
                         colors_volume = ['#00ff9d' if o < c else '#ff4d4d' for o, c in zip(data_local['open'], data_local['close'])]
+                        max_vol = data_local['volumefrom'].max() or 1
                         fig.add_trace(go.Bar(
                             x=data_local.index,
                             y=data_local['volumefrom'],
                             marker_color=colors_volume,
                             name='Volume',
                             opacity=0.85
-                        ), row=2, col=1)
+                        ))
                         
                         fig.update_layout(
                             title=title,
@@ -549,20 +550,24 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                             hovermode="x unified",
                             xaxis_rangeslider_visible=False,
                             legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="center", x=0.5, bgcolor="rgba(0,0,0,0)"),
-                            dragmode='pan'
+                            dragmode='pan',
+                            yaxis=dict(
+                                domain=[0.22, 1.0],          # Price takes the top 78% of the chart
+                                rangemode='nonnegative'
+                            ),
+                            yaxis2=dict(
+                                domain=[0, 0.18],            # Volume restricted to bottom 18% only
+                                overlaying='y',
+                                side='right',
+                                rangemode='nonnegative',     # No negative numbers ever
+                                range=[0, max_vol * 60],     # Heavy compression - tiny bars
+                                showticklabels=False,        # Clean look
+                                showgrid=False,
+                                zeroline=False
+                            )
                         )
                         
-                        # VOLUME AXIS: 0 ALWAYS AT BOTTOM + HEAVILY COMPRESSED
-                        max_vol = data_local['volumefrom'].max() or 1
-                        fig.update_yaxes(
-                            rangemode='nonnegative',
-                            range=[0, max_vol * 40],      # extreme compression → tiny bars
-                            fixedrange=True,               # lock the axis completely
-                            showticklabels=False,          # clean TradingView look
-                            showgrid=False,
-                            row=2, col=1
-                        )
-                        
+                        # STRICT ZOOM LOCK
                         if len(data_local) > 0:
                             min_time = data_local.index.min()
                             max_time = data_local.index.max()
