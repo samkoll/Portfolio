@@ -522,7 +522,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
 </div>"""
         st.markdown(value_box_html, unsafe_allow_html=True)
 
-        # ====================== COMPACT COIN CARDS (more top space + full glow, no cutoff, scrollbar hidden) ======================
+        # ====================== COMPACT COIN CARDS (no blue click rectangle + no table background) ======================
         coin_list = [t for t in df_port['Ticker'] if t != 'USDC']
         cards_html = ""
         for _, r in df_port.iterrows():
@@ -551,10 +551,10 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
 </div>"""
 
         html = f"""<html><head><style>
-body{{background:#0b1120;color:white;font-family:sans-serif;margin:0;padding:0;}}
-.coin-grid {{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px;padding:24px 20px;box-sizing:border-box;max-height:520px;overflow-y:auto;scrollbar-width:none;-ms-overflow-style:none;}}
+body{{background:transparent;color:white;font-family:sans-serif;margin:0;padding:0;}}
+.coin-grid {{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px;padding:24px 20px;box-sizing:border-box;max-height:520px;overflow-y:auto;scrollbar-width:none;-ms-overflow-style:none;background:transparent !important;}}
 .coin-grid::-webkit-scrollbar {{display:none;}}
-.coin-card {{background:#0f172a;padding:16px;border-radius:20px;box-shadow:0 6px 20px rgba(0,0,0,0.3);transition:all 0.25s ease;cursor:pointer;position:relative;z-index:1;}}
+.coin-card {{background:#0f172a;padding:16px;border-radius:20px;box-shadow:0 6px 20px rgba(0,0,0,0.3);transition:all 0.25s ease;cursor:pointer;position:relative;z-index:1;outline:none !important;-webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none;}}
 .coin-card:hover {{transform:translateY(-3px);box-shadow:0 0 45px 12px var(--glow) !important;z-index:10;}}
 .card-header {{display:flex;align-items:center;margin-bottom:14px;}}
 .card-content {{display:flex;flex-direction:column;gap:8px;}}
