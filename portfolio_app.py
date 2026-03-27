@@ -562,7 +562,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                         data_local = data.copy()
                         
                         fig = make_subplots(rows=2, cols=1, shared_xaxes=True, vertical_spacing=0.08,
-                                            row_heights=[0.75, 0.25], subplot_titles=("", "Volume"))
+                                            row_heights=[0.68, 0.32], subplot_titles=("", "Volume"))  # more space for volume
                         
                         fig.add_trace(go.Candlestick(
                             x=data_local.index,
@@ -586,6 +586,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                                 name=f'Your AVG: ${avg_price:,.2f}'
                             ), row=1, col=1)
                         
+                        # Volume bars colored exactly like price candles
                         colors_volume = ['#00ff9d' if o < c else '#ff4d4d' 
                                         for o, c in zip(data_local['open'], data_local['close'])]
                         
@@ -594,7 +595,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                             y=data_local['volumefrom'],
                             marker_color=colors_volume,
                             name='Volume',
-                            opacity=0.85
+                            opacity=0.9
                         ), row=2, col=1)
                         
                         fig.update_layout(
@@ -607,28 +608,29 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                             xaxis_rangeslider_visible=False,
                             legend=dict(orientation="h", yanchor="bottom", y=1.02,
                                         xanchor="center", x=0.5, bgcolor="rgba(0,0,0,0)"),
-                            dragmode='pan'   # no box-zoom
+                            dragmode='pan'
                         )
                         
-                        # STRICT ZOOM LOCK: cannot zoom out beyond the actual candle data
+                        # STRICT ZOOM LOCK - cannot zoom out beyond actual candles
                         if len(data_local) > 0:
                             min_time = data_local.index.min()
                             max_time = data_local.index.max()
                             fig.update_xaxes(
                                 range=[min_time, max_time],
                                 autorange=False,
-                                minallowed=min_time,      # ← prevents zooming out further
-                                maxallowed=max_time       # ← prevents zooming out further
+                                minallowed=min_time,
+                                maxallowed=max_time
                             )
                         
                         st.plotly_chart(
                             fig,
                             use_container_width=True,
                             config={
-                                'scrollZoom': True,
+                                'scrollZoom': True,      # enables both scroll + pinch-to-zoom on phone
                                 'responsive': True,
                                 'displayModeBar': True,
-                                'modeBarButtonsToRemove': ['zoom2d', 'select2d', 'lasso2d']
+                                'modeBarButtonsToRemove': ['zoom2d', 'select2d', 'lasso2d'],
+                                'doubleClick': 'reset'
                             },
                             key=f"chart_{coin}_{candle}_{st.session_state.ui_version}"
                         )
