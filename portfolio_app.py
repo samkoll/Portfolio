@@ -9,22 +9,26 @@ import requests
 import json
 from pathlib import Path
 import hashlib
+import random
 
 # ====================== CONFIG ======================
 st.set_page_config(page_title="Portfolio", layout="wide", page_icon="📊")
 
-# ====================== CACHE BUST FOR PULL-TO-REFRESH ======================
+# ====================== STRONG CACHE BUST FOR PULL-TO-REFRESH ======================
 if "refresh_key" not in st.session_state:
-    st.session_state.refresh_key = 0
+    st.session_state.refresh_key = random.randint(100000, 999999)
 
-# Read timestamp from query param to force real cache invalidation on swipe
+# Read timestamp from query param and FORCE cache clear on swipe
 if "t" in st.query_params:
     try:
-        st.session_state.refresh_key = int(st.query_params["t"])
+        new_key = int(st.query_params["t"])
+        if new_key != st.session_state.refresh_key:
+            st.session_state.refresh_key = new_key
+            st.cache_data.clear()   # This is the key fix - clears ALL cached prices & charts
     except:
         pass
 
-# ====================== PULL-TO-REFRESH (PERFECTED - buttery smooth, works reliably near top) ======================
+# ====================== PULL-TO-REFRESH - NOW FROM ANYWHERE ON THE WHOLE PAGE ======================
 PULL_REFRESH_HTML = """
 <style>
 .pull-to-refresh {
@@ -32,41 +36,41 @@ PULL_REFRESH_HTML = """
     top: 0;
     left: 0;
     right: 0;
-    height: 76px;
+    height: 80px;
     display: flex;
     align-items: center;
     justify-content: center;
     background: linear-gradient(90deg, #1e2a44, #26334f) !important;
     z-index: 99999;
     transform: translateY(-100%);
-    transition: transform 0.75s cubic-bezier(0.32, 0.0, 0.12, 1);
+    transition: transform 0.7s cubic-bezier(0.25, 0.1, 0.25, 1);
     border-bottom-left-radius: 28px;
     border-bottom-right-radius: 28px;
-    box-shadow: 0 8px 32px rgba(0,0,0,0.45);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
     overflow: hidden;
 }
 .pull-to-refresh.active {
     transform: translateY(0);
 }
 .spinner {
-    width: 36px;
-    height: 36px;
-    border: 4px solid rgba(0,255,157,0.3);
+    width: 38px;
+    height: 38px;
+    border: 4px solid rgba(0,255,157,0.25);
     border-top: 4px solid #00ff9d;
     border-radius: 50%;
-    animation: spin 0.95s linear infinite;
+    animation: spin 0.9s linear infinite;
 }
 .checkmark {
     display: none;
-    width: 36px;
-    height: 36px;
+    width: 38px;
+    height: 38px;
 }
 .checkmark svg {
     stroke: #00ff9d;
-    stroke-width: 3.8;
-    stroke-dasharray: 48;
-    stroke-dashoffset: 48;
-    animation: checkDraw 0.7s ease forwards;
+    stroke-width: 4;
+    stroke-dasharray: 50;
+    stroke-dashoffset: 50;
+    animation: checkDraw 0.65s ease forwards;
 }
 @keyframes spin { to { transform: rotate(360deg); } }
 @keyframes checkDraw { to { stroke-dashoffset: 0; } }
@@ -74,7 +78,7 @@ PULL_REFRESH_HTML = """
 <div id="pullrefresh" class="pull-to-refresh">
     <div id="loader" class="spinner"></div>
     <div id="success" class="checkmark">
-        <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#00ff9d" stroke-width="3.8">
+        <svg width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="#00ff9d" stroke-width="4">
             <path d="M20 6L9 17l-5-5"/>
         </svg>
     </div>
@@ -90,21 +94,20 @@ if (!window.pullToRefreshInitialized) {
     window.pullToRefreshInitialized = true;
 
     function hidePull() {
-        container.style.transition = 'transform 0.75s cubic-bezier(0.4, 0, 0.2, 1)';
+        container.style.transition = 'transform 0.7s cubic-bezier(0.4, 0, 0.2, 1)';
         container.style.transform = 'translateY(-100%)';
         setTimeout(() => {
             container.classList.remove('active');
             loader.style.display = 'block';
             success.style.display = 'none';
             isPulling = false;
-        }, 780);
+        }, 700);
     }
 
+    // === SWIPE FROM ANYWHERE ON THE PAGE (exactly what you asked for) ===
     document.documentElement.addEventListener('touchstart', e => {
-        if (window.scrollY <= 45) {
-            startY = e.touches[0].clientY;
-            isPulling = true;
-        }
+        startY = e.touches[0].clientY;
+        isPulling = true;   // No scrollY check → works everywhere on the screen
     }, {passive: true});
 
     document.documentElement.addEventListener('touchmove', e => {
@@ -112,9 +115,9 @@ if (!window.pullToRefreshInitialized) {
         const y = e.touches[0].clientY;
         const diff = y - startY;
         if (diff > 0) {
-            const progress = Math.min(diff * 0.72, 76);
+            const progress = Math.min(diff * 0.68, 80);
             container.style.transition = 'none';
-            container.style.transform = `translateY(${progress - 76}px)`;
+            container.style.transform = `translateY(${progress - 80}px)`;
             container.classList.add('active');
             if (diff > 35) e.preventDefault();
         }
@@ -125,7 +128,7 @@ if (!window.pullToRefreshInitialized) {
         const y = e.changedTouches[0].clientY;
         const diff = y - startY;
         container.style.transition = 'transform 0.75s cubic-bezier(0.25, 0.1, 0.25, 1)';
-        if (diff > 135) {
+        if (diff > 165) {
             loader.style.display = 'none';
             success.style.display = 'block';
             container.style.transform = 'translateY(0)';
@@ -135,7 +138,7 @@ if (!window.pullToRefreshInitialized) {
                 setTimeout(() => {
                     const url = window.location.href.split('?')[0] + '?t=' + Date.now();
                     window.location.href = url;
-                }, 860);
+                }, 820);
             }, 680);
         } else {
             hidePull();
@@ -144,7 +147,7 @@ if (!window.pullToRefreshInitialized) {
     }, {passive: true});
 
     window.addEventListener('scroll', () => {
-        if (window.scrollY > 60) hidePull();
+        if (window.scrollY > 400) hidePull();
     });
 }
 </script>
@@ -749,9 +752,8 @@ def glossy_header(title: str, icon_svg: str):
     st.markdown(html, unsafe_allow_html=True)
 
 # ====================== PAGES ======================
-main_container.empty()
 with main_container.container(key=f"page_{st.session_state.page}_{st.session_state.ui_version}"):
-    components.html(PULL_REFRESH_HTML, height=76)
+    components.html(PULL_REFRESH_HTML, height=80)
    
     if st.session_state.page == "Home":
         glossy_header("Portfolio Dashboard", DASHBOARD_ICON)
@@ -1116,4 +1118,4 @@ document.querySelectorAll('.coin-card').forEach(div => {{
                 st.session_state.ui_version += 1
                 st.rerun()
 
-# Auto-refresh is now handled perfectly by the new pull-to-refresh + cache bust
+# Auto-refresh is now handled perfectly by the new pull-to-refresh + full cache clear
