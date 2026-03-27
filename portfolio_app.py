@@ -143,10 +143,10 @@ st.markdown("""
     }
 }
 
-/* PRICE PILLS - NICER PREMIUM LOOK (distinct from timeframe) */
+/* PRICE PILLS - COMPACT SIZE THAT FITS PERFECTLY + NICER VISUALS */
 .price-pills-container {
     display: flex !important;
-    gap: 8px !important;
+    gap: 6px !important;
     flex-wrap: nowrap !important;
     overflow-x: auto !important;
     padding-bottom: 4px;
@@ -156,37 +156,37 @@ st.markdown("""
     display: none;
 }
 .price-pill, .avg-pill, .daily-pill {
-    padding: 9px 18px !important;
+    padding: 7px 14px !important;
     border-radius: 9999px !important;
     white-space: nowrap !important;
     flex-shrink: 0;
     background: #0f172a !important;
     display: inline-flex;
     align-items: center;
-    gap: 6px;
-    font-size: 1.08rem;
+    gap: 5px;
+    font-size: 1.05rem;
     font-weight: 700;
     box-shadow: 0 4px 12px rgba(0,0,0,0.35),
                 inset 0 1px 0 rgba(255,255,255,0.12);
 }
 .price-pill span:last-child,
 .avg-pill span:last-child {
-    font-size: 1.29rem;
+    font-size: 1.26rem;
 }
 .daily-pill {
     color: #ff4d4d;
     font-weight: 700;
-    padding: 6px 11px !important;
-    font-size: 0.92rem !important;
+    padding: 4px 8px !important;
+    font-size: 0.88rem !important;
 }
 @media (max-width: 700px) {
-    .price-pills-container { gap: 6px !important; }
-    .price-pill, .avg-pill, .daily-pill { padding: 7px 14px !important; }
-    .daily-pill { padding: 4px 9px !important; font-size: 0.85rem !important; }
+    .price-pills-container { gap: 4px !important; }
+    .price-pill, .avg-pill, .daily-pill { padding: 5px 10px !important; }
+    .daily-pill { padding: 3px 7px !important; font-size: 0.82rem !important; }
     .price-pill span:first-child,
-    .avg-pill span:first-child { font-size: 0.95rem !important; }
+    .avg-pill span:first-child { font-size: 0.92rem !important; }
     .price-pill span:last-child,
-    .avg-pill span:last-child { font-size: 1.22rem !important; }
+    .avg-pill span:last-child { font-size: 1.18rem !important; }
 }
 
 /* TIMEFRAME SELECTBOX - FULL TEXT VISIBLE, CLEAN PILL */
@@ -194,8 +194,8 @@ div[data-baseweb="select"] {
     background-color: #1e2a44 !important;
     border-radius: 9999px !important;
     box-shadow: 0 4px 15px rgba(0,0,0,0.4) !important;
-    min-width: 138px !important;
-    max-width: 148px !important;
+    min-width: 148px !important;
+    max-width: 158px !important;
     transition: all 0.2s ease;
 }
 div[data-baseweb="select"] > div {
@@ -220,8 +220,8 @@ div[data-baseweb="select"]:focus-within {
 }
 @media (max-width: 700px) {
     div[data-baseweb="select"] {
-        min-width: 128px !important;
-        max-width: 138px !important;
+        min-width: 138px !important;
+        max-width: 148px !important;
     }
     div[data-baseweb="select"] > div {
         padding: 7px 14px !important;
@@ -546,410 +546,3 @@ if 'last_known_prices' not in st.session_state:
 with st.sidebar:
     nav_items = [
         ("🏠 Portfolio Dashboard", "Home"),
-        ("📊 Crypto Transactions", "Crypto Transactions"),
-        ("💰 Fiat Transactions", "Fiat Transactions")
-    ]
-    for label, key in nav_items:
-        if st.button(label, key=f"nav_{key}", use_container_width=True):
-            st.session_state.page = key
-            st.session_state.ui_version += 1
-            st.rerun()
-    st.divider()
-    if st.button("🔄 Refresh All Prices & Charts", use_container_width=True):
-        st.session_state.ui_version += 1
-        st.success("✅ Refreshing prices & charts...")
-        st.rerun()
-    if st.button("💾 Download Backup", use_container_width=True):
-        data = {"crypto": json.loads(st.session_state.crypto_df.to_json(orient="records")),
-                "fiat": json.loads(st.session_state.fiat_df.to_json(orient="records"))}
-        st.download_button("Download JSON", json.dumps(data, indent=2), "portfolio_backup.json", "application/json")
-
-# ====================== MAIN CONTENT ======================
-main_container = st.empty()
-
-def glossy_header(title: str, icon_svg: str):
-    html = f"""<div class="glossy-header">{icon_svg}<span style="margin-left:12px;">{title}</span></div>"""
-    st.markdown(html, unsafe_allow_html=True)
-
-# ====================== PAGES ======================
-main_container.empty()
-with main_container.container(key=f"page_{st.session_state.page}_{st.session_state.ui_version}"):
-    if st.session_state.page == "Home":
-        glossy_header("Portfolio Dashboard", DASHBOARD_ICON)
-  
-        df_port, total_value, total_pnl, total_pnl_pct = calculate_portfolio(st.session_state.crypto_df)
-  
-        # 3 CARDS – STAY SIDE-BY-SIDE ON MOBILE
-        value_box_html = f"""
-<div style="display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(98px, 1fr));
-            gap: 14px;
-            margin-bottom: 30px;">
-    <div class="glossy-box"><div>Total Value</div><div>{format_money(total_value)}</div></div>
-    <div class="glossy-box"><div>PnL</div><div style="color:{'#00ff9d' if total_pnl>=0 else '#ff4d4d'}">{"▲" if total_pnl>0 else "▼" if total_pnl<0 else ""} {format_money(abs(total_pnl))}</div></div>
-    <div class="glossy-box"><div>PnL %</div><div style="color:{'#00ff9d' if total_pnl_pct>=0 else '#ff4d4d'}">{"▲" if total_pnl_pct>0 else "▼" if total_pnl_pct<0 else ""} {abs(total_pnl_pct):.2f}%</div></div>
-</div>"""
-        st.markdown(value_box_html, unsafe_allow_html=True)
-
-        # ====================== COMPACT COIN CARDS ======================
-        coin_list = [t for t in df_port['Ticker'] if t != 'USDC']
-        cards_html = ""
-        for _, r in df_port.iterrows():
-            pnl = r['PnL']
-            pnl_color = "#00ff9d" if pnl > 0 else "#ff4d4d" if pnl < 0 else "#aaaaaa"
-            arrow = "▲" if pnl > 0 else "▼" if pnl < 0 else ""
-            base_color = get_ticker_color(r['Ticker'])
-            glow_color = '#ffffff77' if base_color == '#000000' else base_color + '77'
-            ticker = r['Ticker']
-            onclick = f"onclick=\"switchToTabAndScroll({coin_list.index(ticker)})\" " if ticker != 'USDC' else ""
-            row_class = "clickable-row" if ticker != 'USDC' else ""
-            logo_url = get_ticker_logo(ticker)
-            cards_html += f"""
-<div class="coin-card {row_class}" data-glow="{glow_color}" {onclick}>
-    <div class="card-header">
-        <img src="{logo_url}" style="height:38px;width:38px;border-radius:50%;object-fit:contain;" onerror="this.src='https://via.placeholder.com/38/1e2a44/ffffff?text={ticker[0]}';">
-        <span style="font-weight:700;font-size:1.22rem;margin-left:10px;">{ticker}</span>
-    </div>
-    <div class="card-content">
-        <div class="label-value-row"><span class="label">Holdings</span><span class="value">{format_holdings(r['Holdings'], r['Ticker'])}</span></div>
-        <div class="label-value-row"><span class="label">Invested</span><span class="value">{format_money(r['USDC'])}</span></div>
-        <div class="label-value-row"><span class="label">PnL</span><span class="value" style="color:{pnl_color};">{arrow} {format_money(abs(pnl) if pd.notna(pnl) else "")}</span></div>
-        <div class="label-value-row"><span class="label">PnL %</span><span class="value" style="color:{pnl_color};">{arrow} {format_percent(abs(r['PnL %']) if pd.notna(r['PnL %']) else "")}</span></div>
-        <div class="label-value-row total"><span class="label">Value</span><span class="value total-value">{format_money(r['Value'])}</span></div>
-    </div>
-</div>"""
-
-        html = f"""<html><head><style>
-body{{background:transparent;color:white;font-family:sans-serif;margin:0;padding:0;}}
-.coin-grid {{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px;padding:32px 26px;box-sizing:border-box;max-height:520px;overflow-y:auto;scrollbar-width:none;-ms-overflow-style:none;background:transparent !important;}}
-.coin-grid::-webkit-scrollbar {{display:none;}}
-.coin-card {{background:#0f172a;padding:16px;border-radius:20px;box-shadow:0 6px 20px rgba(0,0,0,0.3);transition:all 0.25s ease;cursor:pointer;position:relative;z-index:1;outline:none !important;-webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none;}}
-.coin-card:hover {{transform:translateY(-3px);box-shadow:0 0 22px 6px var(--glow) !important;z-index:10;}}
-.card-header {{display:flex;align-items:center;margin-bottom:14px;}}
-.card-content {{display:flex;flex-direction:column;gap:8px;}}
-.label-value-row {{display:flex;justify-content:space-between;align-items:center;font-size:0.95rem;}}
-.label {{color:#aaa;font-weight:500;}}
-.value {{font-weight:600;}}
-.total {{font-size:1.18rem;margin-top:8px;border-top:1px solid rgba(255,255,255,0.12);padding-top:8px;}}
-.total-value {{font-size:1.28rem;}}
-@media (max-width: 700px) {{
-    .coin-grid {{grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px;padding:28px 24px;}}
-    .coin-card {{padding:14px;}}
-}}
-</style></head><body><div class="coin-grid">{cards_html}</div><script>
-function switchToTabAndScroll(index){{
-    const tabs = window.parent.document.querySelectorAll('.stTabs button');
-    if (tabs && tabs[index]) tabs[index].click();
-    setTimeout(() => {{
-        const section = window.parent.document.getElementById('price-charts-section');
-        if (section) {{
-            section.scrollIntoView({{ behavior: 'smooth', block: 'start' }});
-        }}
-    }}, 180);
-}}
-document.querySelectorAll('.coin-card').forEach(div => {{
-    div.style.setProperty('--glow', div.getAttribute('data-glow'));
-}});
-</script><!-- VERSION:{st.session_state.ui_version} --></body></html>"""
-   
-        components.html(html, height=580, scrolling=True)
-
-        # ====================== CHARTS SECTION ======================
-        st.markdown("""<div id="price-charts-section" class="glossy-box" style="background:#1e2a44;padding:18px 30px;border-radius:18px;margin:28px 0 18px 0;"><div style="color:#ffffff;font-weight:700;font-size:23px;text-align:center;">Price Charts + Volume</div></div>""", unsafe_allow_html=True)
-   
-        if coin_list:
-            selected_tab = st.tabs(coin_list)
-            for i, coin in enumerate(coin_list):
-                with selected_tab[i]:
-                    avg_row = df_port.loc[df_port['Ticker'] == coin, 'AVG']
-                    avg_price = avg_row.iloc[0] if not avg_row.empty and pd.notna(avg_row.iloc[0]) else None
-                    live_price = df_port.loc[df_port['Ticker'] == coin, 'Live'].iloc[0] if not df_port.loc[df_port['Ticker'] == coin].empty else 0
-                 
-                    daily_open = get_daily_open(coin)
-                    daily_change_pct = ((live_price - daily_open) / daily_open * 100) if daily_open > 0 else 0
-                    daily_arrow = "▲" if daily_change_pct > 0 else "▼" if daily_change_pct < 0 else ""
-                    daily_color = "#00ff9d" if daily_change_pct > 0 else "#ff4d4d" if daily_change_pct < 0 else "#aaaaaa"
-                 
-                    color = "#00ff9d" if live_price > 0 else "#ff4d4d"
-                    st.markdown(f"""
-                    <div class="price-pills-container">
-                        <div class="price-pill">
-                            <span>LIVE</span>
-                            <span style="color:{color};">{format_crypto_price(live_price)}</span>
-                        </div>
-                        <div class="daily-pill">{daily_arrow} {abs(daily_change_pct):.2f}%</div>
-                        {f'<div class="price-pill avg-pill"><span>AVG</span><span style="color:#ffaa00;">{format_crypto_price(avg_price)}</span></div>' if avg_price is not None else ''}
-                    </div>
-                    """, unsafe_allow_html=True)
-                 
-                    col1, col2 = st.columns([0.55, 4.45])
-                    with col1:
-                        candle = st.selectbox(
-                            "Timeframe",
-                            options=["5m", "30m", "1h", "4h", "1D"],
-                            index=3,
-                            key=f"candle_select_{coin}_{st.session_state.ui_version}",
-                            label_visibility="collapsed"
-                        )
-                 
-                    title = f"{coin} — {candle} candles"
-                 
-                    data = get_cryptocompare_ohlc(coin, candle)
-                 
-                    if data is not None and not data.empty:
-                        data_local = data.copy()
-                     
-                        fig = make_subplots(rows=2, cols=1, shared_xaxes=True, vertical_spacing=0.08,
-                                            row_heights=[0.75, 0.25], subplot_titles=("", ""))
-                        fig.add_trace(go.Candlestick(
-                            x=data_local.index,
-                            open=data_local['open'],
-                            high=data_local['high'],
-                            low=data_local['low'],
-                            close=data_local['close'],
-                            increasing_line_color='#00ff9d',
-                            decreasing_line_color='#ff4d4d',
-                            increasing_fillcolor='#00ff9d',
-                            decreasing_fillcolor='#ff4d4d',
-                            name='Price'
-                        ), row=1, col=1)
-                        if avg_price is not None:
-                            fig.add_trace(go.Scatter(
-                                x=[data_local.index.min(), data_local.index.max()],
-                                y=[avg_price, avg_price],
-                                mode='lines',
-                                line=dict(color='#ffaa00', width=2, dash='dash'),
-                                name=f'Your AVG: ${avg_price:,.2f}'
-                            ), row=1, col=1)
-                        colors_volume = ['#00ff9d' if o < c else '#ff4d4d' for o, c in zip(data_local['open'], data_local['close'])]
-                        fig.add_trace(go.Bar(
-                            x=data_local.index,
-                            y=data_local['volumefrom'],
-                            marker_color=colors_volume,
-                            name='Volume',
-                            opacity=0.85
-                        ), row=2, col=1)
-                        fig.update_layout(
-                            title=title,
-                            height=700,
-                            paper_bgcolor='rgba(0,0,0,0)',
-                            plot_bgcolor='rgba(0,0,0,0)',
-                            font_color='white',
-                            hovermode="x unified",
-                            xaxis_rangeslider_visible=False,
-                            legend=dict(orientation="h", yanchor="bottom", y=1.02,
-                                        xanchor="center", x=0.5, bgcolor="rgba(0,0,0,0)"),
-                            dragmode='pan',
-                            margin=dict(t=40, b=20, l=20, r=20),
-                            xaxis=dict(showspikes=True, spikecolor="rgba(255,255,255,0.95)", spikethickness=1.8, spikesnap="cursor", spikemode="across"),
-                            xaxis2=dict(showspikes=True, spikecolor="rgba(255,255,255,0.95)", spikethickness=1.8, spikesnap="cursor", spikemode="across")
-                        )
-                        fig.update_yaxes(showspikes=True, spikecolor="rgba(255,255,255,0.85)", spikethickness=1.5, spikesnap="cursor", spikemode="across", row=1, col=1)
-                        fig.update_yaxes(showspikes=False, row=2, col=1)
-                        fig.update_yaxes(title="Volume", rangemode='nonnegative', row=2, col=1, showgrid=True, gridwidth=1, gridcolor='rgba(255,255,255,0.08)')
-                        if len(data_local) > 0:
-                            min_time = data_local.index.min()
-                            max_time = data_local.index.max()
-                            fig.update_xaxes(range=[min_time, max_time], autorange=False, minallowed=min_time, maxallowed=max_time)
-                        st.plotly_chart(
-                            fig,
-                            use_container_width=True,
-                            config={'scrollZoom': True, 'responsive': True, 'displayModeBar': True, 'modeBarButtonsToRemove': ['zoom2d', 'select2d', 'lasso2d'], 'doubleClick': 'reset'},
-                            key=f"chart_{coin}_{candle}_{st.session_state.ui_version}"
-                        )
-                    else:
-                        st.error(f"📉 Could not load {coin} chart. Try the **Refresh** button in sidebar.")
-        st.caption("🔴 Live prices update automatically every 15 seconds • Fully connected vertical crosshair across both panels + full-length horizontal crosshair on candlestick")
-
-    # ====================== CRYPTO TRANSACTIONS ======================
-    elif st.session_state.page == "Crypto Transactions":
-        glossy_header("Crypto Transactions", CRYPTO_ICON)
-        df_display = st.session_state.crypto_df.copy()
-        df_display['Date'] = df_display['Datum'].apply(format_datum)
-        df_display = df_display.dropna(how='all').reset_index(drop=True)
-   
-        table_container = st.container(key=f"crypto_table_container_{st.session_state.ui_version}")
-        with table_container:
-            with st.container(height=520, border=True):
-                h = st.columns([1.0, 0.9, 0.7, 1.0, 1.0, 0.4, 0.4])
-                h[0].markdown("**Date**")
-                h[1].markdown("**USDC**")
-                h[2].markdown("**Ticker**")
-                h[3].markdown("**Amount**")
-                h[4].markdown("**Price**")
-                h[5].markdown("**Delete**")
-                h[6].markdown("**Edit**")
-                for i, r in df_display.iterrows():
-                    cols = st.columns([1.0, 0.9, 0.7, 1.0, 1.0, 0.4, 0.4])
-                    with cols[0]: st.write(r['Date'])
-                    with cols[1]: st.write(format_money(r['USDC']))
-                    with cols[2]: st.write(r['Ticker'])
-                    with cols[3]: st.write(format_holdings(r['Amount'], r['Ticker']))
-                    with cols[4]: st.write(format_money(r['Price']))
-                    with cols[5]:
-                        if st.button("🗑️", key=f"del_crypto_{i}_{st.session_state.crypto_table_version}_{st.session_state.ui_version}"):
-                            st.session_state.crypto_df = st.session_state.crypto_df.drop(i).reset_index(drop=True)
-                            save_crypto(st.session_state.crypto_df)
-                            st.session_state.crypto_table_version += 1
-                            st.session_state.ui_version += 1
-                            st.success("✅ Row deleted!")
-                            st.rerun()
-                    with cols[6]:
-                        if st.button("✏️", key=f"edit_crypto_{i}_{st.session_state.crypto_table_version}_{st.session_state.ui_version}"):
-                            st.session_state.editing_row_crypto = i
-                            st.rerun()
-        if 'editing_row_crypto' in st.session_state:
-            edit_idx = st.session_state.editing_row_crypto
-            row = st.session_state.crypto_df.loc[edit_idx]
-            st.markdown("**Edit row**")
-            with st.form("edit_crypto_row"):
-                col_a, col_b, col_c = st.columns([1.2, 1.2, 1.6])
-                with col_a:
-                    new_date = st.date_input("Date", value=datetime(1899, 12, 30) + timedelta(days=int(row['Datum'])))
-                    new_datum = date_to_excel_serial(new_date)
-                with col_b:
-                    new_usdc = st.number_input("USDC Spent", value=float(row['USDC']), step=0.01)
-                with col_c:
-                    new_ticker = st.text_input("Ticker", value=row['Ticker']).upper().strip()
-                new_amount = st.number_input("Amount Bought", value=float(row['Amount']), step=0.000001, format="%.8f")
-                new_price = round(new_usdc / new_amount, 8) if new_amount > 0 else 0.0
-                col_save, col_cancel = st.columns(2)
-                with col_save:
-                    if st.form_submit_button("💾 Save Changes"):
-                        st.session_state.crypto_df.loc[edit_idx] = {"Datum": new_datum, "USDC": new_usdc, "Ticker": new_ticker, "Amount": new_amount, "Price": new_price}
-                        save_crypto(st.session_state.crypto_df)
-                        del st.session_state.editing_row_crypto
-                        st.session_state.crypto_table_version += 1
-                        st.session_state.ui_version += 1
-                        st.success("✅ Row updated!")
-                        st.rerun()
-                with col_cancel:
-                    if st.form_submit_button("❌ Cancel"):
-                        del st.session_state.editing_row_crypto
-                        st.rerun()
-        st.subheader("➕ Add New Transaction")
-        with st.form("add_crypto"):
-            col1, col2, col3 = st.columns([1.2, 1.2, 1.6])
-            with col1:
-                selected_date = st.date_input("Date", value=date(2026, 3, 25))
-                datum = date_to_excel_serial(selected_date)
-            with col2:
-                usdc = st.number_input("USDC Spent", value=15.0, step=0.01)
-            with col3:
-                ticker = st.text_input("Ticker", value="BTC").upper().strip()
-            amount = st.number_input("Amount Bought", value=0.1, step=0.000001, format="%.8f")
-            price = round(usdc / amount, 8) if amount > 0 else 0.0
-            if st.form_submit_button("➕ Add Transaction"):
-                if ticker:
-                    new_row = pd.DataFrame([{"Datum": datum, "USDC": usdc, "Ticker": ticker, "Amount": amount, "Price": price}])
-                    st.session_state.crypto_df = pd.concat([st.session_state.crypto_df, new_row], ignore_index=True)
-                    save_crypto(st.session_state.crypto_df)
-                    st.session_state.crypto_table_version += 1
-                    st.session_state.ui_version += 1
-                    st.success(f"✅ Added {amount} {ticker}")
-                    st.rerun()
-
-    # ====================== FIAT TRANSACTIONS ======================
-    elif st.session_state.page == "Fiat Transactions":
-        total_czk = pd.to_numeric(st.session_state.fiat_df['CZK'], errors='coerce').fillna(0).sum()
-        total_eur = pd.to_numeric(st.session_state.fiat_df['EUR'], errors='coerce').fillna(0).sum()
-        total_usdc = pd.to_numeric(st.session_state.fiat_df['USDC'], errors='coerce').fillna(0).sum()
-        fees_eur = pd.to_numeric(st.session_state.fiat_df['Fee'], errors='coerce').fillna(0).sum()
-        fees_czk = (pd.to_numeric(st.session_state.fiat_df['Fee'], errors='coerce').fillna(0) *
-                    pd.to_numeric(st.session_state.fiat_df['CZK/EUR'], errors='coerce').fillna(0)).sum()
- 
-        glossy_header("Fiat Transactions", FIAT_ICON)
- 
-        summary_html = f"""
-<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:20px;margin-bottom:30px;">
-    <div class="glossy-box"><div>Total CZK</div><div>{total_czk:,.2f}</div></div>
-    <div class="glossy-box"><div>Total EUR</div><div>{total_eur:,.2f}</div></div>
-    <div class="glossy-box"><div>Total USDC</div><div>{format_money(total_usdc)}</div></div>
-    <div class="glossy-box"><div>Fees</div><div class="fee-line">{fees_eur:,.2f} EUR</div><div class="fee-line" style="font-size:22px;">{fees_czk:,.2f} CZK</div></div>
-</div>"""
-        st.markdown(summary_html, unsafe_allow_html=True)
-   
-        df_clean = st.session_state.fiat_df.dropna(how='all').reset_index(drop=True)
-   
-        table_container = st.container(key=f"fiat_table_container_{st.session_state.ui_version}")
-        with table_container:
-            with st.container(height=520, border=True):
-                h = st.columns([1.0, 0.9, 0.9, 0.6, 0.9, 1.0, 0.4, 0.4])
-                h[0].markdown("**Date**")
-                h[1].markdown("**CZK**")
-                h[2].markdown("**EUR**")
-                h[3].markdown("**Fee**")
-                h[4].markdown("**CZK/EUR**")
-                h[5].markdown("**USDC**")
-                h[6].markdown("**Delete**")
-                h[7].markdown("**Edit**")
-                for i, r in df_clean.iterrows():
-                    cols = st.columns([1.0, 0.9, 0.9, 0.6, 0.9, 1.0, 0.4, 0.4])
-                    with cols[0]: st.write(format_datum(r['Datum']))
-                    with cols[1]: st.write(f"{r['CZK']:,.2f}")
-                    with cols[2]: st.write(f"{r['EUR']:,.2f}")
-                    with cols[3]: st.write(f"{r['Fee']:,.2f}")
-                    with cols[4]: st.write(f"{r['CZK/EUR']:,.5f}")
-                    with cols[5]: st.write(format_money(r['USDC']))
-                    with cols[6]:
-                        if st.button("🗑️", key=f"del_{i}_{st.session_state.fiat_table_version}_{st.session_state.ui_version}"):
-                            st.session_state.fiat_df = st.session_state.fiat_df.drop(i).reset_index(drop=True)
-                            save_fiat(st.session_state.fiat_df)
-                            st.session_state.fiat_table_version += 1
-                            st.session_state.ui_version += 1
-                            st.success("✅ Row deleted!")
-                            st.rerun()
-                    with cols[7]:
-                        if st.button("✏️", key=f"edit_{i}_{st.session_state.fiat_table_version}_{st.session_state.ui_version}"):
-                            st.session_state.editing_row = i
-                            st.rerun()
-        if 'editing_row' in st.session_state:
-            edit_idx = st.session_state.editing_row
-            row = st.session_state.fiat_df.loc[edit_idx]
-            st.markdown("**Edit row**")
-            with st.form("edit_fiat_row"):
-                col_a, col_b = st.columns(2)
-                with col_a:
-                    new_date = st.date_input("Date", value=datetime(1899, 12, 30) + timedelta(days=int(row['Datum'])))
-                    new_datum = date_to_excel_serial(new_date)
-                with col_b:
-                    new_czk = st.number_input("CZK", value=float(row['CZK']), step=0.01)
-                new_eur = st.number_input("EUR", value=float(row['EUR']), step=0.01)
-                new_fee = st.number_input("Fee", value=float(row['Fee']), step=0.01)
-                new_usdc = st.number_input("USDC", value=float(row['USDC']), step=0.01)
-                new_czk_eur = round(new_czk / new_eur, 5) if new_eur > 0 else 0.0
-                col_save, col_cancel = st.columns(2)
-                with col_save:
-                    if st.form_submit_button("💾 Save Changes"):
-                        st.session_state.fiat_df.loc[edit_idx] = {"Datum": new_datum, "CZK": new_czk, "EUR": new_eur, "Fee": new_fee, "CZK/EUR": new_czk_eur, "USDC": new_usdc, "NI": row.get('NI', ""), "GG": row.get('GG', ""), "ER": row.get('ER', "")}
-                        save_fiat(st.session_state.fiat_df)
-                        del st.session_state.editing_row
-                        st.session_state.fiat_table_version += 1
-                        st.session_state.ui_version += 1
-                        st.success("✅ Row updated!")
-                        st.rerun()
-                with col_cancel:
-                    if st.form_submit_button("❌ Cancel"):
-                        del st.session_state.editing_row
-                        st.rerun()
-        st.subheader("➕ Add New Fiat Entry")
-        with st.form("add_fiat"):
-            col1, col2 = st.columns(2)
-            with col1:
-                selected_date = st.date_input("Date", value=date(2026, 3, 25))
-                datum = date_to_excel_serial(selected_date)
-            with col2:
-                czk = st.number_input("CZK", value=1000.0, step=0.01)
-            eur = st.number_input("EUR", value=40.0, step=0.01)
-            fee = st.number_input("Fee", value=1.0, step=0.01)
-            usdc = st.number_input("USDC", value=44.67, step=0.01)
-            czk_eur = round(czk / eur, 5) if eur > 0 else 0.0
-            if st.form_submit_button("➕ Add Entry"):
-                new_row = pd.DataFrame([{"Datum": datum, "CZK": czk, "EUR": eur, "Fee": fee, "CZK/EUR": czk_eur, "USDC": usdc, "NI": "", "GG": "", "ER": ""}])
-                st.session_state.fiat_df = pd.concat([st.session_state.fiat_df, new_row], ignore_index=True)
-                save_fiat(st.session_state.fiat_df)
-                st.session_state.fiat_table_version += 1
-                st.session_state.ui_version += 1
-                st.rerun()
-
-# Auto-refresh is now handled silently by cache TTLs (no more visible rerun)
