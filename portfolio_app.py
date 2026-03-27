@@ -553,7 +553,7 @@ td{{padding:0;background:transparent;}}
 .scroll-container::-webkit-scrollbar{{display:none;}}
 /* ====================== PERFECT MOBILE OPTIMIZATION – COIN CARDS EXACTLY SAME WIDTH AS HEADER ====================== */
 @media (max-width: 700px) {{
-    .scroll-container {{width:100% !important;padding:0 !important;margin:0 !important;box-sizing:border-box;}}
+    .scroll-container {{width:100% !important;padding:0 !important;margin:0 -16px !important;box-sizing:border-box;}}
     table {{width:100% !important;min-width:100% !important;border-spacing:0 12px !important;}}
     thead {{display:none;}}
     tbody tr {{display:block;margin-bottom:12px;}}
@@ -606,7 +606,6 @@ td{{padding:0;background:transparent;}}
                     avg_price = avg_row.iloc[0] if not avg_row.empty and pd.notna(avg_row.iloc[0]) else None
                     live_price = df_port.loc[df_port['Ticker'] == coin, 'Live'].iloc[0] if not df_port.loc[df_port['Ticker'] == coin].empty else 0
                  
-                    # DAILY OPEN PILL
                     daily_open = get_daily_open(coin)
                     daily_change_pct = ((live_price - daily_open) / daily_open * 100) if daily_open > 0 else 0
                     daily_arrow = "▲" if daily_change_pct > 0 else "▼" if daily_change_pct < 0 else ""
@@ -626,7 +625,6 @@ td{{padding:0;background:transparent;}}
                     </div>
                     """, unsafe_allow_html=True)
                  
-                    # TIMEFRAME SELECTOR
                     col1, col2 = st.columns([0.8, 4.2])
                     with col1:
                         candle = st.selectbox(
