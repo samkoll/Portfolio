@@ -23,7 +23,7 @@ if "t" in st.query_params:
         new_key = int(st.query_params["t"])
         if new_key != st.session_state.get("refresh_key", 0):
             st.session_state.refresh_key = new_key
-            st.cache_data.clear()
+            st.cache_data.clear()          # Forces all prices and charts to reload
             st.session_state.ui_version = st.session_state.get("ui_version", 0) + 1
     except:
         pass
@@ -33,7 +33,7 @@ PULL_REFRESH_HTML = """
 <style>
 .pull-to-refresh {
     position: fixed;
-    top: 0 !important;               /* absolute top edge */
+    top: 0 !important;               /* flush against absolute top of screen */
     left: 0;
     right: 0;
     height: 88px;
@@ -162,6 +162,11 @@ st.markdown("""
     padding-top: 0px !important;
     margin-top: 0px !important;
 }
+/* Kill ALL default Streamlit top padding */
+.main, .block-container, .stMain {
+    padding-top: 0px !important;
+    margin-top: 0px !important;
+}
 /* Big navigation cards with glossy shine */
 .stButton > button {
     background: #1e2a44 !important;
@@ -235,7 +240,7 @@ st.markdown("""
     gap: 16px;
     width: 100% !important;
     margin-bottom: 45px;
-    margin-top: -88px !important;   /* pulls the card flush under the pull bar */
+    margin-top: -60px !important;   /* creates clean breathing space between pull bar and card */
 }
 .glossy-box {
     padding: 28px 30px;
@@ -267,7 +272,7 @@ st.markdown("""
         padding: 24px 20px !important;
         font-size: 24px !important;
         min-height: 100px;
-        margin-top: -78px !important;
+        margin-top: -52px !important;
     }
 }
 /* MOBILE RESPONSIVE FIX FOR THE 3 SUMMARY CARDS */
