@@ -184,7 +184,7 @@ st.markdown("""
     .avg-pill span:last-child { font-size: 1.18rem !important; }
 }
 
-/* TIMEFRAME PILL SELECTOR - DISTINCT FROM PRICE PILLS + FIXED TEXT VISIBILITY */
+/* TIMEFRAME PILL SELECTOR - DISTINCT + ULTRA-STRONG TEXT VISIBILITY (FIXED) */
 div[data-baseweb="select"] {
     background: linear-gradient(90deg, #26334f, #1e2a44) !important;
     border-radius: 9999px !important;
@@ -200,12 +200,14 @@ div[data-baseweb="select"] > div {
     padding: 14px 24px !important;
     line-height: 1.35 !important;
 }
-/* FORCE SELECTED VALUE TEXT TO BE WHITE AND VISIBLE (stronger selectors) */
+/* MAXIMUM FORCE TEXT VISIBILITY - covers every possible Streamlit/BaseWeb nesting */
+div[data-baseweb="select"] *,
+div[data-baseweb="select"] span,
 div[data-baseweb="select"] [role="button"] span,
 div[data-baseweb="select"] [data-baseweb="select-value"] span,
 div[data-baseweb="select"] > div > div > div > div > div > span,
 div[data-baseweb="select"] > div > div > div > div > span,
-div[data-baseweb="select"] span {
+div[data-baseweb="select"] button span {
     color: #ffffff !important;
     font-weight: 700 !important;
     font-size: 1.18rem !important;
@@ -214,6 +216,7 @@ div[data-baseweb="select"] span {
     display: inline-block !important;
     visibility: visible !important;
     opacity: 1 !important;
+    text-shadow: 0 0 4px rgba(0,0,0,0.6) !important; /* extra crispness */
 }
 /* Arrow color - matches the teal accent */
 div[data-baseweb="select"] svg {
