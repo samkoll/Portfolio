@@ -513,14 +513,14 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                     st.markdown(f"""
                     <div style="display:flex;gap:12px;margin-bottom:16px;">
                         <div style="background:#0f172a;padding:10px 20px;border-radius:9999px;display:inline-flex;align-items:center;gap:12px;">
-                            <span style="font-size:1.15rem;font-weight:700;">{coin} LIVE</span>
+                            <span style="font-size:1.15rem;font-weight:700;">LIVE</span>
                             <span style="font-size:1.45rem;font-weight:700;color:{color};">{format_crypto_price(live_price)}</span>
                         </div>
-                        {f'<div style="background:#0f172a;padding:10px 20px;border-radius:9999px;display:inline-flex;align-items:center;gap:8px;"><span style="font-size:1.15rem;font-weight:600;color:#ffaa00;">AVG</span><span style="font-size:1.45rem;font-weight:700;">{format_crypto_price(avg_price)}</span></div>' if avg_price is not None else ''}
+                        {f'<div style="background:#0f172a;padding:10px 20px;border-radius:9999px;display:inline-flex;align-items:center;gap:8px;"><span style="font-size:1.15rem;font-weight:700;color:#ffaa00;">AVG</span><span style="font-size:1.45rem;font-weight:700;">{format_crypto_price(avg_price)}</span></div>' if avg_price is not None else ''}
                     </div>
                     """, unsafe_allow_html=True)
                     
-                    # TIMEFRAME SELECTOR - made a little smaller
+                    # TIMEFRAME SELECTOR
                     col1, col2 = st.columns([0.8, 4.2])
                     with col1:
                         candle = st.selectbox(
