@@ -13,7 +13,7 @@ import hashlib
 # ====================== CONFIG ======================
 st.set_page_config(page_title="Portfolio", layout="wide", page_icon="💎")
 
-# ====================== PULL-TO-REFRESH WITH SPINNER ======================
+# ====================== PULL-TO-REFRESH WITH SPINNER (ANYWHERE ON SCREEN) ======================
 PULL_REFRESH_HTML = """
 <style>
 .pull-to-refresh {
@@ -25,12 +25,12 @@ PULL_REFRESH_HTML = """
     display: flex;
     align-items: center;
     justify-content: center;
-    background: rgba(15, 23, 36, 0.95);
+    background: rgba(15, 23, 36, 0.98);
     z-index: 9999;
     transform: translateY(-100%);
     transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     overflow: hidden;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
 }
 .pull-to-refresh.active {
     transform: translateY(0);
@@ -55,7 +55,6 @@ PULL_REFRESH_HTML = """
 
 <script>
 let startY = 0;
-let currentY = 0;
 let isPulling = false;
 const pullContainer = document.getElementById('pullrefresh');
 
@@ -73,7 +72,7 @@ document.addEventListener('touchstart', function(e) {
 
 document.addEventListener('touchmove', function(e) {
     if (!isPulling) return;
-    currentY = e.touches[0].clientY;
+    const currentY = e.touches[0].clientY;
     const diff = currentY - startY;
     
     if (diff > 0) {
@@ -86,10 +85,10 @@ document.addEventListener('touchmove', function(e) {
 document.addEventListener('touchend', function(e) {
     if (!isPulling) return;
     
+    const currentY = e.changedTouches[0].clientY;
     const diff = currentY - startY;
     
     if (diff > 120) {
-        // Full refresh
         pullContainer.style.transform = `translateY(0)`;
         setTimeout(() => {
             window.location.reload();
@@ -99,6 +98,7 @@ document.addEventListener('touchend', function(e) {
     }
 }, { passive: true });
 
+// Reset if user scrolls away
 window.addEventListener('scroll', function() {
     if (window.scrollY > 10) {
         resetPull();
