@@ -188,13 +188,14 @@ st.markdown("""
     .avg-pill span:last-child { font-size: 1.18rem !important; }
 }
 
-/* TIMEFRAME SELECTBOX - FULL TEXT ALWAYS VISIBLE */
+/* TIMEFRAME SELECTBOX - ALWAYS SHOWS SELECTED VALUE + DARK MENU */
 div[data-baseweb="select"] {
     background-color: #1e2a44 !important;
     border-radius: 9999px !important;
     box-shadow: 0 4px 15px rgba(0,0,0,0.4) !important;
-    min-width: 155px !important;
-    max-width: 165px !important;
+    min-width: 165px !important;
+    max-width: 175px !important;
+    transition: all 0.2s ease;
 }
 div[data-baseweb="select"] > div {
     background: transparent !important;
@@ -212,10 +213,31 @@ div[data-baseweb="select"] input {
 div[data-baseweb="select"] svg {
     fill: #ffffff !important;
 }
+
+/* OPEN DROPDOWN MENU - FULLY DARK + PREMIUM */
+[data-baseweb="popover"] [data-baseweb="menu"] {
+    background-color: #1e2a44 !important;
+    border-radius: 16px !important;
+    box-shadow: 0 12px 30px rgba(0,0,0,0.6) !important;
+    padding: 6px !important;
+    margin-top: 4px !important;
+}
+[data-baseweb="option"] {
+    color: #e0e0e0 !important;
+    padding: 12px 20px !important;
+    border-radius: 12px !important;
+}
+[data-baseweb="option"][aria-selected="true"] {
+    background-color: #263b5e !important;
+    color: #ffffff !important;
+}
+[data-baseweb="option"]:hover {
+    background-color: #263b5e !important;
+}
 @media (max-width: 700px) {
     div[data-baseweb="select"] {
-        min-width: 145px !important;
-        max-width: 155px !important;
+        min-width: 155px !important;
+        max-width: 165px !important;
     }
     div[data-baseweb="select"] > div {
         padding: 12px 16px !important;
@@ -695,7 +717,7 @@ document.querySelectorAll('.coin-card').forEach(div => {{
                     </div>
                     """, unsafe_allow_html=True)
                  
-                    col1, col2 = st.columns([0.68, 4.32])   # wider column so full label always visible
+                    col1, col2 = st.columns([0.68, 4.32])
                     with col1:
                         candle = st.selectbox(
                             "Timeframe",
