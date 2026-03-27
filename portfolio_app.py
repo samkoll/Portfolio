@@ -143,7 +143,7 @@ st.markdown("""
     }
 }
 
-/* PRICE PILLS - COMPACT SIZE THAT FITS PERFECTLY + NICER VISUALS */
+/* PRICE PILLS - PERFECT AS THEY ARE */
 .price-pills-container {
     display: flex !important;
     gap: 6px !important;
@@ -188,47 +188,41 @@ st.markdown("""
     .avg-pill span:last-child { font-size: 1.18rem !important; }
 }
 
-/* TIMEFRAME SELECTBOX - FULL TEXT VISIBLE, NO BOTTOM CUTOFF */
+/* TIMEFRAME SELECTBOX - FULL TEXT ALWAYS VISIBLE */
 div[data-baseweb="select"] {
     background-color: #1e2a44 !important;
     border-radius: 9999px !important;
     box-shadow: 0 4px 15px rgba(0,0,0,0.4) !important;
-    min-width: 148px !important;
-    max-width: 158px !important;
-    transition: all 0.2s ease;
+    min-width: 155px !important;
+    max-width: 165px !important;
 }
 div[data-baseweb="select"] > div {
     background: transparent !important;
     border: none !important;
-    padding: 13px 18px !important; /* extra vertical space to prevent bottom cutoff */
-    line-height: 1.35 !important;
+    padding: 13px 18px !important;
+    line-height: 1.4 !important;
 }
 div[data-baseweb="select"] input {
     color: #ffffff !important;
     font-weight: 700 !important;
-    font-size: 1.05rem !important;
+    font-size: 1.08rem !important;
     white-space: nowrap !important;
+    text-align: center !important;
 }
 div[data-baseweb="select"] svg {
     fill: #ffffff !important;
 }
-/* No blue highlight */
-div[data-baseweb="select"] [aria-selected="true"],
-div[data-baseweb="select"]:focus-within {
-    background: #1e2a44 !important;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.4) !important;
-}
 @media (max-width: 700px) {
     div[data-baseweb="select"] {
-        min-width: 138px !important;
-        max-width: 148px !important;
+        min-width: 145px !important;
+        max-width: 155px !important;
     }
     div[data-baseweb="select"] > div {
-        padding: 12px 15px !important;
+        padding: 12px 16px !important;
     }
 }
 
-/* CHARTS HEADER WITH NICE FITTING ICON */
+/* CHARTS HEADER */
 .charts-header {
     display: flex;
     align-items: center;
@@ -701,7 +695,7 @@ document.querySelectorAll('.coin-card').forEach(div => {{
                     </div>
                     """, unsafe_allow_html=True)
                  
-                    col1, col2 = st.columns([0.55, 4.45])
+                    col1, col2 = st.columns([0.68, 4.32])   # wider column so full label always visible
                     with col1:
                         candle = st.selectbox(
                             "Timeframe",
