@@ -14,21 +14,22 @@ import random
 # ====================== CONFIG ======================
 st.set_page_config(page_title="Portfolio", layout="wide", page_icon="📊")
 
-# ====================== STRONG CACHE BUST FOR PULL-TO-REFRESH ======================
+# ====================== STRONG CACHE BUST + FULL CLEAR ON SWIPE ======================
 if "refresh_key" not in st.session_state:
     st.session_state.refresh_key = random.randint(100000, 999999)
 
-# Read timestamp from query param and FORCE cache clear on swipe
+# Read timestamp from query param → FORCE full cache clear + new key
 if "t" in st.query_params:
     try:
         new_key = int(st.query_params["t"])
-        if new_key != st.session_state.refresh_key:
+        if new_key != st.session_state.get("refresh_key", 0):
             st.session_state.refresh_key = new_key
-            st.cache_data.clear()   # This is the key fix - clears ALL cached prices & charts
+            st.cache_data.clear()          # This makes prices actually update
+            st.session_state.ui_version = st.session_state.get("ui_version", 0) + 1
     except:
         pass
 
-# ====================== PULL-TO-REFRESH - NOW FROM ANYWHERE ON THE WHOLE PAGE ======================
+# ====================== PULL-TO-REFRESH - SWIPE FROM ANYWHERE ON THE WHOLE PAGE ======================
 PULL_REFRESH_HTML = """
 <style>
 .pull-to-refresh {
@@ -104,10 +105,10 @@ if (!window.pullToRefreshInitialized) {
         }, 700);
     }
 
-    // === SWIPE FROM ANYWHERE ON THE PAGE (exactly what you asked for) ===
+    // SWIPE FROM ANYWHERE ON THE ENTIRE PAGE
     document.documentElement.addEventListener('touchstart', e => {
         startY = e.touches[0].clientY;
-        isPulling = true;   // No scrollY check → works everywhere on the screen
+        isPulling = true;
     }, {passive: true});
 
     document.documentElement.addEventListener('touchmove', e => {
@@ -147,7 +148,7 @@ if (!window.pullToRefreshInitialized) {
     }, {passive: true});
 
     window.addEventListener('scroll', () => {
-        if (window.scrollY > 400) hidePull();
+        if (window.scrollY > 600) hidePull();
     });
 }
 </script>
@@ -233,6 +234,7 @@ st.markdown("""
     gap: 16px;
     width: 100% !important;
     margin-bottom: 45px;
+    margin-top: -65px !important;   /* This removes the extra space above the card */
 }
 .glossy-box {
     padding: 28px 30px;
@@ -264,6 +266,7 @@ st.markdown("""
         padding: 24px 20px !important;
         font-size: 24px !important;
         min-height: 100px;
+        margin-top: -55px !important;
     }
 }
 /* MOBILE RESPONSIVE FIX FOR THE 3 SUMMARY CARDS */
@@ -753,7 +756,7 @@ def glossy_header(title: str, icon_svg: str):
 
 # ====================== PAGES ======================
 with main_container.container(key=f"page_{st.session_state.page}_{st.session_state.ui_version}"):
-    components.html(PULL_REFRESH_HTML, height=80)
+    components.html(PULL_REFRESH_HTML, height=80)   # ← restored so the pull tab is visible again
    
     if st.session_state.page == "Home":
         glossy_header("Portfolio Dashboard", DASHBOARD_ICON)
