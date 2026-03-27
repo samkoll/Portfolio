@@ -522,7 +522,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
 </div>"""
         st.markdown(value_box_html, unsafe_allow_html=True)
 
-        # ====================== COMPACT COIN CARDS (labels left / values right + full glow, no cutoff) ======================
+        # ====================== COMPACT COIN CARDS (labels left / values right + full glow, no cutoff, hidden scrollbar) ======================
         coin_list = [t for t in df_port['Ticker'] if t != 'USDC']
         cards_html = ""
         for _, r in df_port.iterrows():
@@ -552,7 +552,8 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
 
         html = f"""<html><head><style>
 body{{background:#0b1120;color:white;font-family:sans-serif;margin:0;padding:0;}}
-.coin-grid {{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px;padding:0 32px;box-sizing:border-box;}}
+.coin-grid {{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px;padding:0 32px;box-sizing:border-box;max-height:520px;overflow-y:auto;scrollbar-width:none;}}
+.coin-grid::-webkit-scrollbar {{display:none;}}
 .coin-card {{background:#0f172a;padding:16px;border-radius:20px;box-shadow:0 6px 20px rgba(0,0,0,0.3);transition:all 0.25s ease;cursor:pointer;position:relative;z-index:1;}}
 .coin-card:hover {{transform:translateY(-3px);box-shadow:0 0 45px 12px var(--glow) !important;z-index:10;}}
 .card-header {{display:flex;align-items:center;margin-bottom:14px;}}
