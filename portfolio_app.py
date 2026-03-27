@@ -12,7 +12,11 @@ import hashlib
 import random
 
 # ====================== CONFIG ======================
-st.set_page_config(page_title="Portfolio", layout="wide", page_icon="📊")
+st.set_page_config(
+    page_title="Portfolio",
+    layout="wide",
+    page_icon="logo.png"          # ← YOUR TEAL 4-SQUARE GRID LOGO IS NOW THE SITE FAVICON
+)
 
 # ====================== GLOBAL CSS (polished & clean) ======================
 st.markdown("""
@@ -144,19 +148,6 @@ st.markdown("""
         padding: 24px 20px !important;
         font-size: 24px !important;
         min-height: 100px;
-    }
-}
-/* MOBILE RESPONSIVE FIX FOR THE 3 SUMMARY CARDS */
-@media (max-width: 600px) {
-    .glossy-box {
-        min-width: 98px !important;
-        padding: 18px 14px !important;
-    }
-    .glossy-box > div:first-child {
-        font-size: 12px !important;
-    }
-    .glossy-box > div:last-child {
-        font-size: 21px !important;
     }
 }
 /* PRICE PILLS */
@@ -291,7 +282,6 @@ div[data-baseweb="select"] *,
     font-weight: 700;
     font-size: 23px;
 }
-
 /* TIGHTENED CHARTS SECTION - REMOVED EXTRA SPACE */
 .stTabs {
     margin-top: 0 !important;
@@ -309,7 +299,6 @@ div[data-testid="stVerticalBlock"] > div:has(> div.stPlotlyChart) {
     padding-top: 0 !important;
     margin-top: 0 !important;
 }
-
 @media (max-width: 700px) {
     div[data-baseweb="select"] {
         min-width: 142px !important;
@@ -323,8 +312,7 @@ div[data-testid="stVerticalBlock"] > div:has(> div.stPlotlyChart) {
 </style>
 """, unsafe_allow_html=True)
 
-# ====================== SVG ICONS ======================
-DASHBOARD_ICON = '''<svg xmlns="http://www.w3.org/2000/svg" width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="#00ff9d" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>'''
+# ====================== SVG ICONS (only for other pages) ======================
 CRYPTO_ICON = '''<svg xmlns="http://www.w3.org/2000/svg" width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="#00ff9d" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M14.5 8.5L9.5 13.5"/><path d="M9.5 8.5L14.5 13.5"/></svg>'''
 FIAT_ICON = '''<svg xmlns="http://www.w3.org/2000/svg" width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="#00ff9d" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M6 8h12"/><path d="M6 12h12"/><path d="M6 16h12"/></svg>'''
 CHARTS_ICON = '''<svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#00ff9d" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M17 17l-4-4-3 3-4-4"/></svg>'''
@@ -651,22 +639,28 @@ with st.sidebar:
 # ====================== MAIN CONTENT ======================
 main_container = st.empty()
 
-def glossy_header(title: str, icon_svg: str):
-    html = f"""<div class="glossy-header">{icon_svg}<span style="margin-left:12px;">{title}</span></div>"""
-    st.markdown(html, unsafe_allow_html=True)
-
 # ====================== PAGES ======================
 with main_container.container(key=f"page_{st.session_state.page}_{st.session_state.ui_version}"):
     if st.session_state.page == "Home":
-        glossy_header("Portfolio Dashboard", DASHBOARD_ICON)
+        # === PERFECT HEADER WITH YOUR PNG LOGO (exact match to your screenshot) ===
+        st.markdown(f"""
+        <div style="background:#1e2a44;border-radius:18px;padding:18px 0;text-align:center;font-size:28px;font-weight:700;letter-spacing:1.5px;color:#ffffff;display:flex;align-items:center;justify-content:center;gap:14px;margin-bottom:24px;">
+            <img src="logo.png" width="42" style="margin-top:-2px;">
+            Portfolio Dashboard
+        </div>
+        """, unsafe_allow_html=True)
+
         df_port, total_value, total_pnl, total_pnl_pct = calculate_portfolio(st.session_state.crypto_df)
+
+        # === IMPROVED SUMMARY CARDS (perfect spacing on vertical PC with sidebar open) ===
         value_box_html = f"""
-<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(98px, 1fr)); gap: 14px; margin-bottom: 30px;">
-    <div class="glossy-box"><div>Total Value</div><div>{format_money(total_value)}</div></div>
-    <div class="glossy-box"><div>PnL</div><div style="color:{'#00ff9d' if total_pnl>=0 else '#ff4d4d'}">{"▲" if total_pnl>0 else "▼" if total_pnl<0 else ""} {format_money(abs(total_pnl))}</div></div>
-    <div class="glossy-box"><div>PnL %</div><div style="color:{'#00ff9d' if total_pnl_pct>=0 else '#ff4d4d'}">{"▲" if total_pnl_pct>0 else "▼" if total_pnl_pct<0 else ""} {abs(total_pnl_pct):.2f}%</div></div>
-</div>"""
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(122px, 1fr)); gap: 18px; margin-bottom: 34px;">
+            <div class="glossy-box"><div>Total Value</div><div style="font-size:28px;">{format_money(total_value)}</div></div>
+            <div class="glossy-box"><div>PnL</div><div style="color:{'#00ff9d' if total_pnl>=0 else '#ff4d4d'};font-size:28px;">{"▲" if total_pnl>0 else "▼" if total_pnl<0 else ""} {format_money(abs(total_pnl))}</div></div>
+            <div class="glossy-box"><div>PnL %</div><div style="color:{'#00ff9d' if total_pnl_pct>=0 else '#ff4d4d'};font-size:28px;">{"▲" if total_pnl_pct>0 else "▼" if total_pnl_pct<0 else ""} {abs(total_pnl_pct):.2f}%</div></div>
+        </div>"""
         st.markdown(value_box_html, unsafe_allow_html=True)
+
         coin_list = [t for t in df_port['Ticker'] if t != 'USDC']
         cards_html = ""
         for _, r in df_port.iterrows():
@@ -725,7 +719,7 @@ document.querySelectorAll('.coin-card').forEach(div => {{
     div.style.setProperty('--glow', div.getAttribute('data-glow'));
 }});
 </script><!-- VERSION:{st.session_state.ui_version} --></body></html>"""
-        components.html(html, height=520, scrolling=True)  # tightened height for perfect flow
+        components.html(html, height=520, scrolling=True)
 
         st.markdown(f"""
 <div id="price-charts-section" class="glossy-box" style="background:#1e2a44;padding:14px 24px;border-radius:18px;margin:12px 0 8px 0;">
@@ -743,11 +737,9 @@ document.querySelectorAll('.coin-card').forEach(div => {{
                     avg_row = df_port.loc[df_port['Ticker'] == coin, 'AVG']
                     avg_price = avg_row.iloc[0] if not avg_row.empty and pd.notna(avg_row.iloc[0]) else None
                     live_price = df_port.loc[df_port['Ticker'] == coin, 'Live'].iloc[0] if not df_port.loc[df_port['Ticker'] == coin].empty else 0
-
                     daily_open = get_daily_open(coin, st.session_state.refresh_key)
                     daily_change_pct = ((live_price - daily_open) / daily_open * 100) if daily_open > 0 else 0
                     daily_arrow = "▲" if daily_change_pct > 0 else "▼" if daily_change_pct < 0 else ""
-
                     color = "#00ff9d" if live_price > 0 else "#ff4d4d"
                     st.markdown(f"""
                     <div class="price-pills-container">
@@ -759,7 +751,6 @@ document.querySelectorAll('.coin-card').forEach(div => {{
                         {f'<div class="price-pill avg-pill"><span>AVG</span><span style="color:#ffaa00;">{format_crypto_price(avg_price)}</span></div>' if avg_price is not None else ''}
                     </div>
                     """, unsafe_allow_html=True)
-
                     col1, col2 = st.columns([0.95, 4.05])
                     with col1:
                         candle = st.selectbox(
@@ -769,12 +760,9 @@ document.querySelectorAll('.coin-card').forEach(div => {{
                             key=f"candle_select_{coin}_{st.session_state.ui_version}",
                             label_visibility="collapsed"
                         )
-
                     data = get_cryptocompare_ohlc(coin, candle, st.session_state.refresh_key)
-
                     if data is not None and not data.empty:
                         data_local = data.copy()
-
                         fig = make_subplots(rows=2, cols=1, shared_xaxes=True, vertical_spacing=0.08,
                                             row_heights=[0.75, 0.25], subplot_titles=("", ""))
                         fig.add_trace(go.Candlestick(
@@ -836,7 +824,12 @@ document.querySelectorAll('.coin-card').forEach(div => {{
 
     # ====================== CRYPTO TRANSACTIONS ======================
     elif st.session_state.page == "Crypto Transactions":
-        glossy_header("Crypto Transactions", CRYPTO_ICON)
+        st.markdown(f"""
+        <div style="background:#1e2a44;border-radius:18px;padding:18px 0;text-align:center;font-size:28px;font-weight:700;letter-spacing:1.5px;color:#ffffff;display:flex;align-items:center;justify-content:center;gap:14px;margin-bottom:24px;">
+            {CRYPTO_ICON}
+            Crypto Transactions
+        </div>
+        """, unsafe_allow_html=True)
         df_display = st.session_state.crypto_df.copy()
         df_display['Date'] = df_display['Datum'].apply(format_datum)
         df_display = df_display.dropna(how='all').reset_index(drop=True)
@@ -923,13 +916,18 @@ document.querySelectorAll('.coin-card').forEach(div => {{
 
     # ====================== FIAT TRANSACTIONS ======================
     elif st.session_state.page == "Fiat Transactions":
+        st.markdown(f"""
+        <div style="background:#1e2a44;border-radius:18px;padding:18px 0;text-align:center;font-size:28px;font-weight:700;letter-spacing:1.5px;color:#ffffff;display:flex;align-items:center;justify-content:center;gap:14px;margin-bottom:24px;">
+            {FIAT_ICON}
+            Fiat Transactions
+        </div>
+        """, unsafe_allow_html=True)
         total_czk = pd.to_numeric(st.session_state.fiat_df['CZK'], errors='coerce').fillna(0).sum()
         total_eur = pd.to_numeric(st.session_state.fiat_df['EUR'], errors='coerce').fillna(0).sum()
         total_usdc = pd.to_numeric(st.session_state.fiat_df['USDC'], errors='coerce').fillna(0).sum()
         fees_eur = pd.to_numeric(st.session_state.fiat_df['Fee'], errors='coerce').fillna(0).sum()
         fees_czk = (pd.to_numeric(st.session_state.fiat_df['Fee'], errors='coerce').fillna(0) *
                     pd.to_numeric(st.session_state.fiat_df['CZK/EUR'], errors='coerce').fillna(0)).sum()
-        glossy_header("Fiat Transactions", FIAT_ICON)
         summary_html = f"""
 <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:20px;margin-bottom:30px;">
     <div class="glossy-box"><div>Total CZK</div><div>{total_czk:,.2f}</div></div>
