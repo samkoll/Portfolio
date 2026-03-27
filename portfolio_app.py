@@ -637,11 +637,13 @@ def glossy_header(title: str, icon_svg: str):
 # ====================== PAGES ======================
 with main_container.container(key=f"page_{st.session_state.page}_{st.session_state.ui_version}"):
     if st.session_state.page == "Home":
-        # === FIXED: your logo.png is now displayed reliably in the card ===
-        st.markdown('<div class="glossy-header" style="display:flex;align-items:center;justify-content:center;gap:14px;">', unsafe_allow_html=True)
-        st.image("logo.png", width=42)
-        st.markdown('<span style="margin-left:12px;">Portfolio Dashboard</span>', unsafe_allow_html=True)
-        st.markdown('</div>', unsafe_allow_html=True)
+        # === FIXED HEADER: your logo.png is now properly sized and centered inside the card ===
+        st.markdown(f"""
+        <div class="glossy-header" style="display:flex; align-items:center; justify-content:center; gap:18px;">
+            <img src="logo.png" width="52" style="flex-shrink:0;">
+            <span style="font-size:29px; font-weight:700; letter-spacing:1.8px;">Portfolio Dashboard</span>
+        </div>
+        """, unsafe_allow_html=True)
 
         df_port, total_value, total_pnl, total_pnl_pct = calculate_portfolio(st.session_state.crypto_df)
         value_box_html = f"""
@@ -819,7 +821,6 @@ document.querySelectorAll('.coin-card').forEach(div => {{
     # ====================== CRYPTO TRANSACTIONS ======================
     elif st.session_state.page == "Crypto Transactions":
         glossy_header("Crypto Transactions", CRYPTO_ICON)
-        # (rest of your original Crypto Transactions page - unchanged)
         df_display = st.session_state.crypto_df.copy()
         df_display['Date'] = df_display['Datum'].apply(format_datum)
         df_display = df_display.dropna(how='all').reset_index(drop=True)
