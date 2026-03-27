@@ -258,7 +258,7 @@ def get_all_cryptocompare_prices(tickers):
             continue
     return prices
 
-# ====================== CHART FUNCTION (true 4h candles via resampling) ======================
+# ====================== CHART FUNCTION ======================
 @st.cache_data(ttl=80, show_spinner=False)
 def get_cryptocompare_ohlc(ticker: str, candle: str):
     sym = CRYPTOCOMPARE_SYMBOL_MAP.get(ticker.upper())
@@ -283,7 +283,6 @@ def get_cryptocompare_ohlc(ticker: str, candle: str):
         df.set_index("timestamp", inplace=True)
         df = df.drop(columns=["time"])
 
-        # RESAMPLE TO TRUE 4H CANDLES
         if candle == "4h":
             df = df.resample('4H').agg({
                 'open': 'first',
@@ -470,7 +469,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
 </div>"""
         st.markdown(value_box_html, unsafe_allow_html=True)
 
-        # CUSTOM TABLE
+        # CUSTOM TABLE (AVG column removed)
         coin_list = [t for t in df_port['Ticker'] if t != 'USDC']
         rows_html = ""
         for _, r in df_port.iterrows():
@@ -483,7 +482,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
             onclick = f"onclick=\"switchToTab({coin_list.index(ticker)})\" " if ticker != 'USDC' else ""
             row_class = "clickable-row" if ticker != 'USDC' else ""
             logo_url = get_ticker_logo(ticker)
-            rows_html += f"""<tr><td colspan="7" style="padding:0;">
+            rows_html += f"""<tr><td colspan="6" style="padding:0;">
                 <div class="row-inner {row_class}" data-glow="{glow_color}" style="display:flex;justify-content:space-between;align-items:center;margin:6px auto 6px;" {onclick}>
                     <div style="display:flex;align-items:center;gap:8px;min-width:100px;">
                         <img src="{logo_url}" style="height:36px;width:36px;border-radius:50%;object-fit:contain;" onerror="this.src='https://via.placeholder.com/36/1e2a44/ffffff?text={ticker[0]}';">
@@ -491,14 +490,13 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                     </div>
                     <div style="flex:1;text-align:center;">{format_holdings(r['Holdings'], r['Ticker'])}</div>
                     <div style="flex:1;text-align:center;">{format_money(r['USDC'])}</div>
-                    <div style="flex:1;text-align:center;">{format_money(r['AVG'])}</div>
                     <div style="flex:1;text-align:center;color:{pnl_color};font-weight:600;">{arrow} {format_money(abs(pnl) if pd.notna(pnl) else "")}</div>
                     <div style="flex:1;text-align:center;color:{pnl_color};font-weight:600;">{arrow} {format_percent(abs(r['PnL %']) if pd.notna(r['PnL %']) else "")}</div>
                     <div style="flex:1;text-align:center;">{format_money(r['Value'])}</div>
                 </div>
             </td></tr>"""
       
-        html = f"""<html><head><style>body{{background:#0b1120;color:white;font-family:sans-serif;margin:0;}}table{{width:100%;border-spacing:0;table-layout:fixed;min-width:980px;}}thead{{position:sticky;top:0;z-index:9999;background:#0f172a;}}thead th{{padding:12px 8px;text-align:center;font-size:0.95rem;}}td{{padding:0;background:transparent;}}.row-inner{{position:relative;z-index:1;width:98%;padding:8px 10px;border-radius:18px;background:#0f172a;display:flex;justify-content:space-between;align-items:center;transition:transform 0.22s cubic-bezier(0.4,0,0.2,1),box-shadow 0.25s cubic-bezier(0.4,0,0.2,1);cursor:default;font-size:0.95rem;}}@media (max-width:900px){{.row-inner{{padding:6px 8px;}}thead th{{font-size:0.85rem;padding:8px 6px;}}}}.clickable-row{{cursor:pointer;}}.row-inner:hover{{transform:translateY(-2px) scale(1.01);box-shadow:0 0 45px var(--glow)!important;z-index:20;}}.scroll-container{{max-height:460px;overflow-y:auto;overflow-x:auto;position:relative;}} .scroll-container::-webkit-scrollbar{{display:none;}}@media (max-height: 800px) {{ .scroll-container {{ max-height: 460px; }} }}</style></head><body><div class="scroll-container"><table><thead><tr><th>Ticker</th><th>Holdings</th><th>USDC</th><th>AVG</th><th>PnL</th><th>PnL %</th><th>Value</th></tr></thead><tbody>{rows_html}</tbody></table></div><script>function switchToTab(index){{const tabs=window.parent.document.querySelectorAll('.stTabs button');if(tabs&&tabs[index])tabs[index].click();}}document.querySelectorAll('.row-inner').forEach(div=>{{div.style.setProperty('--glow',div.getAttribute('data-glow'));}});</script><!-- VERSION:{st.session_state.ui_version} --></body></html>"""
+        html = f"""<html><head><style>body{{background:#0b1120;color:white;font-family:sans-serif;margin:0;}}table{{width:100%;border-spacing:0;table-layout:fixed;min-width:850px;}}thead{{position:sticky;top:0;z-index:9999;background:#0f172a;}}thead th{{padding:12px 8px;text-align:center;font-size:0.95rem;}}td{{padding:0;background:transparent;}}.row-inner{{position:relative;z-index:1;width:98%;padding:8px 10px;border-radius:18px;background:#0f172a;display:flex;justify-content:space-between;align-items:center;transition:transform 0.22s cubic-bezier(0.4,0,0.2,1),box-shadow 0.25s cubic-bezier(0.4,0,0.2,1);cursor:default;font-size:0.95rem;}}@media (max-width:900px){{.row-inner{{padding:6px 8px;}}thead th{{font-size:0.85rem;padding:8px 6px;}}}}.clickable-row{{cursor:pointer;}}.row-inner:hover{{transform:translateY(-2px) scale(1.01);box-shadow:0 0 45px var(--glow)!important;z-index:20;}}.scroll-container{{max-height:460px;overflow-y:auto;overflow-x:auto;position:relative;}} .scroll-container::-webkit-scrollbar{{display:none;}}@media (max-height: 800px) {{ .scroll-container {{ max-height: 460px; }} }}</style></head><body><div class="scroll-container"><table><thead><tr><th>Ticker</th><th>Holdings</th><th>USDC</th><th>PnL</th><th>PnL %</th><th>Value</th></tr></thead><tbody>{rows_html}</tbody></table></div><script>function switchToTab(index){{const tabs=window.parent.document.querySelectorAll('.stTabs button');if(tabs&&tabs[index])tabs[index].click();}}document.querySelectorAll('.row-inner').forEach(div=>{{div.style.setProperty('--glow',div.getAttribute('data-glow'));}});</script><!-- VERSION:{st.session_state.ui_version} --></body></html>"""
       
         components.html(html, height=485, scrolling=True)
         st.markdown("""<div class="glossy-box" style="background:#1e2a44;padding:22px 30px;border-radius:18px;margin:35px 0 25px 0;"><div style="color:#ffffff;font-weight:700;font-size:26px;text-align:center;">Price Charts + Volume</div></div>""", unsafe_allow_html=True)
@@ -513,14 +511,17 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                     
                     color = "#00ff9d" if live_price > 0 else "#ff4d4d"
                     st.markdown(f"""
-                    <div style="background:#0f172a;padding:10px 20px;border-radius:9999px;display:inline-flex;align-items:center;gap:12px;margin-bottom:16px;">
-                        <span style="font-size:1.15rem;font-weight:700;">{coin} LIVE</span>
-                        <span style="font-size:1.45rem;font-weight:700;color:{color};">{format_crypto_price(live_price)}</span>
+                    <div style="display:flex;gap:12px;margin-bottom:16px;">
+                        <div style="background:#0f172a;padding:10px 20px;border-radius:9999px;display:inline-flex;align-items:center;gap:12px;">
+                            <span style="font-size:1.15rem;font-weight:700;">{coin} LIVE</span>
+                            <span style="font-size:1.45rem;font-weight:700;color:{color};">{format_crypto_price(live_price)}</span>
+                        </div>
+                        {f'<div style="background:#0f172a;padding:10px 20px;border-radius:9999px;display:inline-flex;align-items:center;gap:8px;"><span style="font-size:1.05rem;font-weight:600;color:#ffaa00;">AVG</span><span style="font-size:1.35rem;font-weight:700;">{format_money(avg_price)}</span></div>' if avg_price is not None else ''}
                     </div>
                     """, unsafe_allow_html=True)
                     
-                    # SINGLE DROPDOWN - exactly the same size as before
-                    col1, col2 = st.columns([1, 4])
+                    # TIMEFRAME SELECTOR - made a little smaller
+                    col1, col2 = st.columns([0.8, 4.2])
                     with col1:
                         candle = st.selectbox(
                             "Timeframe",
@@ -595,7 +596,6 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
 
     # ====================== CRYPTO TRANSACTIONS ======================
     elif st.session_state.page == "Crypto Transactions":
-        # (unchanged – same as your previous stable version)
         glossy_header("Crypto Transactions", CRYPTO_ICON)
         df_display = st.session_state.crypto_df.copy()
         df_display['Date'] = df_display['Datum'].apply(format_datum)
