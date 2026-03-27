@@ -9,10 +9,8 @@ import requests
 import json
 from pathlib import Path
 import hashlib
-
 # ====================== CONFIG ======================
 st.set_page_config(page_title="Portfolio", layout="wide", page_icon="💎")
-
 # ====================== GLOBAL CSS ======================
 st.markdown("""
 <style>
@@ -114,7 +112,6 @@ st.markdown("""
     line-height: 1.05;
     color: #ffffff;
 }
-
 /* MOBILE RESPONSIVE FIX FOR THE 3 SUMMARY CARDS */
 @media (max-width: 600px) {
     .glossy-box {
@@ -128,7 +125,40 @@ st.markdown("""
         font-size: 21px !important;
     }
 }
-
+/* NEW: PERFECT MOBILE FIX FOR LIVE / AVG PRICE PILLS (exactly like the cards above) */
+@media (max-width: 600px) {
+    .price-pills-container {
+        flex-wrap: wrap !important;
+        gap: 6px !important;
+        margin-bottom: 12px !important;
+        justify-content: flex-start !important;
+    }
+    .price-pill {
+        padding: 6px 12px !important;
+        border-radius: 9999px !important;
+    }
+    .price-pill span:first-child {
+        font-size: 0.95rem !important;
+        font-weight: 700 !important;
+    }
+    .price-pill span:last-child {
+        font-size: 1.15rem !important;
+        font-weight: 700 !important;
+    }
+    .daily-pill {
+        padding: 2px 5px !important;
+        border-radius: 9999px !important;
+    }
+    .daily-pill span {
+        font-size: 0.72rem !important;
+        font-weight: 600 !important;
+    }
+    .avg-pill {
+        padding: 6px 12px !important;
+        border-radius: 9999px !important;
+        margin-left: 0 !important;
+    }
+}
 /* COMPACT TABLE FIX */
 [data-testid="stHorizontalBlock"] > div:nth-child(6),
 [data-testid="stHorizontalBlock"] > div:nth-child(7),
@@ -143,17 +173,14 @@ st.markdown("""
 }
 </style>
 """, unsafe_allow_html=True)
-
 # ====================== SVG ICONS ======================
 DASHBOARD_ICON = '''<svg xmlns="http://www.w3.org/2000/svg" width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="#00ff9d" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>'''
 CRYPTO_ICON = '''<svg xmlns="http://www.w3.org/2000/svg" width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="#00ff9d" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M14.5 8.5L9.5 13.5"/><path d="M9.5 8.5L14.5 13.5"/></svg>'''
 FIAT_ICON = '''<svg xmlns="http://www.w3.org/2000/svg" width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="#00ff9d" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M6 8h12"/><path d="M6 12h12"/><path d="M6 16h12"/></svg>'''
-
 DATA_DIR = Path("data")
 DATA_DIR.mkdir(exist_ok=True)
 CRYPTO_JSON = DATA_DIR / "crypto_transactions.json"
 FIAT_JSON = DATA_DIR / "fiat_transactions.json"
-
 # ====================== DATE HELPERS ======================
 def format_datum(datum_val):
     if pd.isna(datum_val) or datum_val == "":
@@ -164,12 +191,10 @@ def format_datum(datum_val):
         return date_obj.strftime("%d.%m.%Y")
     except:
         return str(datum_val)
-
 def date_to_excel_serial(selected_date: date) -> int:
     base = datetime(1899, 12, 30).date()
     delta = selected_date - base
     return delta.days
-
 # ====================== INITIAL DATA ======================
 def get_initial_crypto_df():
     return pd.DataFrame([
@@ -185,7 +210,6 @@ def get_initial_crypto_df():
         {"Datum": 46100, "USDC": 15.0, "Ticker": "ETH", "Amount": 0.00707709, "Price": 2119.515224},
         {"Datum": 46100, "USDC": 10.0, "Ticker": "SOL", "Amount": 0.11363518, "Price": 88.00091662},
     ])
-
 def get_initial_fiat_df():
     return pd.DataFrame([
         {"Datum": 46098, "CZK": 1010.16, "EUR": 40.0, "Fee": 1.0, "CZK/EUR": 25.254, "USDC": 44.67, "NI": "CZK", "GG": "", "ER": "8972.72"},
@@ -193,7 +217,6 @@ def get_initial_fiat_df():
         {"Datum": 46098, "CZK": 4174.67, "EUR": 165.0, "Fee": 1.0, "CZK/EUR": 25.3010303, "USDC": 188.188, "NI": "EUR", "GG": "", "ER": "355"},
         {"Datum": 46099, "CZK": 631.13, "EUR": 25.0, "Fee": 1.0, "CZK/EUR": 25.2452, "USDC": 27.42, "NI": "FEEs", "GG": "4", "ER": "101.0543103"},
     ])
-
 # ====================== LOAD / SAVE ======================
 def load_or_init_crypto():
     if CRYPTO_JSON.exists():
@@ -201,27 +224,22 @@ def load_or_init_crypto():
     df = get_initial_crypto_df()
     save_crypto(df)
     return df
-
 def load_or_init_fiat():
     if FIAT_JSON.exists():
         return pd.read_json(FIAT_JSON)
     df = get_initial_fiat_df()
     save_fiat(df)
     return df
-
 def save_crypto(df):
     df.to_json(CRYPTO_JSON, orient="records", indent=2)
-
 def save_fiat(df):
     df.to_json(FIAT_JSON, orient="records", indent=2)
-
 # ====================== CRYPTOCOMPARE MAPPING ======================
 CRYPTOCOMPARE_SYMBOL_MAP = {
     'BTC': 'BTC', 'ETH': 'ETH', 'SOL': 'SOL', 'HBAR': 'HBAR',
     'XRP': 'XRP', 'BNB': 'BNB', 'TRX': 'TRX', 'LINK': 'LINK',
     'SUI': 'SUI', 'USDC': 'USDC',
 }
-
 # ====================== HELPER: RETRY WRAPPER ======================
 def get_with_retry(url: str, headers: dict, timeout: int = 12, retries: int = 4) -> dict | None:
     for attempt in range(retries):
@@ -234,7 +252,6 @@ def get_with_retry(url: str, headers: dict, timeout: int = 12, retries: int = 4)
                 return None
             time.sleep(1.3 ** attempt)
     return None
-
 # ====================== LIVE PRICE FUNCTION ======================
 @st.cache_data(ttl=15, show_spinner=False)
 def get_all_cryptocompare_prices(tickers):
@@ -272,7 +289,6 @@ def get_all_cryptocompare_prices(tickers):
         except:
             continue
     return prices
-
 # ====================== DAILY OPEN PRICE FUNCTION ======================
 @st.cache_data(ttl=300, show_spinner=False)
 def get_daily_open(ticker: str):
@@ -288,7 +304,6 @@ def get_daily_open(ticker: str):
         return 0.0
     except:
         return 0.0
-
 # ====================== CHART FUNCTION ======================
 @st.cache_data(ttl=80, show_spinner=False)
 def get_cryptocompare_ohlc(ticker: str, candle: str):
@@ -320,7 +335,6 @@ def get_cryptocompare_ohlc(ticker: str, candle: str):
         return df
     except:
         return None
-
 # ====================== LOGOS & COLORS ======================
 def get_ticker_logo(ticker: str) -> str:
     ticker = ticker.upper()
@@ -339,7 +353,6 @@ def get_ticker_logo(ticker: str) -> str:
     if ticker in known:
         return known[ticker]
     return f"https://cryptologos.cc/logos/{ticker.lower()}-logo.png"
-
 def get_ticker_color(ticker: str) -> str:
     ticker = ticker.upper()
     known = {
@@ -351,7 +364,6 @@ def get_ticker_color(ticker: str) -> str:
     if ticker in known:
         return known[ticker]
     return f"#{hashlib.md5(ticker.encode()).hexdigest()[:6]}"
-
 # ====================== FORMATTING ======================
 def format_money(val):
     try:
@@ -360,7 +372,6 @@ def format_money(val):
         return f"${val:,.2f}" if val >= 0 else f"-${-val:,.2f}"
     except:
         return ""
-
 def format_crypto_price(val):
     try:
         val = float(val)
@@ -373,7 +384,6 @@ def format_crypto_price(val):
             return f"${val:,.6f}"
     except:
         return ""
-
 def format_percent(val):
     try:
         val = float(val)
@@ -381,7 +391,6 @@ def format_percent(val):
         return f"{val:.2f}%"
     except:
         return ""
-
 def format_holdings(val, ticker=None):
     try:
         val = float(val)
@@ -391,7 +400,6 @@ def format_holdings(val, ticker=None):
         return f"{val:,.4f}".replace(',', '.')
     except:
         return str(val)
-
 # ====================== PORTFOLIO CALC ======================
 def calculate_portfolio(crypto_df):
     if 'last_known_prices' not in st.session_state:
@@ -426,7 +434,6 @@ def calculate_portfolio(crypto_df):
     total_pnl = df_port['PnL'].sum()
     total_pnl_pct = (total_pnl / (total_value - total_pnl) * 100) if (total_value - total_pnl) != 0 else 0
     return df_port, total_value, total_pnl, total_pnl_pct
-
 # ====================== SESSION STATE ======================
 if 'crypto_df' not in st.session_state:
     st.session_state.crypto_df = load_or_init_crypto()
@@ -442,7 +449,6 @@ if 'page' not in st.session_state:
     st.session_state.page = "Home"
 if 'last_known_prices' not in st.session_state:
     st.session_state.last_known_prices = {"USDC": 1.0}
-
 # ====================== SIDEBAR ======================
 with st.sidebar:
     nav_items = [
@@ -464,34 +470,30 @@ with st.sidebar:
         data = {"crypto": json.loads(st.session_state.crypto_df.to_json(orient="records")),
                 "fiat": json.loads(st.session_state.fiat_df.to_json(orient="records"))}
         st.download_button("Download JSON", json.dumps(data, indent=2), "portfolio_backup.json", "application/json")
-
 # ====================== MAIN CONTENT ======================
 main_container = st.empty()
-
 def glossy_header(title: str, icon_svg: str):
     html = f"""<div class="glossy-header">{icon_svg}<span style="margin-left:12px;">{title}</span></div>"""
     st.markdown(html, unsafe_allow_html=True)
-
 # ====================== PAGES ======================
 main_container.empty()
 with main_container.container(key=f"page_{st.session_state.page}_{st.session_state.ui_version}"):
     if st.session_state.page == "Home":
         glossy_header("Portfolio Dashboard", DASHBOARD_ICON)
-    
+   
         df_port, total_value, total_pnl, total_pnl_pct = calculate_portfolio(st.session_state.crypto_df)
-    
+   
         # 3 CARDS – STAY SIDE-BY-SIDE ON MOBILE (shrink to fit phone screen perfectly)
         value_box_html = f"""
-<div style="display: grid; 
-            grid-template-columns: repeat(auto-fit, minmax(98px, 1fr)); 
-            gap: 14px; 
+<div style="display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(98px, 1fr));
+            gap: 14px;
             margin-bottom: 30px;">
     <div class="glossy-box"><div>Total Value</div><div>{format_money(total_value)}</div></div>
     <div class="glossy-box"><div>PnL</div><div style="color:{'#00ff9d' if total_pnl>=0 else '#ff4d4d'}">{"▲" if total_pnl>0 else "▼" if total_pnl<0 else ""} {format_money(abs(total_pnl))}</div></div>
     <div class="glossy-box"><div>PnL %</div><div style="color:{'#00ff9d' if total_pnl_pct>=0 else '#ff4d4d'}">{"▲" if total_pnl_pct>0 else "▼" if total_pnl_pct<0 else ""} {abs(total_pnl_pct):.2f}%</div></div>
 </div>"""
         st.markdown(value_box_html, unsafe_allow_html=True)
-
         # CUSTOM TABLE
         coin_list = [t for t in df_port['Ticker'] if t != 'USDC']
         rows_html = ""
@@ -518,12 +520,12 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                     <div style="flex:1;text-align:center;">{format_money(r['Value'])}</div>
                 </div>
             </td></tr>"""
-     
+    
         html = f"""<html><head><style>body{{background:#0b1120;color:white;font-family:sans-serif;margin:0;}}table{{width:100%;border-spacing:0;table-layout:fixed;min-width:850px;}}thead{{position:sticky;top:0;z-index:9999;background:#0f172a;}}thead th{{padding:12px 8px;text-align:center;font-size:0.95rem;}}td{{padding:0;background:transparent;}}.row-inner{{position:relative;z-index:1;width:98%;padding:8px 10px;border-radius:18px;background:#0f172a;display:flex;justify-content:space-between;align-items:center;transition:transform 0.22s cubic-bezier(0.4,0,0.2,1),box-shadow 0.25s cubic-bezier(0.4,0,0.2,1);cursor:default;font-size:0.95rem;}}@media (max-width:900px){{.row-inner{{padding:6px 8px;}}thead th{{font-size:0.85rem;padding:8px 6px;}}}}.clickable-row{{cursor:pointer;}}.row-inner:hover{{transform:translateY(-2px) scale(1.01);box-shadow:0 0 45px var(--glow)!important;z-index:20;}}.scroll-container{{max-height:460px;overflow-y:auto;overflow-x:auto;position:relative;}} .scroll-container::-webkit-scrollbar{{display:none;}}@media (max-height: 800px) {{ .scroll-container {{ max-height: 460px; }} }}</style></head><body><div class="scroll-container"><table><thead><tr><th>Ticker</th><th>Holdings</th><th>USDC</th><th>PnL</th><th>PnL %</th><th>Value</th></tr></thead><tbody>{rows_html}</tbody></table></div><script>function switchToTab(index){{const tabs=window.parent.document.querySelectorAll('.stTabs button');if(tabs&&tabs[index])tabs[index].click();}}document.querySelectorAll('.row-inner').forEach(div=>{{div.style.setProperty('--glow',div.getAttribute('data-glow'));}});</script><!-- VERSION:{st.session_state.ui_version} --></body></html>"""
-     
+    
         components.html(html, height=485, scrolling=True)
         st.markdown("""<div class="glossy-box" style="background:#1e2a44;padding:22px 30px;border-radius:18px;margin:35px 0 25px 0;"><div style="color:#ffffff;font-weight:700;font-size:26px;text-align:center;">Price Charts + Volume</div></div>""", unsafe_allow_html=True)
-     
+    
         if coin_list:
             selected_tab = st.tabs(coin_list)
             for i, coin in enumerate(coin_list):
@@ -531,27 +533,28 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                     avg_row = df_port.loc[df_port['Ticker'] == coin, 'AVG']
                     avg_price = avg_row.iloc[0] if not avg_row.empty and pd.notna(avg_row.iloc[0]) else None
                     live_price = df_port.loc[df_port['Ticker'] == coin, 'Live'].iloc[0] if not df_port.loc[df_port['Ticker'] == coin].empty else 0
-                   
+                  
                     # DAILY OPEN PILL
                     daily_open = get_daily_open(coin)
                     daily_change_pct = ((live_price - daily_open) / daily_open * 100) if daily_open > 0 else 0
                     daily_arrow = "▲" if daily_change_pct > 0 else "▼" if daily_change_pct < 0 else ""
                     daily_color = "#00ff9d" if daily_change_pct > 0 else "#ff4d4d" if daily_change_pct < 0 else "#aaaaaa"
-                   
+                  
                     color = "#00ff9d" if live_price > 0 else "#ff4d4d"
+                    # UPDATED PRICE PILLS WITH MOBILE CLASS (perfect shrink on phone)
                     st.markdown(f"""
-                    <div style="display:flex;gap:4px;margin-bottom:16px;">
-                        <div style="background:#0f172a;padding:8px 18px;border-radius:9999px;display:inline-flex;align-items:center;gap:10px;">
+                    <div class="price-pills-container" style="display:flex;gap:4px;margin-bottom:16px;">
+                        <div class="price-pill" style="background:#0f172a;padding:8px 18px;border-radius:9999px;display:inline-flex;align-items:center;gap:10px;">
                             <span style="font-size:1.15rem;font-weight:700;">LIVE</span>
                             <span style="font-size:1.45rem;font-weight:700;color:{color};">{format_crypto_price(live_price)}</span>
                         </div>
-                        <div style="background:#0f172a;padding:2px 7px;border-radius:9999px;display:inline-flex;align-items:center;gap:2px;">
+                        <div class="daily-pill" style="background:#0f172a;padding:2px 7px;border-radius:9999px;display:inline-flex;align-items:center;gap:2px;">
                             <span style="font-size:0.85rem;font-weight:600;color:{daily_color};">{daily_arrow} {abs(daily_change_pct):.2f}%</span>
                         </div>
-                        {f'<div style="background:#0f172a;padding:8px 18px;border-radius:9999px;display:inline-flex;align-items:center;gap:10px;margin-left:16px;"><span style="font-size:1.15rem;font-weight:700;color:#ffffff;">AVG</span><span style="font-size:1.45rem;font-weight:700;color:#ffaa00;">{format_crypto_price(avg_price)}</span></div>' if avg_price is not None else ''}
+                        {f'<div class="price-pill avg-pill" style="background:#0f172a;padding:8px 18px;border-radius:9999px;display:inline-flex;align-items:center;gap:10px;margin-left:16px;"><span style="font-size:1.15rem;font-weight:700;color:#ffffff;">AVG</span><span style="font-size:1.45rem;font-weight:700;color:#ffaa00;">{format_crypto_price(avg_price)}</span></div>' if avg_price is not None else ''}
                     </div>
                     """, unsafe_allow_html=True)
-                   
+                  
                     # TIMEFRAME SELECTOR
                     col1, col2 = st.columns([0.8, 4.2])
                     with col1:
@@ -562,18 +565,17 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                             key=f"candle_select_{coin}_{st.session_state.ui_version}",
                             label_visibility="collapsed"
                         )
-                   
+                  
                     title = f"{coin} — {candle} candles"
-                   
+                  
                     data = get_cryptocompare_ohlc(coin, candle)
-                   
+                  
                     if data is not None and not data.empty:
                         data_local = data.copy()
-                       
+                      
                         # FINAL CHART – FULL-LENGTH HORIZONTAL + FULLY CONNECTED VERTICAL
                         fig = make_subplots(rows=2, cols=1, shared_xaxes=True, vertical_spacing=0.08,
                                             row_heights=[0.75, 0.25], subplot_titles=("", ""))
-
                         # Candlestick (top)
                         fig.add_trace(go.Candlestick(
                             x=data_local.index,
@@ -587,7 +589,6 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                             decreasing_fillcolor='#ff4d4d',
                             name='Price'
                         ), row=1, col=1)
-
                         # Your AVG line (top)
                         if avg_price is not None:
                             fig.add_trace(go.Scatter(
@@ -597,7 +598,6 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                                 line=dict(color='#ffaa00', width=2, dash='dash'),
                                 name=f'Your AVG: ${avg_price:,.2f}'
                             ), row=1, col=1)
-
                         # Volume bars (bottom)
                         colors_volume = ['#00ff9d' if o < c else '#ff4d4d' for o, c in zip(data_local['open'], data_local['close'])]
                         fig.add_trace(go.Bar(
@@ -607,7 +607,6 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                             name='Volume',
                             opacity=0.85
                         ), row=2, col=1)
-
                         fig.update_layout(
                             title=title,
                             height=700,
@@ -636,7 +635,6 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                                 spikemode="across"
                             )
                         )
-
                         # HORIZONTAL CROSSHAIR – FULL LENGTH ACROSS THE ENTIRE CHART WIDTH
                         fig.update_yaxes(
                             showspikes=True,
@@ -648,17 +646,14 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                         )
                         # No horizontal spike on volume panel
                         fig.update_yaxes(showspikes=False, row=2, col=1)
-
                         # Volume axis
                         fig.update_yaxes(title="Volume", rangemode='nonnegative', row=2, col=1,
                                          showgrid=True, gridwidth=1, gridcolor='rgba(255,255,255,0.08)')
-
                         # STRICT ZOOM LOCK
                         if len(data_local) > 0:
                             min_time = data_local.index.min()
                             max_time = data_local.index.max()
                             fig.update_xaxes(range=[min_time, max_time], autorange=False, minallowed=min_time, maxallowed=max_time)
-
                         st.plotly_chart(
                             fig,
                             use_container_width=True,
@@ -676,14 +671,13 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
         st.caption("🔴 Live prices update automatically every 30 seconds • Fully connected vertical crosshair across both panels + full-length horizontal crosshair on candlestick")
         time.sleep(30)
         st.rerun()
-
     # ====================== CRYPTO TRANSACTIONS ======================
     elif st.session_state.page == "Crypto Transactions":
         glossy_header("Crypto Transactions", CRYPTO_ICON)
         df_display = st.session_state.crypto_df.copy()
         df_display['Date'] = df_display['Datum'].apply(format_datum)
         df_display = df_display.dropna(how='all').reset_index(drop=True)
-     
+    
         table_container = st.container(key=f"crypto_table_container_{st.session_state.ui_version}")
         with table_container:
             with st.container(height=520, border=True):
@@ -764,7 +758,6 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                     st.session_state.ui_version += 1
                     st.success(f"✅ Added {amount} {ticker}")
                     st.rerun()
-
     # ====================== FIAT TRANSACTIONS ======================
     elif st.session_state.page == "Fiat Transactions":
         total_czk = pd.to_numeric(st.session_state.fiat_df['CZK'], errors='coerce').fillna(0).sum()
@@ -773,9 +766,9 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
         fees_eur = pd.to_numeric(st.session_state.fiat_df['Fee'], errors='coerce').fillna(0).sum()
         fees_czk = (pd.to_numeric(st.session_state.fiat_df['Fee'], errors='coerce').fillna(0) *
                     pd.to_numeric(st.session_state.fiat_df['CZK/EUR'], errors='coerce').fillna(0)).sum()
-   
+  
         glossy_header("Fiat Transactions", FIAT_ICON)
-   
+  
         summary_html = f"""
 <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:20px;margin-bottom:30px;">
     <div class="glossy-box"><div>Total CZK</div><div>{total_czk:,.2f}</div></div>
@@ -784,9 +777,9 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
     <div class="glossy-box"><div>Fees</div><div class="fee-line">{fees_eur:,.2f} EUR</div><div class="fee-line" style="font-size:22px;">{fees_czk:,.2f} CZK</div></div>
 </div>"""
         st.markdown(summary_html, unsafe_allow_html=True)
-     
+    
         df_clean = st.session_state.fiat_df.dropna(how='all').reset_index(drop=True)
-     
+    
         table_container = st.container(key=f"fiat_table_container_{st.session_state.ui_version}")
         with table_container:
             with st.container(height=520, border=True):
@@ -867,7 +860,6 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                 st.session_state.fiat_table_version += 1
                 st.session_state.ui_version += 1
                 st.rerun()
-
 # Auto-refresh
 time.sleep(600)
 st.rerun()
