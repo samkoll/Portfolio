@@ -13,7 +13,7 @@ import hashlib
 # ====================== CONFIG ======================
 st.set_page_config(page_title="Portfolio", layout="wide", page_icon="📊")
 
-# ====================== PULL-TO-REFRESH (ANYWHERE + SLOW SMOOTH ROLL + CHECKMARK) ======================
+# ====================== PULL-TO-REFRESH (ANYWHERE + SLOW GLOSSY ANIMATION + API REFRESH) ======================
 PULL_REFRESH_HTML = """
 <style>
 .pull-to-refresh {
@@ -28,7 +28,7 @@ PULL_REFRESH_HTML = """
     background: linear-gradient(90deg, #26334f, #1e2a44) !important;
     z-index: 99999;
     transform: translateY(-100%);
-    transition: transform 0.55s cubic-bezier(0.25, 0.1, 0.25, 1);
+    transition: transform 0.8s cubic-bezier(0.25, 0.1, 0.25, 1);
     border-bottom-left-radius: 26px;
     border-bottom-right-radius: 26px;
     box-shadow: 0 10px 30px rgba(0,0,0,0.4);
@@ -78,18 +78,18 @@ const loader = document.getElementById('loader');
 const success = document.getElementById('success');
 
 function hidePull() {
-    container.style.transition = 'transform 0.55s cubic-bezier(0.4, 0, 0.2, 1)';
+    container.style.transition = 'transform 0.8s cubic-bezier(0.4, 0, 0.2, 1)';
     container.style.transform = 'translateY(-100%)';
     setTimeout(() => {
         container.classList.remove('active');
         loader.style.display = 'block';
         success.style.display = 'none';
         isPulling = false;
-    }, 560);
+    }, 820);
 }
 
 document.addEventListener('touchstart', e => {
-    if (window.scrollY <= 5) {
+    if (window.scrollY <= 8) {          // works from literally anywhere when at top
         startY = e.touches[0].clientY;
         isPulling = true;
     }
@@ -112,13 +112,13 @@ document.addEventListener('touchend', e => {
     const y = e.changedTouches[0].clientY;
     const diff = y - startY;
 
-    container.style.transition = 'transform 0.55s cubic-bezier(0.25, 0.1, 0.25, 1)';
+    container.style.transition = 'transform 0.8s cubic-bezier(0.25, 0.1, 0.25, 1)';
 
     if (diff > 130) {
         loader.style.display = 'none';
         success.style.display = 'block';
         container.style.transform = 'translateY(0)';
-        setTimeout(() => window.location.reload(), 480);
+        setTimeout(() => window.location.reload(), 520);   // forces fresh API calls
     } else {
         hidePull();
     }
