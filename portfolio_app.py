@@ -23,7 +23,7 @@ if "t" in st.query_params:
         new_key = int(st.query_params["t"])
         if new_key != st.session_state.get("refresh_key", 0):
             st.session_state.refresh_key = new_key
-            st.cache_data.clear()          # Forces prices & charts to reload
+            st.cache_data.clear()          # Forces all prices and charts to reload
             st.session_state.ui_version = st.session_state.get("ui_version", 0) + 1
     except:
         pass
@@ -33,7 +33,7 @@ PULL_REFRESH_HTML = """
 <style>
 .pull-to-refresh {
     position: fixed;
-    top: 0 !important;
+    top: 0 !important;               /* flush against absolute top of screen */
     left: 0;
     right: 0;
     height: 88px;
@@ -104,6 +104,7 @@ if (!window.pullToRefreshInitialized) {
         }, 700);
     }
 
+    // SWIPE FROM ANYWHERE ON THE ENTIRE PAGE
     document.documentElement.addEventListener('touchstart', e => {
         startY = e.touches[0].clientY;
         isPulling = true;
@@ -166,7 +167,33 @@ st.markdown("""
     padding-top: 0px !important;
     margin-top: 0px !important;
 }
-/* Glossy shine for main content */
+/* Big navigation cards with glossy shine */
+.stButton > button {
+    background: #1e2a44 !important;
+    color: #e0e0e0 !important;
+    padding: 22px 24px !important;
+    border-radius: 14px !important;
+    margin-bottom: 14px !important;
+    font-size: 1.28rem !important;
+    font-weight: 700 !important;
+    letter-spacing: 1.2px !important;
+    height: auto !important;
+    width: 100% !important;
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.25) !important;
+    transition: all 0.3s ease !important;
+    position: relative;
+    overflow: hidden;
+}
+.stButton > button:hover {
+    transform: translateY(-4px) !important;
+    box-shadow: 0 12px 30px rgba(255, 255, 255, 0.25) !important;
+    background: #263b5e !important;
+    color: white !important;
+}
+/* Glossy shine for main content + slightly lighter top summary cards */
 .glossy-header,
 .glossy-box {
     position: relative;
@@ -213,7 +240,7 @@ st.markdown("""
     gap: 16px;
     width: 100% !important;
     margin-bottom: 45px;
-    margin-top: -60px !important;   /* perfect small gap between bar and card */
+    margin-top: -60px !important;   /* creates clean breathing space between pull bar and card */
 }
 .glossy-box {
     padding: 28px 30px;
@@ -248,7 +275,20 @@ st.markdown("""
         margin-top: -52px !important;
     }
 }
-/* All other CSS (price pills, select, etc.) stays exactly the same as your perfect version */
+/* MOBILE RESPONSIVE FIX FOR THE 3 SUMMARY CARDS */
+@media (max-width: 600px) {
+    .glossy-box {
+        min-width: 98px !important;
+        padding: 18px 14px !important;
+    }
+    .glossy-box > div:first-child {
+        font-size: 12px !important;
+    }
+    .glossy-box > div:last-child {
+        font-size: 21px !important;
+    }
+}
+/* PRICE PILLS - PERFECT AS THEY ARE */
 .price-pills-container {
     display: flex !important;
     gap: 6px !important;
@@ -292,6 +332,7 @@ st.markdown("""
     .price-pill span:last-child,
     .avg-pill span:last-child { font-size: 1.18rem !important; }
 }
+/* TIMEFRAME PILL - COMPACT + TEXT & ARROW PERFECTLY ALIGNED */
 div[data-baseweb="select"] {
     background: linear-gradient(90deg, #26334f, #1e2a44) !important;
     border-radius: 9999px !important;
@@ -334,6 +375,7 @@ div[data-baseweb="select"] svg {
     fill: #e0e0e0 !important;
     margin-top: 0 !important;
 }
+/* Open menu */
 [data-baseweb="popover"] [data-baseweb="menu"] {
     background-color: #26334f !important;
     border-radius: 9999px !important;
@@ -355,6 +397,7 @@ div[data-baseweb="select"] svg {
 [data-baseweb="option"]:hover {
     background-color: #1e2a44 !important;
 }
+/* CURSOR FIX */
 .glossy-header *,
 .glossy-box *,
 .coin-card *,
@@ -365,6 +408,7 @@ div[data-baseweb="select"] *,
 .charts-header * {
     cursor: pointer !important;
 }
+/* CHARTS HEADER */
 .charts-header {
     display: flex;
     align-items: center;
@@ -718,7 +762,7 @@ def glossy_header(title: str, icon_svg: str):
 
 # ====================== PAGES ======================
 with main_container.container(key=f"page_{st.session_state.page}_{st.session_state.ui_version}"):
-    components.html(PULL_REFRESH_HTML, height=88)   # bar at absolute top
+    components.html(PULL_REFRESH_HTML, height=88)
    
     if st.session_state.page == "Home":
         glossy_header("Portfolio Dashboard", DASHBOARD_ICON)
