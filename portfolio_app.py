@@ -20,7 +20,7 @@ st.markdown("""
 /* Whole app background - lighter elegant navy gradient */
 .stApp {
     background: linear-gradient(180deg, #0f1724 0%, #0a0f1c 100%) !important;
-    padding-top: 12px !important;
+    padding-top: 28px !important;   /* increased for clean breathing space at very top */
 }
 
 /* Clean top spacing */
@@ -101,7 +101,8 @@ st.markdown("""
     justify-content: center;
     gap: 16px;
     width: 100% !important;
-    margin-bottom: 45px;
+    margin-top: 45px;      /* NEW: same space above as below */
+    margin-bottom: 45px;   /* existing space below → now perfectly symmetric */
 }
 .glossy-box {
     padding: 28px 30px;
@@ -128,12 +129,23 @@ st.markdown("""
     color: #ffffff;
 }
 
+/* Fee lines in Fiat summary */
+.fee-line {
+    font-size: 1.35rem;
+    font-weight: 700;
+    color: #ffffff;
+    line-height: 1.1;
+    margin-bottom: 4px;
+}
+
 /* MOBILE: Make header smaller */
 @media (max-width: 700px) {
     .glossy-header {
         padding: 24px 20px !important;
         font-size: 24px !important;
         min-height: 100px;
+        margin-top: 35px !important;   /* slightly reduced on mobile for perfect balance */
+        margin-bottom: 35px !important;
     }
 }
 
@@ -151,7 +163,7 @@ st.markdown("""
     }
 }
 
-/* PRICE PILLS - PERFECT AS THEY ARE */
+/* PRICE PILLS */
 .price-pills-container {
     display: flex !important;
     gap: 6px !important;
@@ -196,7 +208,7 @@ st.markdown("""
     .avg-pill span:last-child { font-size: 1.18rem !important; }
 }
 
-/* TIMEFRAME PILL - COMPACT + TEXT & ARROW PERFECTLY ALIGNED */
+/* TIMEFRAME PILL */
 div[data-baseweb="select"] {
     background: linear-gradient(90deg, #26334f, #1e2a44) !important;
     border-radius: 9999px !important;
