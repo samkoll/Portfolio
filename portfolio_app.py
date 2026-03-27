@@ -599,27 +599,32 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                         
                         fig.update_layout(
                             title=title,
-                            height=700,  # optimized for mobile portrait
+                            height=700,
                             paper_bgcolor='rgba(0,0,0,0)',
                             plot_bgcolor='rgba(0,0,0,0)',
                             font_color='white',
                             hovermode="x unified",
                             xaxis_rangeslider_visible=False,
                             legend=dict(orientation="h", yanchor="bottom", y=1.02,
-                                        xanchor="center", x=0.5, bgcolor="rgba(0,0,0,0)")
+                                        xanchor="center", x=0.5, bgcolor="rgba(0,0,0,0)"),
+                            dragmode='pan'   # disables box-zoom, only pan
                         )
                         
-                        # Force maximal zoom-out (full range) as default
+                        # Lock maximal zoom-out to exact candle range (no empty borders)
                         if len(data_local) > 0:
-                            fig.update_xaxes(range=[data_local.index.min(), data_local.index.max()])
+                            fig.update_xaxes(
+                                range=[data_local.index.min(), data_local.index.max()],
+                                autorange=False
+                            )
                         
                         st.plotly_chart(
                             fig,
                             use_container_width=True,
                             config={
-                                'scrollZoom': True,      # enables pinch-to-zoom on phone + scroll zoom
+                                'scrollZoom': True,          # keeps pinch / scroll zoom on phone
                                 'responsive': True,
-                                'displayModeBar': True
+                                'displayModeBar': True,
+                                'modeBarButtonsToRemove': ['zoom2d', 'select2d', 'lasso2d']  # removes box-zoom option
                             },
                             key=f"chart_{coin}_{candle}_{st.session_state.ui_version}"
                         )
