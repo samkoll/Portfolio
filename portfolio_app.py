@@ -13,7 +13,7 @@ import hashlib
 # ====================== CONFIG ======================
 st.set_page_config(page_title="Portfolio", layout="wide", page_icon="📊")
 
-# ====================== PULL-TO-REFRESH (ANYWHERE + SLOW GLOSSY ANIMATION + API REFRESH) ======================
+# ====================== PULL-TO-REFRESH (ANYWHERE + SAME SLOW ROLL ANIMATION ON SUCCESS + CACHE-BUST REFRESH) ======================
 PULL_REFRESH_HTML = """
 <style>
 .pull-to-refresh {
@@ -88,14 +88,14 @@ function hidePull() {
     }, 820);
 }
 
-document.addEventListener('touchstart', e => {
-    if (window.scrollY <= 8) {          // works from literally anywhere when at top
+document.documentElement.addEventListener('touchstart', e => {
+    if (window.scrollY <= 8) {
         startY = e.touches[0].clientY;
         isPulling = true;
     }
 }, {passive: true});
 
-document.addEventListener('touchmove', e => {
+document.documentElement.addEventListener('touchmove', e => {
     if (!isPulling) return;
     const y = e.touches[0].clientY;
     const diff = y - startY;
@@ -107,7 +107,7 @@ document.addEventListener('touchmove', e => {
     }
 }, {passive: true});
 
-document.addEventListener('touchend', e => {
+document.documentElement.addEventListener('touchend', e => {
     if (!isPulling) return;
     const y = e.changedTouches[0].clientY;
     const diff = y - startY;
@@ -118,7 +118,16 @@ document.addEventListener('touchend', e => {
         loader.style.display = 'none';
         success.style.display = 'block';
         container.style.transform = 'translateY(0)';
-        setTimeout(() => window.location.reload(), 520);   // forces fresh API calls
+        // Slow roll-back animation even on success, then full reload with cache-bust
+        setTimeout(() => {
+            container.style.transition = 'transform 0.8s cubic-bezier(0.25, 0.1, 0.25, 1)';
+            container.style.transform = 'translateY(-100%)';
+            setTimeout(() => {
+                // Force real API refresh
+                const url = window.location.href.split('?')[0] + '?t=' + Date.now();
+                window.location.href = url;
+            }, 820);
+        }, 520);
     } else {
         hidePull();
     }
