@@ -16,6 +16,11 @@ st.set_page_config(page_title="Portfolio", layout="wide", page_icon="💎")
 # ====================== GLOBAL CSS ======================
 st.markdown("""
 <style>
+/* Whole app background - deep elegant navy gradient, perfect match for the cards */
+.stApp {
+    background: linear-gradient(180deg, #0a0f1c 0%, #05080f 100%) !important;
+}
+
 /* Big navigation cards with glossy shine */
 .stButton > button {
     background: #1e2a44 !important;
@@ -522,7 +527,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
 </div>"""
         st.markdown(value_box_html, unsafe_allow_html=True)
 
-        # ====================== COMPACT COIN CARDS (scroll to charts on click) ======================
+        # ====================== COMPACT COIN CARDS (softer glow, padding unchanged) ======================
         coin_list = [t for t in df_port['Ticker'] if t != 'USDC']
         cards_html = ""
         for _, r in df_port.iterrows():
