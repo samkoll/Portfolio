@@ -553,7 +553,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                     if data is not None and not data.empty:
                         data_local = data.copy()
                        
-                        # PERFECTED CHART WITH FULLY CONNECTED VERTICAL + HORIZONTAL CROSSHAIR
+                        # FINAL CHART – FULL-LENGTH HORIZONTAL + FULLY CONNECTED VERTICAL + PRICE LABEL
                         fig = make_subplots(rows=2, cols=1, shared_xaxes=True, vertical_spacing=0.08,
                                             row_heights=[0.75, 0.25], subplot_titles=("", ""))
 
@@ -603,7 +603,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                                         xanchor="center", x=0.5, bgcolor="rgba(0,0,0,0)"),
                             dragmode='pan',
                             margin=dict(t=40, b=20, l=20, r=20),
-                            # FULLY CONNECTED VERTICAL CROSSHAIR (one single line across both panels)
+                            # FULLY CONNECTED VERTICAL CROSSHAIR (single continuous line across BOTH panels)
                             xaxis=dict(
                                 showspikes=True,
                                 spikecolor="rgba(255,255,255,0.95)",
@@ -620,13 +620,14 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                             )
                         )
 
-                        # HORIZONTAL CROSSHAIR ONLY ON CANDLESTICK (price panel)
+                        # HORIZONTAL CROSSHAIR – FULL LENGTH ACROSS THE ENTIRE CHART + LIVE PRICE LABEL
                         fig.update_yaxes(
                             showspikes=True,
                             spikecolor="rgba(255,255,255,0.85)",
                             spikethickness=1.5,
                             spikesnap="cursor",
-                            spikemode="toaxis",
+                            spikemode="across",          # ← makes horizontal line span full width
+                            showspikelabels=True,        # ← shows the exact price on the line
                             row=1, col=1
                         )
                         # No horizontal spike on volume panel
@@ -656,7 +657,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                         )
                     else:
                         st.error(f"📉 Could not load {coin} chart. Try the **Refresh** button in sidebar.")
-        st.caption("🔴 Live prices update automatically every 30 seconds • Fully connected vertical crosshair on both panels + horizontal crosshair on candlestick")
+        st.caption("🔴 Live prices update automatically every 30 seconds • Fully connected vertical crosshair across both panels + full-length horizontal crosshair with live price label on candlestick")
         time.sleep(30)
         st.rerun()
 
