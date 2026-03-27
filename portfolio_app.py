@@ -255,13 +255,16 @@ div[data-baseweb="select"] svg {
     }
 }
 
-/* CURSOR FIX - NO TEXT-FIELD CURSOR ON CARDS OR PILLS */
-.coin-card,
-.price-pill,
-.avg-pill,
-.daily-pill,
-div[data-baseweb="select"],
-div[data-baseweb="select"] > div {
+/* CURSOR FIX - NO TEXT-FIELD CURSOR ON ANY TEXT ANYWHERE */
+.glossy-header *,
+.glossy-box *,
+.coin-card *,
+.price-pill *,
+.avg-pill *,
+.daily-pill *,
+div[data-baseweb="select"] *,
+div[data-baseweb="select"] span,
+.charts-header * {
     cursor: pointer !important;
 }
 
