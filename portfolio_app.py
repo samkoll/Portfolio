@@ -276,7 +276,7 @@ def get_daily_open(ticker: str):
     except:
         return 0.0
 
-# ====================== CHART FUNCTION (PERFECTED) ======================
+# ====================== CHART FUNCTION ======================
 @st.cache_data(ttl=80, show_spinner=False)
 def get_cryptocompare_ohlc(ticker: str, candle: str):
     sym = CRYPTOCOMPARE_SYMBOL_MAP.get(ticker.upper())
@@ -475,7 +475,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
 </div>"""
         st.markdown(value_box_html, unsafe_allow_html=True)
 
-        # CUSTOM TABLE (AVG column removed)
+        # CUSTOM TABLE
         coin_list = [t for t in df_port['Ticker'] if t != 'USDC']
         rows_html = ""
         for _, r in df_port.iterrows():
@@ -553,7 +553,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                     if data is not None and not data.empty:
                         data_local = data.copy()
                        
-                        # PERFECTED VOLUME PANEL – 25% height, perfectly visible, total height still 700px
+                        # PERFECTED CHART WITH SYNCHRONIZED CROSSHAIR
                         fig = make_subplots(rows=2, cols=1, shared_xaxes=True, vertical_spacing=0.08,
                                             row_heights=[0.75, 0.25], subplot_titles=("", ""))
                        
@@ -581,7 +581,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                                 name=f'Your AVG: ${avg_price:,.2f}'
                             ), row=1, col=1)
                        
-                        # Volume bars at the very bottom (beautifully proportioned)
+                        # Volume bars (bottom)
                         colors_volume = ['#00ff9d' if o < c else '#ff4d4d' for o, c in zip(data_local['open'], data_local['close'])]
                         fig.add_trace(go.Bar(
                             x=data_local.index,
@@ -605,14 +605,25 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                             margin=dict(t=40, b=20, l=20, r=20)
                         )
                        
-                        # Volume axis – clean, starts at zero, no artificial compression
-                        fig.update_yaxes(title="Volume", rangemode='nonnegative', row=2, col=1, showgrid=True, gridwidth=1, gridcolor='rgba(255,255,255,0.08)')
+                        # VOLUME AXIS
+                        fig.update_yaxes(title="Volume", rangemode='nonnegative', row=2, col=1,
+                                         showgrid=True, gridwidth=1, gridcolor='rgba(255,255,255,0.08)')
                        
-                        # Strict zoom lock on price candles
+                        # STRICT ZOOM LOCK
                         if len(data_local) > 0:
                             min_time = data_local.index.min()
                             max_time = data_local.index.max()
                             fig.update_xaxes(range=[min_time, max_time], autorange=False, minallowed=min_time, maxallowed=max_time)
+                       
+                        # SYNCHRONIZED CROSSHAIR (the magic line you asked for)
+                        # When you hover on the candlestick, the exact same vertical line appears on the volume panel
+                        fig.update_xaxes(
+                            showspikes=True,
+                            spikecolor="rgba(255,255,255,0.85)",
+                            spikesnap="cursor",
+                            spikemode="across",      # ← this makes the line span BOTH panels
+                            spikethickness=1.5
+                        )
                        
                         st.plotly_chart(
                             fig,
@@ -628,13 +639,12 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                         )
                     else:
                         st.error(f"📉 Could not load {coin} chart. Try the **Refresh** button in sidebar.")
-        st.caption("🔴 Live prices update automatically every 30 seconds")
+        st.caption("🔴 Live prices update automatically every 30 seconds • Hover anywhere on the chart to see synchronized crosshair on both price & volume")
         time.sleep(30)
         st.rerun()
 
     # ====================== CRYPTO TRANSACTIONS ======================
     elif st.session_state.page == "Crypto Transactions":
-        # (unchanged – already perfect)
         glossy_header("Crypto Transactions", CRYPTO_ICON)
         df_display = st.session_state.crypto_df.copy()
         df_display['Date'] = df_display['Datum'].apply(format_datum)
@@ -723,7 +733,6 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
 
     # ====================== FIAT TRANSACTIONS ======================
     elif st.session_state.page == "Fiat Transactions":
-        # (unchanged – already perfect)
         total_czk = pd.to_numeric(st.session_state.fiat_df['CZK'], errors='coerce').fillna(0).sum()
         total_eur = pd.to_numeric(st.session_state.fiat_df['EUR'], errors='coerce').fillna(0).sum()
         total_usdc = pd.to_numeric(st.session_state.fiat_df['USDC'], errors='coerce').fillna(0).sum()
