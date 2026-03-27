@@ -467,8 +467,12 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
     
         df_port, total_value, total_pnl, total_pnl_pct = calculate_portfolio(st.session_state.crypto_df)
     
+        # 3 CARDS STAY SIDE-BY-SIDE ON MOBILE (they shrink instead of stacking)
         value_box_html = f"""
-<div style="display:flex;gap:25px;margin-bottom:30px;flex-wrap:wrap;">
+<div style="display: grid; 
+            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); 
+            gap: 20px; 
+            margin-bottom: 30px;">
     <div class="glossy-box"><div>Total Value</div><div>{format_money(total_value)}</div></div>
     <div class="glossy-box"><div>PnL</div><div style="color:{'#00ff9d' if total_pnl>=0 else '#ff4d4d'}">{"▲" if total_pnl>0 else "▼" if total_pnl<0 else ""} {format_money(abs(total_pnl))}</div></div>
     <div class="glossy-box"><div>PnL %</div><div style="color:{'#00ff9d' if total_pnl_pct>=0 else '#ff4d4d'}">{"▲" if total_pnl_pct>0 else "▼" if total_pnl_pct<0 else ""} {abs(total_pnl_pct):.2f}%</div></div>
@@ -603,7 +607,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                                         xanchor="center", x=0.5, bgcolor="rgba(0,0,0,0)"),
                             dragmode='pan',
                             margin=dict(t=40, b=20, l=20, r=20),
-                            # FULLY CONNECTED VERTICAL CROSSHAIR (one single continuous line across both panels)
+                            # FULLY CONNECTED VERTICAL CROSSHAIR
                             xaxis=dict(
                                 showspikes=True,
                                 spikecolor="rgba(255,255,255,0.95)",
@@ -626,7 +630,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                             spikecolor="rgba(255,255,255,0.85)",
                             spikethickness=1.5,
                             spikesnap="cursor",
-                            spikemode="across",   # <-- this makes the horizontal line span the full width
+                            spikemode="across",
                             row=1, col=1
                         )
                         # No horizontal spike on volume panel
@@ -656,7 +660,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                         )
                     else:
                         st.error(f"📉 Could not load {coin} chart. Try the **Refresh** button in sidebar.")
-        st.caption("🔴 Live prices update automatically every 30 seconds • Fully connected vertical crosshair across both panels + full-length horizontal crosshair on candlestick (price shown in hover tooltip)")
+        st.caption("🔴 Live prices update automatically every 30 seconds • Fully connected vertical crosshair across both panels + full-length horizontal crosshair on candlestick")
         time.sleep(30)
         st.rerun()
 
