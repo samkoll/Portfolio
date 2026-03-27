@@ -125,7 +125,7 @@ st.markdown("""
         font-size: 21px !important;
     }
 }
-/* NEW: PERFECT MOBILE FIX FOR LIVE / AVG PRICE PILLS (exactly like the cards above) */
+/* NEW: PERFECT MOBILE FIX FOR LIVE / AVG PRICE PILLS */
 @media (max-width: 600px) {
     .price-pills-container {
         flex-wrap: wrap !important;
@@ -483,7 +483,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
    
         df_port, total_value, total_pnl, total_pnl_pct = calculate_portfolio(st.session_state.crypto_df)
    
-        # 3 CARDS – STAY SIDE-BY-SIDE ON MOBILE (shrink to fit phone screen perfectly)
+        # 3 CARDS – STAY SIDE-BY-SIDE ON MOBILE
         value_box_html = f"""
 <div style="display: grid;
             grid-template-columns: repeat(auto-fit, minmax(98px, 1fr));
@@ -494,7 +494,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
     <div class="glossy-box"><div>PnL %</div><div style="color:{'#00ff9d' if total_pnl_pct>=0 else '#ff4d4d'}">{"▲" if total_pnl_pct>0 else "▼" if total_pnl_pct<0 else ""} {abs(total_pnl_pct):.2f}%</div></div>
 </div>"""
         st.markdown(value_box_html, unsafe_allow_html=True)
-        # CUSTOM TABLE
+        # ====================== OPTIMIZED RESPONSIVE TABLE ======================
         coin_list = [t for t in df_port['Ticker'] if t != 'USDC']
         rows_html = ""
         for _, r in df_port.iterrows():
@@ -521,9 +521,59 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                 </div>
             </td></tr>"""
     
-        html = f"""<html><head><style>body{{background:#0b1120;color:white;font-family:sans-serif;margin:0;}}table{{width:100%;border-spacing:0;table-layout:fixed;min-width:850px;}}thead{{position:sticky;top:0;z-index:9999;background:#0f172a;}}thead th{{padding:12px 8px;text-align:center;font-size:0.95rem;}}td{{padding:0;background:transparent;}}.row-inner{{position:relative;z-index:1;width:98%;padding:8px 10px;border-radius:18px;background:#0f172a;display:flex;justify-content:space-between;align-items:center;transition:transform 0.22s cubic-bezier(0.4,0,0.2,1),box-shadow 0.25s cubic-bezier(0.4,0,0.2,1);cursor:default;font-size:0.95rem;}}@media (max-width:900px){{.row-inner{{padding:6px 8px;}}thead th{{font-size:0.85rem;padding:8px 6px;}}}}.clickable-row{{cursor:pointer;}}.row-inner:hover{{transform:translateY(-2px) scale(1.01);box-shadow:0 0 45px var(--glow)!important;z-index:20;}}.scroll-container{{max-height:460px;overflow-y:auto;overflow-x:auto;position:relative;}} .scroll-container::-webkit-scrollbar{{display:none;}}@media (max-height: 800px) {{ .scroll-container {{ max-height: 460px; }} }}</style></head><body><div class="scroll-container"><table><thead><tr><th>Ticker</th><th>Holdings</th><th>USDC</th><th>PnL</th><th>PnL %</th><th>Value</th></tr></thead><tbody>{rows_html}</tbody></table></div><script>function switchToTab(index){{const tabs=window.parent.document.querySelectorAll('.stTabs button');if(tabs&&tabs[index])tabs[index].click();}}document.querySelectorAll('.row-inner').forEach(div=>{{div.style.setProperty('--glow',div.getAttribute('data-glow'));}});</script><!-- VERSION:{st.session_state.ui_version} --></body></html>"""
+        html = f"""<html><head><style>
+body{{background:#0b1120;color:white;font-family:sans-serif;margin:0;}}
+table{{width:100%;border-spacing:0;table-layout:fixed;min-width:850px;}}
+thead{{position:sticky;top:0;z-index:9999;background:#0f172a;}}
+thead th{{padding:12px 8px;text-align:center;font-size:0.95rem;}}
+td{{padding:0;background:transparent;}}
+.row-inner{{position:relative;z-index:1;width:98%;padding:8px 10px;border-radius:18px;background:#0f172a;display:flex;justify-content:space-between;align-items:center;transition:transform 0.22s cubic-bezier(0.4,0,0.2,1),box-shadow 0.25s cubic-bezier(0.4,0,0.2,1);cursor:default;font-size:0.95rem;}}
+@media (max-width:900px){{.row-inner{{padding:6px 8px;}}thead th{{font-size:0.85rem;padding:8px 6px;}}}}
+.clickable-row{{cursor:pointer;}}
+.row-inner:hover{{transform:translateY(-2px) scale(1.01);box-shadow:0 0 45px var(--glow)!important;z-index:20;}}
+.scroll-container{{max-height:460px;overflow-y:auto;overflow-x:auto;position:relative;}} 
+.scroll-container::-webkit-scrollbar{{display:none;}}
+
+/* ====================== PERFECT MOBILE OPTIMIZATION ====================== */
+@media (max-width: 700px) {{
+    table {{ min-width: 100% !important; border-spacing: 0 12px !important; }}
+    thead {{ display: none; }}
+    tbody tr {{ display: block; margin-bottom: 14px; }}
+    .row-inner {{
+        flex-direction: column !important;
+        align-items: flex-start !important;
+        padding: 16px 18px !important;
+        gap: 10px;
+        box-shadow: 0 8px 25px rgba(0,0,0,0.3);
+    }}
+    .row-inner > div {{
+        width: 100% !important;
+        text-align: left !important;
+        font-size: 0.98rem !important;
+        padding: 2px 0;
+    }}
+    .row-inner > div:first-child {{
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        font-size: 1.15rem !important;
+        font-weight: 700;
+    }}
+    .row-inner > div:first-child img {{ height: 32px !important; width: 32px !important; }}
+    .row-inner > div:nth-child(2) {{ color: #aaa; font-size: 0.9rem; }}
+    .row-inner > div:nth-child(3) {{ color: #aaa; font-size: 0.9rem; }}
+    .row-inner > div:nth-child(6) {{ 
+        font-size: 1.3rem !important; 
+        font-weight: 700; 
+        text-align: right !important; 
+        margin-top: 6px;
+        border-top: 1px solid rgba(255,255,255,0.1);
+        padding-top: 8px;
+    }}
+}}
+</style></head><body><div class="scroll-container"><table><thead><tr><th>Ticker</th><th>Holdings</th><th>USDC</th><th>PnL</th><th>PnL %</th><th>Value</th></tr></thead><tbody>{rows_html}</tbody></table></div><script>function switchToTab(index){{const tabs=window.parent.document.querySelectorAll('.stTabs button');if(tabs&&tabs[index])tabs[index].click();}}document.querySelectorAll('.row-inner').forEach(div=>{{div.style.setProperty('--glow',div.getAttribute('data-glow'));}});</script><!-- VERSION:{st.session_state.ui_version} --></body></html>"""
     
-        components.html(html, height=485, scrolling=True)
+        components.html(html, height=520, scrolling=True)
         st.markdown("""<div class="glossy-box" style="background:#1e2a44;padding:22px 30px;border-radius:18px;margin:35px 0 25px 0;"><div style="color:#ffffff;font-weight:700;font-size:26px;text-align:center;">Price Charts + Volume</div></div>""", unsafe_allow_html=True)
     
         if coin_list:
@@ -541,7 +591,6 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                     daily_color = "#00ff9d" if daily_change_pct > 0 else "#ff4d4d" if daily_change_pct < 0 else "#aaaaaa"
                   
                     color = "#00ff9d" if live_price > 0 else "#ff4d4d"
-                    # UPDATED PRICE PILLS WITH MOBILE CLASS (perfect shrink on phone)
                     st.markdown(f"""
                     <div class="price-pills-container" style="display:flex;gap:4px;margin-bottom:16px;">
                         <div class="price-pill" style="background:#0f172a;padding:8px 18px;border-radius:9999px;display:inline-flex;align-items:center;gap:10px;">
@@ -573,10 +622,8 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                     if data is not None and not data.empty:
                         data_local = data.copy()
                       
-                        # FINAL CHART – FULL-LENGTH HORIZONTAL + FULLY CONNECTED VERTICAL
                         fig = make_subplots(rows=2, cols=1, shared_xaxes=True, vertical_spacing=0.08,
                                             row_heights=[0.75, 0.25], subplot_titles=("", ""))
-                        # Candlestick (top)
                         fig.add_trace(go.Candlestick(
                             x=data_local.index,
                             open=data_local['open'],
@@ -589,7 +636,6 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                             decreasing_fillcolor='#ff4d4d',
                             name='Price'
                         ), row=1, col=1)
-                        # Your AVG line (top)
                         if avg_price is not None:
                             fig.add_trace(go.Scatter(
                                 x=[data_local.index.min(), data_local.index.max()],
@@ -598,7 +644,6 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                                 line=dict(color='#ffaa00', width=2, dash='dash'),
                                 name=f'Your AVG: ${avg_price:,.2f}'
                             ), row=1, col=1)
-                        # Volume bars (bottom)
                         colors_volume = ['#00ff9d' if o < c else '#ff4d4d' for o, c in zip(data_local['open'], data_local['close'])]
                         fig.add_trace(go.Bar(
                             x=data_local.index,
@@ -619,37 +664,12 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                                         xanchor="center", x=0.5, bgcolor="rgba(0,0,0,0)"),
                             dragmode='pan',
                             margin=dict(t=40, b=20, l=20, r=20),
-                            # FULLY CONNECTED VERTICAL CROSSHAIR
-                            xaxis=dict(
-                                showspikes=True,
-                                spikecolor="rgba(255,255,255,0.95)",
-                                spikethickness=1.8,
-                                spikesnap="cursor",
-                                spikemode="across"
-                            ),
-                            xaxis2=dict(
-                                showspikes=True,
-                                spikecolor="rgba(255,255,255,0.95)",
-                                spikethickness=1.8,
-                                spikesnap="cursor",
-                                spikemode="across"
-                            )
+                            xaxis=dict(showspikes=True, spikecolor="rgba(255,255,255,0.95)", spikethickness=1.8, spikesnap="cursor", spikemode="across"),
+                            xaxis2=dict(showspikes=True, spikecolor="rgba(255,255,255,0.95)", spikethickness=1.8, spikesnap="cursor", spikemode="across")
                         )
-                        # HORIZONTAL CROSSHAIR – FULL LENGTH ACROSS THE ENTIRE CHART WIDTH
-                        fig.update_yaxes(
-                            showspikes=True,
-                            spikecolor="rgba(255,255,255,0.85)",
-                            spikethickness=1.5,
-                            spikesnap="cursor",
-                            spikemode="across",
-                            row=1, col=1
-                        )
-                        # No horizontal spike on volume panel
+                        fig.update_yaxes(showspikes=True, spikecolor="rgba(255,255,255,0.85)", spikethickness=1.5, spikesnap="cursor", spikemode="across", row=1, col=1)
                         fig.update_yaxes(showspikes=False, row=2, col=1)
-                        # Volume axis
-                        fig.update_yaxes(title="Volume", rangemode='nonnegative', row=2, col=1,
-                                         showgrid=True, gridwidth=1, gridcolor='rgba(255,255,255,0.08)')
-                        # STRICT ZOOM LOCK
+                        fig.update_yaxes(title="Volume", rangemode='nonnegative', row=2, col=1, showgrid=True, gridwidth=1, gridcolor='rgba(255,255,255,0.08)')
                         if len(data_local) > 0:
                             min_time = data_local.index.min()
                             max_time = data_local.index.max()
@@ -657,13 +677,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                         st.plotly_chart(
                             fig,
                             use_container_width=True,
-                            config={
-                                'scrollZoom': True,
-                                'responsive': True,
-                                'displayModeBar': True,
-                                'modeBarButtonsToRemove': ['zoom2d', 'select2d', 'lasso2d'],
-                                'doubleClick': 'reset'
-                            },
+                            config={'scrollZoom': True, 'responsive': True, 'displayModeBar': True, 'modeBarButtonsToRemove': ['zoom2d', 'select2d', 'lasso2d'], 'doubleClick': 'reset'},
                             key=f"chart_{coin}_{candle}_{st.session_state.ui_version}"
                         )
                     else:
