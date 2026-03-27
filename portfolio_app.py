@@ -524,7 +524,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
 </div>"""
         st.markdown(value_box_html, unsafe_allow_html=True)
 
-        # ====================== OPTIMIZED RESPONSIVE TABLE (FULL-WIDTH POLISHED COIN CARDS ON MOBILE) ======================
+        # ====================== OPTIMIZED RESPONSIVE TABLE (COIN CARDS NOW SAME WIDTH AS HEADER) ======================
         coin_list = [t for t in df_port['Ticker'] if t != 'USDC']
         rows_html = ""
         for _, r in df_port.iterrows():
@@ -563,9 +563,9 @@ td{{padding:0;background:transparent;}}
 .row-inner:hover{{transform:translateY(-2px) scale(1.01);box-shadow:0 0 45px var(--glow)!important;z-index:20;}}
 .scroll-container{{max-height:520px;overflow-y:auto;overflow-x:auto;position:relative;}}
 .scroll-container::-webkit-scrollbar{{display:none;}}
-/* ====================== PERFECT MOBILE OPTIMIZATION - FULL-WIDTH POLISHED COIN CARDS ====================== */
+/* ====================== PERFECT MOBILE OPTIMIZATION - COIN CARDS SAME WIDTH AS HEADER ====================== */
 @media (max-width: 700px) {{
-    .scroll-container {{width:100% !important;padding:0 8px !important;margin:0 !important;box-sizing:border-box;}}
+    .scroll-container {{width:100% !important;padding:0 !important;margin:0 !important;box-sizing:border-box;}}
     table {{width:100% !important;min-width:100% !important;border-spacing:0 12px !important;}}
     thead {{display:none;}}
     tbody tr {{display:block;margin-bottom:12px;}}
