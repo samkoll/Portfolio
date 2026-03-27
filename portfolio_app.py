@@ -522,7 +522,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
 </div>"""
         st.markdown(value_box_html, unsafe_allow_html=True)
 
-        # ====================== COMPACT COIN CARDS (softer glow, padding unchanged) ======================
+        # ====================== COMPACT COIN CARDS (scroll to charts on click) ======================
         coin_list = [t for t in df_port['Ticker'] if t != 'USDC']
         cards_html = ""
         for _, r in df_port.iterrows():
@@ -532,7 +532,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
             base_color = get_ticker_color(r['Ticker'])
             glow_color = '#ffffff77' if base_color == '#000000' else base_color + '77'
             ticker = r['Ticker']
-            onclick = f"onclick=\"switchToTab({coin_list.index(ticker)})\" " if ticker != 'USDC' else ""
+            onclick = f"onclick=\"switchToTabAndScroll({coin_list.index(ticker)})\" " if ticker != 'USDC' else ""
             row_class = "clickable-row" if ticker != 'USDC' else ""
             logo_url = get_ticker_logo(ticker)
             cards_html += f"""
@@ -567,11 +567,26 @@ body{{background:transparent;color:white;font-family:sans-serif;margin:0;padding
     .coin-grid {{grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px;padding:28px 24px;}}
     .coin-card {{padding:14px;}}
 }}
-</style></head><body><div class="coin-grid">{cards_html}</div><script>function switchToTab(index){{const tabs=window.parent.document.querySelectorAll('.stTabs button');if(tabs&&tabs[index])tabs[index].click();}}document.querySelectorAll('.coin-card').forEach(div=>{{div.style.setProperty('--glow',div.getAttribute('data-glow'));}});</script><!-- VERSION:{st.session_state.ui_version} --></body></html>"""
+</style></head><body><div class="coin-grid">{cards_html}</div><script>
+function switchToTabAndScroll(index){{
+    const tabs = window.parent.document.querySelectorAll('.stTabs button');
+    if (tabs && tabs[index]) tabs[index].click();
+    setTimeout(() => {{
+        const section = window.parent.document.getElementById('price-charts-section');
+        if (section) {{
+            section.scrollIntoView({{ behavior: 'smooth', block: 'start' }});
+        }}
+    }}, 180);
+}}
+document.querySelectorAll('.coin-card').forEach(div => {{
+    div.style.setProperty('--glow', div.getAttribute('data-glow'));
+}});
+</script><!-- VERSION:{st.session_state.ui_version} --></body></html>"""
    
         components.html(html, height=580, scrolling=True)
 
-        st.markdown("""<div class="glossy-box" style="background:#1e2a44;padding:22px 30px;border-radius:18px;margin:35px 0 25px 0;"><div style="color:#ffffff;font-weight:700;font-size:26px;text-align:center;">Price Charts + Volume</div></div>""", unsafe_allow_html=True)
+        # ====================== CHARTS SECTION (with scroll target) ======================
+        st.markdown("""<div id="price-charts-section" class="glossy-box" style="background:#1e2a44;padding:22px 30px;border-radius:18px;margin:35px 0 25px 0;"><div style="color:#ffffff;font-weight:700;font-size:26px;text-align:center;">Price Charts + Volume</div></div>""", unsafe_allow_html=True)
    
         if coin_list:
             selected_tab = st.tabs(coin_list)
