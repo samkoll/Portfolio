@@ -14,12 +14,26 @@ import random
 # ====================== CONFIG ======================
 st.set_page_config(page_title="Portfolio", layout="wide", page_icon="📊")
 
-# ====================== PULL-TO-REFRESH (FULLY FIXED + VISIBLE) ======================
-PULL_REFRESH_HTML_FIXED = """
+# ====================== STRONG CACHE BUST + FULL CLEAR ON SWIPE ======================
+if "refresh_key" not in st.session_state:
+    st.session_state.refresh_key = random.randint(100000, 999999)
+
+if "t" in st.query_params:
+    try:
+        new_key = int(st.query_params["t"])
+        if new_key != st.session_state.get("refresh_key", 0):
+            st.session_state.refresh_key = new_key
+            st.cache_data.clear()          # Forces all prices and charts to reload
+            st.session_state.ui_version = st.session_state.get("ui_version", 0) + 1
+    except:
+        pass
+
+# ====================== PULL-TO-REFRESH - ABSOLUTE TOP OF THE PAGE ======================
+PULL_REFRESH_HTML = """
 <style>
 .pull-to-refresh {
     position: fixed;
-    top: 0 !important;
+    top: 0 !important;               /* flush against absolute top of screen */
     left: 0;
     right: 0;
     height: 88px;
@@ -27,7 +41,7 @@ PULL_REFRESH_HTML_FIXED = """
     align-items: center;
     justify-content: center;
     background: linear-gradient(90deg, #1e2a44, #26334f) !important;
-    z-index: 2147483647 !important;
+    z-index: 1000000 !important;
     transform: translateY(-100%);
     transition: transform 0.7s cubic-bezier(0.25, 0.1, 0.25, 1);
     border-bottom-left-radius: 28px;
@@ -60,13 +74,7 @@ PULL_REFRESH_HTML_FIXED = """
 }
 @keyframes spin { to { transform: rotate(360deg); } }
 @keyframes checkDraw { to { stroke-dashoffset: 0; } }
-
-/* ← CRITICAL FIX: Give the app space for the pull bar */
-.stApp {
-    padding-top: 88px !important;
-}
 </style>
-
 <div id="pullrefresh" class="pull-to-refresh">
     <div id="loader" class="spinner"></div>
     <div id="success" class="checkmark">
@@ -75,7 +83,6 @@ PULL_REFRESH_HTML_FIXED = """
         </svg>
     </div>
 </div>
-
 <script>
 let startY = 0;
 let isPulling = false;
@@ -97,14 +104,13 @@ if (!window.pullToRefreshInitialized) {
         }, 700);
     }
 
-    const doc = window.parent ? window.parent.document.documentElement : document.documentElement;
-
-    doc.addEventListener('touchstart', e => {
+    // SWIPE FROM ANYWHERE ON THE ENTIRE PAGE
+    document.documentElement.addEventListener('touchstart', e => {
         startY = e.touches[0].clientY;
         isPulling = true;
     }, {passive: true});
 
-    doc.addEventListener('touchmove', e => {
+    document.documentElement.addEventListener('touchmove', e => {
         if (!isPulling) return;
         const y = e.touches[0].clientY;
         const diff = y - startY;
@@ -117,7 +123,7 @@ if (!window.pullToRefreshInitialized) {
         }
     }, {passive: false});
 
-    doc.addEventListener('touchend', e => {
+    document.documentElement.addEventListener('touchend', e => {
         if (!isPulling) return;
         const y = e.changedTouches[0].clientY;
         const diff = y - startY;
@@ -130,8 +136,8 @@ if (!window.pullToRefreshInitialized) {
                 container.style.transition = 'transform 0.85s cubic-bezier(0.4, 0, 0.22, 1)';
                 container.style.transform = 'translateY(-100%)';
                 setTimeout(() => {
-                    const url = (window.parent ? window.parent.location : window.location).href.split('?')[0] + '?t=' + Date.now();
-                    (window.parent ? window.parent.location : window.location).href = url;
+                    const url = window.location.href.split('?')[0] + '?t=' + Date.now();
+                    window.location.href = url;
                 }, 820);
             }, 680);
         } else {
@@ -140,41 +146,27 @@ if (!window.pullToRefreshInitialized) {
         isPulling = false;
     }, {passive: true});
 
-    (window.parent || window).addEventListener('scroll', () => {
-        if ((window.parent || window).scrollY > 600) hidePull();
+    window.addEventListener('scroll', () => {
+        if (window.scrollY > 600) hidePull();
     });
 }
 </script>
 """
-st.markdown(PULL_REFRESH_HTML_FIXED, unsafe_allow_html=True)
 
-# ====================== STRONG CACHE BUST + FULL CLEAR ON SWIPE ======================
-if "refresh_key" not in st.session_state:
-    st.session_state.refresh_key = random.randint(100000, 999999)
-if "t" in st.query_params:
-    try:
-        new_key = int(st.query_params["t"])
-        if new_key != st.session_state.get("refresh_key", 0):
-            st.session_state.refresh_key = new_key
-            st.cache_data.clear()
-            st.session_state.ui_version = st.session_state.get("ui_version", 0) + 1
-    except:
-        pass
-
-# ====================== GLOBAL CSS (NO MORE CUTOFF) ======================
+# ====================== GLOBAL CSS ======================
 st.markdown("""
 <style>
 /* Whole app background - lighter elegant navy gradient */
 .stApp {
     background: linear-gradient(180deg, #0f1724 0%, #0a0f1c 100%) !important;
+    padding-top: 0px !important;
+    margin-top: 0px !important;
 }
-
 /* Kill ALL default Streamlit top padding */
 .main, .block-container, .stMain {
     padding-top: 0px !important;
     margin-top: 0px !important;
 }
-
 /* Big navigation cards with glossy shine */
 .stButton > button {
     background: #1e2a44 !important;
@@ -201,8 +193,7 @@ st.markdown("""
     background: #263b5e !important;
     color: white !important;
 }
-
-/* Glossy shine for main content */
+/* Glossy shine for main content + slightly lighter top summary cards */
 .glossy-header,
 .glossy-box {
     position: relative;
@@ -249,7 +240,7 @@ st.markdown("""
     gap: 16px;
     width: 100% !important;
     margin-bottom: 45px;
-    margin-top: 20px !important;   /* ← FIXED: was negative → now positive so dashboard is visible */
+    margin-top: -60px !important;   /* creates clean breathing space between pull bar and card */
 }
 .glossy-box {
     padding: 28px 30px;
@@ -275,17 +266,15 @@ st.markdown("""
     line-height: 1.05;
     color: #ffffff;
 }
-
 /* MOBILE: Make header smaller */
 @media (max-width: 700px) {
     .glossy-header {
         padding: 24px 20px !important;
         font-size: 24px !important;
         min-height: 100px;
-        margin-top: 15px !important;
+        margin-top: -52px !important;
     }
 }
-
 /* MOBILE RESPONSIVE FIX FOR THE 3 SUMMARY CARDS */
 @media (max-width: 600px) {
     .glossy-box {
@@ -299,7 +288,6 @@ st.markdown("""
         font-size: 21px !important;
     }
 }
-
 /* PRICE PILLS - PERFECT AS THEY ARE */
 .price-pills-container {
     display: flex !important;
@@ -344,7 +332,6 @@ st.markdown("""
     .price-pill span:last-child,
     .avg-pill span:last-child { font-size: 1.18rem !important; }
 }
-
 /* TIMEFRAME PILL - COMPACT + TEXT & ARROW PERFECTLY ALIGNED */
 div[data-baseweb="select"] {
     background: linear-gradient(90deg, #26334f, #1e2a44) !important;
@@ -365,18 +352,29 @@ div[data-baseweb="select"] > div {
     justify-content: space-between !important;
     height: 100% !important;
 }
-div[data-baseweb="select"] * {
+div[data-baseweb="select"] *,
+div[data-baseweb="select"] span,
+div[data-baseweb="select"] [role="button"] span,
+div[data-baseweb="select"] [data-baseweb="select-value"] span,
+div[data-baseweb="select"] > div > div > div > div > div > span,
+div[data-baseweb="select"] > div > div > div > div > span {
     color: #ffffff !important;
     font-weight: 700 !important;
     font-size: 1.16rem !important;
     text-align: center !important;
     white-space: nowrap !important;
+    display: inline-block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    letter-spacing: 0.4px !important;
+    text-shadow: 0 1px 2px rgba(0,0,0,0.5) !important;
+    caret-color: transparent !important;
+    vertical-align: middle !important;
 }
 div[data-baseweb="select"] svg {
     fill: #e0e0e0 !important;
     margin-top: 0 !important;
 }
-
 /* Open menu */
 [data-baseweb="popover"] [data-baseweb="menu"] {
     background-color: #26334f !important;
@@ -399,7 +397,6 @@ div[data-baseweb="select"] svg {
 [data-baseweb="option"]:hover {
     background-color: #1e2a44 !important;
 }
-
 /* CURSOR FIX */
 .glossy-header *,
 .glossy-box *,
@@ -411,7 +408,6 @@ div[data-baseweb="select"] *,
 .charts-header * {
     cursor: pointer !important;
 }
-
 /* CHARTS HEADER */
 .charts-header {
     display: flex;
@@ -527,7 +523,7 @@ def get_with_retry(url: str, headers: dict, timeout: int = 12, retries: int = 4)
             time.sleep(1.3 ** attempt)
     return None
 
-# ====================== LIVE PRICE FUNCTION ======================
+# ====================== LIVE PRICE FUNCTION (cache-busted) ======================
 @st.cache_data(ttl=15, show_spinner=False)
 def get_all_cryptocompare_prices(tickers, refresh_key=0):
     prices = {"USDC": 1.0}
@@ -565,7 +561,7 @@ def get_all_cryptocompare_prices(tickers, refresh_key=0):
             continue
     return prices
 
-# ====================== DAILY OPEN PRICE FUNCTION ======================
+# ====================== DAILY OPEN PRICE FUNCTION (cache-busted) ======================
 @st.cache_data(ttl=300, show_spinner=False)
 def get_daily_open(ticker: str, refresh_key=0):
     sym = CRYPTOCOMPARE_SYMBOL_MAP.get(ticker.upper())
@@ -581,7 +577,7 @@ def get_daily_open(ticker: str, refresh_key=0):
     except:
         return 0.0
 
-# ====================== CHART FUNCTION ======================
+# ====================== CHART FUNCTION (cache-busted) ======================
 @st.cache_data(ttl=80, show_spinner=False)
 def get_cryptocompare_ohlc(ticker: str, candle: str, refresh_key=0):
     sym = CRYPTOCOMPARE_SYMBOL_MAP.get(ticker.upper())
@@ -766,6 +762,8 @@ def glossy_header(title: str, icon_svg: str):
 
 # ====================== PAGES ======================
 with main_container.container(key=f"page_{st.session_state.page}_{st.session_state.ui_version}"):
+    components.html(PULL_REFRESH_HTML, height=88)
+   
     if st.session_state.page == "Home":
         glossy_header("Portfolio Dashboard", DASHBOARD_ICON)
         df_port, total_value, total_pnl, total_pnl_pct = calculate_portfolio(st.session_state.crypto_df)
@@ -843,6 +841,7 @@ document.querySelectorAll('.coin-card').forEach(div => {{
     </div>
 </div>
 """, unsafe_allow_html=True)
+ 
         if coin_list:
             selected_tab = st.tabs(coin_list)
             for i, coin in enumerate(coin_list):
@@ -850,9 +849,11 @@ document.querySelectorAll('.coin-card').forEach(div => {{
                     avg_row = df_port.loc[df_port['Ticker'] == coin, 'AVG']
                     avg_price = avg_row.iloc[0] if not avg_row.empty and pd.notna(avg_row.iloc[0]) else None
                     live_price = df_port.loc[df_port['Ticker'] == coin, 'Live'].iloc[0] if not df_port.loc[df_port['Ticker'] == coin].empty else 0
+               
                     daily_open = get_daily_open(coin, st.session_state.refresh_key)
                     daily_change_pct = ((live_price - daily_open) / daily_open * 100) if daily_open > 0 else 0
                     daily_arrow = "▲" if daily_change_pct > 0 else "▼" if daily_change_pct < 0 else ""
+               
                     color = "#00ff9d" if live_price > 0 else "#ff4d4d"
                     st.markdown(f"""
                     <div class="price-pills-container">
@@ -864,6 +865,7 @@ document.querySelectorAll('.coin-card').forEach(div => {{
                         {f'<div class="price-pill avg-pill"><span>AVG</span><span style="color:#ffaa00;">{format_crypto_price(avg_price)}</span></div>' if avg_price is not None else ''}
                     </div>
                     """, unsafe_allow_html=True)
+               
                     col1, col2 = st.columns([0.95, 4.05])
                     with col1:
                         candle = st.selectbox(
@@ -873,9 +875,12 @@ document.querySelectorAll('.coin-card').forEach(div => {{
                             key=f"candle_select_{coin}_{st.session_state.ui_version}",
                             label_visibility="collapsed"
                         )
+               
                     data = get_cryptocompare_ohlc(coin, candle, st.session_state.refresh_key)
+               
                     if data is not None and not data.empty:
                         data_local = data.copy()
+                   
                         fig = make_subplots(rows=2, cols=1, shared_xaxes=True, vertical_spacing=0.08,
                                             row_heights=[0.75, 0.25], subplot_titles=("", ""))
                         fig.add_trace(go.Candlestick(
@@ -940,6 +945,7 @@ document.querySelectorAll('.coin-card').forEach(div => {{
         df_display = st.session_state.crypto_df.copy()
         df_display['Date'] = df_display['Datum'].apply(format_datum)
         df_display = df_display.dropna(how='all').reset_index(drop=True)
+ 
         table_container = st.container(key=f"crypto_table_container_{st.session_state.ui_version}")
         with table_container:
             with st.container(height=520, border=True):
@@ -1037,7 +1043,9 @@ document.querySelectorAll('.coin-card').forEach(div => {{
     <div class="glossy-box"><div>Fees</div><div class="fee-line">{fees_eur:,.2f} EUR</div><div class="fee-line" style="font-size:22px;">{fees_czk:,.2f} CZK</div></div>
 </div>"""
         st.markdown(summary_html, unsafe_allow_html=True)
+ 
         df_clean = st.session_state.fiat_df.dropna(how='all').reset_index(drop=True)
+ 
         table_container = st.container(key=f"fiat_table_container_{st.session_state.ui_version}")
         with table_container:
             with st.container(height=520, border=True):
