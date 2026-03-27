@@ -637,10 +637,10 @@ def glossy_header(title: str, icon_svg: str):
 # ====================== PAGES ======================
 with main_container.container(key=f"page_{st.session_state.page}_{st.session_state.ui_version}"):
     if st.session_state.page == "Home":
-        # === FIXED: pure HTML header - logo + text stay perfectly inside the glossy card ===
+        # === PERFECT HEADER: pure HTML with <img src="logo.png"> - stays inside the card, centered, and loads reliably ===
         st.markdown("""
         <div class="glossy-header" style="display:flex;align-items:center;justify-content:center;gap:18px;">
-            <img src="logo.png" width="52" style="flex-shrink:0;">
+            <img src="logo.png" width="52" style="flex-shrink:0; border-radius:4px;">
             <span style="font-size:29px;font-weight:700;letter-spacing:1.8px;">Portfolio Dashboard</span>
         </div>
         """, unsafe_allow_html=True)
