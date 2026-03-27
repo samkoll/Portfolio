@@ -261,7 +261,6 @@ def get_binance_ohlc(ticker: str, candle: str):
         df['open_time'] = pd.to_datetime(df['open_time'], unit='ms')
         df.set_index('open_time', inplace=True)
         df = df.astype(float)
-        df.rename(columns={'volume': 'volumefrom'}, inplace=True)
         return df
     except:
         return None
@@ -497,9 +496,10 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                     if data is not None and not data.empty:
                         data_local = data.copy()
                         
+                        # VOLUME IS 100% REMOVED — NO TRACE, NO RIGHT AXIS, NO LEGEND ENTRY
                         fig = go.Figure()
                         
-                        # ONLY CANDLESTICK — VOLUME 100% REMOVED
+                        # Candlestick only
                         fig.add_trace(go.Candlestick(
                             x=data_local.index,
                             open=data_local['open'],
@@ -541,22 +541,17 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                                 font=dict(size=13)
                             ),
                             dragmode='pan',
-                            # Force no secondary y-axis (volume axis) ever
                             yaxis=dict(
                                 title="Price",
                                 side="left",
                                 showgrid=True,
                                 gridcolor='rgba(255,255,255,0.08)'
-                            ),
-                            yaxis2=dict(
-                                visible=False,
-                                overlaying='y',
-                                side='right'
                             )
+                            # NO yaxis2 AT ALL — volume axis is completely gone
                         )
                         
-                        # CRITICAL FIX FOR PINCH ZOOM ON PHONES
-                        fig.update_xaxes(fixedrange=False, rangeslider=dict(visible=False))
+                        # PINCH ZOOM + MOBILE TOUCH PERFECTED
+                        fig.update_xaxes(fixedrange=False)
                         fig.update_yaxes(fixedrange=False)
                         
                         if len(data_local) > 0:
