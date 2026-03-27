@@ -13,7 +13,7 @@ import hashlib
 # ====================== CONFIG ======================
 st.set_page_config(page_title="Portfolio", layout="wide", page_icon="💎")
 
-# ====================== PULL-TO-REFRESH WITH SPINNER (ANYWHERE ON SCREEN) ======================
+# ====================== PULL-TO-REFRESH (ANYWHERE + SPINNER → CHECKMARK + GLOSSY CARD STYLE) ======================
 PULL_REFRESH_HTML = """
 <style>
 .pull-to-refresh {
@@ -21,45 +21,77 @@ PULL_REFRESH_HTML = """
     top: 0;
     left: 0;
     right: 0;
-    height: 60px;
+    height: 70px;
     display: flex;
     align-items: center;
     justify-content: center;
-    background: rgba(15, 23, 36, 0.98);
+    background: linear-gradient(90deg, #26334f, #1e2a44) !important;
     z-index: 9999;
     transform: translateY(-100%);
     transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    border-bottom-left-radius: 24px;
+    border-bottom-right-radius: 24px;
+    box-shadow: 0 8px 25px rgba(0,0,0,0.35);
     overflow: hidden;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
 }
 .pull-to-refresh.active {
     transform: translateY(0);
 }
 .spinner {
-    width: 28px;
-    height: 28px;
-    border: 3px solid rgba(0, 255, 157, 0.3);
-    border-top: 3px solid #00ff9d;
+    width: 32px;
+    height: 32px;
+    border: 4px solid rgba(0, 255, 157, 0.3);
+    border-top: 4px solid #00ff9d;
     border-radius: 50%;
     animation: spin 1s linear infinite;
+}
+.checkmark {
+    width: 32px;
+    height: 32px;
+    display: none;
+    animation: checkPop 0.4s ease forwards;
+}
+.checkmark svg {
+    stroke: #00ff9d;
+    stroke-width: 4;
+    stroke-dasharray: 40;
+    stroke-dashoffset: 40;
+    animation: checkDraw 0.6s ease forwards 0.1s;
 }
 @keyframes spin {
     0% { transform: rotate(0deg); }
     100% { transform: rotate(360deg); }
 }
+@keyframes checkPop {
+    0% { transform: scale(0.6); opacity: 0; }
+    60% { transform: scale(1.15); }
+    100% { transform: scale(1); opacity: 1; }
+}
+@keyframes checkDraw {
+    to { stroke-dashoffset: 0; }
+}
 </style>
 
 <div id="pullrefresh" class="pull-to-refresh">
-    <div class="spinner"></div>
+    <div id="spinner" class="spinner"></div>
+    <div id="checkmark" class="checkmark">
+        <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M20 6L9 17l-5-5"/>
+        </svg>
+    </div>
 </div>
 
 <script>
 let startY = 0;
 let isPulling = false;
-const pullContainer = document.getElementById('pullrefresh');
+const container = document.getElementById('pullrefresh');
+const spinner = document.getElementById('spinner');
+const checkmark = document.getElementById('checkmark');
 
 function resetPull() {
-    pullContainer.classList.remove('active');
+    container.classList.remove('active');
+    spinner.style.display = 'block';
+    checkmark.style.display = 'none';
     isPulling = false;
 }
 
@@ -74,35 +106,32 @@ document.addEventListener('touchmove', function(e) {
     if (!isPulling) return;
     const currentY = e.touches[0].clientY;
     const diff = currentY - startY;
-    
     if (diff > 0) {
-        const progress = Math.min(diff / 2, 60);
-        pullContainer.style.transform = `translateY(${progress - 60}px)`;
-        pullContainer.classList.add('active');
+        const progress = Math.min(diff / 2.2, 70);
+        container.style.transform = `translateY(${progress - 70}px)`;
+        container.classList.add('active');
     }
 }, { passive: true });
 
 document.addEventListener('touchend', function(e) {
     if (!isPulling) return;
-    
     const currentY = e.changedTouches[0].clientY;
     const diff = currentY - startY;
     
     if (diff > 120) {
-        pullContainer.style.transform = `translateY(0)`;
+        // Success - show checkmark
+        spinner.style.display = 'none';
+        checkmark.style.display = 'block';
         setTimeout(() => {
             window.location.reload();
-        }, 300);
+        }, 420);
     } else {
         resetPull();
     }
 }, { passive: true });
 
-// Reset if user scrolls away
 window.addEventListener('scroll', function() {
-    if (window.scrollY > 10) {
-        resetPull();
-    }
+    if (window.scrollY > 20) resetPull();
 });
 </script>
 """
@@ -710,7 +739,7 @@ def glossy_header(title: str, icon_svg: str):
 # ====================== PAGES ======================
 main_container.empty()
 with main_container.container(key=f"page_{st.session_state.page}_{st.session_state.ui_version}"):
-    components.html(PULL_REFRESH_HTML, height=60)
+    components.html(PULL_REFRESH_HTML, height=70)
     
     if st.session_state.page == "Home":
         glossy_header("Portfolio Dashboard", DASHBOARD_ICON)
