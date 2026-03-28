@@ -1,246 +1,5 @@
 import streamlit as st
 import pandas as pd
-from datetime import datetime, timedelta, date
-import time
-import streamlit.components.v1 as components
-import plotly.graph_objects as go
-from plotly.subplots import make_subplots
-import requests
-import json
-from pathlib import Path
-import hashlib
-import random
-
-# ====================== CONFIG ======================
-st.set_page_config(page_title="Portfolio", layout="wide", page_icon="logo.png")
-
-# ====================== GLOBAL CSS (polished & clean) ======================
-st.markdown("""
-<style>
-/* Whole app background - lighter elegant navy gradient */
-.stApp {
-    background: linear-gradient(180deg, #0f1724 0%, #0a0f1c 100%) !important;
-    padding-top: 95px !important;
-}
-/* Clean top spacing */
-.main, .block-container, .stMain {
-    padding-top: 0px !important;
-}
-/* Big navigation cards with glossy shine */
-.stButton > button {
-    background: #1e2a44 !important;
-    color: #e0e0e0 !important;
-    padding: 22px 24px !important;
-    border-radius: 14px !important;
-    margin-bottom: 14px !important;
-    font-size: 1.28rem !important;
-    font-weight: 700 !important;
-    letter-spacing: 1.2px !important;
-    height: auto !important;
-    width: 100% !important;
-    display: flex;
-    align-items: center;
-    gap: 18px;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.25) !important;
-    transition: all 0.3s ease !important;
-    position: relative;
-    overflow: hidden;
-}
-.stButton > button:hover {
-    transform: translateY(-4px) !important;
-    box-shadow: 0 12px 30px rgba(255, 255, 255, 0.25) !important;
-    background: #263b5e !important;
-    color: white !important;
-}
-/* Glossy shine for main content */
-.glossy-header,
-.glossy-box {
-    position: relative;
-    overflow: hidden;
-    background: #26334f;
-    border-radius: 18px;
-    box-shadow: 0 12px 35px rgba(0,0,0,0.35);
-    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-}
-.glossy-header:hover,
-.glossy-box:hover {
-    transform: translateY(-4px) scale(1.03);
-    box-shadow: 0 15px 40px rgba(255,255,255,0.15);
-}
-.glossy-header::before,
-.glossy-box::before {
-    content: '';
-    position: absolute;
-    top: -50%;
-    left: -150%;
-    width: 60%;
-    height: 300%;
-    background: linear-gradient(120deg, transparent, rgba(255,255,255,0.28), transparent);
-    transform: rotate(25deg);
-    opacity: 0;
-    transition: all 2.2s cubic-bezier(0.25, 0.1, 0.25, 1);
-    pointer-events: none;
-}
-.glossy-header:hover::before,
-.glossy-box:hover::before {
-    left: 180%;
-    opacity: 1;
-}
-.glossy-header {
-    padding: 32px 40px;
-    min-height: 130px;
-    font-size: 29px;
-    font-weight: 700;
-    letter-spacing: 1.8px;
-    line-height: 1.1;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 16px;
-    width: 100% !important;
-    margin-top: 72px;
-    margin-bottom: 45px;
-}
-.glossy-box {
-    padding: 28px 30px;
-    text-align: center;
-    flex: 1;
-    min-width: 220px;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-}
-.glossy-box > div:first-child {
-    font-size: 13.5px;
-    font-weight: 500;
-    letter-spacing: 1.1px;
-    color: #e0e0e0;
-    opacity: 0.9;
-    margin-bottom: 6px;
-    line-height: 1.2;
-}
-.glossy-box > div:last-child {
-    font-size: 27px;
-    font-weight: 700;
-    line-height: 1.05;
-    color: #ffffff;
-}
-/* Fee lines in Fiat summary */
-.fee-line {
-    font-size: 1.35rem;
-    font-weight: 700;
-    color: #ffffff;
-    line-height: 1.1;
-    margin-bottom: 4px;
-}
-/* MOBILE: Make header smaller */
-@media (max-width: 700px) {
-    .stApp {
-        padding-top: 75px !important;
-    }
-    .glossy-header {
-        margin-top: 52px !important;
-        margin-bottom: 35px !important;
-        padding: 24px 20px !important;
-        font-size: 24px !important;
-        min-height: 100px;
-    }
-}
-/* MOBILE RESPONSIVE FIX FOR THE 3 SUMMARY CARDS */
-@media (max-width: 600px) {
-    .glossy-box {
-        min-width: 98px !important;
-        padding: 18px 14px !important;
-    }
-    .glossy-box > div:first-child {
-        font-size: 12px !important;
-    }
-    .glossy-box > div:last-child {
-        font-size: 21px !important;
-    }
-}
-/* PRICE PILLS */
-.price-pills-container {
-    display: flex !important;
-    gap: 6px !important;
-    flex-wrap: nowrap !important;
-    overflow-x: auto !important;
-    padding-bottom: 4px;
-    scrollbar-width: none;
-}
-.price-pills-container::-webkit-scrollbar {
-    display: none;
-}
-.price-pill, .avg-pill, .daily-pill {
-    padding: 7px 14px !important;
-    border-radius: 9999px !important;
-    white-space: nowrap !important;
-    flex-shrink: 0;
-    background: #0f172a !important;
-    display: inline-flex;
-    align-items: center;
-    gap: 5px;
-    font-size: 1.05rem;
-    font-weight: 700;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.12);
-}
-.price-pill span:last-child,
-.avg-pill span:last-child {
-    font-size: 1.26rem;
-}
-.daily-pill {
-    color: #ff4d4d;
-    font-weight: 700;
-    padding: 4px 8px !important;
-    font-size: 0.88rem !important;
-}
-@media (max-width: 700px) {
-    .price-pills-container { gap: 4px !important; }
-    .price-pill, .avg-pill, .daily-pill { padding: 5px 10px !important; }
-    .daily-pill { padding: 3px 7px !important; font-size: 0.82rem !important; }
-    .price-pill span:first-child,
-    .avg-pill span:first-child { font-size: 0.92rem !important; }
-    .price-pill span:last-child,
-    .avg-pill span:last-child { font-size: 1.18rem !important; }
-}
-/* TIMEFRAME PILL */
-div[data-baseweb="select"] {
-    background: linear-gradient(90deg, #26334f, #1e2a44) !important;
-    border-radius: 9999px !important;
-    box-shadow: 0 6px 20px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.15) !important;
-    min-width: 148px !important;
-    max-width: 160px !important;
-    height: 39px !important;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
-}
-div[data-baseweb="select"] > div {
-    background: transparent !important;
-    border: none !important;
-    padding: 0 18px !important;
-    line-height: 1.35 !important;
-    display: flex !important;
-    align-items: center !important;
-    justify-content: space-between !important;
-    height: 100% !important;
-}
-div[data-baseweb="select"] *,
-div[data-baseweb="select"] span,
-div[data-baseweb="select"] [role="button"] span,
-div[data-baseweb="select"] [data-baseweb="select-value"] span,
-div[data-baseweb="select"] > div > div > div > div > div > span,
-div[data-baseweb="select"] > div > div > div > div > span {
-    color: #ffffff !important;
-    font-weight: 700 !important;
-    font-size: 1.16rem !important;
-    text-align: center !important;
-    white-space: nowrap !important;
-    display: inline-block !important;
-    visibility: visible !important;
-    opacity: 1 !important;
-    letter-spacing: 0.4px !important;
-    text-shadow: 0 1px 2px rgba(0,0,0,0.5) !important;
-import streamlit as st
-import pandas as pd
 from datetime import datetime, date, timedelta
 import json
 from pathlib import Path
@@ -254,7 +13,7 @@ import streamlit.components.v1 as components
 
 st.set_page_config(page_title="Portfolio", layout="wide", initial_sidebar_state="expanded")
 
-# ====================== CUSTOM CSS (with new transaction-card styles for perfect mobile) ======================
+# ====================== CUSTOM CSS ======================
 st.markdown("""
 <style>
     .stApp {
@@ -299,7 +58,6 @@ st.markdown("""
         line-height: 1.05;
         color: #ffffff;
     }
-    /* Fee lines in Fiat summary */
     .fee-line {
         font-size: 1.35rem;
         font-weight: 700;
@@ -307,11 +65,8 @@ st.markdown("""
         line-height: 1.1;
         margin-bottom: 4px;
     }
-    /* MOBILE: Make header smaller */
     @media (max-width: 700px) {
-        .stApp {
-            padding-top: 75px !important;
-        }
+        .stApp { padding-top: 75px !important; }
         .glossy-header {
             margin-top: 52px !important;
             margin-bottom: 35px !important;
@@ -320,20 +75,15 @@ st.markdown("""
             min-height: 100px;
         }
     }
-    /* MOBILE RESPONSIVE FIX FOR THE 3 SUMMARY CARDS */
     @media (max-width: 600px) {
         .glossy-box {
             min-width: 98px !important;
             padding: 18px 14px !important;
         }
-        .glossy-box > div:first-child {
-            font-size: 12px !important;
-        }
-        .glossy-box > div:last-child {
-            font-size: 21px !important;
-        }
+        .glossy-box > div:first-child { font-size: 12px !important; }
+        .glossy-box > div:last-child { font-size: 21px !important; }
     }
-    /* TRANSACTION CARDS - beautiful mobile-first design inspired by home-page coin cards */
+    /* TRANSACTION CARDS - beautiful mobile-first design */
     .transaction-grid {
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
@@ -360,30 +110,11 @@ st.markdown("""
         border-bottom: 1px solid rgba(255,255,255,0.1);
         padding-bottom: 10px;
     }
-    .tx-date {
-        font-size: 0.95rem;
-        color: #aaa;
-        font-weight: 500;
-    }
-    .tx-usdc {
-        font-size: 1.45rem;
-        font-weight: 700;
-        color: #00ff9d;
-    }
-    .tx-body {
-        display: flex;
-        justify-content: space-between;
-        align-items: flex-end;
-    }
-    .tx-ticker-amount {
-        font-size: 1.25rem;
-        font-weight: 700;
-    }
-    .tx-price {
-        font-size: 0.95rem;
-        color: #ffaa00;
-        font-weight: 600;
-    }
+    .tx-date { font-size: 0.95rem; color: #aaa; font-weight: 500; }
+    .tx-usdc { font-size: 1.45rem; font-weight: 700; color: #00ff9d; }
+    .tx-body { display: flex; justify-content: space-between; align-items: flex-end; }
+    .tx-ticker-amount { font-size: 1.25rem; font-weight: 700; }
+    .tx-price { font-size: 0.95rem; color: #ffaa00; font-weight: 600; }
     .action-buttons {
         position: absolute;
         bottom: 14px;
@@ -404,14 +135,12 @@ st.markdown("""
     }
     .edit-btn { background: #1e2a44; color: #ffaa00; }
     .delete-btn { background: #3a1f1f; color: #ff6666; }
-    /* Mobile tweaks for cards */
     @media (max-width: 600px) {
         .transaction-grid { grid-template-columns: 1fr; }
         .transaction-card { padding: 16px; }
         .tx-usdc { font-size: 1.3rem; }
         .tx-ticker-amount { font-size: 1.15rem; }
     }
-    /* PRICE PILLS, TIMEFRAME, CHARTS etc. (unchanged from original) */
     .price-pills-container {
         display: flex !important;
         gap: 6px !important;
@@ -433,10 +162,7 @@ st.markdown("""
         font-weight: 700;
         box-shadow: 0 4px 12px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.12);
     }
-    .price-pill span:last-child,
-    .avg-pill span:last-child {
-        font-size: 1.26rem;
-    }
+    .price-pill span:last-child, .avg-pill span:last-child { font-size: 1.26rem; }
     .daily-pill {
         color: #ff4d4d;
         font-weight: 700;
@@ -962,14 +688,13 @@ document.querySelectorAll('.coin-card').forEach(div => {{
                     else:
                         st.error(f"📉 Could not load {coin} chart. Try the **Refresh** button in sidebar.")
 
-    # ====================== CRYPTO TRANSACTIONS (MOBILE-FIXED WITH BEAUTIFUL CARDS) ======================
+    # ====================== CRYPTO TRANSACTIONS (MOBILE-FIXED CARDS) ======================
     elif st.session_state.page == "Crypto Transactions":
         glossy_header("Crypto Transactions", CRYPTO_ICON)
         df_display = st.session_state.crypto_df.copy()
         df_display['Date'] = df_display['Datum'].apply(format_datum)
         df_display = df_display.dropna(how='all').reset_index(drop=True)
 
-        # Beautiful card grid (perfect on mobile)
         st.markdown('<div class="transaction-grid">', unsafe_allow_html=True)
         for i, r in df_display.iterrows():
             card_html = f"""
@@ -993,7 +718,6 @@ document.querySelectorAll('.coin-card').forEach(div => {{
             st.markdown(card_html, unsafe_allow_html=True)
         st.markdown('</div>', unsafe_allow_html=True)
 
-        # Hidden buttons that cards trigger
         for i, r in df_display.iterrows():
             col1, col2 = st.columns([1, 1], gap="small")
             with col1:
@@ -1009,7 +733,6 @@ document.querySelectorAll('.coin-card').forEach(div => {{
                     st.success("✅ Transaction deleted!")
                     st.rerun()
 
-        # Edit form
         if st.session_state.editing_row_crypto is not None:
             edit_idx = st.session_state.editing_row_crypto
             row = st.session_state.crypto_df.loc[edit_idx]
