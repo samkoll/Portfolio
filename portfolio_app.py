@@ -13,7 +13,7 @@ import streamlit.components.v1 as components
 
 st.set_page_config(page_title="Crypto Portfolio", layout="wide", initial_sidebar_state="expanded")
 
-# ====================== CUSTOM CSS ======================
+# ====================== CUSTOM CSS (EXACT ORIGINAL + coin-grid/coin-card for Crypto page) ======================
 st.markdown("""
 <style>
     letter-spacing: 1.1px;
@@ -202,18 +202,79 @@ div[data-baseweb="select"] *,
         padding: 0 16px !important;
     }
 }
-/* TRANSACTION CARDS - EXACTLY same size and style as home page coin-card */
-.transaction-card {
-    background: #0f172a !important;
-    padding: 16px !important;
-    border-radius: 20px !important;
-    box-shadow: 0 6px 20px rgba(0,0,0,0.3) !important;
-    transition: all 0.25s ease !important;
-    position: relative;
+
+/* === EXACT coin-grid + coin-card styles from original Home page (now available everywhere) === */
+.coin-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 14px;
+    padding: 32px 26px;
+    box-sizing: border-box;
+    background: transparent !important;
 }
-.transaction-card:hover {
-    transform: translateY(-3px) !important;
+.coin-grid::-webkit-scrollbar {
+    display: none;
+}
+.coin-card {
+    background: #0f172a;
+    padding: 16px;
+    border-radius: 20px;
+    box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+    transition: all 0.25s ease;
+    cursor: pointer;
+    position: relative;
+    z-index: 1;
+    outline: none !important;
+    -webkit-tap-highlight-color: transparent;
+    user-select: none;
+    -webkit-user-select: none;
+}
+.coin-card:hover {
+    transform: translateY(-3px);
     box-shadow: 0 0 22px 6px var(--glow) !important;
+    z-index: 10;
+}
+.card-header {
+    display: flex;
+    align-items: center;
+    margin-bottom: 14px;
+}
+.card-content {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+.label-value-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.95rem;
+}
+.label {
+    color: #aaa;
+    font-weight: 500;
+}
+.value {
+    font-weight: 600;
+}
+.total {
+    font-size: 1.18rem;
+    margin-top: 8px;
+    border-top: 1px solid rgba(255,255,255,0.12);
+    padding-top: 8px;
+}
+.total-value {
+    font-size: 1.28rem;
+}
+@media (max-width: 700px) {
+    .coin-grid {
+        grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+        gap: 12px;
+        padding: 28px 24px;
+    }
+    .coin-card {
+        padding: 14px;
+    }
 }
 </style>
 """, unsafe_allow_html=True)
@@ -730,15 +791,14 @@ document.querySelectorAll('.coin-card').forEach(div => {{
                     else:
                         st.error(f"📉 Could not load {coin} chart. Try the **Refresh** button in sidebar.")
 
-    # ====================== CRYPTO TRANSACTIONS ======================
+    # ====================== CRYPTO TRANSACTIONS (now uses EXACT same coin-grid + coin-card as Home) ======================
     elif st.session_state.page == "Crypto Transactions":
         glossy_header("Crypto Transactions", CRYPTO_ICON)
         df_display = st.session_state.crypto_df.copy()
         df_display['Date'] = df_display['Datum'].apply(format_datum)
         df_display = df_display.dropna(how='all').reset_index(drop=True)
 
-        # === EXACT same grid as Home page coin cards (smaller, multi-column) ===
-        st.markdown('<div class="coin-grid" style="padding:32px 26px;max-height:none;">', unsafe_allow_html=True)
+        st.markdown('<div class="coin-grid">', unsafe_allow_html=True)
 
         for i, r in df_display.iterrows():
             ticker = str(r['Ticker']).upper()
@@ -748,33 +808,22 @@ document.querySelectorAll('.coin-card').forEach(div => {{
             amount_str = format_holdings(r['Amount'], ticker)
             price_str = format_money(r['Price'])
 
-            # Card - identical size/style to home page
             st.markdown(f"""
-            <div class="transaction-card" style="--glow:{get_ticker_color(ticker) + '77'}">
-                <div style="display:flex;align-items:center;margin-bottom:14px;">
+            <div class="coin-card" style="--glow:{get_ticker_color(ticker) + '77'}">
+                <div class="card-header">
                     <img src="{logo_url}" style="height:38px;width:38px;border-radius:50%;object-fit:contain;" onerror="this.src='https://via.placeholder.com/38/1e2a44/ffffff?text={ticker[0]}';">
-                    <div style="margin-left:12px;flex:1;">
-                        <span style="font-weight:700;font-size:1.22rem;color:#ffffff;">{ticker}</span>
-                        <div style="color:#94a3b8;font-size:0.95rem;margin-top:2px;">{date_str}</div>
-                    </div>
-                    <div style="text-align:right;">
-                        <div style="font-size:1.18rem;font-weight:700;color:#00ff9d;">{usdc_str}</div>
-                    </div>
+                    <span style="font-weight:700;font-size:1.22rem;margin-left:10px;">{ticker}</span>
                 </div>
-                <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;border-top:1px solid rgba(255,255,255,0.12);padding-top:12px;">
-                    <div>
-                        <span style="color:#aaa;font-size:0.95rem;font-weight:500;">AMOUNT</span>
-                        <div style="font-size:1.05rem;font-weight:600;margin-top:4px;">{amount_str}</div>
-                    </div>
-                    <div>
-                        <span style="color:#aaa;font-size:0.95rem;font-weight:500;">BUY PRICE</span>
-                        <div style="font-size:1.05rem;font-weight:600;margin-top:4px;">{price_str}</div>
-                    </div>
+                <div class="card-content">
+                    <div class="label-value-row"><span class="label">Date</span><span class="value">{date_str}</span></div>
+                    <div class="label-value-row"><span class="label">USDC</span><span class="value">{usdc_str}</span></div>
+                    <div class="label-value-row"><span class="label">Amount</span><span class="value">{amount_str}</span></div>
+                    <div class="label-value-row"><span class="label">Buy Price</span><span class="value">{price_str}</span></div>
                 </div>
             </div>
             """, unsafe_allow_html=True)
 
-            # === ROLLOUT MENU INSIDE / ON TOP of the card (top-right visual) ===
+            # === ⋯ rollout menu INSIDE / ON TOP of each card (top-right) ===
             with st.popover("⋯", key=f"menu_crypto_{i}_{st.session_state.crypto_table_version}_{st.session_state.ui_version}", use_container_width=False):
                 col_edit, col_del = st.columns(2)
                 with col_edit:
