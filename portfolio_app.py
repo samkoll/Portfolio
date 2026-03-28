@@ -14,7 +14,7 @@ import textwrap
 
 st.set_page_config(page_title="Portfolio", layout="wide", initial_sidebar_state="expanded")
 
-# ====================== CUSTOM CSS (FINAL VERSION) ======================
+# ====================== CUSTOM CSS (FINAL - hover restored + buttons fully hidden) ======================
 css = textwrap.dedent("""
 <style>
     .stApp {
@@ -89,7 +89,7 @@ css = textwrap.dedent("""
         .glossy-box > div:first-child { font-size: 12px !important; }
         .glossy-box > div:last-child { font-size: 21px !important; }
     }
-    /* TRANSACTION CARDS */
+    /* TRANSACTION CARDS - hover & glow restored */
     .transaction-grid {
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
@@ -405,13 +405,13 @@ def get_ticker_color(ticker: str) -> str:
         return known[ticker]
     return f"#{hashlib.md5(ticker.encode()).hexdigest()[:6]}"
 
-# ====================== FORMATTING ======================
+# ====================== FORMATTING (ESCAPED $) ======================
 def format_money(val):
     try:
         val = float(val)
         if pd.isna(val): return ""
-        # ESCAPE $ to prevent LaTeX math mode
-        return (f"\( {val:,.2f}" if val >= 0 else f"- \){-val:,.2f}").replace("$", "&#36;")
+        s = f"\( {val:,.2f}" if val >= 0 else f"- \){-val:,.2f}"
+        return s.replace("$", "&#36;")
     except:
         return ""
 
@@ -420,11 +420,12 @@ def format_crypto_price(val):
         val = float(val)
         if pd.isna(val): return ""
         if val >= 1:
-            return f"\( {val:,.2f}".replace(" \)", "&#36;")
+            s = f"${val:,.2f}"
         elif val >= 0.01:
-            return f"\( {val:,.4f}".replace(" \)", "&#36;")
+            s = f"${val:,.4f}"
         else:
-            return f"\( {val:,.6f}".replace(" \)", "&#36;")
+            s = f"${val:,.6f}"
+        return s.replace("$", "&#36;")
     except:
         return ""
 
@@ -708,13 +709,14 @@ document.querySelectorAll('.coin-card').forEach(div => {{
                     else:
                         st.error(f"📉 Could not load {coin} chart. Try the **Refresh** button in sidebar.")
 
-    # ====================== CRYPTO TRANSACTIONS (FINAL FIXED) ======================
+    # ====================== CRYPTO TRANSACTIONS (CLEAN - NO DUPLICATE BUTTONS) ======================
     elif st.session_state.page == "Crypto Transactions":
         glossy_header("Crypto Transactions", CRYPTO_ICON)
         df_display = st.session_state.crypto_df.copy()
         df_display['Date'] = df_display['Datum'].apply(format_datum)
         df_display = df_display.dropna(how='all').reset_index(drop=True)
 
+        # Beautiful cards
         st.markdown('<div class="transaction-grid">', unsafe_allow_html=True)
         for i, r in df_display.iterrows():
             usdc_str = format_money(r['USDC'])
@@ -740,7 +742,8 @@ document.querySelectorAll('.coin-card').forEach(div => {{
             st.markdown(card_html, unsafe_allow_html=True)
         st.markdown('</div>', unsafe_allow_html=True)
 
-        # Hidden buttons (kept in DOM for JS to click)
+        # Hidden buttons (kept in DOM for JS clicks)
+        st.markdown('<div style="display:none !important; visibility:hidden !important; height:0 !important; overflow:hidden !important;">', unsafe_allow_html=True)
         for i, r in df_display.iterrows():
             col1, col2 = st.columns([1, 1], gap="small")
             with col1:
@@ -755,6 +758,7 @@ document.querySelectorAll('.coin-card').forEach(div => {{
                     st.session_state.ui_version += 1
                     st.success("✅ Transaction deleted!")
                     st.rerun()
+        st.markdown('</div>', unsafe_allow_html=True)
 
         # Edit form
         if st.session_state.editing_row_crypto is not None:
