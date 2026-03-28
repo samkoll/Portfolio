@@ -639,8 +639,9 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
     if st.session_state.page == "Home":
         # === ORIGINAL HEADER RESTORED: using the green grid SVG icon (no custom logo.png in the card) ===
         glossy_header("Portfolio Dashboard", DASHBOARD_ICON)
-
+        
         df_port, total_value, total_pnl, total_pnl_pct = calculate_portfolio(st.session_state.crypto_df)
+        
         value_box_html = f"""
 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(98px, 1fr)); gap: 14px; margin-bottom: 30px;">
     <div class="glossy-box"><div>Total Value</div><div>{format_money(total_value)}</div></div>
@@ -648,8 +649,9 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
     <div class="glossy-box"><div>PnL %</div><div style="color:{'#00ff9d' if total_pnl_pct>=0 else '#ff4d4d'}">{"▲" if total_pnl_pct>0 else "▼" if total_pnl_pct<0 else ""} {abs(total_pnl_pct):.2f}%</div></div>
 </div>"""
         st.markdown(value_box_html, unsafe_allow_html=True)
-
+        
         coin_list = [t for t in df_port['Ticker'] if t != 'USDC']
+        
         cards_html = ""
         for _, r in df_port.iterrows():
             pnl = r['PnL']
@@ -675,6 +677,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
         <div class="label-value-row total"><span class="label">Value</span><span class="value total-value">{format_money(r['Value'])}</span></div>
     </div>
 </div>"""
+        
         html = f"""<html><head><style>
 body{{background:transparent;color:white;font-family:sans-serif;margin:0;padding:0;}}
 .coin-grid {{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px;padding:32px 26px;box-sizing:border-box;max-height:520px;overflow-y:auto;scrollbar-width:none;background:transparent !important;}}
@@ -708,16 +711,17 @@ document.querySelectorAll('.coin-card').forEach(div => {{
 }});
 </script><!-- VERSION:{st.session_state.ui_version} --></body></html>"""
         components.html(html, height=580, scrolling=True)
-
+        
+        # ====================== CHARTS SECTION (GAP FIXED - PERFECTLY ALIGNED) ======================
         st.markdown(f"""
-<div id="price-charts-section" class="glossy-box" style="background:#1e2a44;padding:18px 30px;border-radius:18px;margin:28px 0 18px 0;">
+<div id="price-charts-section" class="glossy-box" style="background:#1e2a44;padding:18px 30px;border-radius:18px;margin:30px 0 18px 0;">
     <div class="charts-header">
         {CHARTS_ICON}
         <span>Charts</span>
     </div>
 </div>
 """, unsafe_allow_html=True)
-
+        
         if coin_list:
             selected_tab = st.tabs(coin_list)
             for i, coin in enumerate(coin_list):
@@ -739,7 +743,6 @@ document.querySelectorAll('.coin-card').forEach(div => {{
                         {f'<div class="price-pill avg-pill"><span>AVG</span><span style="color:#ffaa00;">{format_crypto_price(avg_price)}</span></div>' if avg_price is not None else ''}
                     </div>
                     """, unsafe_allow_html=True)
-
                     col1, col2 = st.columns([0.95, 4.05])
                     with col1:
                         candle = st.selectbox(
@@ -749,9 +752,7 @@ document.querySelectorAll('.coin-card').forEach(div => {{
                             key=f"candle_select_{coin}_{st.session_state.ui_version}",
                             label_visibility="collapsed"
                         )
-
                     data = get_cryptocompare_ohlc(coin, candle, st.session_state.refresh_key)
-
                     if data is not None and not data.empty:
                         data_local = data.copy()
                         fig = make_subplots(rows=2, cols=1, shared_xaxes=True, vertical_spacing=0.08,
@@ -812,7 +813,7 @@ document.querySelectorAll('.coin-card').forEach(div => {{
                         )
                     else:
                         st.error(f"📉 Could not load {coin} chart. Try the **Refresh** button in sidebar.")
-
+    
     # ====================== CRYPTO TRANSACTIONS ======================
     elif st.session_state.page == "Crypto Transactions":
         glossy_header("Crypto Transactions", CRYPTO_ICON)
@@ -899,7 +900,7 @@ document.querySelectorAll('.coin-card').forEach(div => {{
                     st.session_state.ui_version += 1
                     st.success(f"✅ Added {amount} {ticker}")
                     st.rerun()
-
+    
     # ====================== FIAT TRANSACTIONS ======================
     elif st.session_state.page == "Fiat Transactions":
         total_czk = pd.to_numeric(st.session_state.fiat_df['CZK'], errors='coerce').fillna(0).sum()
