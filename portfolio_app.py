@@ -13,10 +13,10 @@ import streamlit.components.v1 as components
 
 st.set_page_config(page_title="Crypto Portfolio", layout="wide", initial_sidebar_state="expanded")
 
-# ====================== STRONGEST CUSTOM CSS (ALL ISSUES FIXED) ======================
+# ====================== STRONGEST CUSTOM CSS (MAXIMUM OVERRIDE - ALL ISSUES FIXED) ======================
 st.markdown("""
 <style>
-    /* === ABSOLUTE TOP + STRONGEST GLOSSY-HEADER (all page titles) === */
+    /* === ABSOLUTE TOP + STRONGEST GLOSSY-HEADER (Portfolio Dashboard / Crypto Transactions / Fiat Transactions) === */
     .stApp { padding-top: 0 !important; }
     .glossy-header {
         background: #0f172a !important;
@@ -84,7 +84,7 @@ st.markdown("""
         margin-bottom: 4px !important;
     }
 
-    /* MOBILE: zero top gap + strong hover */
+    /* MOBILE OVERRIDE */
     @media (max-width: 700px) {
         .glossy-header { margin-top: 0 !important; padding: 20px 24px !important; font-size: 24px !important; }
         .glossy-box { min-width: 98px !important; padding: 18px 14px !important; }
@@ -92,7 +92,7 @@ st.markdown("""
         .glossy-box > div:last-child { font-size: 21px !important; }
     }
 
-    /* === COIN-GRID + COIN-CARD (strong gloss + strong glow + TWO cards on mobile) === */
+    /* === COIN-GRID + COIN-CARD (strong gloss + strong glow + MULTIPLE cards on PC + TWO on mobile) === */
     .coin-grid {
         display: grid !important;
         grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)) !important;
@@ -127,7 +127,7 @@ st.markdown("""
     .total { font-size: 1.18rem; margin-top: 8px; border-top: 1px solid rgba(255,255,255,0.12); padding-top: 8px; }
     .total-value { font-size: 1.28rem; }
 
-    /* MOBILE: fit TWO transaction cards side-by-side */
+    /* MOBILE: TWO transaction cards side-by-side */
     @media (max-width: 700px) {
         .coin-grid { 
             grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)) !important; 
