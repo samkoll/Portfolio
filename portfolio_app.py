@@ -12,41 +12,11 @@ import hashlib
 import random
 
 # ====================== CONFIG ======================
-st.set_page_config(
-    page_title="Portfolio", 
-    layout="wide", 
-    page_icon="logo.png",
-    initial_sidebar_state="expanded"   # ← This forces the sidebar to stay visible (especially important on mobile)
-)
+st.set_page_config(page_title="Portfolio", layout="wide", page_icon="logo.png")
 
-# ====================== GLOBAL CSS (TARGETED - keeps sidebar, removes ONLY branding) ======================
+# ====================== GLOBAL CSS (polished & clean) ======================
 st.markdown("""
 <style>
-/* === KEEP SIDEBAR + HAMBURGER MENU (mobile) === */
-/* Only hide the Streamlit/Cloud branding elements */
-#MainMenu {visibility: hidden !important;}
-footer {visibility: hidden !important;}
-div[data-testid="stToolbar"] {display: none !important;}
-div[data-testid="stDecoration"] {display: none !important;}
-div[data-testid="stStatusWidget"] {display: none !important;}
-
-/* Bottom-right GitHub user + Streamlit logo / viewer badge (this is what you saw) */
-.viewerBadge_container__1QSob,
-.styles_viewerBadge__1yB5_,
-.viewerBadge_link__1S137,
-.viewerBadge_text__1JaDK,
-div[style*="made with streamlit"],
-.css-1jc7ptx,
-.e1ewe7hr3,
-.st-emotion-cache-1r4qjyz,
-.st-emotion-cache-1wb1j9c,
-.st-emotion-cache-1f3c2v8,
-div[data-testid="stMarkdownContainer"] p a[href*="streamlit"],
-.st-emotion-cache-1f3c2v8 a,
-[data-testid="stAppViewContainer"] footer a {
-    display: none !important;
-}
-
 /* Whole app background - lighter elegant navy gradient */
 .stApp {
     background: linear-gradient(180deg, #0f1724 0%, #0a0f1c 100%) !important;
@@ -546,7 +516,7 @@ def format_money(val):
     try:
         val = float(val)
         if pd.isna(val): return ""
-        return f"\( {val:,.2f}" if val >= 0 else f"- \){-val:,.2f}"
+        return f"${val:,.2f}" if val >= 0 else f"-${-val:,.2f}"
     except:
         return ""
 
@@ -667,6 +637,7 @@ def glossy_header(title: str, icon_svg: str):
 # ====================== PAGES ======================
 with main_container.container(key=f"page_{st.session_state.page}_{st.session_state.ui_version}"):
     if st.session_state.page == "Home":
+        # === ORIGINAL HEADER RESTORED: using the green grid SVG icon (no custom logo.png in the card) ===
         glossy_header("Portfolio Dashboard", DASHBOARD_ICON)
 
         df_port, total_value, total_pnl, total_pnl_pct = calculate_portfolio(st.session_state.crypto_df)
