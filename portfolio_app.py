@@ -33,12 +33,12 @@ st.markdown("""
     margin-bottom: 18px !important;
 }
 
-/* === TRANSACTION CARDS - narrower, perfectly spaced, white text === */
+/* === TRANSACTION CARDS - narrower, perfectly spaced, white text, no gray bars === */
 .transaction-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
     gap: 18px;
-    padding: 0 12px;           /* extra side padding so cards don't touch edge */
+    padding: 0 16px;           /* extra side padding - cards no longer cut off */
 }
 .transaction-card {
     background: #0f172a;
@@ -638,6 +638,14 @@ def format_holdings(val, ticker=None):
     except:
         return str(val)
 
+def format_percent(val):
+    try:
+        val = float(val)
+        if pd.isna(val): return ""
+        return f"{val:.2f}%"
+    except:
+        return ""
+
 # ====================== PORTFOLIO CALC ======================
 def calculate_portfolio(crypto_df):
     if 'last_known_prices' not in st.session_state:
@@ -742,6 +750,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
         
         coin_list = [t for t in df_port['Ticker'] if t != 'USDC']
         
+        # Pre-compute formatted values to avoid any NameError inside f-string
         cards_html = ""
         for _, r in df_port.iterrows():
             pnl = r['PnL']
@@ -753,6 +762,9 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
             onclick = f"onclick=\"switchToTabAndScroll({coin_list.index(ticker)})\" " if ticker != 'USDC' else ""
             row_class = "clickable-row" if ticker != 'USDC' else ""
             logo_url = get_ticker_logo(ticker)
+            
+            pnl_pct_formatted = format_percent(abs(r['PnL %'])) if pd.notna(r['PnL %']) else ""
+            
             cards_html += f"""
 <div class="coin-card {row_class}" data-glow="{glow_color}" {onclick}>
     <div class="card-header">
@@ -763,7 +775,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
         <div class="label-value-row"><span class="label">Holdings</span><span class="value">{format_holdings(r['Holdings'], r['Ticker'])}</span></div>
         <div class="label-value-row"><span class="label">Invested</span><span class="value">{format_money(r['USDC'])}</span></div>
         <div class="label-value-row"><span class="label">PnL</span><span class="value" style="color:{pnl_color};">{arrow} {format_money(abs(pnl) if pd.notna(pnl) else "")}</span></div>
-        <div class="label-value-row"><span class="label">PnL %</span><span class="value" style="color:{pnl_color};">{arrow} {format_percent(abs(r['PnL %']) if pd.notna(r['PnL %']) else "")}</span></div>
+        <div class="label-value-row"><span class="label">PnL %</span><span class="value" style="color:{pnl_color};">{arrow} {pnl_pct_formatted}</span></div>
         <div class="label-value-row total"><span class="label">Value</span><span class="value total-value">{format_money(r['Value'])}</span></div>
     </div>
 </div>"""
@@ -903,11 +915,11 @@ document.querySelectorAll('.coin-card').forEach(div => {{
                     else:
                         st.error(f"📉 Could not load {coin} chart. Try the **Refresh** button in sidebar.")
     
-    # ====================== CRYPTO TRANSACTIONS - FIXED & POLISHED ======================
+    # ====================== CRYPTO TRANSACTIONS - FINAL POLISHED VERSION ======================
     elif st.session_state.page == "Crypto Transactions":
         glossy_header("Crypto Transactions", CRYPTO_ICON)
         
-        # Hidden triggers for JS communication
+        # Hidden triggers for JS → Python
         delete_trigger = st.text_input("delete_trigger", value=st.session_state.delete_trigger, label_visibility="collapsed", key="delete_trigger_hidden")
         edit_trigger = st.text_input("edit_trigger", value=st.session_state.edit_trigger, label_visibility="collapsed", key="edit_trigger_hidden")
         
@@ -961,7 +973,7 @@ document.querySelectorAll('.coin-card').forEach(div => {{
     </div>
     <div class="transaction-content">
         <div><small>Invested</small><br><strong>{invested}</strong></div>
-        <div><small>Amount</small><br><strong class="transaction-amount-ticker">{amount_val} <span style="color:#aaa;font-size:0.9rem;">{r['Ticker']}</span></strong></div>
+        <div><small>Amount</small><br><strong class="transaction-amount-ticker">{amount_val} {r['Ticker']}</strong></div>
         <div><small>Price</small><br><strong>{price}</strong></div>
     </div>
     <div class="transaction-buttons">
@@ -976,7 +988,7 @@ document.querySelectorAll('.coin-card').forEach(div => {{
 <head>
 <style>
 body {{ background: transparent; margin: 0; padding: 0; }}
-.transaction-grid {{ display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 18px; padding: 0 12px; }}
+.transaction-grid {{ display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 18px; padding: 0 16px; }}
 .transaction-card {{ background: #0f172a; border-radius: 20px; padding: 20px; box-shadow: 0 6px 20px rgba(0,0,0,0.3); transition: all 0.25s ease; }}
 .transaction-card:hover {{ transform: translateY(-4px); box-shadow: 0 12px 30px rgba(0, 255, 157, 0.3); }}
 .transaction-header {{ display: flex; align-items: center; gap: 14px; margin-bottom: 18px; }}
@@ -1021,7 +1033,7 @@ function editTransaction(i) {{
 """
         components.html(full_html, height=680, scrolling=True)
         
-        # Edit form
+        # Edit form (opens below the cards)
         if 'editing_row_crypto' in st.session_state:
             edit_idx = st.session_state.editing_row_crypto
             row = st.session_state.crypto_df.loc[edit_idx]
