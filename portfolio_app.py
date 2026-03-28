@@ -17,10 +17,11 @@ st.set_page_config(page_title="Portfolio", layout="wide", page_icon="logo.png")
 # ====================== GLOBAL CSS (Polished + Lower Intensity Glow) ======================
 st.markdown("""
 <style>
-/* ====================== GLOBAL LAYOUT ====================== */
+/* ====================== GLOBAL LAYOUT - CLOSER TO EDGES ====================== */
 .stApp {
     background: linear-gradient(180deg, #0f1724 0%, #0a0f1c 100%) !important;
 }
+/* Remove excessive Streamlit default padding - content hugs the edges */
 .main .block-container,
 .stMain .block-container,
 div[data-testid="stMainBlockContainer"] {
@@ -29,6 +30,7 @@ div[data-testid="stMainBlockContainer"] {
     padding-top: 0px !important;
     max-width: 100% !important;
 }
+/* Slightly more breathing room on very wide screens */
 @media (min-width: 1200px) {
     .main .block-container,
     div[data-testid="stMainBlockContainer"] {
@@ -36,6 +38,7 @@ div[data-testid="stMainBlockContainer"] {
         padding-right: 18px !important;
     }
 }
+/* Mobile - comfortable but much closer to edges */
 @media (max-width: 768px) {
     .main .block-container,
     div[data-testid="stMainBlockContainer"] {
@@ -43,8 +46,12 @@ div[data-testid="stMainBlockContainer"] {
         padding-right: 8px !important;
     }
 }
+/* Clean top spacing */
+.main, .block-container, .stMain {
+    padding-top: 0px !important;
+}
 
-/* === COIN CARDS - LOWER INTENSITY GLOW (as requested) === */
+/* === COIN CARDS - LOWER INTENSITY + SMALLER GLOW RADIUS === */
 .coin-card {
     background: #0f172a;
     padding: 16px;
@@ -61,7 +68,7 @@ div[data-testid="stMainBlockContainer"] {
 }
 .coin-card:hover {
     transform: translateY(-3px);
-    box-shadow: 0 0 16px 3px var(--glow) !important;   /* Lower intensity + smaller radius */
+    box-shadow: 0 0 16px 3px var(--glow) !important;   /* Reduced intensity & radius */
     z-index: 10;
 }
 
@@ -113,7 +120,7 @@ div[data-testid="stMainBlockContainer"] {
     .coin-card { padding: 14px; }
 }
 
-/* Transaction Cards */
+/* === TRANSACTION CARDS === */
 .transaction-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(380px, 1fr));
@@ -136,7 +143,91 @@ div[data-testid="stMainBlockContainer"] {
     box-shadow: 0 12px 30px rgba(0, 255, 157, 0.3);
 }
 
-/* Glossy Elements */
+/* Main header row */
+.transaction-main-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 16px;
+}
+.transaction-left {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    flex: 1;
+}
+.transaction-header img {
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    object-fit: contain;
+}
+.transaction-ticker {
+    font-size: 1.28rem;
+    font-weight: 700;
+    color: #ffffff;
+    line-height: 1.05;
+}
+.transaction-date {
+    color: #aaa;
+    font-size: 0.92rem;
+    margin-top: 2px;
+}
+.transaction-values {
+    display: flex;
+    gap: 24px;
+    text-align: right;
+    font-size: 1.02rem;
+}
+.transaction-values div {
+    min-width: 88px;
+}
+.transaction-values small {
+    color: #aaa;
+    font-size: 0.82rem;
+    font-weight: 500;
+    display: block;
+}
+.transaction-values strong {
+    font-weight: 700;
+    color: #ffffff;
+}
+.transaction-amount {
+    font-size: 1.04rem;
+    font-weight: 700;
+    color: #ffffff;
+}
+.transaction-buttons {
+    display: flex;
+    gap: 12px;
+    margin-top: auto;
+}
+.transaction-buttons button {
+    flex: 1;
+    padding: 10px 14px;
+    border: none;
+    border-radius: 11px;
+    font-weight: 700;
+    font-size: 0.95rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+.transaction-buttons .delete-btn {
+    background: #e63939;
+    color: white;
+}
+.transaction-buttons .delete-btn:hover {
+    background: #c1121f;
+}
+.transaction-buttons .edit-btn {
+    background: #00b894;
+    color: #0f1724;
+}
+.transaction-buttons .edit-btn:hover {
+    background: #00a17a;
+}
+
+/* Glossy Header & Boxes */
 .glossy-header {
     position: relative;
     overflow: hidden;
@@ -279,15 +370,14 @@ def save_crypto(df):
 def save_fiat(df):
     df.to_json(FIAT_JSON, orient="records", indent=2)
 
-# ====================== [All helper functions: get_with_retry, get_all_cryptocompare_prices, get_daily_open, get_cryptocompare_ohlc, get_ticker_logo, get_ticker_color, format_money, format_holdings, format_percent, calculate_portfolio] ======================
-# (These are unchanged from your original code - included fully below for completeness)
-
+# ====================== CRYPTOCOMPARE MAPPING ======================
 CRYPTOCOMPARE_SYMBOL_MAP = {
     'BTC': 'BTC', 'ETH': 'ETH', 'SOL': 'SOL', 'HBAR': 'HBAR',
     'XRP': 'XRP', 'BNB': 'BNB', 'TRX': 'TRX', 'LINK': 'LINK',
     'SUI': 'SUI', 'USDC': 'USDC',
 }
 
+# ====================== HELPER: RETRY WRAPPER ======================
 def get_with_retry(url: str, headers: dict, timeout: int = 12, retries: int = 4) -> dict | None:
     for attempt in range(retries):
         try:
@@ -300,6 +390,7 @@ def get_with_retry(url: str, headers: dict, timeout: int = 12, retries: int = 4)
             time.sleep(1.3 ** attempt)
     return None
 
+# ====================== LIVE PRICE FUNCTION ======================
 @st.cache_data(ttl=15, show_spinner=False)
 def get_all_cryptocompare_prices(tickers, refresh_key=0):
     prices = {"USDC": 1.0}
@@ -337,6 +428,7 @@ def get_all_cryptocompare_prices(tickers, refresh_key=0):
             continue
     return prices
 
+# ====================== DAILY OPEN PRICE FUNCTION ======================
 @st.cache_data(ttl=300, show_spinner=False)
 def get_daily_open(ticker: str, refresh_key=0):
     sym = CRYPTOCOMPARE_SYMBOL_MAP.get(ticker.upper())
@@ -352,6 +444,7 @@ def get_daily_open(ticker: str, refresh_key=0):
     except:
         return 0.0
 
+# ====================== CHART FUNCTION ======================
 @st.cache_data(ttl=80, show_spinner=False)
 def get_cryptocompare_ohlc(ticker: str, candle: str, refresh_key=0):
     sym = CRYPTOCOMPARE_SYMBOL_MAP.get(ticker.upper())
@@ -383,6 +476,7 @@ def get_cryptocompare_ohlc(ticker: str, candle: str, refresh_key=0):
     except:
         return None
 
+# ====================== LOGOS & COLORS ======================
 def get_ticker_logo(ticker: str) -> str:
     ticker = ticker.upper()
     known = {
@@ -413,6 +507,7 @@ def get_ticker_color(ticker: str) -> str:
         return known[ticker]
     return f"#{hashlib.md5(ticker.encode()).hexdigest()[:6]}"
 
+# ====================== FORMATTING ======================
 def format_money(val):
     try:
         val = float(val)
@@ -439,6 +534,7 @@ def format_percent(val):
     except:
         return ""
 
+# ====================== PORTFOLIO CALC ======================
 def calculate_portfolio(crypto_df):
     if 'last_known_prices' not in st.session_state:
         st.session_state.last_known_prices = {"USDC": 1.0}
@@ -693,9 +789,10 @@ document.querySelectorAll('.coin-card').forEach(div => {{
                     else:
                         st.error(f"📉 Could not load {coin} chart. Try the **Refresh** button in sidebar.")
 
+    # ====================== CRYPTO TRANSACTIONS ======================
     elif st.session_state.page == "Crypto Transactions":
         glossy_header("Crypto Transactions", CRYPTO_ICON)
-        # ... (your full Crypto Transactions page code - kept exactly as original)
+      
         delete_trigger = st.text_input("delete_trigger", value=st.session_state.delete_trigger, label_visibility="collapsed", key="delete_trigger_hidden")
         edit_trigger = st.text_input("edit_trigger", value=st.session_state.edit_trigger, label_visibility="collapsed", key="edit_trigger_hidden")
       
@@ -843,6 +940,7 @@ function editTransaction(i) {{
                     st.success(f"✅ Added {amount} {ticker}")
                     st.rerun()
 
+    # ====================== FIAT TRANSACTIONS ======================
     elif st.session_state.page == "Fiat Transactions":
         total_czk = pd.to_numeric(st.session_state.fiat_df['CZK'], errors='coerce').fillna(0).sum()
         total_eur = pd.to_numeric(st.session_state.fiat_df['EUR'], errors='coerce').fillna(0).sum()
