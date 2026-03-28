@@ -14,7 +14,7 @@ import textwrap
 
 st.set_page_config(page_title="Portfolio", layout="wide", initial_sidebar_state="expanded")
 
-# ====================== CUSTOM CSS ======================
+# ====================== CUSTOM CSS (FINAL VERSION) ======================
 css = textwrap.dedent("""
 <style>
     .stApp {
@@ -43,6 +43,11 @@ css = textwrap.dedent("""
                     inset 0 1px 0 rgba(255,255,255,0.12);
         text-align: center;
         min-width: 110px;
+        transition: all 0.25s ease;
+    }
+    .glossy-box:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 12px 30px rgba(0,255,157,0.25);
     }
     .glossy-box > div:first-child {
         font-size: 14px;
@@ -142,16 +147,17 @@ css = textwrap.dedent("""
         .tx-usdc { font-size: 1.3rem; }
         .tx-ticker-amount { font-size: 1.15rem; }
     }
-    /* HIDE DUPLICATE BUTTONS BUT KEEP THEM CLICKABLE */
+    /* COMPLETELY HIDE DUPLICATE BUTTONS */
     .stButton button[key*="edit_crypto_"],
     .stButton button[key*="del_crypto_"] {
         display: none !important;
         visibility: hidden !important;
-        height: 0 !important;
-        width: 0 !important;
+        height: 0px !important;
+        width: 0px !important;
         margin: 0 !important;
         padding: 0 !important;
         overflow: hidden !important;
+        position: absolute !important;
     }
     .price-pills-container {
         display: flex !important;
@@ -404,7 +410,8 @@ def format_money(val):
     try:
         val = float(val)
         if pd.isna(val): return ""
-        return f"\( {val:,.2f}" if val >= 0 else f"- \){-val:,.2f}"
+        # ESCAPE $ to prevent LaTeX math mode
+        return (f"\( {val:,.2f}" if val >= 0 else f"- \){-val:,.2f}").replace("$", "&#36;")
     except:
         return ""
 
@@ -413,11 +420,11 @@ def format_crypto_price(val):
         val = float(val)
         if pd.isna(val): return ""
         if val >= 1:
-            return f"${val:,.2f}"
+            return f"\( {val:,.2f}".replace(" \)", "&#36;")
         elif val >= 0.01:
-            return f"${val:,.4f}"
+            return f"\( {val:,.4f}".replace(" \)", "&#36;")
         else:
-            return f"${val:,.6f}"
+            return f"\( {val:,.6f}".replace(" \)", "&#36;")
     except:
         return ""
 
@@ -701,7 +708,7 @@ document.querySelectorAll('.coin-card').forEach(div => {{
                     else:
                         st.error(f"📉 Could not load {coin} chart. Try the **Refresh** button in sidebar.")
 
-    # ====================== CRYPTO TRANSACTIONS ======================
+    # ====================== CRYPTO TRANSACTIONS (FINAL FIXED) ======================
     elif st.session_state.page == "Crypto Transactions":
         glossy_header("Crypto Transactions", CRYPTO_ICON)
         df_display = st.session_state.crypto_df.copy()
@@ -710,8 +717,8 @@ document.querySelectorAll('.coin-card').forEach(div => {{
 
         st.markdown('<div class="transaction-grid">', unsafe_allow_html=True)
         for i, r in df_display.iterrows():
-            usdc_str = format_money(r['USDC']).replace('$', '&#36;')
-            price_str = format_money(r['Price']).replace('$', '&#36;')
+            usdc_str = format_money(r['USDC'])
+            price_str = format_money(r['Price'])
             card_html = f"""
             <div class="transaction-card">
                 <div class="tx-header">
@@ -733,7 +740,7 @@ document.querySelectorAll('.coin-card').forEach(div => {{
             st.markdown(card_html, unsafe_allow_html=True)
         st.markdown('</div>', unsafe_allow_html=True)
 
-        # Hidden buttons (kept in DOM so JS can click them)
+        # Hidden buttons (kept in DOM for JS to click)
         for i, r in df_display.iterrows():
             col1, col2 = st.columns([1, 1], gap="small")
             with col1:
