@@ -14,7 +14,7 @@ import textwrap
 
 st.set_page_config(page_title="Portfolio", layout="wide", initial_sidebar_state="expanded")
 
-# ====================== CUSTOM CSS (hover + glow restored, buttons fixed) ======================
+# ====================== CUSTOM CSS ======================
 css = textwrap.dedent("""
 <style>
     .stApp { background: linear-gradient(180deg, #0f1724, #1e2a44); }
@@ -70,7 +70,7 @@ css = textwrap.dedent("""
         .glossy-box > div:first-child { font-size: 12px !important; }
         .glossy-box > div:last-child { font-size: 21px !important; }
     }
-    /* TRANSACTION CARDS - hover & glow restored */
+    /* TRANSACTION CARDS */
     .transaction-grid {
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
@@ -385,7 +385,7 @@ def get_ticker_color(ticker: str) -> str:
         return known[ticker]
     return f"#{hashlib.md5(ticker.encode()).hexdigest()[:6]}"
 
-# ====================== FORMATTING ======================
+# ====================== FORMATTING (ESCAPED $) ======================
 def format_money(val):
     try:
         val = float(val)
@@ -514,7 +514,7 @@ def glossy_header(title: str, icon_svg: str):
 
 with main_container.container(key=f"page_{st.session_state.page}_{st.session_state.ui_version}"):
     if st.session_state.page == "Home":
-        # === ORIGINAL HOME PAGE RESTORED EXACTLY ===
+        # === EXACT ORIGINAL HOME PAGE (restored) ===
         glossy_header("Portfolio Dashboard", DASHBOARD_ICON)
 
         df_port, total_value, total_pnl, total_pnl_pct = calculate_portfolio(st.session_state.crypto_df)
@@ -690,7 +690,7 @@ document.querySelectorAll('.coin-card').forEach(div => {{
                     else:
                         st.error(f"📉 Could not load {coin} chart. Try the **Refresh** button in sidebar.")
 
-    # ====================== CRYPTO TRANSACTIONS (FIXED CARDS) ======================
+    # ====================== CRYPTO TRANSACTIONS (CLEAN CARDS WITH WORKING BUTTONS) ======================
     elif st.session_state.page == "Crypto Transactions":
         glossy_header("Crypto Transactions", CRYPTO_ICON)
         df_display = st.session_state.crypto_df.copy()
@@ -722,7 +722,7 @@ document.querySelectorAll('.coin-card').forEach(div => {{
             st.markdown(card_html, unsafe_allow_html=True)
         st.markdown('</div>', unsafe_allow_html=True)
 
-        # Hidden buttons (JS triggers these)
+        # Hidden native buttons (JS clicks them)
         for i, r in df_display.iterrows():
             col1, col2 = st.columns([1, 1], gap="small")
             with col1:
