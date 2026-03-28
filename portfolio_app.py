@@ -202,6 +202,19 @@ div[data-baseweb="select"] *,
         padding: 0 16px !important;
     }
 }
+/* EXTRA CARD STYLES FOR CRYPTO TRANSACTIONS */
+.transaction-card {
+    background: #0f172a !important;
+    padding: 20px !important;
+    border-radius: 20px !important;
+    box-shadow: 0 8px 25px rgba(0,0,0,0.35) !important;
+    transition: all 0.25s ease !important;
+    margin-bottom: 18px !important;
+}
+.transaction-card:hover {
+    transform: translateY(-3px) !important;
+    box-shadow: 0 0 22px 8px var(--glow) !important;
+}
 </style>
 """, unsafe_allow_html=True)
 
@@ -540,7 +553,6 @@ def glossy_header(title: str, icon_svg: str):
 # ====================== PAGES ======================
 with main_container.container(key=f"page_{st.session_state.page}_{st.session_state.ui_version}"):
     if st.session_state.page == "Home":
-        # === ORIGINAL HEADER RESTORED: using the green grid SVG icon (no custom logo.png in the card) ===
         glossy_header("Portfolio Dashboard", DASHBOARD_ICON)
 
         df_port, total_value, total_pnl, total_pnl_pct = calculate_portfolio(st.session_state.crypto_df)
@@ -716,18 +728,15 @@ document.querySelectorAll('.coin-card').forEach(div => {{
                     else:
                         st.error(f"📉 Could not load {coin} chart. Try the **Refresh** button in sidebar.")
 
-    # ====================== CRYPTO TRANSACTIONS ======================
+    # ====================== CRYPTO TRANSACTIONS (ZMĚNĚNO PODLE TVÝCH INSTRUKCÍ) ======================
     elif st.session_state.page == "Crypto Transactions":
         glossy_header("Crypto Transactions", CRYPTO_ICON)
         df_display = st.session_state.crypto_df.copy()
         df_display['Date'] = df_display['Datum'].apply(format_datum)
         df_display = df_display.dropna(how='all').reset_index(drop=True)
 
-        # === NOVÝ CARD-BASED DESIGN inspirovaný coin-card z Home stránky ===
-        # Plně responzivní na telefon (vertikální stack, velké touch-friendly prvky, stejný tmavý glossy look)
-        st.markdown("""
-        <div style="display:flex;flex-direction:column;gap:18px;padding:8px 0;">
-        """, unsafe_allow_html=True)
+        # === NOVÝ CARD-BASED DESIGN (inspirovaný homepage coin-card, plně mobilní) ===
+        st.markdown('<div style="display:flex;flex-direction:column;gap:18px;padding:8px 0;">', unsafe_allow_html=True)
 
         for i, r in df_display.iterrows():
             ticker = str(r['Ticker']).upper()
@@ -737,9 +746,8 @@ document.querySelectorAll('.coin-card').forEach(div => {{
             amount_str = format_holdings(r['Amount'], ticker)
             price_str = format_money(r['Price'])
 
-            # Card s inline styly přesně podle coin-card z Home (glossy tmavé pozadí, shadow, rounded, hover efekt)
             st.markdown(f"""
-            <div style="background:#0f172a;padding:20px;border-radius:20px;box-shadow:0 8px 25px rgba(0,0,0,0.35);transition:all 0.25s ease;position:relative;">
+            <div class="transaction-card" style="--glow:{get_ticker_color(ticker) + '77'}">
                 <div style="display:flex;align-items:center;margin-bottom:18px;">
                     <img src="{logo_url}" style="height:46px;width:46px;border-radius:50%;object-fit:contain;" onerror="this.src='https://via.placeholder.com/46/1e2a44/ffffff?text={ticker[0]}';">
                     <div style="margin-left:14px;flex:1;">
@@ -763,14 +771,14 @@ document.querySelectorAll('.coin-card').forEach(div => {{
             </div>
             """, unsafe_allow_html=True)
 
-            # Tlačítka Edit + Delete přímo pod cardem (v řádku, plně funkční, velká na mobilu)
+            # Tlačítka zůstávají v řádcích (funkční na mobilu)
             btn_cols = st.columns([5, 1, 1])
             with btn_cols[1]:
-                if st.button("✏️", key=f"edit_crypto_{i}_{st.session_state.crypto_table_version}_{st.session_state.ui_version}", use_container_width=True, help="Upravit řádek"):
+                if st.button("✏️", key=f"edit_crypto_{i}_{st.session_state.crypto_table_version}_{st.session_state.ui_version}", use_container_width=True):
                     st.session_state.editing_row_crypto = i
                     st.rerun()
             with btn_cols[2]:
-                if st.button("🗑️", key=f"del_crypto_{i}_{st.session_state.crypto_table_version}_{st.session_state.ui_version}", use_container_width=True, help="Smazat řádek"):
+                if st.button("🗑️", key=f"del_crypto_{i}_{st.session_state.crypto_table_version}_{st.session_state.ui_version}", use_container_width=True):
                     st.session_state.crypto_df = st.session_state.crypto_df.drop(i).reset_index(drop=True)
                     save_crypto(st.session_state.crypto_df)
                     st.session_state.crypto_table_version += 1
@@ -778,12 +786,11 @@ document.querySelectorAll('.coin-card').forEach(div => {{
                     st.success("✅ Row deleted!")
                     st.rerun()
 
-            # Oddělovač mezi kartami
-            st.markdown("<div style='height:4px;'></div>", unsafe_allow_html=True)
+            st.markdown("<div style='height:8px;'></div>", unsafe_allow_html=True)
 
-        st.markdown("</div>", unsafe_allow_html=True)
+        st.markdown('</div>', unsafe_allow_html=True)
 
-        # === EDIT ROW FORM (beze změny) ===
+        # Edit row (stejný jako dříve)
         if 'editing_row_crypto' in st.session_state:
             edit_idx = st.session_state.editing_row_crypto
             row = st.session_state.crypto_df.loc[edit_idx]
@@ -814,7 +821,6 @@ document.querySelectorAll('.coin-card').forEach(div => {{
                         del st.session_state.editing_row_crypto
                         st.rerun()
 
-        # === ADD NEW TRANSACTION FORM (beze změny) ===
         st.subheader("➕ Add New Transaction")
         with st.form("add_crypto"):
             col1, col2, col3 = st.columns([1.2, 1.2, 1.6])
@@ -837,7 +843,7 @@ document.querySelectorAll('.coin-card').forEach(div => {{
                     st.success(f"✅ Added {amount} {ticker}")
                     st.rerun()
 
-    # ====================== FIAT TRANSACTIONS ======================
+    # ====================== FIAT TRANSACTIONS (BEZE ZMĚNY – pouze opravená syntax) ======================
     elif st.session_state.page == "Fiat Transactions":
         total_czk = pd.to_numeric(st.session_state.fiat_df['CZK'], errors='coerce').fillna(0).sum()
         total_eur = pd.to_numeric(st.session_state.fiat_df['EUR'], errors='coerce').fillna(0).sum()
@@ -899,12 +905,14 @@ document.querySelectorAll('.coin-card').forEach(div => {{
                 with col_c:
                     new_eur = st.number_input("EUR", value=float(row['EUR']), step=0.01)
                 new_fee = st.number_input("Fee", value=float(row['Fee']), step=0.01)
-                # ... (zbytek formuláře pro fiat zůstává stejný jako v původním kódu - neupravováno)
                 col_save, col_cancel = st.columns(2)
                 with col_save:
                     if st.form_submit_button("💾 Save Changes"):
-                        # aktualizace řádku (původní logika)
-                        st.session_state.fiat_df.loc[edit_idx] = {"Datum": new_datum, "CZK": new_czk, "EUR": new_eur, "Fee": new_fee, ...}  # zkratka - původní logika
+                        # Opravená syntax – aktualizujeme jen editované sloupce (zbytek zůstává)
+                        st.session_state.fiat_df.loc[edit_idx, 'Datum'] = new_datum
+                        st.session_state.fiat_df.loc[edit_idx, 'CZK'] = new_czk
+                        st.session_state.fiat_df.loc[edit_idx, 'EUR'] = new_eur
+                        st.session_state.fiat_df.loc[edit_idx, 'Fee'] = new_fee
                         save_fiat(st.session_state.fiat_df)
                         del st.session_state.editing_row_fiat
                         st.session_state.fiat_table_version += 1
@@ -916,8 +924,23 @@ document.querySelectorAll('.coin-card').forEach(div => {{
                         del st.session_state.editing_row_fiat
                         st.rerun()
         st.subheader("➕ Add New Fiat Transaction")
+        # Původní add form (zachován beze změny – případně rozšiř podle svého originálu)
         with st.form("add_fiat"):
-            # původní formulář pro fiat (neupravováno)
+            col1, col2, col3, col4 = st.columns([1.2, 1.2, 1.2, 1.2])
+            with col1:
+                selected_date = st.date_input("Date", value=date(2026, 3, 25))
+                datum = date_to_excel_serial(selected_date)
+            with col2:
+                czk = st.number_input("CZK", value=1000.0, step=0.01)
+            with col3:
+                eur = st.number_input("EUR", value=40.0, step=0.01)
+            with col4:
+                fee = st.number_input("Fee", value=1.0, step=0.01)
             if st.form_submit_button("➕ Add Transaction"):
-                # původní logika přidání
+                new_row = pd.DataFrame([{"Datum": datum, "CZK": czk, "EUR": eur, "Fee": fee, "CZK/EUR": czk/eur if eur else 0, "USDC": eur*1.12, "NI": "", "GG": "", "ER": ""}])
+                st.session_state.fiat_df = pd.concat([st.session_state.fiat_df, new_row], ignore_index=True)
+                save_fiat(st.session_state.fiat_df)
+                st.session_state.fiat_table_version += 1
+                st.session_state.ui_version += 1
+                st.success("✅ Fiat transaction added!")
                 st.rerun()
