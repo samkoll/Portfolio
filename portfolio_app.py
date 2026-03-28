@@ -13,22 +13,27 @@ import streamlit.components.v1 as components
 
 st.set_page_config(page_title="Crypto Portfolio", layout="wide", initial_sidebar_state="expanded")
 
-# ====================== STRONGEST CUSTOM CSS (ALL HEADERS FIXED) ======================
+# ====================== STRONGEST CUSTOM CSS (ALL TOP HEADERS FIXED + ZERO GAP) ======================
 st.markdown("""
 <style>
-    /* === STRONGEST GLOSSY-HEADER (Portfolio Dashboard + Crypto Transactions + Fiat Transactions titles) === */
+    /* === ABSOLUTE TOP + STRONGEST GLOSSY-HEADER (Portfolio Dashboard / Crypto Transactions / Fiat Transactions titles) === */
     .glossy-header {
         background: #0f172a !important;
         padding: 24px 30px !important;
         border-radius: 20px !important;
-        box-shadow: 0 8px 25px rgba(0,0,0,0.35) !important;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.45) !important;
         display: flex !important;
         align-items: center !important;
         font-size: 28px !important;
         font-weight: 700 !important;
         color: #ffffff !important;
-        margin-bottom: 30px !important;
         letter-spacing: 1.1px !important;
+        margin-top: 8px !important;     /* minimal top spacing */
+        margin-bottom: 20px !important;
+    }
+    .glossy-header:hover {
+        box-shadow: 0 14px 35px rgba(0,0,0,0.55) !important;
+        transform: translateY(-2px) !important;
     }
 
     /* === STRONGEST GLOSSY-BOX (Total Value / PnL / PnL % cards) === */
@@ -36,11 +41,15 @@ st.markdown("""
         background: #0f172a !important;
         padding: 20px 24px !important;
         border-radius: 20px !important;
-        box-shadow: 0 8px 25px rgba(0,0,0,0.35) !important;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.45) !important;
         text-align: center !important;
         display: flex !important;
         flex-direction: column !important;
         justify-content: center !important;
+    }
+    .glossy-box:hover {
+        box-shadow: 0 14px 35px rgba(0,0,0,0.55) !important;
+        transform: translateY(-2px) !important;
     }
     .glossy-box > div:first-child {
         font-size: 15px !important;
@@ -74,16 +83,19 @@ st.markdown("""
         margin-bottom: 4px !important;
     }
 
-    /* MOBILE OVERRIDES (strongest possible) */
+    /* ZERO TOP GAP ON MOBILE + DESKTOP - header cards start right at the top */
+    .stApp {
+        padding-top: 0 !important;
+    }
     @media (max-width: 700px) {
-        .stApp { padding-top: 75px !important; }
-        .glossy-header { margin-top: 52px !important; margin-bottom: 35px !important; padding: 24px 20px !important; font-size: 24px !important; }
+        .stApp { padding-top: 0 !important; }
+        .glossy-header { margin-top: 8px !important; margin-bottom: 20px !important; padding: 20px 24px !important; font-size: 24px !important; }
         .glossy-box { min-width: 98px !important; padding: 18px 14px !important; }
         .glossy-box > div:first-child { font-size: 12px !important; }
         .glossy-box > div:last-child { font-size: 21px !important; }
     }
 
-    /* === EXACT coin-grid + coin-card (same as original Home page) === */
+    /* === EXACT coin-grid + coin-card (same as original Home page - with gloss & hover) === */
     .coin-grid {
         display: grid !important;
         grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)) !important;
@@ -123,7 +135,7 @@ st.markdown("""
         .coin-card { padding: 14px !important; }
     }
 
-    /* Price pills (kept for charts) */
+    /* Price pills (kept) */
     .price-pills-container { display: flex !important; gap: 6px !important; flex-wrap: nowrap !important; overflow-x: auto !important; padding-bottom: 4px; scrollbar-width: none; }
     .price-pill, .avg-pill, .daily-pill {
         padding: 7px 14px !important;
