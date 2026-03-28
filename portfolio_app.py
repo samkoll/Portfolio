@@ -13,278 +13,142 @@ import streamlit.components.v1 as components
 
 st.set_page_config(page_title="Crypto Portfolio", layout="wide", initial_sidebar_state="expanded")
 
-# ====================== CUSTOM CSS - EXACT ORIGINAL FROM YOUR FIRST MESSAGE ======================
+# ====================== CUSTOM CSS - MAXIMUM SPECIFICITY FOR GLOSSY-BOX + EXACT COIN-GRID ======================
 st.markdown("""
 <style>
-    letter-spacing: 1.1px;
-    color: #e0e0e0;
-    opacity: 0.9;
-    margin-bottom: 6px;
-    line-height: 1.2;
-}
-.glossy-box > div:first-child {
-    font-size: 15px;
-    font-weight: 600;
-    letter-spacing: 1.1px;
-    color: #e0e0e0;
-    opacity: 0.9;
-    margin-bottom: 6px;
-    line-height: 1.2;
-}
-.glossy-box > div:last-child {
-    font-size: 27px;
-    font-weight: 700;
-    line-height: 1.05;
-    color: #ffffff;
-}
-/* Fee lines in Fiat summary */
-.fee-line {
-    font-size: 1.35rem;
-    font-weight: 700;
-    color: #ffffff;
-    line-height: 1.1;
-    margin-bottom: 4px;
-}
-/* MOBILE: Make header smaller */
-@media (max-width: 700px) {
-    .stApp {
-        padding-top: 75px !important;
-    }
-    .glossy-header {
-        margin-top: 52px !important;
-        margin-bottom: 35px !important;
-        padding: 24px 20px !important;
-        font-size: 24px !important;
-        min-height: 100px;
-    }
-}
-/* MOBILE RESPONSIVE FIX FOR THE 3 SUMMARY CARDS */
-@media (max-width: 600px) {
+    /* === STRONGEST GLOSSY-BOX (header cards on EVERY page) - this is the original look restored === */
     .glossy-box {
-        min-width: 98px !important;
-        padding: 18px 14px !important;
+        background: #0f172a !important;
+        padding: 20px 24px !important;
+        border-radius: 20px !important;
+        box-shadow: 0 8px 25px rgba(0,0,0,0.35) !important;
+        text-align: center !important;
     }
     .glossy-box > div:first-child {
-        font-size: 12px !important;
+        font-size: 15px !important;
+        font-weight: 600 !important;
+        letter-spacing: 1.1px !important;
+        color: #e0e0e0 !important;
+        opacity: 0.9 !important;
+        margin-bottom: 6px !important;
+        line-height: 1.2 !important;
     }
     .glossy-box > div:last-child {
-        font-size: 21px !important;
+        font-size: 27px !important;
+        font-weight: 700 !important;
+        line-height: 1.05 !important;
+        color: #ffffff !important;
     }
-}
-/* PRICE PILLS */
-.price-pills-container {
-    display: flex !important;
-    gap: 6px !important;
-    flex-wrap: nowrap !important;
-    overflow-x: auto !important;
-    padding-bottom: 4px;
-    scrollbar-width: none;
-}
-.price-pills-container::-webkit-scrollbar {
-    display: none;
-}
-.price-pill, .avg-pill, .daily-pill {
-    padding: 7px 14px !important;
-    border-radius: 9999px !important;
-    white-space: nowrap !important;
-    flex-shrink: 0;
-    background: #0f172a !important;
-    display: inline-flex;
-    align-items: center;
-    gap: 5px;
-    font-size: 1.05rem;
-    font-weight: 700;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.12);
-}
-.price-pill span:last-child,
-.avg-pill span:last-child {
-    font-size: 1.26rem;
-}
-.daily-pill {
-    color: #ff4d4d;
-    font-weight: 700;
-    padding: 4px 8px !important;
-    font-size: 0.88rem !important;
-}
-@media (max-width: 700px) {
-    .price-pills-container { gap: 4px !important; }
-    .price-pill, .avg-pill, .daily-pill { padding: 5px 10px !important; }
-    .daily-pill { padding: 3px 7px !important; font-size: 0.82rem !important; }
-    .price-pill span:first-child,
-    .avg-pill span:first-child { font-size: 0.92rem !important; }
-    .price-pill span:last-child,
-    .avg-pill span:last-child { font-size: 1.18rem !important; }
-}
-/* TIMEFRAME PILL */
-div[data-baseweb="select"] {
-    background: linear-gradient(90deg, #26334f, #1e2a44) !important;
-    border-radius: 9999px !important;
-    box-shadow: 0 6px 20px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.15) !important;
-    min-width: 148px !important;
-    max-width: 160px !important;
-    height: 39px !important;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
-}
-div[data-baseweb="select"] > div {
-    background: transparent !important;
-    border: none !important;
-    padding: 0 18px !important;
-    line-height: 1.35 !important;
-    display: flex !important;
-    align-items: center !important;
-    justify-content: space-between !important;
-    height: 100% !important;
-}
-div[data-baseweb="select"] *,
-div[data-baseweb="select"] span,
-div[data-baseweb="select"] [role="button"] span,
-div[data-baseweb="select"] [data-baseweb="select-value"] span,
-div[data-baseweb="select"] > div > div > div > div > div > span,
-div[data-baseweb="select"] > div > div > div > div > span {
-    color: #ffffff !important;
-    font-weight: 700 !important;
-    font-size: 1.16rem !important;
-    text-align: center !important;
-    white-space: nowrap !important;
-    display: inline-block !important;
-    visibility: visible !important;
-    opacity: 1 !important;
-    letter-spacing: 0.4px !important;
-    text-shadow: 0 1px 2px rgba(0,0,0,0.5) !important;
-    caret-color: transparent !important;
-    vertical-align: middle !important;
-}
-div[data-baseweb="select"] svg {
-    fill: #e0e0e0 !important;
-    margin-top: 0 !important;
-}
-/* Open menu */
-[data-baseweb="popover"] [data-baseweb="menu"] {
-    background-color: #26334f !important;
-    border-radius: 9999px !important;
-    box-shadow: 0 12px 30px rgba(0,0,0,0.6) !important;
-    padding: 8px 6px !important;
-    margin-top: 6px !important;
-    border: 2px solid #00ff9d !important;
-}
-[data-baseweb="option"] {
-    color: #e0e0e0 !important;
-    padding: 12px 24px !important;
-    border-radius: 9999px !important;
-    margin: 3px 4px !important;
-}
-[data-baseweb="option"][aria-selected="true"] {
-    background-color: #00ff9d !important;
-    color: #0f1724 !important;
-}
-[data-baseweb="option"]:hover {
-    background-color: #1e2a44 !important;
-}
-/* CURSOR FIX */
-.glossy-header *,
-.glossy-box *,
-.coin-card *,
-.price-pill *,
-.avg-pill *,
-.daily-pill *,
-div[data-baseweb="select"] *,
-.charts-header * {
-    cursor: pointer !important;
-}
-/* CHARTS HEADER */
-.charts-header {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 14px;
-    color: #ffffff;
-    font-weight: 700;
-    font-size: 23px;
-}
-@media (max-width: 700px) {
-    div[data-baseweb="select"] {
-        min-width: 142px !important;
-        max-width: 155px !important;
-        height: 37px !important;
-    }
-    div[data-baseweb="select"] > div {
-        padding: 0 16px !important;
-    }
-}
 
-/* === EXACT coin-grid + coin-card from original Home page (now used on Crypto Transactions) === */
-.coin-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-    gap: 14px;
-    padding: 32px 26px;
-    box-sizing: border-box;
-    background: transparent !important;
-}
-.coin-grid::-webkit-scrollbar {
-    display: none;
-}
-.coin-card {
-    background: #0f172a;
-    padding: 16px;
-    border-radius: 20px;
-    box-shadow: 0 6px 20px rgba(0,0,0,0.3);
-    transition: all 0.25s ease;
-    cursor: pointer;
-    position: relative;
-    z-index: 1;
-    outline: none !important;
-    -webkit-tap-highlight-color: transparent;
-    user-select: none;
-    -webkit-user-select: none;
-}
-.coin-card:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 0 22px 6px var(--glow) !important;
-    z-index: 10;
-}
-.card-header {
-    display: flex;
-    align-items: center;
-    margin-bottom: 14px;
-}
-.card-content {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-}
-.label-value-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    font-size: 0.95rem;
-}
-.label {
-    color: #aaa;
-    font-weight: 500;
-}
-.value {
-    font-weight: 600;
-}
-.total {
-    font-size: 1.18rem;
-    margin-top: 8px;
-    border-top: 1px solid rgba(255,255,255,0.12);
-    padding-top: 8px;
-}
-.total-value {
-    font-size: 1.28rem;
-}
-@media (max-width: 700px) {
+    /* Fee lines in Fiat summary */
+    .fee-line {
+        font-size: 1.35rem !important;
+        font-weight: 700 !important;
+        color: #ffffff !important;
+        line-height: 1.1 !important;
+        margin-bottom: 4px !important;
+    }
+
+    /* MOBILE: Make header smaller */
+    @media (max-width: 700px) {
+        .stApp { padding-top: 75px !important; }
+        .glossy-header {
+            margin-top: 52px !important;
+            margin-bottom: 35px !important;
+            padding: 24px 20px !important;
+            font-size: 24px !important;
+            min-height: 100px;
+        }
+    }
+    @media (max-width: 600px) {
+        .glossy-box { min-width: 98px !important; padding: 18px 14px !important; }
+        .glossy-box > div:first-child { font-size: 12px !important; }
+        .glossy-box > div:last-child { font-size: 21px !important; }
+    }
+
+    /* === EXACT coin-grid + coin-card from original Home page (used on Crypto Transactions) === */
     .coin-grid {
-        grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-        gap: 12px;
-        padding: 28px 24px;
+        display: grid !important;
+        grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)) !important;
+        gap: 14px !important;
+        padding: 32px 26px !important;
+        box-sizing: border-box !important;
+        background: transparent !important;
     }
+    .coin-grid::-webkit-scrollbar { display: none !important; }
+
     .coin-card {
-        padding: 14px;
+        background: #0f172a !important;
+        padding: 16px !important;
+        border-radius: 20px !important;
+        box-shadow: 0 6px 20px rgba(0,0,0,0.3) !important;
+        transition: all 0.25s ease !important;
+        cursor: pointer;
+        position: relative !important;
+        z-index: 1 !important;
+        outline: none !important;
+        -webkit-tap-highlight-color: transparent;
+        user-select: none;
+        -webkit-user-select: none;
     }
-}
+    .coin-card:hover {
+        transform: translateY(-3px) !important;
+        box-shadow: 0 0 22px 6px var(--glow) !important;
+        z-index: 10 !important;
+    }
+    .card-header { display: flex; align-items: center; margin-bottom: 14px; }
+    .card-content { display: flex; flex-direction: column; gap: 8px; }
+    .label-value-row { display: flex; justify-content: space-between; align-items: center; font-size: 0.95rem; }
+    .label { color: #aaa; font-weight: 500; }
+    .value { font-weight: 600; }
+    .total { font-size: 1.18rem; margin-top: 8px; border-top: 1px solid rgba(255,255,255,0.12); padding-top: 8px; }
+    .total-value { font-size: 1.28rem; }
+
+    @media (max-width: 700px) {
+        .coin-grid {
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)) !important;
+            gap: 12px !important;
+            padding: 28px 24px !important;
+        }
+        .coin-card { padding: 14px !important; }
+    }
+
+    /* PRICE PILLS */
+    .price-pills-container {
+        display: flex !important;
+        gap: 6px !important;
+        flex-wrap: nowrap !important;
+        overflow-x: auto !important;
+        padding-bottom: 4px;
+        scrollbar-width: none;
+    }
+    .price-pills-container::-webkit-scrollbar { display: none; }
+    .price-pill, .avg-pill, .daily-pill {
+        padding: 7px 14px !important;
+        border-radius: 9999px !important;
+        white-space: nowrap !important;
+        flex-shrink: 0;
+        background: #0f172a !important;
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        font-size: 1.05rem;
+        font-weight: 700;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.12);
+    }
+    .price-pill span:last-child, .avg-pill span:last-child { font-size: 1.26rem; }
+    .daily-pill { color: #ff4d4d; font-weight: 700; padding: 4px 8px !important; font-size: 0.88rem !important; }
+
+    /* TIMEFRAME PILL */
+    div[data-baseweb="select"] {
+        background: linear-gradient(90deg, #26334f, #1e2a44) !important;
+        border-radius: 9999px !important;
+        box-shadow: 0 6px 20px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.15) !important;
+        min-width: 148px !important;
+        max-width: 160px !important;
+        height: 39px !important;
+    }
+    div[data-baseweb="select"] * { color: #ffffff !important; font-weight: 700 !important; font-size: 1.16rem !important; }
 </style>
 """, unsafe_allow_html=True)
 
@@ -800,14 +664,13 @@ document.querySelectorAll('.coin-card').forEach(div => {{
                     else:
                         st.error(f"📉 Could not load {coin} chart. Try the **Refresh** button in sidebar.")
 
-    # ====================== CRYPTO TRANSACTIONS (exact same coin-grid as Home page) ======================
+    # ====================== CRYPTO TRANSACTIONS - EXACT SAME GRID AS HOME ======================
     elif st.session_state.page == "Crypto Transactions":
         glossy_header("Crypto Transactions", CRYPTO_ICON)
         df_display = st.session_state.crypto_df.copy()
         df_display['Date'] = df_display['Datum'].apply(format_datum)
         df_display = df_display.dropna(how='all').reset_index(drop=True)
 
-        # === EXACT same grid as Home page ===
         st.markdown('<div class="coin-grid">', unsafe_allow_html=True)
 
         for i, r in df_display.iterrows():
@@ -833,7 +696,7 @@ document.querySelectorAll('.coin-card').forEach(div => {{
             </div>
             """, unsafe_allow_html=True)
 
-            # ⋯ rollout menu INSIDE the card (top-right)
+            # ⋯ rollout menu INSIDE the card
             with st.popover("⋯", key=f"menu_crypto_{i}_{st.session_state.crypto_table_version}_{st.session_state.ui_version}", use_container_width=False):
                 col_edit, col_del = st.columns(2)
                 with col_edit:
@@ -904,7 +767,7 @@ document.querySelectorAll('.coin-card').forEach(div => {{
                     st.success(f"✅ Added {amount} {ticker}")
                     st.rerun()
 
-    # ====================== FIAT TRANSACTIONS ======================
+    # ====================== FIAT TRANSACTIONS (unchanged) ======================
     elif st.session_state.page == "Fiat Transactions":
         total_czk = pd.to_numeric(st.session_state.fiat_df['CZK'], errors='coerce').fillna(0).sum()
         total_eur = pd.to_numeric(st.session_state.fiat_df['EUR'], errors='coerce').fillna(0).sum()
