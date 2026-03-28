@@ -14,14 +14,15 @@ import random
 # ====================== CONFIG ======================
 st.set_page_config(page_title="Portfolio", layout="wide", page_icon="logo.png")
 
-# ====================== GLOBAL CSS (Polished + Refined Coin Card Glow) ======================
+# ====================== GLOBAL CSS (Polished + Closer to Edges) ======================
 st.markdown("""
 <style>
 /* ====================== GLOBAL LAYOUT - CLOSER TO EDGES ====================== */
 .stApp {
     background: linear-gradient(180deg, #0f1724 0%, #0a0f1c 100%) !important;
 }
-/* Remove excessive Streamlit default padding */
+
+/* Remove excessive Streamlit default padding - content hugs the edges */
 .main .block-container,
 .stMain .block-container,
 div[data-testid="stMainBlockContainer"] {
@@ -30,6 +31,8 @@ div[data-testid="stMainBlockContainer"] {
     padding-top: 0px !important;
     max-width: 100% !important;
 }
+
+/* Slightly more breathing room on very wide screens */
 @media (min-width: 1200px) {
     .main .block-container,
     div[data-testid="stMainBlockContainer"] {
@@ -37,6 +40,8 @@ div[data-testid="stMainBlockContainer"] {
         padding-right: 18px !important;
     }
 }
+
+/* Mobile - comfortable but much closer to edges */
 @media (max-width: 768px) {
     .main .block-container,
     div[data-testid="stMainBlockContainer"] {
@@ -45,84 +50,26 @@ div[data-testid="stMainBlockContainer"] {
     }
 }
 
-/* === COIN CARDS - LOWER INTENSITY GLOW === */
-.coin-card {
-    background: #0f172a;
-    padding: 16px;
-    border-radius: 20px;
-    box-shadow: 0 6px 20px rgba(0,0,0,0.3);
-    transition: all 0.25s ease;
-    cursor: pointer;
-    position: relative;
-    z-index: 1;
-    outline: none !important;
-    -webkit-tap-highlight-color: transparent;
-    user-select: none;
-    -webkit-user-select: none;
+/* Clean top spacing */
+.main, .block-container, .stMain {
+    padding-top: 0px !important;
 }
 
-/* Refined hover glow - lower intensity and smaller radius */
-.coin-card:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 0 16px 3px var(--glow) !important;
-    z-index: 10;
+/* === PRICE CHARTS SECTION - Tighter spacing === */
+#price-charts-section {
+    margin-top: -25px !important;
+    margin-bottom: 18px !important;
+    padding: 18px 20px !important;
 }
 
-.coin-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-    gap: 14px;
-    padding: 20px 12px;
-    box-sizing: border-box;
-    max-height: 520px;
-    overflow-y: auto;
-    scrollbar-width: none;
-    background: transparent !important;
-}
-.coin-grid::-webkit-scrollbar { display: none; }
-
-.card-header {
-    display: flex;
-    align-items: center;
-    margin-bottom: 14px;
-}
-.card-content {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-}
-.label-value-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    font-size: 0.95rem;
-}
-.label { color: #aaa; font-weight: 500; }
-.value { font-weight: 600; }
-.total {
-    font-size: 1.18rem;
-    margin-top: 8px;
-    border-top: 1px solid rgba(255,255,255,0.12);
-    padding-top: 8px;
-}
-.total-value { font-size: 1.28rem; }
-
-@media (max-width: 700px) {
-    .coin-grid {
-        grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-        gap: 12px;
-        padding: 16px 8px;
-    }
-    .coin-card { padding: 14px; }
-}
-
-/* Transaction Cards & Other Elements (unchanged) */
+/* === TRANSACTION CARDS === */
 .transaction-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(380px, 1fr));
     gap: 16px;
     padding: 0 6px;
 }
+
 .transaction-card {
     background: #0f172a;
     border-radius: 18px;
@@ -134,10 +81,112 @@ div[data-testid="stMainBlockContainer"] {
     flex-direction: column;
     min-height: 138px;
 }
+
 .transaction-card:hover {
     transform: translateY(-4px);
     box-shadow: 0 12px 30px rgba(0, 255, 157, 0.3);
 }
+
+/* Main header row */
+.transaction-main-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 16px;
+}
+
+.transaction-left {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    flex: 1;
+}
+
+.transaction-header img {
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    object-fit: contain;
+}
+
+.transaction-ticker {
+    font-size: 1.28rem;
+    font-weight: 700;
+    color: #ffffff;
+    line-height: 1.05;
+}
+
+.transaction-date {
+    color: #aaa;
+    font-size: 0.92rem;
+    margin-top: 2px;
+}
+
+.transaction-values {
+    display: flex;
+    gap: 24px;
+    text-align: right;
+    font-size: 1.02rem;
+}
+
+.transaction-values div {
+    min-width: 88px;
+}
+
+.transaction-values small {
+    color: #aaa;
+    font-size: 0.82rem;
+    font-weight: 500;
+    display: block;
+}
+
+.transaction-values strong {
+    font-weight: 700;
+    color: #ffffff;
+}
+
+.transaction-amount {
+    font-size: 1.04rem;
+    font-weight: 700;
+    color: #ffffff;
+}
+
+.transaction-buttons {
+    display: flex;
+    gap: 12px;
+    margin-top: auto;
+}
+
+.transaction-buttons button {
+    flex: 1;
+    padding: 10px 14px;
+    border: none;
+    border-radius: 11px;
+    font-weight: 700;
+    font-size: 0.95rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.transaction-buttons .delete-btn {
+    background: #e63939;
+    color: white;
+}
+
+.transaction-buttons .delete-btn:hover {
+    background: #c1121f;
+}
+
+.transaction-buttons .edit-btn {
+    background: #00b894;
+    color: #0f1724;
+}
+
+.transaction-buttons .edit-btn:hover {
+    background: #00a17a;
+}
+
+/* Glossy Header - Closer to top */
 .glossy-header {
     position: relative;
     overflow: hidden;
@@ -159,6 +208,12 @@ div[data-testid="stMainBlockContainer"] {
     margin-top: 68px;
     margin-bottom: 38px;
 }
+
+.glossy-header:hover {
+    transform: translateY(-4px) scale(1.03);
+    box-shadow: 0 15px 40px rgba(255,255,255,0.15);
+}
+
 .glossy-box {
     position: relative;
     overflow: hidden;
@@ -174,6 +229,35 @@ div[data-testid="stMainBlockContainer"] {
     flex-direction: column;
     justify-content: center;
 }
+
+.glossy-box:hover {
+    transform: translateY(-4px) scale(1.03);
+    box-shadow: 0 15px 40px rgba(255,255,255,0.15);
+}
+
+.glossy-box > div:first-child {
+    font-size: 13.5px;
+    font-weight: 500;
+    letter-spacing: 1.1px;
+    color: #e0e0e0;
+    opacity: 0.9;
+    margin-bottom: 6px;
+    line-height: 1.2;
+}
+
+.glossy-box > div:last-child {
+    font-size: 27px;
+    font-weight: 700;
+    line-height: 1.05;
+    color: #ffffff;
+}
+
+/* Coin Grid */
+.coin-grid {
+    padding: 20px 12px !important;
+}
+
+/* Price pills */
 .price-pills-container {
     display: flex !important;
     gap: 6px !important;
@@ -182,6 +266,33 @@ div[data-testid="stMainBlockContainer"] {
     padding-bottom: 4px;
     scrollbar-width: none;
 }
+
+.price-pills-container::-webkit-scrollbar { display: none; }
+
+.price-pill, .avg-pill, .daily-pill {
+    padding: 7px 14px !important;
+    border-radius: 9999px !important;
+    white-space: nowrap !important;
+    flex-shrink: 0;
+    background: #0f172a !important;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 1.05rem;
+    font-weight: 700;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.12);
+}
+
+.price-pill span:last-child, .avg-pill span:last-child { font-size: 1.26rem; }
+
+.daily-pill {
+    color: #ff4d4d;
+    font-weight: 700;
+    padding: 4px 8px !important;
+    font-size: 0.88rem !important;
+}
+
+/* Buttons */
 .stButton > button {
     background: #1e2a44 !important;
     color: #e0e0e0 !important;
@@ -199,11 +310,40 @@ div[data-testid="stMainBlockContainer"] {
     box-shadow: 0 4px 15px rgba(0,0,0,0.25) !important;
     transition: all 0.3s ease !important;
 }
+
 .stButton > button:hover {
     transform: translateY(-4px) !important;
     box-shadow: 0 12px 30px rgba(255, 255, 255, 0.25) !important;
     background: #263b5e !important;
     color: white !important;
+}
+
+@media (max-width: 700px) {
+    .stApp { padding-top: 72px !important; }
+    .glossy-header {
+        margin-top: 48px !important;
+        margin-bottom: 28px !important;
+        padding: 24px 16px !important;
+        font-size: 24px !important;
+        min-height: 100px;
+    }
+    .transaction-grid {
+        grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+        padding: 0 4px;
+        gap: 14px;
+    }
+    .coin-grid {
+        padding: 16px 8px !important;
+    }
+}
+
+@media (max-width: 600px) {
+    .glossy-box {
+        min-width: 98px !important;
+        padding: 18px 14px !important;
+    }
+    .glossy-box > div:first-child { font-size: 12px !important; }
+    .glossy-box > div:last-child { font-size: 21px !important; }
 }
 </style>
 """, unsafe_allow_html=True)
@@ -535,9 +675,9 @@ def glossy_header(title: str, icon_svg: str):
 with main_container.container(key=f"page_{st.session_state.page}_{st.session_state.ui_version}"):
     if st.session_state.page == "Home":
         glossy_header("Portfolio Dashboard", DASHBOARD_ICON)
-      
+       
         df_port, total_value, total_pnl, total_pnl_pct = calculate_portfolio(st.session_state.crypto_df)
-      
+       
         value_box_html = f"""
 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(98px, 1fr)); gap: 14px; margin-bottom: 30px;">
     <div class="glossy-box"><div>Total Value</div><div>{format_money(total_value)}</div></div>
@@ -545,9 +685,9 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
     <div class="glossy-box"><div>PnL %</div><div style="color:{'#00ff9d' if total_pnl_pct>=0 else '#ff4d4d'}">{"▲" if total_pnl_pct>0 else "▼" if total_pnl_pct<0 else ""} {abs(total_pnl_pct):.2f}%</div></div>
 </div>"""
         st.markdown(value_box_html, unsafe_allow_html=True)
-      
+       
         coin_list = [t for t in df_port['Ticker'] if t != 'USDC']
-      
+       
         cards_html = ""
         for _, r in df_port.iterrows():
             pnl = r['PnL']
@@ -559,9 +699,9 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
             onclick = f"onclick=\"switchToTabAndScroll({coin_list.index(ticker)})\" " if ticker != 'USDC' else ""
             row_class = "clickable-row" if ticker != 'USDC' else ""
             logo_url = get_ticker_logo(ticker)
-          
+           
             pnl_pct_formatted = format_percent(abs(r['PnL %'])) if pd.notna(r['PnL %']) else ""
-          
+           
             cards_html += f"""
 <div class="coin-card {row_class}" data-glow="{glow_color}" {onclick}>
     <div class="card-header">
@@ -576,11 +716,24 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
         <div class="label-value-row total"><span class="label">Value</span><span class="value total-value">{format_money(r['Value'])}</span></div>
     </div>
 </div>"""
-      
+       
         html = f"""<html><head><style>
 body{{background:transparent;color:white;font-family:sans-serif;margin:0;padding:0;}}
 .coin-grid {{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px;padding:20px 12px;box-sizing:border-box;max-height:520px;overflow-y:auto;scrollbar-width:none;background:transparent !important;}}
 .coin-grid::-webkit-scrollbar {{display:none;}}
+.coin-card {{background:#0f172a;padding:16px;border-radius:20px;box-shadow:0 6px 20px rgba(0,0,0,0.3);transition:all 0.25s ease;cursor:pointer;position:relative;z-index:1;outline:none !important;-webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none;}}
+.coin-card:hover {{transform:translateY(-3px);box-shadow:0 0 22px 6px var(--glow) !important;z-index:10;}}
+.card-header {{display:flex;align-items:center;margin-bottom:14px;}}
+.card-content {{display:flex;flex-direction:column;gap:8px;}}
+.label-value-row {{display:flex;justify-content:space-between;align-items:center;font-size:0.95rem;}}
+.label {{color:#aaa;font-weight:500;}}
+.value {{font-weight:600;}}
+.total {{font-size:1.18rem;margin-top:8px;border-top:1px solid rgba(255,255,255,0.12);padding-top:8px;}}
+.total-value {{font-size:1.28rem;}}
+@media (max-width: 700px) {{
+    .coin-grid {{grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px;padding:16px 8px;}}
+    .coin-card {{padding:14px;}}
+}}
 </style></head><body><div class="coin-grid">{cards_html}</div><script>
 function switchToTabAndScroll(index){{
     const tabs = window.parent.document.querySelectorAll('.stTabs button');
@@ -597,7 +750,7 @@ document.querySelectorAll('.coin-card').forEach(div => {{
 }});
 </script><!-- VERSION:{st.session_state.ui_version} --></body></html>"""
         components.html(html, height=580, scrolling=True)
-      
+       
         st.markdown(f"""
 <div id="price-charts-section" class="glossy-box" style="background:#1e2a44;padding:18px 20px;border-radius:18px;">
     <div class="charts-header">
@@ -606,7 +759,7 @@ document.querySelectorAll('.coin-card').forEach(div => {{
     </div>
 </div>
 """, unsafe_allow_html=True)
-      
+       
         if coin_list:
             selected_tab = st.tabs(coin_list)
             for i, coin in enumerate(coin_list):
@@ -698,14 +851,14 @@ document.querySelectorAll('.coin-card').forEach(div => {{
                         )
                     else:
                         st.error(f"📉 Could not load {coin} chart. Try the **Refresh** button in sidebar.")
-
+   
     # ====================== CRYPTO TRANSACTIONS ======================
     elif st.session_state.page == "Crypto Transactions":
         glossy_header("Crypto Transactions", CRYPTO_ICON)
-      
+       
         delete_trigger = st.text_input("delete_trigger", value=st.session_state.delete_trigger, label_visibility="collapsed", key="delete_trigger_hidden")
         edit_trigger = st.text_input("edit_trigger", value=st.session_state.edit_trigger, label_visibility="collapsed", key="edit_trigger_hidden")
-      
+       
         if delete_trigger and delete_trigger != st.session_state.delete_trigger:
             try:
                 idx = int(delete_trigger)
@@ -719,7 +872,7 @@ document.querySelectorAll('.coin-card').forEach(div => {{
             except:
                 pass
             st.session_state.delete_trigger = delete_trigger
-      
+       
         if edit_trigger and edit_trigger != st.session_state.edit_trigger:
             try:
                 idx = int(edit_trigger)
@@ -729,11 +882,11 @@ document.querySelectorAll('.coin-card').forEach(div => {{
             except:
                 pass
             st.session_state.edit_trigger = edit_trigger
-      
+       
         df_display = st.session_state.crypto_df.copy()
         df_display['Date'] = df_display['Datum'].apply(format_datum)
         df_display = df_display.dropna(how='all').reset_index(drop=True)
-      
+       
         cards_html = ""
         for i, r in df_display.iterrows():
             logo_url = get_ticker_logo(r['Ticker'])
@@ -741,7 +894,7 @@ document.querySelectorAll('.coin-card').forEach(div => {{
             amount_val = format_holdings(r['Amount'], r['Ticker'])
             price = format_money(r['Price'])
             date_str = r['Date']
-          
+           
             cards_html += f"""
 <div class="transaction-card">
     <div class="transaction-main-row">
@@ -764,7 +917,7 @@ document.querySelectorAll('.coin-card').forEach(div => {{
     </div>
 </div>
 """
-      
+       
         full_html = f"""
 <html>
 <head>
@@ -797,7 +950,7 @@ function editTransaction(i) {{
 </html>
 """
         components.html(full_html, height=560, scrolling=True)
-      
+       
         if 'editing_row_crypto' in st.session_state:
             edit_idx = st.session_state.editing_row_crypto
             row = st.session_state.crypto_df.loc[edit_idx]
@@ -827,7 +980,7 @@ function editTransaction(i) {{
                     if st.form_submit_button("❌ Cancel"):
                         del st.session_state.editing_row_crypto
                         st.rerun()
-      
+       
         st.subheader("➕ Add New Transaction")
         with st.form("add_crypto"):
             col1, col2, col3 = st.columns([1.2, 1.2, 1.6])
@@ -849,7 +1002,7 @@ function editTransaction(i) {{
                     st.session_state.ui_version += 1
                     st.success(f"✅ Added {amount} {ticker}")
                     st.rerun()
-
+   
     # ====================== FIAT TRANSACTIONS ======================
     elif st.session_state.page == "Fiat Transactions":
         total_czk = pd.to_numeric(st.session_state.fiat_df['CZK'], errors='coerce').fillna(0).sum()
@@ -858,9 +1011,9 @@ function editTransaction(i) {{
         fees_eur = pd.to_numeric(st.session_state.fiat_df['Fee'], errors='coerce').fillna(0).sum()
         fees_czk = (pd.to_numeric(st.session_state.fiat_df['Fee'], errors='coerce').fillna(0) *
                     pd.to_numeric(st.session_state.fiat_df['CZK/EUR'], errors='coerce').fillna(0)).sum()
-       
+        
         glossy_header("Fiat Transactions", FIAT_ICON)
-       
+        
         summary_html = f"""
 <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:20px;margin-bottom:30px;">
     <div class="glossy-box"><div>Total CZK</div><div>{total_czk:,.2f}</div></div>
@@ -869,7 +1022,7 @@ function editTransaction(i) {{
     <div class="glossy-box"><div>Fees</div><div class="fee-line">{fees_eur:,.2f} EUR</div><div class="fee-line" style="font-size:22px;">{fees_czk:,.2f} CZK</div></div>
 </div>"""
         st.markdown(summary_html, unsafe_allow_html=True)
-       
+        
         df_clean = st.session_state.fiat_df.dropna(how='all').reset_index(drop=True)
         table_container = st.container(key=f"fiat_table_container_{st.session_state.ui_version}")
         with table_container:
@@ -903,7 +1056,7 @@ function editTransaction(i) {{
                         if st.button("✏️", key=f"edit_{i}_{st.session_state.fiat_table_version}_{st.session_state.ui_version}"):
                             st.session_state.editing_row = i
                             st.rerun()
-       
+        
         if 'editing_row' in st.session_state:
             edit_idx = st.session_state.editing_row
             row = st.session_state.fiat_df.loc[edit_idx]
@@ -933,7 +1086,7 @@ function editTransaction(i) {{
                     if st.form_submit_button("❌ Cancel"):
                         del st.session_state.editing_row
                         st.rerun()
-       
+        
         st.subheader("➕ Add New Fiat Entry")
         with st.form("add_fiat"):
             col1, col2 = st.columns(2)
