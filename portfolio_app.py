@@ -33,12 +33,12 @@ st.markdown("""
     margin-bottom: 18px !important;
 }
 
-/* === TRANSACTION CARDS - narrower, perfectly spaced, white text, no gray bars === */
+/* === TRANSACTION CARDS - final polished version === */
 .transaction-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
     gap: 18px;
-    padding: 0 16px;           /* extra side padding - cards no longer cut off */
+    padding: 0 16px;
 }
 .transaction-card {
     background: #0f172a;
@@ -95,10 +95,16 @@ st.markdown("""
     font-weight: 700;
     color: #ffffff;
 }
-.transaction-amount-ticker {
-    font-size: 1.08rem;
+.transaction-amount {
+    font-size: 1.12rem;
     font-weight: 700;
     color: #ffffff;
+    text-align: right;
+}
+.transaction-amount-ticker {
+    font-size: 0.95rem;
+    color: #aaa;
+    font-weight: 500;
 }
 .transaction-buttons {
     display: flex;
@@ -116,18 +122,18 @@ st.markdown("""
     transition: all 0.2s ease;
 }
 .transaction-buttons .delete-btn {
-    background: #ff4d4d;
+    background: #e63939;
     color: white;
 }
 .transaction-buttons .delete-btn:hover {
-    background: #ff3333;
+    background: #c1121f;
 }
 .transaction-buttons .edit-btn {
-    background: #00ff9d;
+    background: #00b894;
     color: #0f1724;
 }
 .transaction-buttons .edit-btn:hover {
-    background: #00cc7a;
+    background: #00a17a;
 }
 
 /* Big navigation cards with glossy shine */
@@ -750,7 +756,6 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
         
         coin_list = [t for t in df_port['Ticker'] if t != 'USDC']
         
-        # Pre-compute formatted values to avoid any NameError inside f-string
         cards_html = ""
         for _, r in df_port.iterrows():
             pnl = r['PnL']
@@ -915,15 +920,13 @@ document.querySelectorAll('.coin-card').forEach(div => {{
                     else:
                         st.error(f"📉 Could not load {coin} chart. Try the **Refresh** button in sidebar.")
     
-    # ====================== CRYPTO TRANSACTIONS - FINAL POLISHED VERSION ======================
+    # ====================== CRYPTO TRANSACTIONS - FINAL POLISHED ======================
     elif st.session_state.page == "Crypto Transactions":
         glossy_header("Crypto Transactions", CRYPTO_ICON)
         
-        # Hidden triggers for JS → Python
         delete_trigger = st.text_input("delete_trigger", value=st.session_state.delete_trigger, label_visibility="collapsed", key="delete_trigger_hidden")
         edit_trigger = st.text_input("edit_trigger", value=st.session_state.edit_trigger, label_visibility="collapsed", key="edit_trigger_hidden")
         
-        # Handle delete
         if delete_trigger and delete_trigger != st.session_state.delete_trigger:
             try:
                 idx = int(delete_trigger)
@@ -938,7 +941,6 @@ document.querySelectorAll('.coin-card').forEach(div => {{
                 pass
             st.session_state.delete_trigger = delete_trigger
         
-        # Handle edit
         if edit_trigger and edit_trigger != st.session_state.edit_trigger:
             try:
                 idx = int(edit_trigger)
@@ -953,7 +955,6 @@ document.querySelectorAll('.coin-card').forEach(div => {{
         df_display['Date'] = df_display['Datum'].apply(format_datum)
         df_display = df_display.dropna(how='all').reset_index(drop=True)
         
-        # Build transaction cards
         cards_html = ""
         for i, r in df_display.iterrows():
             logo_url = get_ticker_logo(r['Ticker'])
@@ -973,7 +974,7 @@ document.querySelectorAll('.coin-card').forEach(div => {{
     </div>
     <div class="transaction-content">
         <div><small>Invested</small><br><strong>{invested}</strong></div>
-        <div><small>Amount</small><br><strong class="transaction-amount-ticker">{amount_val} {r['Ticker']}</strong></div>
+        <div><small>Amount</small><br><strong class="transaction-amount">{amount_val}</strong><br><span class="transaction-amount-ticker">{r['Ticker']}</span></div>
         <div><small>Price</small><br><strong>{price}</strong></div>
     </div>
     <div class="transaction-buttons">
@@ -999,13 +1000,14 @@ body {{ background: transparent; margin: 0; padding: 0; }}
 .transaction-content div {{ text-align: center; }}
 .transaction-content small {{ font-size: 0.82rem; color: #aaa; display: block; margin-bottom: 3px; }}
 .transaction-content strong {{ font-size: 1.08rem; font-weight: 700; color: #ffffff; }}
-.transaction-amount-ticker {{ font-size: 1.08rem; font-weight: 700; color: #ffffff; }}
+.transaction-amount {{ font-size: 1.12rem; font-weight: 700; color: #ffffff; }}
+.transaction-amount-ticker {{ font-size: 0.95rem; color: #aaa; font-weight: 500; }}
 .transaction-buttons {{ display: flex; gap: 12px; }}
 .transaction-buttons button {{ flex: 1; padding: 11px 16px; border: none; border-radius: 12px; font-weight: 700; font-size: 0.98rem; cursor: pointer; transition: all 0.2s ease; }}
-.transaction-buttons .delete-btn {{ background: #ff4d4d; color: white; }}
-.transaction-buttons .delete-btn:hover {{ background: #ff3333; }}
-.transaction-buttons .edit-btn {{ background: #00ff9d; color: #0f1724; }}
-.transaction-buttons .edit-btn:hover {{ background: #00cc7a; }}
+.transaction-buttons .delete-btn {{ background: #e63939; color: white; }}
+.transaction-buttons .delete-btn:hover {{ background: #c1121f; }}
+.transaction-buttons .edit-btn {{ background: #00b894; color: #0f1724; }}
+.transaction-buttons .edit-btn:hover {{ background: #00a17a; }}
 </style>
 </head>
 <body>
@@ -1033,7 +1035,6 @@ function editTransaction(i) {{
 """
         components.html(full_html, height=680, scrolling=True)
         
-        # Edit form (opens below the cards)
         if 'editing_row_crypto' in st.session_state:
             edit_idx = st.session_state.editing_row_crypto
             row = st.session_state.crypto_df.loc[edit_idx]
