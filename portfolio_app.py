@@ -13,9 +13,28 @@ import streamlit.components.v1 as components
 
 st.set_page_config(page_title="Crypto Portfolio", layout="wide", initial_sidebar_state="expanded")
 
-# ====================== CUSTOM CSS (EXACT ORIGINAL + coin-grid/coin-card for Crypto page) ======================
+# ====================== CUSTOM CSS - FULL ORIGINAL + EXACT coin-grid/coin-card ======================
 st.markdown("""
 <style>
+    letter-spacing: 1.1px;
+    color: #e0e0e0;
+    opacity: 0.9;
+    margin-bottom: 6px;
+    line-height: 1.2;
+}
+
+/* === RESTORED FULL ORIGINAL GLOSSY-BOX (header summary cards) === */
+.glossy-box {
+    background: #0f172a !important;
+    padding: 20px 24px !important;
+    border-radius: 20px !important;
+    box-shadow: 0 8px 25px rgba(0,0,0,0.35) !important;
+    text-align: center !important;
+    transition: all 0.25s ease !important;
+}
+.glossy-box > div:first-child {
+    font-size: 15px;
+    font-weight: 600;
     letter-spacing: 1.1px;
     color: #e0e0e0;
     opacity: 0.9;
@@ -28,6 +47,7 @@ st.markdown("""
     line-height: 1.05;
     color: #ffffff;
 }
+
 /* Fee lines in Fiat summary */
 .fee-line {
     font-size: 1.35rem;
@@ -36,6 +56,7 @@ st.markdown("""
     line-height: 1.1;
     margin-bottom: 4px;
 }
+
 /* MOBILE: Make header smaller */
 @media (max-width: 700px) {
     .stApp {
@@ -49,6 +70,7 @@ st.markdown("""
         min-height: 100px;
     }
 }
+
 /* MOBILE RESPONSIVE FIX FOR THE 3 SUMMARY CARDS */
 @media (max-width: 600px) {
     .glossy-box {
@@ -62,6 +84,7 @@ st.markdown("""
         font-size: 21px !important;
     }
 }
+
 /* PRICE PILLS */
 .price-pills-container {
     display: flex !important;
@@ -106,6 +129,7 @@ st.markdown("""
     .price-pill span:last-child,
     .avg-pill span:last-child { font-size: 1.18rem !important; }
 }
+
 /* TIMEFRAME PILL */
 div[data-baseweb="select"] {
     background: linear-gradient(90deg, #26334f, #1e2a44) !important;
@@ -149,6 +173,7 @@ div[data-baseweb="select"] svg {
     fill: #e0e0e0 !important;
     margin-top: 0 !important;
 }
+
 /* Open menu */
 [data-baseweb="popover"] [data-baseweb="menu"] {
     background-color: #26334f !important;
@@ -171,6 +196,7 @@ div[data-baseweb="select"] svg {
 [data-baseweb="option"]:hover {
     background-color: #1e2a44 !important;
 }
+
 /* CURSOR FIX */
 .glossy-header *,
 .glossy-box *,
@@ -182,6 +208,7 @@ div[data-baseweb="select"] *,
 .charts-header * {
     cursor: pointer !important;
 }
+
 /* CHARTS HEADER */
 .charts-header {
     display: flex;
@@ -203,7 +230,7 @@ div[data-baseweb="select"] *,
     }
 }
 
-/* === EXACT coin-grid + coin-card styles from original Home page (now available everywhere) === */
+/* === EXACT coin-grid + coin-card from original Home page (used on Crypto Transactions) === */
 .coin-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
@@ -791,7 +818,7 @@ document.querySelectorAll('.coin-card').forEach(div => {{
                     else:
                         st.error(f"📉 Could not load {coin} chart. Try the **Refresh** button in sidebar.")
 
-    # ====================== CRYPTO TRANSACTIONS (now uses EXACT same coin-grid + coin-card as Home) ======================
+    # ====================== CRYPTO TRANSACTIONS ======================
     elif st.session_state.page == "Crypto Transactions":
         glossy_header("Crypto Transactions", CRYPTO_ICON)
         df_display = st.session_state.crypto_df.copy()
@@ -823,7 +850,7 @@ document.querySelectorAll('.coin-card').forEach(div => {{
             </div>
             """, unsafe_allow_html=True)
 
-            # === ⋯ rollout menu INSIDE / ON TOP of each card (top-right) ===
+            # === ⋯ rollout menu INSIDE the card (top-right) ===
             with st.popover("⋯", key=f"menu_crypto_{i}_{st.session_state.crypto_table_version}_{st.session_state.ui_version}", use_container_width=False):
                 col_edit, col_del = st.columns(2)
                 with col_edit:
