@@ -14,7 +14,7 @@ import textwrap
 
 st.set_page_config(page_title="Portfolio", layout="wide", initial_sidebar_state="expanded")
 
-# ====================== CUSTOM CSS (strong hide for buttons + LaTeX fix) ======================
+# ====================== CUSTOM CSS ======================
 css = textwrap.dedent("""
 <style>
     .stApp {
@@ -142,8 +142,9 @@ css = textwrap.dedent("""
         .tx-usdc { font-size: 1.3rem; }
         .tx-ticker-amount { font-size: 1.15rem; }
     }
-    /* STRONG HIDE FOR DUPLICATE BUTTONS */
-    .stButton button[key*="edit_crypto"], .stButton button[key*="del_crypto"] {
+    /* HIDE DUPLICATE BUTTONS BUT KEEP THEM CLICKABLE */
+    .stButton button[key*="edit_crypto_"],
+    .stButton button[key*="del_crypto_"] {
         display: none !important;
         visibility: hidden !important;
         height: 0 !important;
@@ -525,7 +526,6 @@ def glossy_header(title: str, icon_svg: str):
 
 with main_container.container(key=f"page_{st.session_state.page}_{st.session_state.ui_version}"):
     if st.session_state.page == "Home":
-        # (Home page unchanged - kept exactly as before)
         glossy_header("Portfolio Dashboard", DASHBOARD_ICON)
 
         df_port, total_value, total_pnl, total_pnl_pct = calculate_portfolio(st.session_state.crypto_df)
@@ -701,7 +701,7 @@ document.querySelectorAll('.coin-card').forEach(div => {{
                     else:
                         st.error(f"📉 Could not load {coin} chart. Try the **Refresh** button in sidebar.")
 
-    # ====================== CRYPTO TRANSACTIONS (CLEAN CARDS - NO DUPLICATE BUTTONS) ======================
+    # ====================== CRYPTO TRANSACTIONS ======================
     elif st.session_state.page == "Crypto Transactions":
         glossy_header("Crypto Transactions", CRYPTO_ICON)
         df_display = st.session_state.crypto_df.copy()
@@ -710,7 +710,6 @@ document.querySelectorAll('.coin-card').forEach(div => {{
 
         st.markdown('<div class="transaction-grid">', unsafe_allow_html=True)
         for i, r in df_display.iterrows():
-            # ESCAPE $ to prevent LaTeX \( bug
             usdc_str = format_money(r['USDC']).replace('$', '&#36;')
             price_str = format_money(r['Price']).replace('$', '&#36;')
             card_html = f"""
@@ -734,8 +733,21 @@ document.querySelectorAll('.coin-card').forEach(div => {{
             st.markdown(card_html, unsafe_allow_html=True)
         st.markdown('</div>', unsafe_allow_html=True)
 
-        # === NO VISIBLE DUPLICATE BUTTONS ANYMORE ===
-        # The strong CSS rule above hides all buttons with those keys completely.
+        # Hidden buttons (kept in DOM so JS can click them)
+        for i, r in df_display.iterrows():
+            col1, col2 = st.columns([1, 1], gap="small")
+            with col1:
+                if st.button("✏️ Edit", key=f"edit_crypto_{i}_{st.session_state.crypto_table_version}_{st.session_state.ui_version}", use_container_width=True):
+                    st.session_state.editing_row_crypto = i
+                    st.rerun()
+            with col2:
+                if st.button("🗑️ Delete", key=f"del_crypto_{i}_{st.session_state.crypto_table_version}_{st.session_state.ui_version}", use_container_width=True):
+                    st.session_state.crypto_df = st.session_state.crypto_df.drop(i).reset_index(drop=True)
+                    save_crypto(st.session_state.crypto_df)
+                    st.session_state.crypto_table_version += 1
+                    st.session_state.ui_version += 1
+                    st.success("✅ Transaction deleted!")
+                    st.rerun()
 
         # Edit form
         if st.session_state.editing_row_crypto is not None:
