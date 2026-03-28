@@ -33,7 +33,7 @@ st.markdown("""
     margin-bottom: 18px !important;
 }
 
-/* === TRANSACTION CARDS - final polished version === */
+/* === TRANSACTION CARDS - matching dashboard coin card style === */
 .transaction-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
@@ -67,7 +67,7 @@ st.markdown("""
     object-fit: contain;
 }
 .transaction-ticker {
-    font-size: 1.35rem;
+    font-size: 1.32rem;
     font-weight: 700;
     color: #ffffff;
 }
@@ -96,7 +96,7 @@ st.markdown("""
     color: #ffffff;
 }
 .transaction-amount {
-    font-size: 1.12rem;
+    font-size: 1.08rem;
     font-weight: 700;
     color: #ffffff;
     text-align: right;
@@ -920,7 +920,7 @@ document.querySelectorAll('.coin-card').forEach(div => {{
                     else:
                         st.error(f"📉 Could not load {coin} chart. Try the **Refresh** button in sidebar.")
     
-    # ====================== CRYPTO TRANSACTIONS - FINAL POLISHED ======================
+    # ====================== CRYPTO TRANSACTIONS - AMOUNT MOVED TO RIGHT + MATCHING DASHBOARD STYLE ======================
     elif st.session_state.page == "Crypto Transactions":
         glossy_header("Crypto Transactions", CRYPTO_ICON)
         
@@ -974,7 +974,7 @@ document.querySelectorAll('.coin-card').forEach(div => {{
     </div>
     <div class="transaction-content">
         <div><small>Invested</small><br><strong>{invested}</strong></div>
-        <div><small>Amount</small><br><strong class="transaction-amount">{amount_val}</strong><br><span class="transaction-amount-ticker">{r['Ticker']}</span></div>
+        <div><small>Amount</small><br><strong class="transaction-amount">{amount_val}</strong></div>
         <div><small>Price</small><br><strong>{price}</strong></div>
     </div>
     <div class="transaction-buttons">
@@ -994,14 +994,13 @@ body {{ background: transparent; margin: 0; padding: 0; }}
 .transaction-card:hover {{ transform: translateY(-4px); box-shadow: 0 12px 30px rgba(0, 255, 157, 0.3); }}
 .transaction-header {{ display: flex; align-items: center; gap: 14px; margin-bottom: 18px; }}
 .transaction-header img {{ width: 48px; height: 48px; border-radius: 50%; object-fit: contain; }}
-.transaction-ticker {{ font-size: 1.35rem; font-weight: 700; color: #ffffff; }}
+.transaction-ticker {{ font-size: 1.32rem; font-weight: 700; color: #ffffff; }}
 .transaction-date {{ color: #aaa; font-size: 0.95rem; }}
 .transaction-content {{ display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin-bottom: 22px; }}
 .transaction-content div {{ text-align: center; }}
 .transaction-content small {{ font-size: 0.82rem; color: #aaa; display: block; margin-bottom: 3px; }}
 .transaction-content strong {{ font-size: 1.08rem; font-weight: 700; color: #ffffff; }}
-.transaction-amount {{ font-size: 1.12rem; font-weight: 700; color: #ffffff; }}
-.transaction-amount-ticker {{ font-size: 0.95rem; color: #aaa; font-weight: 500; }}
+.transaction-amount {{ font-size: 1.08rem; font-weight: 700; color: #ffffff; text-align: right; }}
 .transaction-buttons {{ display: flex; gap: 12px; }}
 .transaction-buttons button {{ flex: 1; padding: 11px 16px; border: none; border-radius: 12px; font-weight: 700; font-size: 0.98rem; cursor: pointer; transition: all 0.2s ease; }}
 .transaction-buttons .delete-btn {{ background: #e63939; color: white; }}
