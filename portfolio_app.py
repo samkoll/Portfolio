@@ -13,7 +13,7 @@ import streamlit.components.v1 as components
 
 st.set_page_config(page_title="Crypto Portfolio", layout="wide", initial_sidebar_state="expanded")
 
-# ====================== CUSTOM CSS - FULL ORIGINAL + STRONG GLOSSY-BOX ======================
+# ====================== CUSTOM CSS - FULL ORIGINAL + STRONG GLOSSY-BOX + coin-grid ======================
 st.markdown("""
 <style>
     letter-spacing: 1.1px;
@@ -23,7 +23,7 @@ st.markdown("""
     line-height: 1.2;
 }
 
-/* === FULL ORIGINAL GLOSSY-BOX (header summary cards) - MAXIMUM SPECIFICITY === */
+/* === FULL ORIGINAL GLOSSY-BOX (header summary cards) - HIGH SPECIFICITY === */
 .glossy-box {
     background: #0f172a !important;
     padding: 20px 24px !important;
@@ -205,7 +205,7 @@ div[data-baseweb="select"] *,
     }
 }
 
-/* === EXACT coin-grid + coin-card from original Home page === */
+/* === EXACT coin-grid + coin-card from original Home page (used on Crypto Transactions) === */
 .coin-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
@@ -793,7 +793,7 @@ document.querySelectorAll('.coin-card').forEach(div => {{
                     else:
                         st.error(f"📉 Could not load {coin} chart. Try the **Refresh** button in sidebar.")
 
-    # ====================== CRYPTO TRANSACTIONS ======================
+    # ====================== CRYPTO TRANSACTIONS - EXACT same grid as Home ======================
     elif st.session_state.page == "Crypto Transactions":
         glossy_header("Crypto Transactions", CRYPTO_ICON)
         df_display = st.session_state.crypto_df.copy()
@@ -825,7 +825,7 @@ document.querySelectorAll('.coin-card').forEach(div => {{
             </div>
             """, unsafe_allow_html=True)
 
-            # ⋯ rollout menu INSIDE the card
+            # ⋯ rollout menu INSIDE the card (top-right)
             with st.popover("⋯", key=f"menu_crypto_{i}_{st.session_state.crypto_table_version}_{st.session_state.ui_version}", use_container_width=False):
                 col_edit, col_del = st.columns(2)
                 with col_edit:
