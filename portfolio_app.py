@@ -13,7 +13,7 @@ import streamlit.components.v1 as components
 
 st.set_page_config(page_title="Crypto Portfolio", layout="wide", initial_sidebar_state="expanded")
 
-# ====================== CUSTOM CSS (FULL ORIGINAL + TRANSACTION GRID) ======================
+# ====================== CUSTOM CSS ======================
 st.markdown("""
 <style>
     letter-spacing: 1.1px;
@@ -202,7 +202,7 @@ div[data-baseweb="select"] *,
         padding: 0 16px !important;
     }
 }
-/* TRANSACTION CARDS - SAME SIZE & STYLE AS HOME PAGE coin-card */
+/* TRANSACTION CARDS - EXACTLY same size and style as home page coin-card */
 .transaction-card {
     background: #0f172a !important;
     padding: 16px !important;
@@ -737,8 +737,8 @@ document.querySelectorAll('.coin-card').forEach(div => {{
         df_display['Date'] = df_display['Datum'].apply(format_datum)
         df_display = df_display.dropna(how='all').reset_index(drop=True)
 
-        # === GRID LIKE HOME PAGE ===
-        st.markdown('<div class="coin-grid" style="padding:20px 26px;max-height:none;">', unsafe_allow_html=True)
+        # === EXACT same grid as Home page coin cards (smaller, multi-column) ===
+        st.markdown('<div class="coin-grid" style="padding:32px 26px;max-height:none;">', unsafe_allow_html=True)
 
         for i, r in df_display.iterrows():
             ticker = str(r['Ticker']).upper()
@@ -748,6 +748,7 @@ document.querySelectorAll('.coin-card').forEach(div => {{
             amount_str = format_holdings(r['Amount'], ticker)
             price_str = format_money(r['Price'])
 
+            # Card - identical size/style to home page
             st.markdown(f"""
             <div class="transaction-card" style="--glow:{get_ticker_color(ticker) + '77'}">
                 <div style="display:flex;align-items:center;margin-bottom:14px;">
@@ -773,7 +774,7 @@ document.querySelectorAll('.coin-card').forEach(div => {{
             </div>
             """, unsafe_allow_html=True)
 
-            # === ROLLOUT MENU INSIDE THE CARD (top-right visual) ===
+            # === ROLLOUT MENU INSIDE / ON TOP of the card (top-right visual) ===
             with st.popover("⋯", key=f"menu_crypto_{i}_{st.session_state.crypto_table_version}_{st.session_state.ui_version}", use_container_width=False):
                 col_edit, col_del = st.columns(2)
                 with col_edit:
