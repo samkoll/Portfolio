@@ -13,16 +13,34 @@ import streamlit.components.v1 as components
 
 st.set_page_config(page_title="Crypto Portfolio", layout="wide", initial_sidebar_state="expanded")
 
-# ====================== CUSTOM CSS - MAXIMUM SPECIFICITY FOR GLOSSY-BOX + EXACT COIN-GRID ======================
+# ====================== STRONGEST CUSTOM CSS (ALL HEADERS FIXED) ======================
 st.markdown("""
 <style>
-    /* === STRONGEST GLOSSY-BOX (header cards on EVERY page) - this is the original look restored === */
+    /* === STRONGEST GLOSSY-HEADER (Portfolio Dashboard + Crypto Transactions + Fiat Transactions titles) === */
+    .glossy-header {
+        background: #0f172a !important;
+        padding: 24px 30px !important;
+        border-radius: 20px !important;
+        box-shadow: 0 8px 25px rgba(0,0,0,0.35) !important;
+        display: flex !important;
+        align-items: center !important;
+        font-size: 28px !important;
+        font-weight: 700 !important;
+        color: #ffffff !important;
+        margin-bottom: 30px !important;
+        letter-spacing: 1.1px !important;
+    }
+
+    /* === STRONGEST GLOSSY-BOX (Total Value / PnL / PnL % cards) === */
     .glossy-box {
         background: #0f172a !important;
         padding: 20px 24px !important;
         border-radius: 20px !important;
         box-shadow: 0 8px 25px rgba(0,0,0,0.35) !important;
         text-align: center !important;
+        display: flex !important;
+        flex-direction: column !important;
+        justify-content: center !important;
     }
     .glossy-box > div:first-child {
         font-size: 15px !important;
@@ -31,13 +49,20 @@ st.markdown("""
         color: #e0e0e0 !important;
         opacity: 0.9 !important;
         margin-bottom: 6px !important;
-        line-height: 1.2 !important;
     }
     .glossy-box > div:last-child {
         font-size: 27px !important;
         font-weight: 700 !important;
         line-height: 1.05 !important;
         color: #ffffff !important;
+    }
+
+    /* PnL arrow always next to number (mobile fix) */
+    .pnl-content {
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        gap: 6px !important;
     }
 
     /* Fee lines in Fiat summary */
@@ -49,24 +74,16 @@ st.markdown("""
         margin-bottom: 4px !important;
     }
 
-    /* MOBILE: Make header smaller */
+    /* MOBILE OVERRIDES (strongest possible) */
     @media (max-width: 700px) {
         .stApp { padding-top: 75px !important; }
-        .glossy-header {
-            margin-top: 52px !important;
-            margin-bottom: 35px !important;
-            padding: 24px 20px !important;
-            font-size: 24px !important;
-            min-height: 100px;
-        }
-    }
-    @media (max-width: 600px) {
+        .glossy-header { margin-top: 52px !important; margin-bottom: 35px !important; padding: 24px 20px !important; font-size: 24px !important; }
         .glossy-box { min-width: 98px !important; padding: 18px 14px !important; }
         .glossy-box > div:first-child { font-size: 12px !important; }
         .glossy-box > div:last-child { font-size: 21px !important; }
     }
 
-    /* === EXACT coin-grid + coin-card from original Home page (used on Crypto Transactions) === */
+    /* === EXACT coin-grid + coin-card (same as original Home page) === */
     .coin-grid {
         display: grid !important;
         grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)) !important;
@@ -87,9 +104,6 @@ st.markdown("""
         position: relative !important;
         z-index: 1 !important;
         outline: none !important;
-        -webkit-tap-highlight-color: transparent;
-        user-select: none;
-        -webkit-user-select: none;
     }
     .coin-card:hover {
         transform: translateY(-3px) !important;
@@ -105,29 +119,16 @@ st.markdown("""
     .total-value { font-size: 1.28rem; }
 
     @media (max-width: 700px) {
-        .coin-grid {
-            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)) !important;
-            gap: 12px !important;
-            padding: 28px 24px !important;
-        }
+        .coin-grid { grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)) !important; gap: 12px !important; padding: 28px 24px !important; }
         .coin-card { padding: 14px !important; }
     }
 
-    /* PRICE PILLS */
-    .price-pills-container {
-        display: flex !important;
-        gap: 6px !important;
-        flex-wrap: nowrap !important;
-        overflow-x: auto !important;
-        padding-bottom: 4px;
-        scrollbar-width: none;
-    }
-    .price-pills-container::-webkit-scrollbar { display: none; }
+    /* Price pills (kept for charts) */
+    .price-pills-container { display: flex !important; gap: 6px !important; flex-wrap: nowrap !important; overflow-x: auto !important; padding-bottom: 4px; scrollbar-width: none; }
     .price-pill, .avg-pill, .daily-pill {
         padding: 7px 14px !important;
         border-radius: 9999px !important;
         white-space: nowrap !important;
-        flex-shrink: 0;
         background: #0f172a !important;
         display: inline-flex;
         align-items: center;
@@ -136,19 +137,6 @@ st.markdown("""
         font-weight: 700;
         box-shadow: 0 4px 12px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.12);
     }
-    .price-pill span:last-child, .avg-pill span:last-child { font-size: 1.26rem; }
-    .daily-pill { color: #ff4d4d; font-weight: 700; padding: 4px 8px !important; font-size: 0.88rem !important; }
-
-    /* TIMEFRAME PILL */
-    div[data-baseweb="select"] {
-        background: linear-gradient(90deg, #26334f, #1e2a44) !important;
-        border-radius: 9999px !important;
-        box-shadow: 0 6px 20px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.15) !important;
-        min-width: 148px !important;
-        max-width: 160px !important;
-        height: 39px !important;
-    }
-    div[data-baseweb="select"] * { color: #ffffff !important; font-weight: 700 !important; font-size: 1.16rem !important; }
 </style>
 """, unsafe_allow_html=True)
 
@@ -495,8 +483,8 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
         value_box_html = f"""
 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(98px, 1fr)); gap: 14px; margin-bottom: 30px;">
     <div class="glossy-box"><div>Total Value</div><div>{format_money(total_value)}</div></div>
-    <div class="glossy-box"><div>PnL</div><div style="color:{'#00ff9d' if total_pnl>=0 else '#ff4d4d'}">{"▲" if total_pnl>0 else "▼" if total_pnl<0 else ""} {format_money(abs(total_pnl))}</div></div>
-    <div class="glossy-box"><div>PnL %</div><div style="color:{'#00ff9d' if total_pnl_pct>=0 else '#ff4d4d'}">{"▲" if total_pnl_pct>0 else "▼" if total_pnl_pct<0 else ""} {abs(total_pnl_pct):.2f}%</div></div>
+    <div class="glossy-box"><div>PnL</div><div class="pnl-content" style="color:{'#00ff9d' if total_pnl>=0 else '#ff4d4d'}">{"▲" if total_pnl>0 else "▼" if total_pnl<0 else ""} {format_money(abs(total_pnl))}</div></div>
+    <div class="glossy-box"><div>PnL %</div><div class="pnl-content" style="color:{'#00ff9d' if total_pnl_pct>=0 else '#ff4d4d'}">{"▲" if total_pnl_pct>0 else "▼" if total_pnl_pct<0 else ""} {abs(total_pnl_pct):.2f}%</div></div>
 </div>"""
         st.markdown(value_box_html, unsafe_allow_html=True)
 
@@ -696,7 +684,6 @@ document.querySelectorAll('.coin-card').forEach(div => {{
             </div>
             """, unsafe_allow_html=True)
 
-            # ⋯ rollout menu INSIDE the card
             with st.popover("⋯", key=f"menu_crypto_{i}_{st.session_state.crypto_table_version}_{st.session_state.ui_version}", use_container_width=False):
                 col_edit, col_del = st.columns(2)
                 with col_edit:
@@ -767,7 +754,7 @@ document.querySelectorAll('.coin-card').forEach(div => {{
                     st.success(f"✅ Added {amount} {ticker}")
                     st.rerun()
 
-    # ====================== FIAT TRANSACTIONS (unchanged) ======================
+    # ====================== FIAT TRANSACTIONS ======================
     elif st.session_state.page == "Fiat Transactions":
         total_czk = pd.to_numeric(st.session_state.fiat_df['CZK'], errors='coerce').fillna(0).sum()
         total_eur = pd.to_numeric(st.session_state.fiat_df['EUR'], errors='coerce').fillna(0).sum()
