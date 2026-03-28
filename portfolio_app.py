@@ -13,7 +13,7 @@ import streamlit.components.v1 as components
 
 st.set_page_config(page_title="Crypto Portfolio", layout="wide", initial_sidebar_state="expanded")
 
-# ====================== CUSTOM CSS - FULL ORIGINAL + EXACT coin-grid/coin-card ======================
+# ====================== CUSTOM CSS - FULL ORIGINAL + STRONG GLOSSY-BOX ======================
 st.markdown("""
 <style>
     letter-spacing: 1.1px;
@@ -23,38 +23,37 @@ st.markdown("""
     line-height: 1.2;
 }
 
-/* === RESTORED FULL ORIGINAL GLOSSY-BOX (header summary cards) === */
+/* === FULL ORIGINAL GLOSSY-BOX (header summary cards) - MAXIMUM SPECIFICITY === */
 .glossy-box {
     background: #0f172a !important;
     padding: 20px 24px !important;
     border-radius: 20px !important;
     box-shadow: 0 8px 25px rgba(0,0,0,0.35) !important;
     text-align: center !important;
-    transition: all 0.25s ease !important;
 }
 .glossy-box > div:first-child {
-    font-size: 15px;
-    font-weight: 600;
-    letter-spacing: 1.1px;
-    color: #e0e0e0;
-    opacity: 0.9;
-    margin-bottom: 6px;
-    line-height: 1.2;
+    font-size: 15px !important;
+    font-weight: 600 !important;
+    letter-spacing: 1.1px !important;
+    color: #e0e0e0 !important;
+    opacity: 0.9 !important;
+    margin-bottom: 6px !important;
+    line-height: 1.2 !important;
 }
 .glossy-box > div:last-child {
-    font-size: 27px;
-    font-weight: 700;
-    line-height: 1.05;
-    color: #ffffff;
+    font-size: 27px !important;
+    font-weight: 700 !important;
+    line-height: 1.05 !important;
+    color: #ffffff !important;
 }
 
 /* Fee lines in Fiat summary */
 .fee-line {
-    font-size: 1.35rem;
-    font-weight: 700;
-    color: #ffffff;
-    line-height: 1.1;
-    margin-bottom: 4px;
+    font-size: 1.35rem !important;
+    font-weight: 700 !important;
+    color: #ffffff !important;
+    line-height: 1.1 !important;
+    margin-bottom: 4px !important;
 }
 
 /* MOBILE: Make header smaller */
@@ -70,7 +69,6 @@ st.markdown("""
         min-height: 100px;
     }
 }
-
 /* MOBILE RESPONSIVE FIX FOR THE 3 SUMMARY CARDS */
 @media (max-width: 600px) {
     .glossy-box {
@@ -174,29 +172,6 @@ div[data-baseweb="select"] svg {
     margin-top: 0 !important;
 }
 
-/* Open menu */
-[data-baseweb="popover"] [data-baseweb="menu"] {
-    background-color: #26334f !important;
-    border-radius: 9999px !important;
-    box-shadow: 0 12px 30px rgba(0,0,0,0.6) !important;
-    padding: 8px 6px !important;
-    margin-top: 6px !important;
-    border: 2px solid #00ff9d !important;
-}
-[data-baseweb="option"] {
-    color: #e0e0e0 !important;
-    padding: 12px 24px !important;
-    border-radius: 9999px !important;
-    margin: 3px 4px !important;
-}
-[data-baseweb="option"][aria-selected="true"] {
-    background-color: #00ff9d !important;
-    color: #0f1724 !important;
-}
-[data-baseweb="option"]:hover {
-    background-color: #1e2a44 !important;
-}
-
 /* CURSOR FIX */
 .glossy-header *,
 .glossy-box *,
@@ -230,7 +205,7 @@ div[data-baseweb="select"] *,
     }
 }
 
-/* === EXACT coin-grid + coin-card from original Home page (used on Crypto Transactions) === */
+/* === EXACT coin-grid + coin-card from original Home page === */
 .coin-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
@@ -850,7 +825,7 @@ document.querySelectorAll('.coin-card').forEach(div => {{
             </div>
             """, unsafe_allow_html=True)
 
-            # === ⋯ rollout menu INSIDE the card (top-right) ===
+            # ⋯ rollout menu INSIDE the card
             with st.popover("⋯", key=f"menu_crypto_{i}_{st.session_state.crypto_table_version}_{st.session_state.ui_version}", use_container_width=False):
                 col_edit, col_del = st.columns(2)
                 with col_edit:
