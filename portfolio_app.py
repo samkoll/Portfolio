@@ -33,33 +33,41 @@ st.markdown("""
     margin-bottom: 18px !important;
 }
 
-/* === TRANSACTION CARDS - WIDER & SHORTER + Invested/Amount/Price on same line as ticker === */
+/* === TRANSACTION CARDS - Wider, shorter, Invested/Amount/Price BESIDE ticker (same line) === */
 .transaction-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(380px, 1fr));
     gap: 16px;
     padding: 0 14px;
 }
 .transaction-card {
     background: #0f172a;
     border-radius: 18px;
-    padding: 18px 18px 14px;
+    padding: 18px 20px 14px;
     box-shadow: 0 6px 20px rgba(0,0,0,0.3);
     transition: all 0.25s ease;
     position: relative;
     display: flex;
     flex-direction: column;
-    min-height: 148px; /* much shorter */
+    min-height: 138px;
 }
 .transaction-card:hover {
     transform: translateY(-4px);
     box-shadow: 0 12px 30px rgba(0, 255, 157, 0.3);
 }
-.transaction-header {
+
+/* Main header row: Logo + Ticker + Date + Invested/Amount/Price all on ONE line */
+.transaction-main-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 16px;
+}
+.transaction-left {
     display: flex;
     align-items: center;
     gap: 14px;
-    margin-bottom: 14px;
+    flex: 1;
 }
 .transaction-header img {
     width: 42px;
@@ -78,19 +86,24 @@ st.markdown("""
     font-size: 0.92rem;
     margin-top: 2px;
 }
-.transaction-info-row {
+
+/* Right side: Invested / Amount / Price in one compact row */
+.transaction-values {
     display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 16px;
+    gap: 24px;
+    text-align: right;
     font-size: 1.02rem;
 }
-.transaction-info-row small {
+.transaction-values div {
+    min-width: 88px;
+}
+.transaction-values small {
     color: #aaa;
     font-size: 0.82rem;
     font-weight: 500;
+    display: block;
 }
-.transaction-info-row strong {
+.transaction-values strong {
     font-weight: 700;
     color: #ffffff;
 }
@@ -98,13 +111,8 @@ st.markdown("""
     font-size: 1.04rem;
     font-weight: 700;
     color: #ffffff;
-    text-align: right;
 }
-.transaction-amount-ticker {
-    font-size: 0.92rem;
-    color: #aaa;
-    font-weight: 500;
-}
+
 .transaction-buttons {
     display: flex;
     gap: 12px;
@@ -135,7 +143,7 @@ st.markdown("""
     background: #00a17a;
 }
 
-/* Big navigation cards with glossy shine */
+/* Rest of the app styles (unchanged) */
 .stButton > button {
     background: #1e2a44 !important;
     color: #e0e0e0 !important;
@@ -161,7 +169,6 @@ st.markdown("""
     background: #263b5e !important;
     color: white !important;
 }
-/* Glossy shine for main content */
 .glossy-header,
 .glossy-box {
     position: relative;
@@ -234,7 +241,6 @@ st.markdown("""
     line-height: 1.05;
     color: #ffffff;
 }
-/* Fee lines in Fiat summary */
 .fee-line {
     font-size: 1.35rem;
     font-weight: 700;
@@ -242,11 +248,8 @@ st.markdown("""
     line-height: 1.1;
     margin-bottom: 4px;
 }
-/* MOBILE: Make header smaller */
 @media (max-width: 700px) {
-    .stApp {
-        padding-top: 75px !important;
-    }
+    .stApp { padding-top: 75px !important; }
     .glossy-header {
         margin-top: 52px !important;
         margin-bottom: 35px !important;
@@ -255,29 +258,24 @@ st.markdown("""
         min-height: 100px;
     }
     .transaction-grid {
-        grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+        grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
         padding: 0 10px;
         gap: 14px;
     }
     .transaction-card {
-        padding: 16px 16px 12px;
-        min-height: 142px;
+        padding: 16px 18px 12px;
+        min-height: 134px;
     }
+    .transaction-values { gap: 18px; }
 }
-/* MOBILE RESPONSIVE FIX FOR THE 3 SUMMARY CARDS */
 @media (max-width: 600px) {
     .glossy-box {
         min-width: 98px !important;
         padding: 18px 14px !important;
     }
-    .glossy-box > div:first-child {
-        font-size: 12px !important;
-    }
-    .glossy-box > div:last-child {
-        font-size: 21px !important;
-    }
+    .glossy-box > div:first-child { font-size: 12px !important; }
+    .glossy-box > div:last-child { font-size: 21px !important; }
 }
-/* PRICE PILLS */
 .price-pills-container {
     display: flex !important;
     gap: 6px !important;
@@ -286,9 +284,7 @@ st.markdown("""
     padding-bottom: 4px;
     scrollbar-width: none;
 }
-.price-pills-container::-webkit-scrollbar {
-    display: none;
-}
+.price-pills-container::-webkit-scrollbar { display: none; }
 .price-pill, .avg-pill, .daily-pill {
     padding: 7px 14px !important;
     border-radius: 9999px !important;
@@ -302,10 +298,7 @@ st.markdown("""
     font-weight: 700;
     box-shadow: 0 4px 12px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.12);
 }
-.price-pill span:last-child,
-.avg-pill span:last-child {
-    font-size: 1.26rem;
-}
+.price-pill span:last-child, .avg-pill span:last-child { font-size: 1.26rem; }
 .daily-pill {
     color: #ff4d4d;
     font-weight: 700;
@@ -316,12 +309,9 @@ st.markdown("""
     .price-pills-container { gap: 4px !important; }
     .price-pill, .avg-pill, .daily-pill { padding: 5px 10px !important; }
     .daily-pill { padding: 3px 7px !important; font-size: 0.82rem !important; }
-    .price-pill span:first-child,
-    .avg-pill span:first-child { font-size: 0.92rem !important; }
-    .price-pill span:last-child,
-    .avg-pill span:last-child { font-size: 1.18rem !important; }
+    .price-pill span:first-child, .avg-pill span:first-child { font-size: 0.92rem !important; }
+    .price-pill span:last-child, .avg-pill span:last-child { font-size: 1.18rem !important; }
 }
-/* TIMEFRAME PILL */
 div[data-baseweb="select"] {
     background: linear-gradient(90deg, #26334f, #1e2a44) !important;
     border-radius: 9999px !important;
@@ -341,30 +331,11 @@ div[data-baseweb="select"] > div {
     justify-content: space-between !important;
     height: 100% !important;
 }
-div[data-baseweb="select"] *,
-div[data-baseweb="select"] span,
-div[data-baseweb="select"] [role="button"] span,
-div[data-baseweb="select"] [data-baseweb="select-value"] span,
-div[data-baseweb="select"] > div > div > div > div > div > span,
-div[data-baseweb="select"] > div > div > div > div > span {
+div[data-baseweb="select"] * {
     color: #ffffff !important;
     font-weight: 700 !important;
     font-size: 1.16rem !important;
-    text-align: center !important;
-    white-space: nowrap !important;
-    display: inline-block !important;
-    visibility: visible !important;
-    opacity: 1 !important;
-    letter-spacing: 0.4px !important;
-    text-shadow: 0 1px 2px rgba(0,0,0,0.5) !important;
-    caret-color: transparent !important;
-    vertical-align: middle !important;
 }
-div[data-baseweb="select"] svg {
-    fill: #e0e0e0 !important;
-    margin-top: 0 !important;
-}
-/* Open menu */
 [data-baseweb="popover"] [data-baseweb="menu"] {
     background-color: #26334f !important;
     border-radius: 9999px !important;
@@ -373,31 +344,9 @@ div[data-baseweb="select"] svg {
     margin-top: 6px !important;
     border: 2px solid #00ff9d !important;
 }
-[data-baseweb="option"] {
-    color: #e0e0e0 !important;
-    padding: 12px 24px !important;
-    border-radius: 9999px !important;
-    margin: 3px 4px !important;
-}
-[data-baseweb="option"][aria-selected="true"] {
-    background-color: #00ff9d !important;
-    color: #0f1724 !important;
-}
-[data-baseweb="option"]:hover {
-    background-color: #1e2a44 !important;
-}
-/* CURSOR FIX */
-.glossy-header *,
-.glossy-box *,
-.coin-card *,
-.price-pill *,
-.avg-pill *,
-.daily-pill *,
-div[data-baseweb="select"] *,
-.charts-header * {
+.glossy-header *, .glossy-box *, .coin-card *, .price-pill *, .avg-pill *, .daily-pill *, div[data-baseweb="select"] *, .charts-header * {
     cursor: pointer !important;
 }
-/* CHARTS HEADER */
 .charts-header {
     display: flex;
     align-items: center;
@@ -406,16 +355,6 @@ div[data-baseweb="select"] *,
     color: #ffffff;
     font-weight: 700;
     font-size: 23px;
-}
-@media (max-width: 700px) {
-    div[data-baseweb="select"] {
-        min-width: 142px !important;
-        max-width: 155px !important;
-        height: 37px !important;
-    }
-    div[data-baseweb="select"] > div {
-        padding: 0 16px !important;
-    }
 }
 </style>
 """, unsafe_allow_html=True)
@@ -924,7 +863,7 @@ document.querySelectorAll('.coin-card').forEach(div => {{
                     else:
                         st.error(f"📉 Could not load {coin} chart. Try the **Refresh** button in sidebar.")
     
-    # ====================== CRYPTO TRANSACTIONS - Invested/Amount/Price on same line as ticker + wider & shorter cards ======================
+    # ====================== CRYPTO TRANSACTIONS - Invested/Amount/Price VEDLE ticker (same line) ======================
     elif st.session_state.page == "Crypto Transactions":
         glossy_header("Crypto Transactions", CRYPTO_ICON)
         
@@ -969,19 +908,22 @@ document.querySelectorAll('.coin-card').forEach(div => {{
             
             cards_html += f"""
 <div class="transaction-card">
-    <div class="transaction-header">
-        <img src="{logo_url}" onerror="this.src='https://via.placeholder.com/42/1e2a44/ffffff?text={r['Ticker'][0]}';">
-        <div>
-            <div class="transaction-ticker">{r['Ticker']}</div>
-            <div class="transaction-date">{date_str}</div>
+    <div class="transaction-main-row">
+        <!-- Left: Logo + Ticker + Date -->
+        <div class="transaction-left">
+            <img src="{logo_url}" onerror="this.src='https://via.placeholder.com/42/1e2a44/ffffff?text={r['Ticker'][0]}';">
+            <div>
+                <div class="transaction-ticker">{r['Ticker']}</div>
+                <div class="transaction-date">{date_str}</div>
+            </div>
         </div>
-    </div>
-    
-    <!-- Invested / Amount / Price on the same line as ticker -->
-    <div class="transaction-info-row">
-        <div><small>Invested</small><br><strong>{invested}</strong></div>
-        <div><small>Amount</small><br><strong class="transaction-amount">{amount_val}</strong></div>
-        <div><small>Price</small><br><strong>{price}</strong></div>
+        
+        <!-- Right: Invested / Amount / Price - VEDLE ticker -->
+        <div class="transaction-values">
+            <div><small>Invested</small><br><strong>{invested}</strong></div>
+            <div><small>Amount</small><br><strong class="transaction-amount">{amount_val}</strong></div>
+            <div><small>Price</small><br><strong>{price}</strong></div>
+        </div>
     </div>
     
     <div class="transaction-buttons">
@@ -996,17 +938,19 @@ document.querySelectorAll('.coin-card').forEach(div => {{
 <head>
 <style>
 body {{ background: transparent; margin: 0; padding: 0; }}
-.transaction-grid {{ display: grid; grid-template-columns: repeat(auto-fit, minmax(360px, 1fr)); gap: 16px; padding: 0 14px; }}
-.transaction-card {{ background: #0f172a; border-radius: 18px; padding: 18px 18px 14px; box-shadow: 0 6px 20px rgba(0,0,0,0.3); transition: all 0.25s ease; min-height: 148px; }}
+.transaction-grid {{ display: grid; grid-template-columns: repeat(auto-fit, minmax(380px, 1fr)); gap: 16px; padding: 0 14px; }}
+.transaction-card {{ background: #0f172a; border-radius: 18px; padding: 18px 20px 14px; box-shadow: 0 6px 20px rgba(0,0,0,0.3); transition: all 0.25s ease; min-height: 138px; }}
 .transaction-card:hover {{ transform: translateY(-4px); box-shadow: 0 12px 30px rgba(0, 255, 157, 0.3); }}
-.transaction-header {{ display: flex; align-items: center; gap: 14px; margin-bottom: 14px; }}
+.transaction-main-row {{ display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }}
+.transaction-left {{ display: flex; align-items: center; gap: 14px; flex: 1; }}
 .transaction-header img {{ width: 42px; height: 42px; border-radius: 50%; object-fit: contain; }}
 .transaction-ticker {{ font-size: 1.28rem; font-weight: 700; color: #ffffff; line-height: 1.05; }}
 .transaction-date {{ color: #aaa; font-size: 0.92rem; margin-top: 2px; }}
-.transaction-info-row {{ display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; font-size: 1.02rem; }}
-.transaction-info-row small {{ color: #aaa; font-size: 0.82rem; font-weight: 500; }}
-.transaction-info-row strong {{ font-weight: 700; color: #ffffff; }}
-.transaction-amount {{ font-size: 1.04rem; font-weight: 700; color: #ffffff; text-align: right; }}
+.transaction-values {{ display: flex; gap: 24px; text-align: right; font-size: 1.02rem; }}
+.transaction-values div {{ min-width: 88px; }}
+.transaction-values small {{ color: #aaa; font-size: 0.82rem; font-weight: 500; display: block; }}
+.transaction-values strong {{ font-weight: 700; color: #ffffff; }}
+.transaction-amount {{ font-size: 1.04rem; font-weight: 700; color: #ffffff; }}
 .transaction-buttons {{ display: flex; gap: 12px; }}
 .transaction-buttons button {{ flex: 1; padding: 10px 14px; border: none; border-radius: 11px; font-weight: 700; font-size: 0.95rem; cursor: pointer; transition: all 0.2s ease; }}
 .transaction-buttons .delete-btn {{ background: #e63939; color: white; }}
@@ -1038,7 +982,7 @@ function editTransaction(i) {{
 </body>
 </html>
 """
-        components.html(full_html, height=580, scrolling=True)
+        components.html(full_html, height=560, scrolling=True)
         
         if 'editing_row_crypto' in st.session_state:
             edit_idx = st.session_state.editing_row_crypto
