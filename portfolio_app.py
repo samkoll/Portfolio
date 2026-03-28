@@ -33,6 +33,21 @@ st.markdown("""
     margin-bottom: 18px !important;
 }
 
+/* === NEW TRANSACTION CARDS (only used on Crypto Transactions page) === */
+.transaction-row {
+    background: #0f172a;
+    border-radius: 20px;
+    padding: 18px 22px;
+    margin-bottom: 14px;
+    box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+    transition: all 0.25s ease;
+    position: relative;
+}
+.transaction-row:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 0 22px 6px rgba(0, 255, 157, 0.25);
+}
+
 /* Big navigation cards with glossy shine */
 .stButton > button {
     background: #1e2a44 !important;
@@ -821,42 +836,54 @@ document.querySelectorAll('.coin-card').forEach(div => {{
                     else:
                         st.error(f"📉 Could not load {coin} chart. Try the **Refresh** button in sidebar.")
     
-    # ====================== CRYPTO TRANSACTIONS ======================
+    # ====================== CRYPTO TRANSACTIONS - REBUILT AS NARROWER CARDS (exactly like dashboard style) ======================
     elif st.session_state.page == "Crypto Transactions":
         glossy_header("Crypto Transactions", CRYPTO_ICON)
         df_display = st.session_state.crypto_df.copy()
         df_display['Date'] = df_display['Datum'].apply(format_datum)
         df_display = df_display.dropna(how='all').reset_index(drop=True)
-        table_container = st.container(key=f"crypto_table_container_{st.session_state.ui_version}")
-        with table_container:
-            with st.container(height=520, border=True):
-                h = st.columns([1.0, 0.9, 0.7, 1.0, 1.0, 0.4, 0.4])
-                h[0].markdown("**Date**")
-                h[1].markdown("**USDC**")
-                h[2].markdown("**Ticker**")
-                h[3].markdown("**Amount**")
-                h[4].markdown("**Price**")
-                h[5].markdown("**Delete**")
-                h[6].markdown("**Edit**")
-                for i, r in df_display.iterrows():
-                    cols = st.columns([1.0, 0.9, 0.7, 1.0, 1.0, 0.4, 0.4])
-                    with cols[0]: st.write(r['Date'])
-                    with cols[1]: st.write(format_money(r['USDC']))
-                    with cols[2]: st.write(r['Ticker'])
-                    with cols[3]: st.write(format_holdings(r['Amount'], r['Ticker']))
-                    with cols[4]: st.write(format_money(r['Price']))
-                    with cols[5]:
-                        if st.button("🗑️", key=f"del_crypto_{i}_{st.session_state.crypto_table_version}_{st.session_state.ui_version}"):
-                            st.session_state.crypto_df = st.session_state.crypto_df.drop(i).reset_index(drop=True)
-                            save_crypto(st.session_state.crypto_df)
-                            st.session_state.crypto_table_version += 1
-                            st.session_state.ui_version += 1
-                            st.success("✅ Row deleted!")
-                            st.rerun()
-                    with cols[6]:
-                        if st.button("✏️", key=f"edit_crypto_{i}_{st.session_state.crypto_table_version}_{st.session_state.ui_version}"):
-                            st.session_state.editing_row_crypto = i
-                            st.rerun()
+
+        # Transaction cards (narrower than dashboard cards, with logo + Delete + Edit buttons)
+        for i, r in df_display.iterrows():
+            logo_url = get_ticker_logo(r['Ticker'])
+            st.markdown('<div class="transaction-row">', unsafe_allow_html=True)
+            
+            cols = st.columns([0.8, 2.8, 1.6, 1.6, 1.5, 0.9, 0.9])
+            
+            with cols[0]:
+                st.image(logo_url, width=48)
+            
+            with cols[1]:
+                st.markdown(f"""
+                <div style="font-weight:700; font-size:1.28rem;">{r['Ticker']}</div>
+                <div style="color:#aaa; font-size:0.95rem;">{r['Date']}</div>
+                """, unsafe_allow_html=True)
+            
+            with cols[2]:
+                st.markdown(f"**Invested**<br>{format_money(r['USDC'])}")
+            
+            with cols[3]:
+                st.markdown(f"**Amount**<br>{format_holdings(r['Amount'], r['Ticker'])}")
+            
+            with cols[4]:
+                st.markdown(f"**Price**<br>{format_money(r['Price'])}")
+            
+            with cols[5]:
+                if st.button("🗑️", key=f"del_crypto_{i}_{st.session_state.crypto_table_version}_{st.session_state.ui_version}", use_container_width=True):
+                    st.session_state.crypto_df = st.session_state.crypto_df.drop(i).reset_index(drop=True)
+                    save_crypto(st.session_state.crypto_df)
+                    st.session_state.crypto_table_version += 1
+                    st.session_state.ui_version += 1
+                    st.success("✅ Row deleted!")
+                    st.rerun()
+            
+            with cols[6]:
+                if st.button("✏️", key=f"edit_crypto_{i}_{st.session_state.crypto_table_version}_{st.session_state.ui_version}", use_container_width=True):
+                    st.session_state.editing_row_crypto = i
+                    st.rerun()
+            
+            st.markdown('</div>', unsafe_allow_html=True)
+
         if 'editing_row_crypto' in st.session_state:
             edit_idx = st.session_state.editing_row_crypto
             row = st.session_state.crypto_df.loc[edit_idx]
