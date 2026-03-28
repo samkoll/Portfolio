@@ -33,12 +33,12 @@ st.markdown("""
     margin-bottom: 18px !important;
 }
 
-/* === TRANSACTION CARDS - narrower, dashboard-style, 2-3 per row === */
+/* === TRANSACTION CARDS - narrower, perfectly spaced, white text === */
 .transaction-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
-    gap: 16px;
-    padding: 8px 0;
+    gap: 18px;
+    padding: 0 12px;           /* extra side padding so cards don't touch edge */
 }
 .transaction-card {
     background: #0f172a;
@@ -67,7 +67,7 @@ st.markdown("""
     object-fit: contain;
 }
 .transaction-ticker {
-    font-size: 1.32rem;
+    font-size: 1.35rem;
     font-weight: 700;
     color: #ffffff;
 }
@@ -79,7 +79,7 @@ st.markdown("""
     display: grid;
     grid-template-columns: 1fr 1fr 1fr;
     gap: 12px;
-    margin-bottom: 20px;
+    margin-bottom: 22px;
 }
 .transaction-content div {
     text-align: center;
@@ -88,24 +88,30 @@ st.markdown("""
     font-size: 0.82rem;
     color: #aaa;
     display: block;
-    margin-bottom: 2px;
+    margin-bottom: 3px;
 }
 .transaction-content strong {
-    font-size: 1.05rem;
+    font-size: 1.08rem;
     font-weight: 700;
+    color: #ffffff;
+}
+.transaction-amount-ticker {
+    font-size: 1.08rem;
+    font-weight: 700;
+    color: #ffffff;
 }
 .transaction-buttons {
     display: flex;
-    gap: 10px;
+    gap: 12px;
     margin-top: auto;
 }
 .transaction-buttons button {
     flex: 1;
-    padding: 10px 14px;
+    padding: 11px 16px;
     border: none;
     border-radius: 12px;
     font-weight: 700;
-    font-size: 0.95rem;
+    font-size: 0.98rem;
     cursor: pointer;
     transition: all 0.2s ease;
 }
@@ -245,6 +251,7 @@ st.markdown("""
     }
     .transaction-grid {
         grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        padding: 0 8px;
     }
 }
 /* MOBILE RESPONSIVE FIX FOR THE 3 SUMMARY CARDS */
@@ -621,27 +628,6 @@ def format_money(val):
     except:
         return ""
 
-def format_crypto_price(val):
-    try:
-        val = float(val)
-        if pd.isna(val): return ""
-        if val >= 1:
-            return f"${val:,.2f}"
-        elif val >= 0.01:
-            return f"${val:,.4f}"
-        else:
-            return f"${val:,.6f}"
-    except:
-        return ""
-
-def format_percent(val):
-    try:
-        val = float(val)
-        if pd.isna(val): return ""
-        return f"{val:.2f}%"
-    except:
-        return ""
-
 def format_holdings(val, ticker=None):
     try:
         val = float(val)
@@ -742,7 +728,6 @@ def glossy_header(title: str, icon_svg: str):
 # ====================== PAGES ======================
 with main_container.container(key=f"page_{st.session_state.page}_{st.session_state.ui_version}"):
     if st.session_state.page == "Home":
-        # === ORIGINAL HEADER RESTORED: using the green grid SVG icon ===
         glossy_header("Portfolio Dashboard", DASHBOARD_ICON)
         
         df_port, total_value, total_pnl, total_pnl_pct = calculate_portfolio(st.session_state.crypto_df)
@@ -817,7 +802,6 @@ document.querySelectorAll('.coin-card').forEach(div => {{
 </script><!-- VERSION:{st.session_state.ui_version} --></body></html>"""
         components.html(html, height=580, scrolling=True)
         
-        # ====================== CHARTS SECTION - GAP NOW PERFECTLY MATCHED ======================
         st.markdown(f"""
 <div id="price-charts-section" class="glossy-box" style="background:#1e2a44;padding:18px 30px;border-radius:18px;">
     <div class="charts-header">
@@ -842,10 +826,10 @@ document.querySelectorAll('.coin-card').forEach(div => {{
                     <div class="price-pills-container">
                         <div class="price-pill">
                             <span>LIVE</span>
-                            <span style="color:{color};">{format_crypto_price(live_price)}</span>
+                            <span style="color:{color};">{format_money(live_price)}</span>
                         </div>
                         <div class="daily-pill">{daily_arrow} {abs(daily_change_pct):.2f}%</div>
-                        {f'<div class="price-pill avg-pill"><span>AVG</span><span style="color:#ffaa00;">{format_crypto_price(avg_price)}</span></div>' if avg_price is not None else ''}
+                        {f'<div class="price-pill avg-pill"><span>AVG</span><span style="color:#ffaa00;">{format_money(avg_price)}</span></div>' if avg_price is not None else ''}
                     </div>
                     """, unsafe_allow_html=True)
                     col1, col2 = st.columns([0.95, 4.05])
@@ -919,15 +903,15 @@ document.querySelectorAll('.coin-card').forEach(div => {{
                     else:
                         st.error(f"📉 Could not load {coin} chart. Try the **Refresh** button in sidebar.")
     
-    # ====================== CRYPTO TRANSACTIONS - PERFECT NARROW CARDS (2-3 per row) ======================
+    # ====================== CRYPTO TRANSACTIONS - FIXED & POLISHED ======================
     elif st.session_state.page == "Crypto Transactions":
         glossy_header("Crypto Transactions", CRYPTO_ICON)
         
-        # Hidden triggers for JS → Python communication
+        # Hidden triggers for JS communication
         delete_trigger = st.text_input("delete_trigger", value=st.session_state.delete_trigger, label_visibility="collapsed", key="delete_trigger_hidden")
         edit_trigger = st.text_input("edit_trigger", value=st.session_state.edit_trigger, label_visibility="collapsed", key="edit_trigger_hidden")
         
-        # Handle delete from JS
+        # Handle delete
         if delete_trigger and delete_trigger != st.session_state.delete_trigger:
             try:
                 idx = int(delete_trigger)
@@ -942,7 +926,7 @@ document.querySelectorAll('.coin-card').forEach(div => {{
                 pass
             st.session_state.delete_trigger = delete_trigger
         
-        # Handle edit from JS
+        # Handle edit
         if edit_trigger and edit_trigger != st.session_state.edit_trigger:
             try:
                 idx = int(edit_trigger)
@@ -957,12 +941,12 @@ document.querySelectorAll('.coin-card').forEach(div => {{
         df_display['Date'] = df_display['Datum'].apply(format_datum)
         df_display = df_display.dropna(how='all').reset_index(drop=True)
         
-        # Build beautiful narrow cards (exactly like dashboard style but narrower + buttons)
+        # Build transaction cards
         cards_html = ""
         for i, r in df_display.iterrows():
             logo_url = get_ticker_logo(r['Ticker'])
             invested = format_money(r['USDC'])
-            amount = format_holdings(r['Amount'], r['Ticker'])
+            amount_val = format_holdings(r['Amount'], r['Ticker'])
             price = format_money(r['Price'])
             date_str = r['Date']
             
@@ -977,7 +961,7 @@ document.querySelectorAll('.coin-card').forEach(div => {{
     </div>
     <div class="transaction-content">
         <div><small>Invested</small><br><strong>{invested}</strong></div>
-        <div><small>Amount</small><br><strong>{amount}</strong></div>
+        <div><small>Amount</small><br><strong class="transaction-amount-ticker">{amount_val} <span style="color:#aaa;font-size:0.9rem;">{r['Ticker']}</span></strong></div>
         <div><small>Price</small><br><strong>{price}</strong></div>
     </div>
     <div class="transaction-buttons">
@@ -992,19 +976,20 @@ document.querySelectorAll('.coin-card').forEach(div => {{
 <head>
 <style>
 body {{ background: transparent; margin: 0; padding: 0; }}
-.transaction-grid {{ display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 16px; }}
+.transaction-grid {{ display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 18px; padding: 0 12px; }}
 .transaction-card {{ background: #0f172a; border-radius: 20px; padding: 20px; box-shadow: 0 6px 20px rgba(0,0,0,0.3); transition: all 0.25s ease; }}
 .transaction-card:hover {{ transform: translateY(-4px); box-shadow: 0 12px 30px rgba(0, 255, 157, 0.3); }}
 .transaction-header {{ display: flex; align-items: center; gap: 14px; margin-bottom: 18px; }}
 .transaction-header img {{ width: 48px; height: 48px; border-radius: 50%; object-fit: contain; }}
-.transaction-ticker {{ font-size: 1.32rem; font-weight: 700; color: #ffffff; }}
+.transaction-ticker {{ font-size: 1.35rem; font-weight: 700; color: #ffffff; }}
 .transaction-date {{ color: #aaa; font-size: 0.95rem; }}
-.transaction-content {{ display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin-bottom: 20px; }}
+.transaction-content {{ display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin-bottom: 22px; }}
 .transaction-content div {{ text-align: center; }}
-.transaction-content small {{ font-size: 0.82rem; color: #aaa; display: block; margin-bottom: 2px; }}
-.transaction-content strong {{ font-size: 1.05rem; font-weight: 700; }}
-.transaction-buttons {{ display: flex; gap: 10px; }}
-.transaction-buttons button {{ flex: 1; padding: 10px 14px; border: none; border-radius: 12px; font-weight: 700; font-size: 0.95rem; cursor: pointer; transition: all 0.2s ease; }}
+.transaction-content small {{ font-size: 0.82rem; color: #aaa; display: block; margin-bottom: 3px; }}
+.transaction-content strong {{ font-size: 1.08rem; font-weight: 700; color: #ffffff; }}
+.transaction-amount-ticker {{ font-size: 1.08rem; font-weight: 700; color: #ffffff; }}
+.transaction-buttons {{ display: flex; gap: 12px; }}
+.transaction-buttons button {{ flex: 1; padding: 11px 16px; border: none; border-radius: 12px; font-weight: 700; font-size: 0.98rem; cursor: pointer; transition: all 0.2s ease; }}
 .transaction-buttons .delete-btn {{ background: #ff4d4d; color: white; }}
 .transaction-buttons .delete-btn:hover {{ background: #ff3333; }}
 .transaction-buttons .edit-btn {{ background: #00ff9d; color: #0f1724; }}
@@ -1034,8 +1019,9 @@ function editTransaction(i) {{
 </body>
 </html>
 """
-        components.html(full_html, height=620, scrolling=True)
+        components.html(full_html, height=680, scrolling=True)
         
+        # Edit form
         if 'editing_row_crypto' in st.session_state:
             edit_idx = st.session_state.editing_row_crypto
             row = st.session_state.crypto_df.loc[edit_idx]
