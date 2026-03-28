@@ -14,7 +14,7 @@ import random
 # ====================== CONFIG ======================
 st.set_page_config(page_title="Portfolio", layout="wide", page_icon="logo.png")
 
-# ====================== GLOBAL CSS (polished & clean + FLIP CARD) ======================
+# ====================== GLOBAL CSS (polished & clean) ======================
 st.markdown("""
 <style>
 /* Whole app background - lighter elegant navy gradient */
@@ -26,13 +26,14 @@ st.markdown("""
 .main, .block-container, .stMain {
     padding-top: 0px !important;
 }
+
 /* === PERFECT GAP FIX BETWEEN COIN GRID AND CHARTS === */
 #price-charts-section {
     margin-top: -25px !important;
     margin-bottom: 18px !important;
 }
 
-/* === TRANSACTION CARDS === */
+/* === TRANSACTION CARDS - Wider, shorter, Invested/Amount/Price BESIDE ticker (same line) === */
 .transaction-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(380px, 1fr));
@@ -54,6 +55,8 @@ st.markdown("""
     transform: translateY(-4px);
     box-shadow: 0 12px 30px rgba(0, 255, 157, 0.3);
 }
+
+/* Main header row: Logo + Ticker + Date + Invested/Amount/Price all on ONE line */
 .transaction-main-row {
     display: flex;
     align-items: center;
@@ -83,6 +86,8 @@ st.markdown("""
     font-size: 0.92rem;
     margin-top: 2px;
 }
+
+/* Right side: Invested / Amount / Price in one compact row */
 .transaction-values {
     display: flex;
     gap: 24px;
@@ -107,6 +112,7 @@ st.markdown("""
     font-weight: 700;
     color: #ffffff;
 }
+
 .transaction-buttons {
     display: flex;
     gap: 12px;
@@ -137,7 +143,7 @@ st.markdown("""
     background: #00a17a;
 }
 
-/* Rest of the app styles */
+/* Rest of the app styles (unchanged) */
 .stButton > button {
     background: #1e2a44 !important;
     color: #e0e0e0 !important;
@@ -154,6 +160,8 @@ st.markdown("""
     gap: 18px;
     box-shadow: 0 4px 15px rgba(0,0,0,0.25) !important;
     transition: all 0.3s ease !important;
+    position: relative;
+    overflow: hidden;
 }
 .stButton > button:hover {
     transform: translateY(-4px) !important;
@@ -240,67 +248,6 @@ st.markdown("""
     line-height: 1.1;
     margin-bottom: 4px;
 }
-
-/* ====================== FLIP CARD - Premium 3D Horizontal Flip ====================== */
-.flip-card {
-    perspective: 1400px;
-    height: 100%;
-    cursor: pointer;
-}
-.flip-card-inner {
-    position: relative;
-    width: 100%;
-    height: 100%;
-    text-align: center;
-    transition: transform 0.82s cubic-bezier(0.23, 1.0, 0.32, 1.0);
-    transform-style: preserve-3d;
-    border-radius: 20px;
-    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.35);
-}
-.flip-card.flipped .flip-card-inner {
-    transform: rotateY(180deg);
-}
-.flip-card-front, .flip-card-back {
-    position: absolute;
-    width: 100%;
-    height: 100%;
-    -webkit-backface-visibility: hidden;
-    backface-visibility: hidden;
-    border-radius: 20px;
-    overflow: hidden;
-}
-.flip-card-front {
-    background: #0f172a;
-    padding: 18px 16px;
-}
-.flip-card-back {
-    background: #0f172a;
-    transform: rotateY(180deg);
-    display: flex;
-    flex-direction: column;
-    padding: 14px;
-}
-.flip-card-back .mini-chart-wrapper {
-    flex: 1;
-    min-height: 0;
-    border-radius: 14px;
-    overflow: hidden;
-    background: #1a2338;
-    box-shadow: inset 0 2px 8px rgba(0,0,0,0.4);
-}
-.flip-card-front:hover {
-    box-shadow: 0 0 28px 8px var(--glow) !important;
-}
-.flip-hint {
-    position: absolute;
-    bottom: 12px;
-    right: 16px;
-    font-size: 0.78rem;
-    color: #666;
-    font-weight: 500;
-    pointer-events: none;
-}
-
 @media (max-width: 700px) {
     .stApp { padding-top: 75px !important; }
     .glossy-header {
@@ -320,6 +267,14 @@ st.markdown("""
         min-height: 134px;
     }
     .transaction-values { gap: 18px; }
+}
+@media (max-width: 600px) {
+    .glossy-box {
+        min-width: 98px !important;
+        padding: 18px 14px !important;
+    }
+    .glossy-box > div:first-child { font-size: 12px !important; }
+    .glossy-box > div:last-child { font-size: 21px !important; }
 }
 .price-pills-container {
     display: flex !important;
@@ -349,6 +304,57 @@ st.markdown("""
     font-weight: 700;
     padding: 4px 8px !important;
     font-size: 0.88rem !important;
+}
+@media (max-width: 700px) {
+    .price-pills-container { gap: 4px !important; }
+    .price-pill, .avg-pill, .daily-pill { padding: 5px 10px !important; }
+    .daily-pill { padding: 3px 7px !important; font-size: 0.82rem !important; }
+    .price-pill span:first-child, .avg-pill span:first-child { font-size: 0.92rem !important; }
+    .price-pill span:last-child, .avg-pill span:last-child { font-size: 1.18rem !important; }
+}
+div[data-baseweb="select"] {
+    background: linear-gradient(90deg, #26334f, #1e2a44) !important;
+    border-radius: 9999px !important;
+    box-shadow: 0 6px 20px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.15) !important;
+    min-width: 148px !important;
+    max-width: 160px !important;
+    height: 39px !important;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+div[data-baseweb="select"] > div {
+    background: transparent !important;
+    border: none !important;
+    padding: 0 18px !important;
+    line-height: 1.35 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    height: 100% !important;
+}
+div[data-baseweb="select"] * {
+    color: #ffffff !important;
+    font-weight: 700 !important;
+    font-size: 1.16rem !important;
+}
+[data-baseweb="popover"] [data-baseweb="menu"] {
+    background-color: #26334f !important;
+    border-radius: 9999px !important;
+    box-shadow: 0 12px 30px rgba(0,0,0,0.6) !important;
+    padding: 8px 6px !important;
+    margin-top: 6px !important;
+    border: 2px solid #00ff9d !important;
+}
+.glossy-header *, .glossy-box *, .coin-card *, .price-pill *, .avg-pill *, .daily-pill *, div[data-baseweb="select"] *, .charts-header * {
+    cursor: pointer !important;
+}
+.charts-header {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 14px;
+    color: #ffffff;
+    font-weight: 700;
+    font-size: 23px;
 }
 </style>
 """, unsafe_allow_html=True)
@@ -680,10 +686,9 @@ def glossy_header(title: str, icon_svg: str):
 with main_container.container(key=f"page_{st.session_state.page}_{st.session_state.ui_version}"):
     if st.session_state.page == "Home":
         glossy_header("Portfolio Dashboard", DASHBOARD_ICON)
-       
+        
         df_port, total_value, total_pnl, total_pnl_pct = calculate_portfolio(st.session_state.crypto_df)
-       
-        # Value summary
+        
         value_box_html = f"""
 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(98px, 1fr)); gap: 14px; margin-bottom: 30px;">
     <div class="glossy-box"><div>Total Value</div><div>{format_money(total_value)}</div></div>
@@ -691,159 +696,81 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
     <div class="glossy-box"><div>PnL %</div><div style="color:{'#00ff9d' if total_pnl_pct>=0 else '#ff4d4d'}">{"▲" if total_pnl_pct>0 else "▼" if total_pnl_pct<0 else ""} {abs(total_pnl_pct):.2f}%</div></div>
 </div>"""
         st.markdown(value_box_html, unsafe_allow_html=True)
-       
+        
         coin_list = [t for t in df_port['Ticker'] if t != 'USDC']
-       
-        # ====================== FLIP CARD GRID ======================
+        
         cards_html = ""
         for _, r in df_port.iterrows():
-            ticker = r['Ticker']
-            if ticker == 'USDC':
-                continue
-                
             pnl = r['PnL']
             pnl_color = "#00ff9d" if pnl > 0 else "#ff4d4d" if pnl < 0 else "#aaaaaa"
             arrow = "▲" if pnl > 0 else "▼" if pnl < 0 else ""
-            base_color = get_ticker_color(ticker)
+            base_color = get_ticker_color(r['Ticker'])
             glow_color = '#ffffff77' if base_color == '#000000' else base_color + '77'
+            ticker = r['Ticker']
+            onclick = f"onclick=\"switchToTabAndScroll({coin_list.index(ticker)})\" " if ticker != 'USDC' else ""
+            row_class = "clickable-row" if ticker != 'USDC' else ""
             logo_url = get_ticker_logo(ticker)
+            
             pnl_pct_formatted = format_percent(abs(r['PnL %'])) if pd.notna(r['PnL %']) else ""
-            live_price = r['Live']
-            avg_price = r.get('AVG', None)
-
-            # Mini chart (30m)
-            mini_data = get_cryptocompare_ohlc(ticker, "30m", st.session_state.refresh_key)
-            mini_chart_html = ""
-            if mini_data is not None and not mini_data.empty:
-                fig_mini = make_subplots(rows=2, cols=1, shared_xaxes=True, vertical_spacing=0.12,
-                                        row_heights=[0.78, 0.22], subplot_titles=("", ""))
-                
-                fig_mini.add_trace(go.Candlestick(
-                    x=mini_data.index,
-                    open=mini_data['open'],
-                    high=mini_data['high'],
-                    low=mini_data['low'],
-                    close=mini_data['close'],
-                    increasing_line_color='#00ff9d',
-                    decreasing_line_color='#ff4d4d',
-                    name='Price'
-                ), row=1, col=1)
-                
-                if avg_price and pd.notna(avg_price):
-                    fig_mini.add_trace(go.Scatter(
-                        x=[mini_data.index.min(), mini_data.index.max()],
-                        y=[avg_price, avg_price],
-                        mode='lines',
-                        line=dict(color='#ffaa00', width=1.8, dash='dash'),
-                        name='Your AVG'
-                    ), row=1, col=1)
-                
-                colors_vol = ['#00ff9d' if o < c else '#ff4d4d' for o, c in zip(mini_data['open'], mini_data['close'])]
-                fig_mini.add_trace(go.Bar(
-                    x=mini_data.index,
-                    y=mini_data['volumefrom'],
-                    marker_color=colors_vol,
-                    name='Volume',
-                    opacity=0.75
-                ), row=2, col=1)
-                
-                fig_mini.update_layout(
-                    height=280,
-                    margin=dict(t=10, b=10, l=10, r=10),
-                    paper_bgcolor='rgba(0,0,0,0)',
-                    plot_bgcolor='rgba(0,0,0,0)',
-                    font_color='#ddd',
-                    showlegend=False,
-                    xaxis_rangeslider_visible=False,
-                    dragmode='pan',
-                    hovermode="x unified"
-                )
-                fig_mini.update_xaxes(showspikes=False, showgrid=False)
-                fig_mini.update_yaxes(showspikes=False, showgrid=True, gridcolor='rgba(255,255,255,0.06)')
-                
-                mini_chart_html = fig_mini.to_html(full_html=False, include_plotlyjs=False, config={'displayModeBar': False})
-            else:
-                mini_chart_html = f'<div style="height:100%;display:flex;align-items:center;justify-content:center;color:#777;font-style:italic;">No chart data available for {ticker}</div>'
-
+            
             cards_html += f"""
-<div class="flip-card" data-ticker="{ticker}" style="--glow:{glow_color};">
-    <div class="flip-card-inner">
-        <!-- FRONT SIDE -->
-        <div class="flip-card-front">
-            <div class="card-header">
-                <img src="{logo_url}" style="height:38px;width:38px;border-radius:50%;object-fit:contain;" 
-                     onerror="this.src='https://via.placeholder.com/38/1e2a44/ffffff?text={ticker[0]}';">
-                <span style="font-weight:700;font-size:1.22rem;margin-left:10px;">{ticker}</span>
-            </div>
-            <div class="card-content">
-                <div class="label-value-row"><span class="label">Holdings</span><span class="value">{format_holdings(r['Holdings'], r['Ticker'])}</span></div>
-                <div class="label-value-row"><span class="label">Invested</span><span class="value">{format_money(r['USDC'])}</span></div>
-                <div class="label-value-row"><span class="label">PnL</span><span class="value" style="color:{pnl_color};">{arrow} {format_money(abs(pnl) if pd.notna(pnl) else "")}</span></div>
-                <div class="label-value-row"><span class="label">PnL %</span><span class="value" style="color:{pnl_color};">{arrow} {pnl_pct_formatted}</span></div>
-                <div class="label-value-row total"><span class="label">Value</span><span class="value total-value">{format_money(r['Value'])}</span></div>
-            </div>
-            <div class="flip-hint">Click to flip →</div>
-        </div>
-
-        <!-- BACK SIDE -->
-        <div class="flip-card-back">
-            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;padding:0 4px;">
-                <span style="font-weight:700;color:#fff;font-size:1.05rem;">{ticker} • 30m</span>
-                <button onclick="flipBack(this)" style="background:none;border:none;color:#00ff9d;font-size:1.35rem;cursor:pointer;padding:4px 8px;">←</button>
-            </div>
-            <div class="mini-chart-wrapper">
-                {mini_chart_html}
-            </div>
-            <div class="price-pills-container" style="margin-top:10px;justify-content:center;">
-                <div class="price-pill">
-                    <span>LIVE</span>
-                    <span style="color:{'#00ff9d' if live_price > 0 else '#ff4d4d'};">{format_money(live_price)}</span>
-                </div>
-                {f'<div class="avg-pill"><span>AVG</span><span style="color:#ffaa00;">{format_money(avg_price)}</span></div>' if avg_price and pd.notna(avg_price) else ''}
-            </div>
-        </div>
+<div class="coin-card {row_class}" data-glow="{glow_color}" {onclick}>
+    <div class="card-header">
+        <img src="{logo_url}" style="height:38px;width:38px;border-radius:50%;object-fit:contain;" onerror="this.src='https://via.placeholder.com/38/1e2a44/ffffff?text={ticker[0]}';">
+        <span style="font-weight:700;font-size:1.22rem;margin-left:10px;">{ticker}</span>
     </div>
-</div>
-"""
-
+    <div class="card-content">
+        <div class="label-value-row"><span class="label">Holdings</span><span class="value">{format_holdings(r['Holdings'], r['Ticker'])}</span></div>
+        <div class="label-value-row"><span class="label">Invested</span><span class="value">{format_money(r['USDC'])}</span></div>
+        <div class="label-value-row"><span class="label">PnL</span><span class="value" style="color:{pnl_color};">{arrow} {format_money(abs(pnl) if pd.notna(pnl) else "")}</span></div>
+        <div class="label-value-row"><span class="label">PnL %</span><span class="value" style="color:{pnl_color};">{arrow} {pnl_pct_formatted}</span></div>
+        <div class="label-value-row total"><span class="label">Value</span><span class="value total-value">{format_money(r['Value'])}</span></div>
+    </div>
+</div>"""
+        
         html = f"""<html><head><style>
 body{{background:transparent;color:white;font-family:sans-serif;margin:0;padding:0;}}
-.coin-grid {{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:18px;padding:32px 26px;box-sizing:border-box;max-height:650px;overflow-y:auto;scrollbar-width:none;}}
+.coin-grid {{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px;padding:32px 26px;box-sizing:border-box;max-height:520px;overflow-y:auto;scrollbar-width:none;background:transparent !important;}}
 .coin-grid::-webkit-scrollbar {{display:none;}}
-</style></head><body>
-<div class="coin-grid">{cards_html}</div>
-<script>
-function flipBack(btn) {{
-    const card = btn.closest('.flip-card');
-    if (card) card.classList.remove('flipped');
+.coin-card {{background:#0f172a;padding:16px;border-radius:20px;box-shadow:0 6px 20px rgba(0,0,0,0.3);transition:all 0.25s ease;cursor:pointer;position:relative;z-index:1;outline:none !important;-webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none;}}
+.coin-card:hover {{transform:translateY(-3px);box-shadow:0 0 22px 6px var(--glow) !important;z-index:10;}}
+.card-header {{display:flex;align-items:center;margin-bottom:14px;}}
+.card-content {{display:flex;flex-direction:column;gap:8px;}}
+.label-value-row {{display:flex;justify-content:space-between;align-items:center;font-size:0.95rem;}}
+.label {{color:#aaa;font-weight:500;}}
+.value {{font-weight:600;}}
+.total {{font-size:1.18rem;margin-top:8px;border-top:1px solid rgba(255,255,255,0.12);padding-top:8px;}}
+.total-value {{font-size:1.28rem;}}
+@media (max-width: 700px) {{
+    .coin-grid {{grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px;padding:28px 24px;}}
+    .coin-card {{padding:14px;}}
 }}
-document.querySelectorAll('.flip-card').forEach(card => {{
-    card.addEventListener('click', function(e) {{
-        if (!e.target.closest('button')) {{
-            this.classList.toggle('flipped');
+</style></head><body><div class="coin-grid">{cards_html}</div><script>
+function switchToTabAndScroll(index){{
+    const tabs = window.parent.document.querySelectorAll('.stTabs button');
+    if (tabs && tabs[index]) tabs[index].click();
+    setTimeout(() => {{
+        const section = window.parent.document.getElementById('price-charts-section');
+        if (section) {{
+            section.scrollIntoView({{ behavior: 'smooth', block: 'start' }});
         }}
-    }});
+    }}, 180);
+}}
+document.querySelectorAll('.coin-card').forEach(div => {{
+    div.style.setProperty('--glow', div.getAttribute('data-glow'));
 }});
-document.addEventListener('keydown', function(e) {{
-    if (e.key === "Escape") {{
-        document.querySelectorAll('.flip-card').forEach(c => c.classList.remove('flipped'));
-    }}
-}});
-</script>
-</body></html>"""
-
-        components.html(html, height=680, scrolling=True)
-       
-        # Full Charts Section (unchanged)
+</script><!-- VERSION:{st.session_state.ui_version} --></body></html>"""
+        components.html(html, height=580, scrolling=True)
+        
         st.markdown(f"""
 <div id="price-charts-section" class="glossy-box" style="background:#1e2a44;padding:18px 30px;border-radius:18px;">
     <div class="charts-header">
         {CHARTS_ICON}
-        <span>Full Charts</span>
+        <span>Charts</span>
     </div>
 </div>
 """, unsafe_allow_html=True)
-       
+        
         if coin_list:
             selected_tab = st.tabs(coin_list)
             for i, coin in enumerate(coin_list):
@@ -935,14 +862,14 @@ document.addEventListener('keydown', function(e) {{
                         )
                     else:
                         st.error(f"📉 Could not load {coin} chart. Try the **Refresh** button in sidebar.")
-
-    # ====================== CRYPTO TRANSACTIONS ======================
+    
+    # ====================== CRYPTO TRANSACTIONS - Invested/Amount/Price VEDLE ticker (same line) ======================
     elif st.session_state.page == "Crypto Transactions":
         glossy_header("Crypto Transactions", CRYPTO_ICON)
-       
+        
         delete_trigger = st.text_input("delete_trigger", value=st.session_state.delete_trigger, label_visibility="collapsed", key="delete_trigger_hidden")
         edit_trigger = st.text_input("edit_trigger", value=st.session_state.edit_trigger, label_visibility="collapsed", key="edit_trigger_hidden")
-       
+        
         if delete_trigger and delete_trigger != st.session_state.delete_trigger:
             try:
                 idx = int(delete_trigger)
@@ -956,7 +883,7 @@ document.addEventListener('keydown', function(e) {{
             except:
                 pass
             st.session_state.delete_trigger = delete_trigger
-       
+        
         if edit_trigger and edit_trigger != st.session_state.edit_trigger:
             try:
                 idx = int(edit_trigger)
@@ -966,11 +893,11 @@ document.addEventListener('keydown', function(e) {{
             except:
                 pass
             st.session_state.edit_trigger = edit_trigger
-       
+        
         df_display = st.session_state.crypto_df.copy()
         df_display['Date'] = df_display['Datum'].apply(format_datum)
         df_display = df_display.dropna(how='all').reset_index(drop=True)
-       
+        
         cards_html = ""
         for i, r in df_display.iterrows():
             logo_url = get_ticker_logo(r['Ticker'])
@@ -978,10 +905,11 @@ document.addEventListener('keydown', function(e) {{
             amount_val = format_holdings(r['Amount'], r['Ticker'])
             price = format_money(r['Price'])
             date_str = r['Date']
-           
+            
             cards_html += f"""
 <div class="transaction-card">
     <div class="transaction-main-row">
+        <!-- Left: Logo + Ticker + Date -->
         <div class="transaction-left">
             <img src="{logo_url}" onerror="this.src='https://via.placeholder.com/42/1e2a44/ffffff?text={r['Ticker'][0]}';">
             <div>
@@ -989,19 +917,22 @@ document.addEventListener('keydown', function(e) {{
                 <div class="transaction-date">{date_str}</div>
             </div>
         </div>
+        
+        <!-- Right: Invested / Amount / Price - VEDLE ticker -->
         <div class="transaction-values">
             <div><small>Invested</small><br><strong>{invested}</strong></div>
             <div><small>Amount</small><br><strong class="transaction-amount">{amount_val}</strong></div>
             <div><small>Price</small><br><strong>{price}</strong></div>
         </div>
     </div>
+    
     <div class="transaction-buttons">
         <button class="delete-btn" onclick="deleteTransaction({i})">🗑️ Delete</button>
         <button class="edit-btn" onclick="editTransaction({i})">✏️ Edit</button>
     </div>
 </div>
 """
-       
+        
         full_html = f"""
 <html>
 <head>
@@ -1052,7 +983,7 @@ function editTransaction(i) {{
 </html>
 """
         components.html(full_html, height=560, scrolling=True)
-       
+        
         if 'editing_row_crypto' in st.session_state:
             edit_idx = st.session_state.editing_row_crypto
             row = st.session_state.crypto_df.loc[edit_idx]
@@ -1082,7 +1013,7 @@ function editTransaction(i) {{
                     if st.form_submit_button("❌ Cancel"):
                         del st.session_state.editing_row_crypto
                         st.rerun()
-       
+        
         st.subheader("➕ Add New Transaction")
         with st.form("add_crypto"):
             col1, col2, col3 = st.columns([1.2, 1.2, 1.6])
@@ -1104,7 +1035,7 @@ function editTransaction(i) {{
                     st.session_state.ui_version += 1
                     st.success(f"✅ Added {amount} {ticker}")
                     st.rerun()
-
+    
     # ====================== FIAT TRANSACTIONS ======================
     elif st.session_state.page == "Fiat Transactions":
         total_czk = pd.to_numeric(st.session_state.fiat_df['CZK'], errors='coerce').fillna(0).sum()
