@@ -13,7 +13,7 @@ import streamlit.components.v1 as components
 
 st.set_page_config(page_title="Crypto Portfolio", layout="wide", initial_sidebar_state="expanded")
 
-# ====================== CUSTOM CSS ======================
+# ====================== CUSTOM CSS (FULL ORIGINAL + SMALL TRANSACTION CARDS) ======================
 st.markdown("""
 <style>
     letter-spacing: 1.1px;
@@ -202,19 +202,19 @@ div[data-baseweb="select"] *,
         padding: 0 16px !important;
     }
 }
-/* TRANSACTION CARDS - exactly as in your screenshot */
+/* TRANSACTION CARDS - EXACTLY SAME SIZE AS HOME PAGE coin-card */
 .transaction-card {
     background: #0f172a !important;
-    padding: 20px !important;
+    padding: 16px !important;
     border-radius: 20px !important;
-    box-shadow: 0 8px 25px rgba(0,0,0,0.35) !important;
+    box-shadow: 0 6px 20px rgba(0,0,0,0.3) !important;
     transition: all 0.25s ease !important;
-    margin-bottom: 18px !important;
+    margin-bottom: 14px !important;
     position: relative;
 }
 .transaction-card:hover {
     transform: translateY(-3px) !important;
-    box-shadow: 0 0 22px 8px var(--glow) !important;
+    box-shadow: 0 0 22px 6px var(--glow) !important;
 }
 </style>
 """, unsafe_allow_html=True)
@@ -428,13 +428,13 @@ def get_ticker_color(ticker: str) -> str:
         return known[ticker]
     return f"#{hashlib.md5(ticker.encode()).hexdigest()[:6]}"
 
-# ====================== FORMATTING - FIXED DOLLAR SIGN ======================
+# ====================== FORMATTING (DOLLAR SIGN FIXED) ======================
 def format_money(val):
     try:
         val = float(val)
         if pd.isna(val): return ""
         s = f"{val:,.2f}" if val >= 0 else f"-{(-val):,.2f}"
-        return f"&#36;{s}"          # &#36; prevents LaTeX parsing in Streamlit
+        return f"&#36;{s}"
     except:
         return ""
 
@@ -556,7 +556,7 @@ def glossy_header(title: str, icon_svg: str):
 # ====================== PAGES ======================
 with main_container.container(key=f"page_{st.session_state.page}_{st.session_state.ui_version}"):
     if st.session_state.page == "Home":
-        # === EXACTLY ORIGINAL - no changes to cards or background ===
+        # === EXACTLY ORIGINAL (restored) ===
         glossy_header("Portfolio Dashboard", DASHBOARD_ICON)
 
         df_port, total_value, total_pnl, total_pnl_pct = calculate_portfolio(st.session_state.crypto_df)
@@ -732,14 +732,14 @@ document.querySelectorAll('.coin-card').forEach(div => {{
                     else:
                         st.error(f"📉 Could not load {coin} chart. Try the **Refresh** button in sidebar.")
 
-    # ====================== CRYPTO TRANSACTIONS ======================
+    # ====================== CRYPTO TRANSACTIONS (cards now same size as Home) ======================
     elif st.session_state.page == "Crypto Transactions":
         glossy_header("Crypto Transactions", CRYPTO_ICON)
         df_display = st.session_state.crypto_df.copy()
         df_display['Date'] = df_display['Datum'].apply(format_datum)
         df_display = df_display.dropna(how='all').reset_index(drop=True)
 
-        st.markdown('<div style="display:flex;flex-direction:column;gap:18px;padding:8px 0;">', unsafe_allow_html=True)
+        st.markdown('<div style="display:flex;flex-direction:column;gap:14px;padding:8px 0;">', unsafe_allow_html=True)
 
         for i, r in df_display.iterrows():
             ticker = str(r['Ticker']).upper()
@@ -749,33 +749,32 @@ document.querySelectorAll('.coin-card').forEach(div => {{
             amount_str = format_holdings(r['Amount'], ticker)
             price_str = format_money(r['Price'])
 
-            # Beautiful card exactly matching your screenshot
             st.markdown(f"""
             <div class="transaction-card" style="--glow:{get_ticker_color(ticker) + '77'}">
-                <div style="display:flex;align-items:center;margin-bottom:18px;">
-                    <img src="{logo_url}" style="height:46px;width:46px;border-radius:50%;object-fit:contain;" onerror="this.src='https://via.placeholder.com/46/1e2a44/ffffff?text={ticker[0]}';">
-                    <div style="margin-left:14px;flex:1;">
-                        <span style="font-weight:700;font-size:1.45rem;color:#ffffff;">{ticker}</span>
-                        <div style="color:#94a3b8;font-size:1.05rem;margin-top:2px;">{date_str}</div>
+                <div style="display:flex;align-items:center;margin-bottom:14px;">
+                    <img src="{logo_url}" style="height:38px;width:38px;border-radius:50%;object-fit:contain;" onerror="this.src='https://via.placeholder.com/38/1e2a44/ffffff?text={ticker[0]}';">
+                    <div style="margin-left:12px;flex:1;">
+                        <span style="font-weight:700;font-size:1.22rem;color:#ffffff;">{ticker}</span>
+                        <div style="color:#94a3b8;font-size:0.95rem;margin-top:2px;">{date_str}</div>
                     </div>
                     <div style="text-align:right;">
-                        <div style="font-size:1.4rem;font-weight:700;color:#00ff9d;">{usdc_str}</div>
+                        <div style="font-size:1.18rem;font-weight:700;color:#00ff9d;">{usdc_str}</div>
                     </div>
                 </div>
-                <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;border-top:1px solid rgba(255,255,255,0.12);padding-top:16px;">
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;border-top:1px solid rgba(255,255,255,0.12);padding-top:12px;">
                     <div>
                         <span style="color:#aaa;font-size:0.95rem;font-weight:500;">AMOUNT</span>
-                        <div style="font-size:1.32rem;font-weight:700;margin-top:4px;">{amount_str}</div>
+                        <div style="font-size:1.05rem;font-weight:600;margin-top:4px;">{amount_str}</div>
                     </div>
                     <div>
                         <span style="color:#aaa;font-size:0.95rem;font-weight:500;">BUY PRICE</span>
-                        <div style="font-size:1.32rem;font-weight:700;margin-top:4px;">{price_str}</div>
+                        <div style="font-size:1.05rem;font-weight:600;margin-top:4px;">{price_str}</div>
                     </div>
                 </div>
             </div>
             """, unsafe_allow_html=True)
 
-            # === ROLLOUT MENU (⋯) for every card separately ===
+            # Rollout menu (⋯) per card
             with st.popover("⋯", key=f"menu_crypto_{i}_{st.session_state.crypto_table_version}_{st.session_state.ui_version}", use_container_width=False):
                 col_edit, col_del = st.columns(2)
                 with col_edit:
@@ -791,11 +790,11 @@ document.querySelectorAll('.coin-card').forEach(div => {{
                         st.success("✅ Row deleted!")
                         st.rerun()
 
-            st.markdown("<div style='height:8px;'></div>", unsafe_allow_html=True)
+            st.markdown("<div style='height:4px;'></div>", unsafe_allow_html=True)
 
         st.markdown('</div>', unsafe_allow_html=True)
 
-        # Edit form (unchanged)
+        # Edit form
         if 'editing_row_crypto' in st.session_state:
             edit_idx = st.session_state.editing_row_crypto
             row = st.session_state.crypto_df.loc[edit_idx]
@@ -848,7 +847,7 @@ document.querySelectorAll('.coin-card').forEach(div => {{
                     st.success(f"✅ Added {amount} {ticker}")
                     st.rerun()
 
-    # ====================== FIAT TRANSACTIONS (unchanged) ======================
+    # ====================== FIAT TRANSACTIONS (glossy-box restored) ======================
     elif st.session_state.page == "Fiat Transactions":
         total_czk = pd.to_numeric(st.session_state.fiat_df['CZK'], errors='coerce').fillna(0).sum()
         total_eur = pd.to_numeric(st.session_state.fiat_df['EUR'], errors='coerce').fillna(0).sum()
