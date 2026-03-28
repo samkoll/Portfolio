@@ -137,6 +137,145 @@ st.markdown("""
     .delete-btn { background: #3a1f1f; color: #ff6666; }
     @media (max-width: 600px) {
         .transaction-grid { grid-template-columns: 1fr; }
+import streamlit as st
+import pandas as pd
+from datetime import datetime, date, timedelta
+import json
+from pathlib import Path
+import random
+import time
+import requests
+import hashlib
+import plotly.graph_objects as go
+from plotly.subplots import make_subplots
+import streamlit.components.v1 as components
+
+st.set_page_config(page_title="Portfolio", layout="wide", initial_sidebar_state="expanded")
+
+# ====================== CUSTOM CSS ======================
+st.markdown("""
+<style>
+    .stApp {
+        background: linear-gradient(180deg, #0f1724, #1e2a44);
+    }
+    .glossy-header {
+        background: linear-gradient(90deg, #1e2a44, #26334f);
+        border-radius: 22px;
+        padding: 28px 32px;
+        margin: 20px 0 28px 0;
+        box-shadow: 0 8px 25px rgba(0,0,0,0.4),
+                    inset 0 1px 0 rgba(255,255,255,0.15);
+        display: flex;
+        align-items: center;
+        font-size: 28px;
+        font-weight: 700;
+        color: #ffffff;
+        letter-spacing: 1.1px;
+        line-height: 1.2;
+    }
+    .glossy-box {
+        background: linear-gradient(145deg, #0f172a, #1e2a44);
+        border-radius: 18px;
+        padding: 22px 24px;
+        box-shadow: 0 8px 25px rgba(0,0,0,0.35),
+                    inset 0 1px 0 rgba(255,255,255,0.12);
+        text-align: center;
+        min-width: 110px;
+    }
+    .glossy-box > div:first-child {
+        font-size: 14px;
+        font-weight: 600;
+        letter-spacing: 1.1px;
+        color: #e0e0e0;
+        opacity: 0.9;
+        margin-bottom: 6px;
+        line-height: 1.2;
+    }
+    .glossy-box > div:last-child {
+        font-size: 27px;
+        font-weight: 700;
+        line-height: 1.05;
+        color: #ffffff;
+    }
+    .fee-line {
+        font-size: 1.35rem;
+        font-weight: 700;
+        color: #ffffff;
+        line-height: 1.1;
+        margin-bottom: 4px;
+    }
+    @media (max-width: 700px) {
+        .stApp { padding-top: 75px !important; }
+        .glossy-header {
+            margin-top: 52px !important;
+            margin-bottom: 35px !important;
+            padding: 24px 20px !important;
+            font-size: 24px !important;
+            min-height: 100px;
+        }
+    }
+    @media (max-width: 600px) {
+        .glossy-box {
+            min-width: 98px !important;
+            padding: 18px 14px !important;
+        }
+        .glossy-box > div:first-child { font-size: 12px !important; }
+        .glossy-box > div:last-child { font-size: 21px !important; }
+    }
+    /* TRANSACTION CARDS - beautiful mobile-first design */
+    .transaction-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+        gap: 16px;
+        padding: 8px 0;
+    }
+    .transaction-card {
+        background: linear-gradient(145deg, #0f172a, #1e2a44);
+        border-radius: 18px;
+        padding: 18px 20px;
+        box-shadow: 0 6px 20px rgba(0,0,0,0.35);
+        transition: all 0.25s ease;
+        position: relative;
+    }
+    .transaction-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 12px 30px rgba(0,255,157,0.25);
+    }
+    .tx-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 12px;
+        border-bottom: 1px solid rgba(255,255,255,0.1);
+        padding-bottom: 10px;
+    }
+    .tx-date { font-size: 0.95rem; color: #aaa; font-weight: 500; }
+    .tx-usdc { font-size: 1.45rem; font-weight: 700; color: #00ff9d; }
+    .tx-body { display: flex; justify-content: space-between; align-items: flex-end; }
+    .tx-ticker-amount { font-size: 1.25rem; font-weight: 700; }
+    .tx-price { font-size: 0.95rem; color: #ffaa00; font-weight: 600; }
+    .action-buttons {
+        position: absolute;
+        bottom: 14px;
+        right: 14px;
+        display: flex;
+        gap: 6px;
+    }
+    .action-btn {
+        width: 42px;
+        height: 42px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.3rem;
+        transition: all 0.2s;
+        cursor: pointer;
+    }
+    .edit-btn { background: #1e2a44; color: #ffaa00; }
+    .delete-btn { background: #3a1f1f; color: #ff6666; }
+    @media (max-width: 600px) {
+        .transaction-grid { grid-template-columns: 1fr; }
         .transaction-card { padding: 16px; }
         .tx-usdc { font-size: 1.3rem; }
         .tx-ticker-amount { font-size: 1.15rem; }
@@ -688,7 +827,7 @@ document.querySelectorAll('.coin-card').forEach(div => {{
                     else:
                         st.error(f"📉 Could not load {coin} chart. Try the **Refresh** button in sidebar.")
 
-    # ====================== CRYPTO TRANSACTIONS (MOBILE-FIXED CARDS) ======================
+    # ====================== CRYPTO TRANSACTIONS (FINAL FIXED VERSION) ======================
     elif st.session_state.page == "Crypto Transactions":
         glossy_header("Crypto Transactions", CRYPTO_ICON)
         df_display = st.session_state.crypto_df.copy()
@@ -698,7 +837,7 @@ document.querySelectorAll('.coin-card').forEach(div => {{
         # Beautiful card grid
         st.markdown('<div class="transaction-grid">', unsafe_allow_html=True)
         for i, r in df_display.iterrows():
-            # Escape $ to prevent LaTeX math mode \( 
+            # ESCAPE $ to stop LaTeX \( bug
             usdc_str = format_money(r['USDC']).replace('$', '&#36;')
             price_str = format_money(r['Price']).replace('$', '&#36;')
             card_html = f"""
@@ -722,8 +861,8 @@ document.querySelectorAll('.coin-card').forEach(div => {{
             st.markdown(card_html, unsafe_allow_html=True)
         st.markdown('</div>', unsafe_allow_html=True)
 
-        # Hidden buttons (exist for JS but not visible)
-        st.markdown('<div style="display: none;">', unsafe_allow_html=True)
+        # HIDDEN BUTTONS (no longer visible)
+        st.markdown('<div style="display:none !important; visibility:hidden !important; height:0 !important; overflow:hidden !important; margin:0 !important; padding:0 !important;">', unsafe_allow_html=True)
         for i, r in df_display.iterrows():
             col1, col2 = st.columns([1, 1], gap="small")
             with col1:
