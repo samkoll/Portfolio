@@ -16,27 +16,25 @@ st.set_page_config(page_title="Crypto Portfolio", layout="wide", initial_sidebar
 # ====================== STRONGEST CUSTOM CSS (ALL ISSUES FIXED) ======================
 st.markdown("""
 <style>
-    /* === ZERO TOP GAP + STRONGEST GLOSSY-HEADER (Portfolio Dashboard / Crypto / Fiat titles) === */
-    .stApp {
-        padding-top: 0 !important;
-    }
+    /* === ABSOLUTE TOP + STRONGEST GLOSSY-HEADER (all page titles) === */
+    .stApp { padding-top: 0 !important; }
     .glossy-header {
         background: #0f172a !important;
         padding: 24px 30px !important;
         border-radius: 20px !important;
-        box-shadow: 0 10px 30px rgba(0,0,0,0.45) !important;
+        box-shadow: 0 12px 35px rgba(0,0,0,0.5) !important;
         display: flex !important;
         align-items: center !important;
         font-size: 28px !important;
         font-weight: 700 !important;
         color: #ffffff !important;
         letter-spacing: 1.1px !important;
-        margin-top: 0 !important;          /* absolute top */
+        margin-top: 0 !important;
         margin-bottom: 20px !important;
     }
     .glossy-header:hover {
-        box-shadow: 0 14px 35px rgba(0,0,0,0.55) !important;
-        transform: translateY(-2px) !important;
+        box-shadow: 0 18px 45px rgba(0,0,0,0.65) !important;
+        transform: translateY(-3px) !important;
     }
 
     /* === STRONGEST GLOSSY-BOX (Total Value / PnL / PnL % cards) === */
@@ -44,15 +42,15 @@ st.markdown("""
         background: #0f172a !important;
         padding: 20px 24px !important;
         border-radius: 20px !important;
-        box-shadow: 0 10px 30px rgba(0,0,0,0.45) !important;
+        box-shadow: 0 12px 35px rgba(0,0,0,0.5) !important;
         text-align: center !important;
         display: flex !important;
         flex-direction: column !important;
         justify-content: center !important;
     }
     .glossy-box:hover {
-        box-shadow: 0 14px 35px rgba(0,0,0,0.55) !important;
-        transform: translateY(-2px) !important;
+        box-shadow: 0 18px 45px rgba(0,0,0,0.65) !important;
+        transform: translateY(-3px) !important;
     }
     .glossy-box > div:first-child {
         font-size: 15px !important;
@@ -69,12 +67,12 @@ st.markdown("""
         color: #ffffff !important;
     }
 
-    /* PnL arrows always NEXT to numbers (flex fix) */
+    /* PnL arrow ALWAYS next to number + red/green color */
     .pnl-content {
         display: flex !important;
         align-items: center !important;
         justify-content: center !important;
-        gap: 6px !important;
+        gap: 4px !important;
     }
 
     /* Fee lines */
@@ -86,7 +84,7 @@ st.markdown("""
         margin-bottom: 4px !important;
     }
 
-    /* MOBILE OVERRIDES */
+    /* MOBILE: zero top gap + strong hover */
     @media (max-width: 700px) {
         .glossy-header { margin-top: 0 !important; padding: 20px 24px !important; font-size: 24px !important; }
         .glossy-box { min-width: 98px !important; padding: 18px 14px !important; }
@@ -94,7 +92,7 @@ st.markdown("""
         .glossy-box > div:last-child { font-size: 21px !important; }
     }
 
-    /* === COIN-GRID + COIN-CARD (now fits TWO cards on mobile) === */
+    /* === COIN-GRID + COIN-CARD (strong gloss + strong glow + TWO cards on mobile) === */
     .coin-grid {
         display: grid !important;
         grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)) !important;
@@ -109,16 +107,16 @@ st.markdown("""
         background: #0f172a !important;
         padding: 16px !important;
         border-radius: 20px !important;
-        box-shadow: 0 10px 30px rgba(0,0,0,0.45) !important;
-        transition: all 0.25s ease !important;
+        box-shadow: 0 12px 35px rgba(0,0,0,0.5) !important;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
         cursor: pointer;
         position: relative !important;
         z-index: 1 !important;
         outline: none !important;
     }
     .coin-card:hover {
-        transform: translateY(-3px) !important;
-        box-shadow: 0 0 22px 8px var(--glow) !important;
+        transform: translateY(-4px) !important;
+        box-shadow: 0 0 28px 10px var(--glow) !important;
         z-index: 10 !important;
     }
     .card-header { display: flex; align-items: center; margin-bottom: 14px; }
@@ -132,14 +130,14 @@ st.markdown("""
     /* MOBILE: fit TWO transaction cards side-by-side */
     @media (max-width: 700px) {
         .coin-grid { 
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)) !important; 
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)) !important; 
             gap: 12px !important; 
             padding: 28px 24px !important; 
         }
         .coin-card { padding: 14px !important; }
     }
 
-    /* Price pills (kept) */
+    /* Price pills */
     .price-pills-container { display: flex !important; gap: 6px !important; flex-wrap: nowrap !important; overflow-x: auto !important; padding-bottom: 4px; scrollbar-width: none; }
     .price-pill, .avg-pill, .daily-pill {
         padding: 7px 14px !important;
@@ -534,8 +532,8 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
 body{{background:transparent;color:white;font-family:sans-serif;margin:0;padding:0;}}
 .coin-grid {{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px;padding:32px 26px;box-sizing:border-box;max-height:520px;overflow-y:auto;scrollbar-width:none;background:transparent !important;}}
 .coin-grid::-webkit-scrollbar {{display:none;}}
-.coin-card {{background:#0f172a;padding:16px;border-radius:20px;box-shadow:0 10px 30px rgba(0,0,0,0.45);transition:all 0.25s ease;cursor:pointer;position:relative;z-index:1;outline:none !important;-webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none;}}
-.coin-card:hover {{transform:translateY(-3px);box-shadow:0 0 22px 8px var(--glow) !important;z-index:10;}}
+.coin-card {{background:#0f172a;padding:16px;border-radius:20px;box-shadow:0 12px 35px rgba(0,0,0,0.5);transition:all 0.3s cubic-bezier(0.4,0,0.2,1);cursor:pointer;position:relative;z-index:1;outline:none !important;-webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none;}}
+.coin-card:hover {{transform:translateY(-4px);box-shadow:0 0 28px 10px var(--glow) !important;z-index:10;}}
 .card-header {{display:flex;align-items:center;margin-bottom:14px;}}
 .card-content {{display:flex;flex-direction:column;gap:8px;}}
 .label-value-row {{display:flex;justify-content:space-between;align-items:center;font-size:0.95rem;}}
@@ -544,7 +542,7 @@ body{{background:transparent;color:white;font-family:sans-serif;margin:0;padding
 .total {{font-size:1.18rem;margin-top:8px;border-top:1px solid rgba(255,255,255,0.12);padding-top:8px;}}
 .total-value {{font-size:1.28rem;}}
 @media (max-width: 700px) {{
-    .coin-grid {{grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;padding:28px 24px;}}
+    .coin-grid {{grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;padding:28px 24px;}}
     .coin-card {{padding:14px;}}
 }}
 </style></head><body><div class="coin-grid">{cards_html}</div><script>
