@@ -695,18 +695,22 @@ document.querySelectorAll('.coin-card').forEach(div => {{
         df_display['Date'] = df_display['Datum'].apply(format_datum)
         df_display = df_display.dropna(how='all').reset_index(drop=True)
 
+        # Beautiful card grid
         st.markdown('<div class="transaction-grid">', unsafe_allow_html=True)
         for i, r in df_display.iterrows():
+            # Escape $ to prevent LaTeX math mode \( 
+            usdc_str = format_money(r['USDC']).replace('$', '&#36;')
+            price_str = format_money(r['Price']).replace('$', '&#36;')
             card_html = f"""
             <div class="transaction-card">
                 <div class="tx-header">
                     <div class="tx-date">{r['Date']}</div>
-                    <div class="tx-usdc">{format_money(r['USDC'])}</div>
+                    <div class="tx-usdc">{usdc_str}</div>
                 </div>
                 <div class="tx-body">
                     <div>
                         <div class="tx-ticker-amount">{r['Ticker']} • {format_holdings(r['Amount'], r['Ticker'])}</div>
-                        <div class="tx-price">Price: {format_money(r['Price'])}</div>
+                        <div class="tx-price">Price: {price_str}</div>
                     </div>
                 </div>
                 <div class="action-buttons">
@@ -718,6 +722,8 @@ document.querySelectorAll('.coin-card').forEach(div => {{
             st.markdown(card_html, unsafe_allow_html=True)
         st.markdown('</div>', unsafe_allow_html=True)
 
+        # Hidden buttons (exist for JS but not visible)
+        st.markdown('<div style="display: none;">', unsafe_allow_html=True)
         for i, r in df_display.iterrows():
             col1, col2 = st.columns([1, 1], gap="small")
             with col1:
@@ -732,7 +738,9 @@ document.querySelectorAll('.coin-card').forEach(div => {{
                     st.session_state.ui_version += 1
                     st.success("✅ Transaction deleted!")
                     st.rerun()
+        st.markdown('</div>', unsafe_allow_html=True)
 
+        # Edit form
         if st.session_state.editing_row_crypto is not None:
             edit_idx = st.session_state.editing_row_crypto
             row = st.session_state.crypto_df.loc[edit_idx]
