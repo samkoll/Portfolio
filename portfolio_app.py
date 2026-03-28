@@ -13,7 +13,7 @@ import streamlit.components.v1 as components
 
 st.set_page_config(page_title="Crypto Portfolio", layout="wide", initial_sidebar_state="expanded")
 
-# ====================== CUSTOM CSS (FULL ORIGINAL + SMALL TRANSACTION CARDS) ======================
+# ====================== CUSTOM CSS (FULL ORIGINAL + TRANSACTION GRID) ======================
 st.markdown("""
 <style>
     letter-spacing: 1.1px;
@@ -202,14 +202,13 @@ div[data-baseweb="select"] *,
         padding: 0 16px !important;
     }
 }
-/* TRANSACTION CARDS - EXACTLY SAME SIZE AS HOME PAGE coin-card */
+/* TRANSACTION CARDS - SAME SIZE & STYLE AS HOME PAGE coin-card */
 .transaction-card {
     background: #0f172a !important;
     padding: 16px !important;
     border-radius: 20px !important;
     box-shadow: 0 6px 20px rgba(0,0,0,0.3) !important;
     transition: all 0.25s ease !important;
-    margin-bottom: 14px !important;
     position: relative;
 }
 .transaction-card:hover {
@@ -428,7 +427,7 @@ def get_ticker_color(ticker: str) -> str:
         return known[ticker]
     return f"#{hashlib.md5(ticker.encode()).hexdigest()[:6]}"
 
-# ====================== FORMATTING (DOLLAR SIGN FIXED) ======================
+# ====================== FORMATTING ======================
 def format_money(val):
     try:
         val = float(val)
@@ -556,7 +555,6 @@ def glossy_header(title: str, icon_svg: str):
 # ====================== PAGES ======================
 with main_container.container(key=f"page_{st.session_state.page}_{st.session_state.ui_version}"):
     if st.session_state.page == "Home":
-        # === EXACTLY ORIGINAL (restored) ===
         glossy_header("Portfolio Dashboard", DASHBOARD_ICON)
 
         df_port, total_value, total_pnl, total_pnl_pct = calculate_portfolio(st.session_state.crypto_df)
@@ -732,14 +730,15 @@ document.querySelectorAll('.coin-card').forEach(div => {{
                     else:
                         st.error(f"📉 Could not load {coin} chart. Try the **Refresh** button in sidebar.")
 
-    # ====================== CRYPTO TRANSACTIONS (cards now same size as Home) ======================
+    # ====================== CRYPTO TRANSACTIONS ======================
     elif st.session_state.page == "Crypto Transactions":
         glossy_header("Crypto Transactions", CRYPTO_ICON)
         df_display = st.session_state.crypto_df.copy()
         df_display['Date'] = df_display['Datum'].apply(format_datum)
         df_display = df_display.dropna(how='all').reset_index(drop=True)
 
-        st.markdown('<div style="display:flex;flex-direction:column;gap:14px;padding:8px 0;">', unsafe_allow_html=True)
+        # === GRID LIKE HOME PAGE ===
+        st.markdown('<div class="coin-grid" style="padding:20px 26px;max-height:none;">', unsafe_allow_html=True)
 
         for i, r in df_display.iterrows():
             ticker = str(r['Ticker']).upper()
@@ -774,7 +773,7 @@ document.querySelectorAll('.coin-card').forEach(div => {{
             </div>
             """, unsafe_allow_html=True)
 
-            # Rollout menu (⋯) per card
+            # === ROLLOUT MENU INSIDE THE CARD (top-right visual) ===
             with st.popover("⋯", key=f"menu_crypto_{i}_{st.session_state.crypto_table_version}_{st.session_state.ui_version}", use_container_width=False):
                 col_edit, col_del = st.columns(2)
                 with col_edit:
@@ -789,8 +788,6 @@ document.querySelectorAll('.coin-card').forEach(div => {{
                         st.session_state.ui_version += 1
                         st.success("✅ Row deleted!")
                         st.rerun()
-
-            st.markdown("<div style='height:4px;'></div>", unsafe_allow_html=True)
 
         st.markdown('</div>', unsafe_allow_html=True)
 
@@ -847,7 +844,7 @@ document.querySelectorAll('.coin-card').forEach(div => {{
                     st.success(f"✅ Added {amount} {ticker}")
                     st.rerun()
 
-    # ====================== FIAT TRANSACTIONS (glossy-box restored) ======================
+    # ====================== FIAT TRANSACTIONS ======================
     elif st.session_state.page == "Fiat Transactions":
         total_czk = pd.to_numeric(st.session_state.fiat_df['CZK'], errors='coerce').fillna(0).sum()
         total_eur = pd.to_numeric(st.session_state.fiat_df['EUR'], errors='coerce').fillna(0).sum()
