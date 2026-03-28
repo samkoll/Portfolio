@@ -33,19 +33,95 @@ st.markdown("""
     margin-bottom: 18px !important;
 }
 
-/* === NEW TRANSACTION CARDS (only used on Crypto Transactions page) === */
-.transaction-row {
+/* === TRANSACTION CARDS - narrower, dashboard-style, 2-3 per row === */
+.transaction-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+    gap: 16px;
+    padding: 8px 0;
+}
+.transaction-card {
     background: #0f172a;
     border-radius: 20px;
-    padding: 18px 22px;
-    margin-bottom: 14px;
+    padding: 20px;
     box-shadow: 0 6px 20px rgba(0,0,0,0.3);
     transition: all 0.25s ease;
     position: relative;
+    display: flex;
+    flex-direction: column;
 }
-.transaction-row:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 0 22px 6px rgba(0, 255, 157, 0.25);
+.transaction-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 30px rgba(0, 255, 157, 0.3);
+}
+.transaction-header {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 18px;
+}
+.transaction-header img {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    object-fit: contain;
+}
+.transaction-ticker {
+    font-size: 1.32rem;
+    font-weight: 700;
+    color: #ffffff;
+}
+.transaction-date {
+    color: #aaa;
+    font-size: 0.95rem;
+}
+.transaction-content {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 20px;
+}
+.transaction-content div {
+    text-align: center;
+}
+.transaction-content small {
+    font-size: 0.82rem;
+    color: #aaa;
+    display: block;
+    margin-bottom: 2px;
+}
+.transaction-content strong {
+    font-size: 1.05rem;
+    font-weight: 700;
+}
+.transaction-buttons {
+    display: flex;
+    gap: 10px;
+    margin-top: auto;
+}
+.transaction-buttons button {
+    flex: 1;
+    padding: 10px 14px;
+    border: none;
+    border-radius: 12px;
+    font-weight: 700;
+    font-size: 0.95rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+.transaction-buttons .delete-btn {
+    background: #ff4d4d;
+    color: white;
+}
+.transaction-buttons .delete-btn:hover {
+    background: #ff3333;
+}
+.transaction-buttons .edit-btn {
+    background: #00ff9d;
+    color: #0f1724;
+}
+.transaction-buttons .edit-btn:hover {
+    background: #00cc7a;
 }
 
 /* Big navigation cards with glossy shine */
@@ -166,6 +242,9 @@ st.markdown("""
         padding: 24px 20px !important;
         font-size: 24px !important;
         min-height: 100px;
+    }
+    .transaction-grid {
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
     }
 }
 /* MOBILE RESPONSIVE FIX FOR THE 3 SUMMARY CARDS */
@@ -625,6 +704,10 @@ if 'last_known_prices' not in st.session_state:
     st.session_state.last_known_prices = {"USDC": 1.0}
 if 'refresh_key' not in st.session_state:
     st.session_state.refresh_key = random.randint(100000, 999999)
+if 'delete_trigger' not in st.session_state:
+    st.session_state.delete_trigger = ""
+if 'edit_trigger' not in st.session_state:
+    st.session_state.edit_trigger = ""
 
 # ====================== SIDEBAR ======================
 with st.sidebar:
@@ -836,58 +919,127 @@ document.querySelectorAll('.coin-card').forEach(div => {{
                     else:
                         st.error(f"📉 Could not load {coin} chart. Try the **Refresh** button in sidebar.")
     
-    # ====================== CRYPTO TRANSACTIONS - REBUILT AS NARROWER CARDS (exactly like dashboard style) ======================
+    # ====================== CRYPTO TRANSACTIONS - PERFECT NARROW CARDS (2-3 per row) ======================
     elif st.session_state.page == "Crypto Transactions":
         glossy_header("Crypto Transactions", CRYPTO_ICON)
-        df_display = st.session_state.crypto_df.copy()
-        df_display['Date'] = df_display['Datum'].apply(format_datum)
-        df_display = df_display.dropna(how='all').reset_index(drop=True)
-
-        # Transaction cards (narrower than dashboard cards, with logo + Delete + Edit buttons)
-        for i, r in df_display.iterrows():
-            logo_url = get_ticker_logo(r['Ticker'])
-            st.markdown('<div class="transaction-row">', unsafe_allow_html=True)
-            
-            cols = st.columns([0.8, 2.8, 1.6, 1.6, 1.5, 0.9, 0.9])
-            
-            with cols[0]:
-                st.image(logo_url, width=48)
-            
-            with cols[1]:
-                st.markdown(f"""
-                <div style="font-weight:700; font-size:1.28rem;">{r['Ticker']}</div>
-                <div style="color:#aaa; font-size:0.95rem;">{r['Date']}</div>
-                """, unsafe_allow_html=True)
-            
-            with cols[2]:
-                st.markdown(f"**Invested**<br>{format_money(r['USDC'])}")
-            
-            with cols[3]:
-                st.markdown(f"**Amount**<br>{format_holdings(r['Amount'], r['Ticker'])}")
-            
-            with cols[4]:
-                st.markdown(f"**Price**<br>{format_money(r['Price'])}")
-            
-            with cols[5]:
-                if st.button("🗑️", key=f"del_crypto_{i}_{st.session_state.crypto_table_version}_{st.session_state.ui_version}", use_container_width=True):
-                    st.session_state.crypto_df = st.session_state.crypto_df.drop(i).reset_index(drop=True)
+        
+        # Hidden triggers for JS → Python communication
+        delete_trigger = st.text_input("delete_trigger", value=st.session_state.delete_trigger, label_visibility="collapsed", key="delete_trigger_hidden")
+        edit_trigger = st.text_input("edit_trigger", value=st.session_state.edit_trigger, label_visibility="collapsed", key="edit_trigger_hidden")
+        
+        # Handle delete from JS
+        if delete_trigger and delete_trigger != st.session_state.delete_trigger:
+            try:
+                idx = int(delete_trigger)
+                if 0 <= idx < len(st.session_state.crypto_df):
+                    st.session_state.crypto_df = st.session_state.crypto_df.drop(idx).reset_index(drop=True)
                     save_crypto(st.session_state.crypto_df)
                     st.session_state.crypto_table_version += 1
                     st.session_state.ui_version += 1
-                    st.success("✅ Row deleted!")
+                    st.success("✅ Transaction deleted!")
                     st.rerun()
-            
-            with cols[6]:
-                if st.button("✏️", key=f"edit_crypto_{i}_{st.session_state.crypto_table_version}_{st.session_state.ui_version}", use_container_width=True):
-                    st.session_state.editing_row_crypto = i
+            except:
+                pass
+            st.session_state.delete_trigger = delete_trigger
+        
+        # Handle edit from JS
+        if edit_trigger and edit_trigger != st.session_state.edit_trigger:
+            try:
+                idx = int(edit_trigger)
+                if 0 <= idx < len(st.session_state.crypto_df):
+                    st.session_state.editing_row_crypto = idx
                     st.rerun()
+            except:
+                pass
+            st.session_state.edit_trigger = edit_trigger
+        
+        df_display = st.session_state.crypto_df.copy()
+        df_display['Date'] = df_display['Datum'].apply(format_datum)
+        df_display = df_display.dropna(how='all').reset_index(drop=True)
+        
+        # Build beautiful narrow cards (exactly like dashboard style but narrower + buttons)
+        cards_html = ""
+        for i, r in df_display.iterrows():
+            logo_url = get_ticker_logo(r['Ticker'])
+            invested = format_money(r['USDC'])
+            amount = format_holdings(r['Amount'], r['Ticker'])
+            price = format_money(r['Price'])
+            date_str = r['Date']
             
-            st.markdown('</div>', unsafe_allow_html=True)
-
+            cards_html += f"""
+<div class="transaction-card">
+    <div class="transaction-header">
+        <img src="{logo_url}" onerror="this.src='https://via.placeholder.com/48/1e2a44/ffffff?text={r['Ticker'][0]}';">
+        <div>
+            <div class="transaction-ticker">{r['Ticker']}</div>
+            <div class="transaction-date">{date_str}</div>
+        </div>
+    </div>
+    <div class="transaction-content">
+        <div><small>Invested</small><br><strong>{invested}</strong></div>
+        <div><small>Amount</small><br><strong>{amount}</strong></div>
+        <div><small>Price</small><br><strong>{price}</strong></div>
+    </div>
+    <div class="transaction-buttons">
+        <button class="delete-btn" onclick="deleteTransaction({i})">🗑️ Delete</button>
+        <button class="edit-btn" onclick="editTransaction({i})">✏️ Edit</button>
+    </div>
+</div>
+"""
+        
+        full_html = f"""
+<html>
+<head>
+<style>
+body {{ background: transparent; margin: 0; padding: 0; }}
+.transaction-grid {{ display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 16px; }}
+.transaction-card {{ background: #0f172a; border-radius: 20px; padding: 20px; box-shadow: 0 6px 20px rgba(0,0,0,0.3); transition: all 0.25s ease; }}
+.transaction-card:hover {{ transform: translateY(-4px); box-shadow: 0 12px 30px rgba(0, 255, 157, 0.3); }}
+.transaction-header {{ display: flex; align-items: center; gap: 14px; margin-bottom: 18px; }}
+.transaction-header img {{ width: 48px; height: 48px; border-radius: 50%; object-fit: contain; }}
+.transaction-ticker {{ font-size: 1.32rem; font-weight: 700; color: #ffffff; }}
+.transaction-date {{ color: #aaa; font-size: 0.95rem; }}
+.transaction-content {{ display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin-bottom: 20px; }}
+.transaction-content div {{ text-align: center; }}
+.transaction-content small {{ font-size: 0.82rem; color: #aaa; display: block; margin-bottom: 2px; }}
+.transaction-content strong {{ font-size: 1.05rem; font-weight: 700; }}
+.transaction-buttons {{ display: flex; gap: 10px; }}
+.transaction-buttons button {{ flex: 1; padding: 10px 14px; border: none; border-radius: 12px; font-weight: 700; font-size: 0.95rem; cursor: pointer; transition: all 0.2s ease; }}
+.transaction-buttons .delete-btn {{ background: #ff4d4d; color: white; }}
+.transaction-buttons .delete-btn:hover {{ background: #ff3333; }}
+.transaction-buttons .edit-btn {{ background: #00ff9d; color: #0f1724; }}
+.transaction-buttons .edit-btn:hover {{ background: #00cc7a; }}
+</style>
+</head>
+<body>
+<div class="transaction-grid">
+{cards_html}
+</div>
+<script>
+function deleteTransaction(i) {{
+    const input = window.parent.document.querySelector('input[aria-label="delete_trigger"]');
+    if (input) {{
+        input.value = i;
+        input.dispatchEvent(new Event('change'));
+    }}
+}}
+function editTransaction(i) {{
+    const input = window.parent.document.querySelector('input[aria-label="edit_trigger"]');
+    if (input) {{
+        input.value = i;
+        input.dispatchEvent(new Event('change'));
+    }}
+}}
+</script>
+</body>
+</html>
+"""
+        components.html(full_html, height=620, scrolling=True)
+        
         if 'editing_row_crypto' in st.session_state:
             edit_idx = st.session_state.editing_row_crypto
             row = st.session_state.crypto_df.loc[edit_idx]
-            st.markdown("**Edit row**")
+            st.markdown("**Edit transaction**")
             with st.form("edit_crypto_row"):
                 col_a, col_b, col_c = st.columns([1.2, 1.2, 1.6])
                 with col_a:
@@ -907,12 +1059,13 @@ document.querySelectorAll('.coin-card').forEach(div => {{
                         del st.session_state.editing_row_crypto
                         st.session_state.crypto_table_version += 1
                         st.session_state.ui_version += 1
-                        st.success("✅ Row updated!")
+                        st.success("✅ Transaction updated!")
                         st.rerun()
                 with col_cancel:
                     if st.form_submit_button("❌ Cancel"):
                         del st.session_state.editing_row_crypto
                         st.rerun()
+        
         st.subheader("➕ Add New Transaction")
         with st.form("add_crypto"):
             col1, col2, col3 = st.columns([1.2, 1.2, 1.6])
