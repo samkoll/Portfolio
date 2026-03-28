@@ -14,7 +14,7 @@ import random
 # ====================== CONFIG ======================
 st.set_page_config(page_title="Portfolio", layout="wide", page_icon="logo.png")
 
-# ====================== GLOBAL CSS (Fixed Glow + Modern Header) ======================
+# ====================== GLOBAL CSS (Polished + Closer to Edges) ======================
 st.markdown("""
 <style>
 /* ====================== GLOBAL LAYOUT - CLOSER TO EDGES ====================== */
@@ -22,7 +22,7 @@ st.markdown("""
     background: linear-gradient(180deg, #0f1724 0%, #0a0f1c 100%) !important;
 }
 
-/* Tight but safe padding */
+/* Remove excessive Streamlit default padding - content hugs the edges */
 .main .block-container,
 .stMain .block-container,
 div[data-testid="stMainBlockContainer"] {
@@ -32,6 +32,7 @@ div[data-testid="stMainBlockContainer"] {
     max-width: 100% !important;
 }
 
+/* Slightly more breathing room on very wide screens */
 @media (min-width: 1200px) {
     .main .block-container,
     div[data-testid="stMainBlockContainer"] {
@@ -40,6 +41,7 @@ div[data-testid="stMainBlockContainer"] {
     }
 }
 
+/* Mobile - comfortable but much closer to edges */
 @media (max-width: 768px) {
     .main .block-container,
     div[data-testid="stMainBlockContainer"] {
@@ -48,72 +50,19 @@ div[data-testid="stMainBlockContainer"] {
     }
 }
 
-/* FIX: Glow no longer cut off on coin cards */
-.coin-grid {
-    padding: 20px 8px !important;
-    margin: 0 -12px;
-    overflow: visible !important;
-}
-
-.coin-card {
-    background: #0f172a;
-    padding: 16px;
-    border-radius: 20px;
-    box-shadow: 0 6px 20px rgba(0,0,0,0.3);
-    transition: all 0.25s ease;
-    position: relative;
-    z-index: 1;
-    margin: 0 8px;
-}
-
-.coin-card:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 0 32px 14px var(--glow) !important;
-    z-index: 10;
-}
-
 /* Clean top spacing */
 .main, .block-container, .stMain {
     padding-top: 0px !important;
 }
 
-/* === PRICE CHARTS SECTION === */
+/* === PRICE CHARTS SECTION - Tighter spacing === */
 #price-charts-section {
     margin-top: -25px !important;
     margin-bottom: 18px !important;
     padding: 18px 20px !important;
 }
 
-/* ====================== CRYPTO TRANSACTIONS HEADER (Screenshot Style) ====================== */
-.crypto-header {
-    background: #1a2338;
-    border-radius: 16px 16px 0 0;
-    padding: 20px 24px;
-    display: flex;
-    align-items: center;
-    gap: 16px;
-    font-size: 1.45rem;
-    font-weight: 700;
-    color: white;
-    margin-bottom: -4px;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.4);
-}
-
-.crypto-header .close-circle {
-    width: 32px;
-    height: 32px;
-    background: #00ff9d;
-    color: #0f1724;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 1.4rem;
-    font-weight: bold;
-    line-height: 1;
-}
-
-/* Transaction Cards */
+/* === TRANSACTION CARDS === */
 .transaction-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(380px, 1fr));
@@ -127,6 +76,9 @@ div[data-testid="stMainBlockContainer"] {
     padding: 18px 20px 14px;
     box-shadow: 0 6px 20px rgba(0,0,0,0.3);
     transition: all 0.25s ease;
+    position: relative;
+    display: flex;
+    flex-direction: column;
     min-height: 138px;
 }
 
@@ -135,18 +87,119 @@ div[data-testid="stMainBlockContainer"] {
     box-shadow: 0 12px 30px rgba(0, 255, 157, 0.3);
 }
 
-/* Glossy Elements */
+/* Main header row */
+.transaction-main-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 16px;
+}
+
+.transaction-left {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    flex: 1;
+}
+
+.transaction-header img {
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    object-fit: contain;
+}
+
+.transaction-ticker {
+    font-size: 1.28rem;
+    font-weight: 700;
+    color: #ffffff;
+    line-height: 1.05;
+}
+
+.transaction-date {
+    color: #aaa;
+    font-size: 0.92rem;
+    margin-top: 2px;
+}
+
+.transaction-values {
+    display: flex;
+    gap: 24px;
+    text-align: right;
+    font-size: 1.02rem;
+}
+
+.transaction-values div {
+    min-width: 88px;
+}
+
+.transaction-values small {
+    color: #aaa;
+    font-size: 0.82rem;
+    font-weight: 500;
+    display: block;
+}
+
+.transaction-values strong {
+    font-weight: 700;
+    color: #ffffff;
+}
+
+.transaction-amount {
+    font-size: 1.04rem;
+    font-weight: 700;
+    color: #ffffff;
+}
+
+.transaction-buttons {
+    display: flex;
+    gap: 12px;
+    margin-top: auto;
+}
+
+.transaction-buttons button {
+    flex: 1;
+    padding: 10px 14px;
+    border: none;
+    border-radius: 11px;
+    font-weight: 700;
+    font-size: 0.95rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.transaction-buttons .delete-btn {
+    background: #e63939;
+    color: white;
+}
+
+.transaction-buttons .delete-btn:hover {
+    background: #c1121f;
+}
+
+.transaction-buttons .edit-btn {
+    background: #00b894;
+    color: #0f1724;
+}
+
+.transaction-buttons .edit-btn:hover {
+    background: #00a17a;
+}
+
+/* Glossy Header - Closer to top */
 .glossy-header {
     position: relative;
     overflow: hidden;
     background: #26334f;
     border-radius: 18px;
     box-shadow: 0 12px 35px rgba(0,0,0,0.35);
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
     padding: 32px 24px;
     min-height: 130px;
     font-size: 29px;
     font-weight: 700;
     letter-spacing: 1.8px;
+    line-height: 1.1;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -156,9 +209,18 @@ div[data-testid="stMainBlockContainer"] {
     margin-bottom: 38px;
 }
 
+.glossy-header:hover {
+    transform: translateY(-4px) scale(1.03);
+    box-shadow: 0 15px 40px rgba(255,255,255,0.15);
+}
+
 .glossy-box {
+    position: relative;
+    overflow: hidden;
     background: #26334f;
     border-radius: 18px;
+    box-shadow: 0 12px 35px rgba(0,0,0,0.35);
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
     padding: 28px 30px;
     text-align: center;
     flex: 1;
@@ -166,34 +228,95 @@ div[data-testid="stMainBlockContainer"] {
     display: flex;
     flex-direction: column;
     justify-content: center;
-    box-shadow: 0 12px 35px rgba(0,0,0,0.35);
 }
 
-.stButton > button {
-    background: #1e2a44 !important;
-    color: #e0e0e0 !important;
-    padding: 22px 24px !important;
-    border-radius: 14px !important;
-    font-size: 1.28rem !important;
-    font-weight: 700 !important;
-    width: 100% !important;
+.glossy-box:hover {
+    transform: translateY(-4px) scale(1.03);
+    box-shadow: 0 15px 40px rgba(255,255,255,0.15);
 }
 
-.stButton > button:hover {
-    background: #263b5e !important;
-    color: white !important;
-    transform: translateY(-4px);
+.glossy-box > div:first-child {
+    font-size: 13.5px;
+    font-weight: 500;
+    letter-spacing: 1.1px;
+    color: #e0e0e0;
+    opacity: 0.9;
+    margin-bottom: 6px;
+    line-height: 1.2;
 }
 
+.glossy-box > div:last-child {
+    font-size: 27px;
+    font-weight: 700;
+    line-height: 1.05;
+    color: #ffffff;
+}
+
+/* Coin Grid */
+.coin-grid {
+    padding: 20px 12px !important;
+}
+
+/* Price pills */
 .price-pills-container {
     display: flex !important;
     gap: 6px !important;
-    overflow-x: auto;
+    flex-wrap: nowrap !important;
+    overflow-x: auto !important;
     padding-bottom: 4px;
     scrollbar-width: none;
 }
 
 .price-pills-container::-webkit-scrollbar { display: none; }
+
+.price-pill, .avg-pill, .daily-pill {
+    padding: 7px 14px !important;
+    border-radius: 9999px !important;
+    white-space: nowrap !important;
+    flex-shrink: 0;
+    background: #0f172a !important;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 1.05rem;
+    font-weight: 700;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.12);
+}
+
+.price-pill span:last-child, .avg-pill span:last-child { font-size: 1.26rem; }
+
+.daily-pill {
+    color: #ff4d4d;
+    font-weight: 700;
+    padding: 4px 8px !important;
+    font-size: 0.88rem !important;
+}
+
+/* Buttons */
+.stButton > button {
+    background: #1e2a44 !important;
+    color: #e0e0e0 !important;
+    padding: 22px 24px !important;
+    border-radius: 14px !important;
+    margin-bottom: 14px !important;
+    font-size: 1.28rem !important;
+    font-weight: 700 !important;
+    letter-spacing: 1.2px !important;
+    height: auto !important;
+    width: 100% !important;
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.25) !important;
+    transition: all 0.3s ease !important;
+}
+
+.stButton > button:hover {
+    transform: translateY(-4px) !important;
+    box-shadow: 0 12px 30px rgba(255, 255, 255, 0.25) !important;
+    background: #263b5e !important;
+    color: white !important;
+}
 
 @media (max-width: 700px) {
     .stApp { padding-top: 72px !important; }
@@ -201,14 +324,26 @@ div[data-testid="stMainBlockContainer"] {
         margin-top: 48px !important;
         margin-bottom: 28px !important;
         padding: 24px 16px !important;
+        font-size: 24px !important;
+        min-height: 100px;
     }
     .transaction-grid {
+        grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
         padding: 0 4px;
         gap: 14px;
     }
     .coin-grid {
-        padding: 16px 6px !important;
+        padding: 16px 8px !important;
     }
+}
+
+@media (max-width: 600px) {
+    .glossy-box {
+        min-width: 98px !important;
+        padding: 18px 14px !important;
+    }
+    .glossy-box > div:first-child { font-size: 12px !important; }
+    .glossy-box > div:last-child { font-size: 21px !important; }
 }
 </style>
 """, unsafe_allow_html=True)
@@ -305,7 +440,7 @@ def get_with_retry(url: str, headers: dict, timeout: int = 12, retries: int = 4)
             time.sleep(1.3 ** attempt)
     return None
 
-# ====================== LIVE PRICE & CHART FUNCTIONS ======================
+# ====================== LIVE PRICE FUNCTION ======================
 @st.cache_data(ttl=15, show_spinner=False)
 def get_all_cryptocompare_prices(tickers, refresh_key=0):
     prices = {"USDC": 1.0}
@@ -343,6 +478,7 @@ def get_all_cryptocompare_prices(tickers, refresh_key=0):
             continue
     return prices
 
+# ====================== DAILY OPEN PRICE FUNCTION ======================
 @st.cache_data(ttl=300, show_spinner=False)
 def get_daily_open(ticker: str, refresh_key=0):
     sym = CRYPTOCOMPARE_SYMBOL_MAP.get(ticker.upper())
@@ -358,6 +494,7 @@ def get_daily_open(ticker: str, refresh_key=0):
     except:
         return 0.0
 
+# ====================== CHART FUNCTION ======================
 @st.cache_data(ttl=80, show_spinner=False)
 def get_cryptocompare_ohlc(ticker: str, candle: str, refresh_key=0):
     sym = CRYPTOCOMPARE_SYMBOL_MAP.get(ticker.upper())
@@ -582,10 +719,10 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
        
         html = f"""<html><head><style>
 body{{background:transparent;color:white;font-family:sans-serif;margin:0;padding:0;}}
-.coin-grid {{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px;padding:20px 8px;box-sizing:border-box;max-height:520px;overflow-y:auto;scrollbar-width:none;background:transparent !important;}}
+.coin-grid {{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px;padding:20px 12px;box-sizing:border-box;max-height:520px;overflow-y:auto;scrollbar-width:none;background:transparent !important;}}
 .coin-grid::-webkit-scrollbar {{display:none;}}
 .coin-card {{background:#0f172a;padding:16px;border-radius:20px;box-shadow:0 6px 20px rgba(0,0,0,0.3);transition:all 0.25s ease;cursor:pointer;position:relative;z-index:1;outline:none !important;-webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none;}}
-.coin-card:hover {{transform:translateY(-3px);box-shadow:0 0 32px 14px var(--glow) !important;z-index:10;}}
+.coin-card:hover {{transform:translateY(-3px);box-shadow:0 0 22px 6px var(--glow) !important;z-index:10;}}
 .card-header {{display:flex;align-items:center;margin-bottom:14px;}}
 .card-content {{display:flex;flex-direction:column;gap:8px;}}
 .label-value-row {{display:flex;justify-content:space-between;align-items:center;font-size:0.95rem;}}
@@ -714,16 +851,10 @@ document.querySelectorAll('.coin-card').forEach(div => {{
                         )
                     else:
                         st.error(f"📉 Could not load {coin} chart. Try the **Refresh** button in sidebar.")
-
+   
     # ====================== CRYPTO TRANSACTIONS ======================
     elif st.session_state.page == "Crypto Transactions":
-        # Modern header matching your screenshot
-        st.markdown(f"""
-        <div class="crypto-header">
-            <div class="close-circle">×</div>
-            <span>Crypto Transactions</span>
-        </div>
-        """, unsafe_allow_html=True)
+        glossy_header("Crypto Transactions", CRYPTO_ICON)
        
         delete_trigger = st.text_input("delete_trigger", value=st.session_state.delete_trigger, label_visibility="collapsed", key="delete_trigger_hidden")
         edit_trigger = st.text_input("edit_trigger", value=st.session_state.edit_trigger, label_visibility="collapsed", key="edit_trigger_hidden")
@@ -871,7 +1002,7 @@ function editTransaction(i) {{
                     st.session_state.ui_version += 1
                     st.success(f"✅ Added {amount} {ticker}")
                     st.rerun()
-
+   
     # ====================== FIAT TRANSACTIONS ======================
     elif st.session_state.page == "Fiat Transactions":
         total_czk = pd.to_numeric(st.session_state.fiat_df['CZK'], errors='coerce').fillna(0).sum()
