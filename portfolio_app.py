@@ -1,156 +1,304 @@
 import streamlit as st
 import pandas as pd
-from datetime import datetime, date, timedelta
-import json
-from pathlib import Path
-import random
-import requests
+from datetime import datetime, timedelta, date
 import time
-import hashlib
+import streamlit.components.v1 as components
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
-import streamlit.components.v1 as components
+import requests
+import json
+from pathlib import Path
+import hashlib
+import random
 
-st.set_page_config(page_title="Crypto Portfolio", layout="wide", initial_sidebar_state="expanded")
+# ====================== CONFIG ======================
+st.set_page_config(page_title="Portfolio", layout="wide", page_icon="logo.png")
 
-# ====================== STRONGEST CUSTOM CSS (MAXIMUM OVERRIDE - ALL ISSUES FIXED) ======================
+# ====================== GLOBAL CSS (polished & clean) ======================
 st.markdown("""
 <style>
-    /* === ABSOLUTE TOP + STRONGEST GLOSSY-HEADER (Portfolio Dashboard / Crypto Transactions / Fiat Transactions) === */
-    .stApp { padding-top: 0 !important; }
+/* Whole app background - lighter elegant navy gradient */
+.stApp {
+    background: linear-gradient(180deg, #0f1724 0%, #0a0f1c 100%) !important;
+    padding-top: 95px !important;
+}
+/* Clean top spacing */
+.main, .block-container, .stMain {
+    padding-top: 0px !important;
+}
+/* Big navigation cards with glossy shine */
+.stButton > button {
+    background: #1e2a44 !important;
+    color: #e0e0e0 !important;
+    padding: 22px 24px !important;
+    border-radius: 14px !important;
+    margin-bottom: 14px !important;
+    font-size: 1.28rem !important;
+    font-weight: 700 !important;
+    letter-spacing: 1.2px !important;
+    height: auto !important;
+    width: 100% !important;
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.25) !important;
+    transition: all 0.3s ease !important;
+    position: relative;
+    overflow: hidden;
+}
+.stButton > button:hover {
+    transform: translateY(-4px) !important;
+    box-shadow: 0 12px 30px rgba(255, 255, 255, 0.25) !important;
+    background: #263b5e !important;
+    color: white !important;
+}
+/* Glossy shine for main content */
+.glossy-header,
+.glossy-box {
+    position: relative;
+    overflow: hidden;
+    background: #26334f;
+    border-radius: 18px;
+    box-shadow: 0 12px 35px rgba(0,0,0,0.35);
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.glossy-header:hover,
+.glossy-box:hover {
+    transform: translateY(-4px) scale(1.03);
+    box-shadow: 0 15px 40px rgba(255,255,255,0.15);
+}
+.glossy-header::before,
+.glossy-box::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -150%;
+    width: 60%;
+    height: 300%;
+    background: linear-gradient(120deg, transparent, rgba(255,255,255,0.28), transparent);
+    transform: rotate(25deg);
+    opacity: 0;
+    transition: all 2.2s cubic-bezier(0.25, 0.1, 0.25, 1);
+    pointer-events: none;
+}
+.glossy-header:hover::before,
+.glossy-box:hover::before {
+    left: 180%;
+    opacity: 1;
+}
+.glossy-header {
+    padding: 32px 40px;
+    min-height: 130px;
+    font-size: 29px;
+    font-weight: 700;
+    letter-spacing: 1.8px;
+    line-height: 1.1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    width: 100% !important;
+    margin-top: 72px;
+    margin-bottom: 45px;
+}
+.glossy-box {
+    padding: 28px 30px;
+    text-align: center;
+    flex: 1;
+    min-width: 220px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+.glossy-box > div:first-child {
+    font-size: 13.5px;
+    font-weight: 500;
+    letter-spacing: 1.1px;
+    color: #e0e0e0;
+    opacity: 0.9;
+    margin-bottom: 6px;
+    line-height: 1.2;
+}
+.glossy-box > div:last-child {
+    font-size: 27px;
+    font-weight: 700;
+    line-height: 1.05;
+    color: #ffffff;
+}
+/* Fee lines in Fiat summary */
+.fee-line {
+    font-size: 1.35rem;
+    font-weight: 700;
+    color: #ffffff;
+    line-height: 1.1;
+    margin-bottom: 4px;
+}
+/* MOBILE: Make header smaller */
+@media (max-width: 700px) {
+    .stApp {
+        padding-top: 75px !important;
+    }
     .glossy-header {
-        background: #0f172a !important;
-        padding: 24px 30px !important;
-        border-radius: 20px !important;
-        box-shadow: 0 12px 35px rgba(0,0,0,0.5) !important;
-        display: flex !important;
-        align-items: center !important;
-        font-size: 28px !important;
-        font-weight: 700 !important;
-        color: #ffffff !important;
-        letter-spacing: 1.1px !important;
-        margin-top: 0 !important;
-        margin-bottom: 20px !important;
+        margin-top: 52px !important;
+        margin-bottom: 35px !important;
+        padding: 24px 20px !important;
+        font-size: 24px !important;
+        min-height: 100px;
     }
-    .glossy-header:hover {
-        box-shadow: 0 18px 45px rgba(0,0,0,0.65) !important;
-        transform: translateY(-3px) !important;
-    }
-
-    /* === STRONGEST GLOSSY-BOX (Total Value / PnL / PnL % cards) === */
+}
+/* MOBILE RESPONSIVE FIX FOR THE 3 SUMMARY CARDS */
+@media (max-width: 600px) {
     .glossy-box {
-        background: #0f172a !important;
-        padding: 20px 24px !important;
-        border-radius: 20px !important;
-        box-shadow: 0 12px 35px rgba(0,0,0,0.5) !important;
-        text-align: center !important;
-        display: flex !important;
-        flex-direction: column !important;
-        justify-content: center !important;
-    }
-    .glossy-box:hover {
-        box-shadow: 0 18px 45px rgba(0,0,0,0.65) !important;
-        transform: translateY(-3px) !important;
+        min-width: 98px !important;
+        padding: 18px 14px !important;
     }
     .glossy-box > div:first-child {
-        font-size: 15px !important;
-        font-weight: 600 !important;
-        letter-spacing: 1.1px !important;
-        color: #e0e0e0 !important;
-        opacity: 0.9 !important;
-        margin-bottom: 6px !important;
+        font-size: 12px !important;
     }
     .glossy-box > div:last-child {
-        font-size: 27px !important;
-        font-weight: 700 !important;
-        line-height: 1.05 !important;
-        color: #ffffff !important;
+        font-size: 21px !important;
     }
-
-    /* PnL arrow ALWAYS next to number + red/green color */
-    .pnl-content {
-        display: flex !important;
-        align-items: center !important;
-        justify-content: center !important;
-        gap: 4px !important;
+}
+/* PRICE PILLS */
+.price-pills-container {
+    display: flex !important;
+    gap: 6px !important;
+    flex-wrap: nowrap !important;
+    overflow-x: auto !important;
+    padding-bottom: 4px;
+    scrollbar-width: none;
+}
+.price-pills-container::-webkit-scrollbar {
+    display: none;
+}
+.price-pill, .avg-pill, .daily-pill {
+    padding: 7px 14px !important;
+    border-radius: 9999px !important;
+    white-space: nowrap !important;
+    flex-shrink: 0;
+    background: #0f172a !important;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 1.05rem;
+    font-weight: 700;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.12);
+}
+.price-pill span:last-child,
+.avg-pill span:last-child {
+    font-size: 1.26rem;
+}
+.daily-pill {
+    color: #ff4d4d;
+    font-weight: 700;
+    padding: 4px 8px !important;
+    font-size: 0.88rem !important;
+}
+@media (max-width: 700px) {
+    .price-pills-container { gap: 4px !important; }
+    .price-pill, .avg-pill, .daily-pill { padding: 5px 10px !important; }
+    .daily-pill { padding: 3px 7px !important; font-size: 0.82rem !important; }
+    .price-pill span:first-child,
+    .avg-pill span:first-child { font-size: 0.92rem !important; }
+    .price-pill span:last-child,
+    .avg-pill span:last-child { font-size: 1.18rem !important; }
+}
+/* TIMEFRAME PILL */
+div[data-baseweb="select"] {
+    background: linear-gradient(90deg, #26334f, #1e2a44) !important;
+    border-radius: 9999px !important;
+    box-shadow: 0 6px 20px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.15) !important;
+    min-width: 148px !important;
+    max-width: 160px !important;
+    height: 39px !important;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+div[data-baseweb="select"] > div {
+    background: transparent !important;
+    border: none !important;
+    padding: 0 18px !important;
+    line-height: 1.35 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    height: 100% !important;
+}
+div[data-baseweb="select"] *,
+div[data-baseweb="select"] span,
+div[data-baseweb="select"] [role="button"] span,
+div[data-baseweb="select"] [data-baseweb="select-value"] span,
+div[data-baseweb="select"] > div > div > div > div > div > span,
+div[data-baseweb="select"] > div > div > div > div > span {
+    color: #ffffff !important;
+    font-weight: 700 !important;
+    font-size: 1.16rem !important;
+    text-align: center !important;
+    white-space: nowrap !important;
+    display: inline-block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    letter-spacing: 0.4px !important;
+    text-shadow: 0 1px 2px rgba(0,0,0,0.5) !important;
+    caret-color: transparent !important;
+    vertical-align: middle !important;
+}
+div[data-baseweb="select"] svg {
+    fill: #e0e0e0 !important;
+    margin-top: 0 !important;
+}
+/* Open menu */
+[data-baseweb="popover"] [data-baseweb="menu"] {
+    background-color: #26334f !important;
+    border-radius: 9999px !important;
+    box-shadow: 0 12px 30px rgba(0,0,0,0.6) !important;
+    padding: 8px 6px !important;
+    margin-top: 6px !important;
+    border: 2px solid #00ff9d !important;
+}
+[data-baseweb="option"] {
+    color: #e0e0e0 !important;
+    padding: 12px 24px !important;
+    border-radius: 9999px !important;
+    margin: 3px 4px !important;
+}
+[data-baseweb="option"][aria-selected="true"] {
+    background-color: #00ff9d !important;
+    color: #0f1724 !important;
+}
+[data-baseweb="option"]:hover {
+    background-color: #1e2a44 !important;
+}
+/* CURSOR FIX */
+.glossy-header *,
+.glossy-box *,
+.coin-card *,
+.price-pill *,
+.avg-pill *,
+.daily-pill *,
+div[data-baseweb="select"] *,
+.charts-header * {
+    cursor: pointer !important;
+}
+/* CHARTS HEADER */
+.charts-header {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 14px;
+    color: #ffffff;
+    font-weight: 700;
+    font-size: 23px;
+}
+@media (max-width: 700px) {
+    div[data-baseweb="select"] {
+        min-width: 142px !important;
+        max-width: 155px !important;
+        height: 37px !important;
     }
-
-    /* Fee lines */
-    .fee-line {
-        font-size: 1.35rem !important;
-        font-weight: 700 !important;
-        color: #ffffff !important;
-        line-height: 1.1 !important;
-        margin-bottom: 4px !important;
+    div[data-baseweb="select"] > div {
+        padding: 0 16px !important;
     }
-
-    /* MOBILE OVERRIDE */
-    @media (max-width: 700px) {
-        .glossy-header { margin-top: 0 !important; padding: 20px 24px !important; font-size: 24px !important; }
-        .glossy-box { min-width: 98px !important; padding: 18px 14px !important; }
-        .glossy-box > div:first-child { font-size: 12px !important; }
-        .glossy-box > div:last-child { font-size: 21px !important; }
-    }
-
-    /* === COIN-GRID + COIN-CARD (strong gloss + strong glow + MULTIPLE cards on PC + TWO on mobile) === */
-    .coin-grid {
-        display: grid !important;
-        grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)) !important;
-        gap: 14px !important;
-        padding: 32px 26px !important;
-        box-sizing: border-box !important;
-        background: transparent !important;
-    }
-    .coin-grid::-webkit-scrollbar { display: none !important; }
-
-    .coin-card {
-        background: #0f172a !important;
-        padding: 16px !important;
-        border-radius: 20px !important;
-        box-shadow: 0 12px 35px rgba(0,0,0,0.5) !important;
-        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
-        cursor: pointer;
-        position: relative !important;
-        z-index: 1 !important;
-        outline: none !important;
-    }
-    .coin-card:hover {
-        transform: translateY(-4px) !important;
-        box-shadow: 0 0 28px 10px var(--glow) !important;
-        z-index: 10 !important;
-    }
-    .card-header { display: flex; align-items: center; margin-bottom: 14px; }
-    .card-content { display: flex; flex-direction: column; gap: 8px; }
-    .label-value-row { display: flex; justify-content: space-between; align-items: center; font-size: 0.95rem; }
-    .label { color: #aaa; font-weight: 500; }
-    .value { font-weight: 600; }
-    .total { font-size: 1.18rem; margin-top: 8px; border-top: 1px solid rgba(255,255,255,0.12); padding-top: 8px; }
-    .total-value { font-size: 1.28rem; }
-
-    /* MOBILE: TWO transaction cards side-by-side */
-    @media (max-width: 700px) {
-        .coin-grid { 
-            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)) !important; 
-            gap: 12px !important; 
-            padding: 28px 24px !important; 
-        }
-        .coin-card { padding: 14px !important; }
-    }
-
-    /* Price pills */
-    .price-pills-container { display: flex !important; gap: 6px !important; flex-wrap: nowrap !important; overflow-x: auto !important; padding-bottom: 4px; scrollbar-width: none; }
-    .price-pill, .avg-pill, .daily-pill {
-        padding: 7px 14px !important;
-        border-radius: 9999px !important;
-        white-space: nowrap !important;
-        background: #0f172a !important;
-        display: inline-flex;
-        align-items: center;
-        gap: 5px;
-        font-size: 1.05rem;
-        font-weight: 700;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.12);
-    }
+}
 </style>
 """, unsafe_allow_html=True)
 
@@ -368,8 +516,7 @@ def format_money(val):
     try:
         val = float(val)
         if pd.isna(val): return ""
-        s = f"{val:,.2f}" if val >= 0 else f"-{(-val):,.2f}"
-        return f"&#36;{s}"
+        return f"${val:,.2f}" if val >= 0 else f"-${-val:,.2f}"
     except:
         return ""
 
@@ -378,12 +525,11 @@ def format_crypto_price(val):
         val = float(val)
         if pd.isna(val): return ""
         if val >= 1:
-            s = f"{val:,.2f}"
+            return f"${val:,.2f}"
         elif val >= 0.01:
-            s = f"{val:,.4f}"
+            return f"${val:,.4f}"
         else:
-            s = f"{val:,.6f}"
-        return f"&#36;{s}"
+            return f"${val:,.6f}"
     except:
         return ""
 
@@ -491,14 +637,15 @@ def glossy_header(title: str, icon_svg: str):
 # ====================== PAGES ======================
 with main_container.container(key=f"page_{st.session_state.page}_{st.session_state.ui_version}"):
     if st.session_state.page == "Home":
+        # === ORIGINAL HEADER RESTORED: using the green grid SVG icon (no custom logo.png in the card) ===
         glossy_header("Portfolio Dashboard", DASHBOARD_ICON)
 
         df_port, total_value, total_pnl, total_pnl_pct = calculate_portfolio(st.session_state.crypto_df)
         value_box_html = f"""
 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(98px, 1fr)); gap: 14px; margin-bottom: 30px;">
     <div class="glossy-box"><div>Total Value</div><div>{format_money(total_value)}</div></div>
-    <div class="glossy-box"><div>PnL</div><div class="pnl-content" style="color:{'#00ff9d' if total_pnl>=0 else '#ff4d4d'}">{"▲" if total_pnl>0 else "▼" if total_pnl<0 else ""} {format_money(abs(total_pnl))}</div></div>
-    <div class="glossy-box"><div>PnL %</div><div class="pnl-content" style="color:{'#00ff9d' if total_pnl_pct>=0 else '#ff4d4d'}">{"▲" if total_pnl_pct>0 else "▼" if total_pnl_pct<0 else ""} {abs(total_pnl_pct):.2f}%</div></div>
+    <div class="glossy-box"><div>PnL</div><div style="color:{'#00ff9d' if total_pnl>=0 else '#ff4d4d'}">{"▲" if total_pnl>0 else "▼" if total_pnl<0 else ""} {format_money(abs(total_pnl))}</div></div>
+    <div class="glossy-box"><div>PnL %</div><div style="color:{'#00ff9d' if total_pnl_pct>=0 else '#ff4d4d'}">{"▲" if total_pnl_pct>0 else "▼" if total_pnl_pct<0 else ""} {abs(total_pnl_pct):.2f}%</div></div>
 </div>"""
         st.markdown(value_box_html, unsafe_allow_html=True)
 
@@ -532,8 +679,8 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
 body{{background:transparent;color:white;font-family:sans-serif;margin:0;padding:0;}}
 .coin-grid {{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px;padding:32px 26px;box-sizing:border-box;max-height:520px;overflow-y:auto;scrollbar-width:none;background:transparent !important;}}
 .coin-grid::-webkit-scrollbar {{display:none;}}
-.coin-card {{background:#0f172a;padding:16px;border-radius:20px;box-shadow:0 12px 35px rgba(0,0,0,0.5);transition:all 0.3s cubic-bezier(0.4,0,0.2,1);cursor:pointer;position:relative;z-index:1;outline:none !important;-webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none;}}
-.coin-card:hover {{transform:translateY(-4px);box-shadow:0 0 28px 10px var(--glow) !important;z-index:10;}}
+.coin-card {{background:#0f172a;padding:16px;border-radius:20px;box-shadow:0 6px 20px rgba(0,0,0,0.3);transition:all 0.25s ease;cursor:pointer;position:relative;z-index:1;outline:none !important;-webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none;}}
+.coin-card:hover {{transform:translateY(-3px);box-shadow:0 0 22px 6px var(--glow) !important;z-index:10;}}
 .card-header {{display:flex;align-items:center;margin-bottom:14px;}}
 .card-content {{display:flex;flex-direction:column;gap:8px;}}
 .label-value-row {{display:flex;justify-content:space-between;align-items:center;font-size:0.95rem;}}
@@ -542,7 +689,7 @@ body{{background:transparent;color:white;font-family:sans-serif;margin:0;padding
 .total {{font-size:1.18rem;margin-top:8px;border-top:1px solid rgba(255,255,255,0.12);padding-top:8px;}}
 .total-value {{font-size:1.28rem;}}
 @media (max-width: 700px) {{
-    .coin-grid {{grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;padding:28px 24px;}}
+    .coin-grid {{grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px;padding:28px 24px;}}
     .coin-card {{padding:14px;}}
 }}
 </style></head><body><div class="coin-grid">{cards_html}</div><script>
@@ -672,50 +819,36 @@ document.querySelectorAll('.coin-card').forEach(div => {{
         df_display = st.session_state.crypto_df.copy()
         df_display['Date'] = df_display['Datum'].apply(format_datum)
         df_display = df_display.dropna(how='all').reset_index(drop=True)
-
-        st.markdown('<div class="coin-grid">', unsafe_allow_html=True)
-
-        for i, r in df_display.iterrows():
-            ticker = str(r['Ticker']).upper()
-            logo_url = get_ticker_logo(ticker)
-            date_str = r['Date']
-            usdc_str = format_money(r['USDC'])
-            amount_str = format_holdings(r['Amount'], ticker)
-            price_str = format_money(r['Price'])
-
-            st.markdown(f"""
-            <div class="coin-card" style="--glow:{get_ticker_color(ticker) + '77'}">
-                <div class="card-header">
-                    <img src="{logo_url}" style="height:38px;width:38px;border-radius:50%;object-fit:contain;" onerror="this.src='https://via.placeholder.com/38/1e2a44/ffffff?text={ticker[0]}';">
-                    <span style="font-weight:700;font-size:1.22rem;margin-left:10px;">{ticker}</span>
-                </div>
-                <div class="card-content">
-                    <div class="label-value-row"><span class="label">Date</span><span class="value">{date_str}</span></div>
-                    <div class="label-value-row"><span class="label">USDC</span><span class="value">{usdc_str}</span></div>
-                    <div class="label-value-row"><span class="label">Amount</span><span class="value">{amount_str}</span></div>
-                    <div class="label-value-row"><span class="label">Buy Price</span><span class="value">{price_str}</span></div>
-                </div>
-            </div>
-            """, unsafe_allow_html=True)
-
-            with st.popover("⋯", key=f"menu_crypto_{i}_{st.session_state.crypto_table_version}_{st.session_state.ui_version}", use_container_width=False):
-                col_edit, col_del = st.columns(2)
-                with col_edit:
-                    if st.button("✏️ Edit", key=f"edit_crypto_{i}_{st.session_state.crypto_table_version}_{st.session_state.ui_version}", use_container_width=True):
-                        st.session_state.editing_row_crypto = i
-                        st.rerun()
-                with col_del:
-                    if st.button("🗑️ Delete", key=f"del_crypto_{i}_{st.session_state.crypto_table_version}_{st.session_state.ui_version}", use_container_width=True):
-                        st.session_state.crypto_df = st.session_state.crypto_df.drop(i).reset_index(drop=True)
-                        save_crypto(st.session_state.crypto_df)
-                        st.session_state.crypto_table_version += 1
-                        st.session_state.ui_version += 1
-                        st.success("✅ Row deleted!")
-                        st.rerun()
-
-        st.markdown('</div>', unsafe_allow_html=True)
-
-        # Edit form
+        table_container = st.container(key=f"crypto_table_container_{st.session_state.ui_version}")
+        with table_container:
+            with st.container(height=520, border=True):
+                h = st.columns([1.0, 0.9, 0.7, 1.0, 1.0, 0.4, 0.4])
+                h[0].markdown("**Date**")
+                h[1].markdown("**USDC**")
+                h[2].markdown("**Ticker**")
+                h[3].markdown("**Amount**")
+                h[4].markdown("**Price**")
+                h[5].markdown("**Delete**")
+                h[6].markdown("**Edit**")
+                for i, r in df_display.iterrows():
+                    cols = st.columns([1.0, 0.9, 0.7, 1.0, 1.0, 0.4, 0.4])
+                    with cols[0]: st.write(r['Date'])
+                    with cols[1]: st.write(format_money(r['USDC']))
+                    with cols[2]: st.write(r['Ticker'])
+                    with cols[3]: st.write(format_holdings(r['Amount'], r['Ticker']))
+                    with cols[4]: st.write(format_money(r['Price']))
+                    with cols[5]:
+                        if st.button("🗑️", key=f"del_crypto_{i}_{st.session_state.crypto_table_version}_{st.session_state.ui_version}"):
+                            st.session_state.crypto_df = st.session_state.crypto_df.drop(i).reset_index(drop=True)
+                            save_crypto(st.session_state.crypto_df)
+                            st.session_state.crypto_table_version += 1
+                            st.session_state.ui_version += 1
+                            st.success("✅ Row deleted!")
+                            st.rerun()
+                    with cols[6]:
+                        if st.button("✏️", key=f"edit_crypto_{i}_{st.session_state.crypto_table_version}_{st.session_state.ui_version}"):
+                            st.session_state.editing_row_crypto = i
+                            st.rerun()
         if 'editing_row_crypto' in st.session_state:
             edit_idx = st.session_state.editing_row_crypto
             row = st.session_state.crypto_df.loc[edit_idx]
@@ -745,7 +878,6 @@ document.querySelectorAll('.coin-card').forEach(div => {{
                     if st.form_submit_button("❌ Cancel"):
                         del st.session_state.editing_row_crypto
                         st.rerun()
-
         st.subheader("➕ Add New Transaction")
         with st.form("add_crypto"):
             col1, col2, col3 = st.columns([1.2, 1.2, 1.6])
@@ -789,83 +921,80 @@ document.querySelectorAll('.coin-card').forEach(div => {{
         table_container = st.container(key=f"fiat_table_container_{st.session_state.ui_version}")
         with table_container:
             with st.container(height=520, border=True):
-                h = st.columns([1.0, 0.9, 0.7, 1.0, 1.0, 0.4, 0.4])
+                h = st.columns([1.0, 0.9, 0.9, 0.6, 0.9, 1.0, 0.4, 0.4])
                 h[0].markdown("**Date**")
                 h[1].markdown("**CZK**")
                 h[2].markdown("**EUR**")
                 h[3].markdown("**Fee**")
-                h[4].markdown("**USDC**")
-                h[5].markdown("**Delete**")
-                h[6].markdown("**Edit**")
+                h[4].markdown("**CZK/EUR**")
+                h[5].markdown("**USDC**")
+                h[6].markdown("**Delete**")
+                h[7].markdown("**Edit**")
                 for i, r in df_clean.iterrows():
-                    cols = st.columns([1.0, 0.9, 0.7, 1.0, 1.0, 0.4, 0.4])
+                    cols = st.columns([1.0, 0.9, 0.9, 0.6, 0.9, 1.0, 0.4, 0.4])
                     with cols[0]: st.write(format_datum(r['Datum']))
                     with cols[1]: st.write(f"{r['CZK']:,.2f}")
                     with cols[2]: st.write(f"{r['EUR']:,.2f}")
                     with cols[3]: st.write(f"{r['Fee']:,.2f}")
-                    with cols[4]: st.write(format_money(r['USDC']))
-                    with cols[5]:
-                        if st.button("🗑️", key=f"del_fiat_{i}_{st.session_state.fiat_table_version}_{st.session_state.ui_version}"):
+                    with cols[4]: st.write(f"{r['CZK/EUR']:,.5f}")
+                    with cols[5]: st.write(format_money(r['USDC']))
+                    with cols[6]:
+                        if st.button("🗑️", key=f"del_{i}_{st.session_state.fiat_table_version}_{st.session_state.ui_version}"):
                             st.session_state.fiat_df = st.session_state.fiat_df.drop(i).reset_index(drop=True)
                             save_fiat(st.session_state.fiat_df)
                             st.session_state.fiat_table_version += 1
                             st.session_state.ui_version += 1
                             st.success("✅ Row deleted!")
                             st.rerun()
-                    with cols[6]:
-                        if st.button("✏️", key=f"edit_fiat_{i}_{st.session_state.fiat_table_version}_{st.session_state.ui_version}"):
-                            st.session_state.editing_row_fiat = i
+                    with cols[7]:
+                        if st.button("✏️", key=f"edit_{i}_{st.session_state.fiat_table_version}_{st.session_state.ui_version}"):
+                            st.session_state.editing_row = i
                             st.rerun()
-        if 'editing_row_fiat' in st.session_state:
-            edit_idx = st.session_state.editing_row_fiat
+        if 'editing_row' in st.session_state:
+            edit_idx = st.session_state.editing_row
             row = st.session_state.fiat_df.loc[edit_idx]
             st.markdown("**Edit row**")
             with st.form("edit_fiat_row"):
-                col_a, col_b, col_c = st.columns([1.2, 1.2, 1.6])
+                col_a, col_b = st.columns(2)
                 with col_a:
                     new_date = st.date_input("Date", value=datetime(1899, 12, 30) + timedelta(days=int(row['Datum'])))
                     new_datum = date_to_excel_serial(new_date)
                 with col_b:
                     new_czk = st.number_input("CZK", value=float(row['CZK']), step=0.01)
-                with col_c:
-                    new_eur = st.number_input("EUR", value=float(row['EUR']), step=0.01)
+                new_eur = st.number_input("EUR", value=float(row['EUR']), step=0.01)
                 new_fee = st.number_input("Fee", value=float(row['Fee']), step=0.01)
+                new_usdc = st.number_input("USDC", value=float(row['USDC']), step=0.01)
+                new_czk_eur = round(new_czk / new_eur, 5) if new_eur > 0 else 0.0
                 col_save, col_cancel = st.columns(2)
                 with col_save:
                     if st.form_submit_button("💾 Save Changes"):
-                        st.session_state.fiat_df.loc[edit_idx, 'Datum'] = new_datum
-                        st.session_state.fiat_df.loc[edit_idx, 'CZK'] = new_czk
-                        st.session_state.fiat_df.loc[edit_idx, 'EUR'] = new_eur
-                        st.session_state.fiat_df.loc[edit_idx, 'Fee'] = new_fee
+                        st.session_state.fiat_df.loc[edit_idx] = {"Datum": new_datum, "CZK": new_czk, "EUR": new_eur, "Fee": new_fee, "CZK/EUR": new_czk_eur, "USDC": new_usdc, "NI": row.get('NI', ""), "GG": row.get('GG', ""), "ER": row.get('ER', "")}
                         save_fiat(st.session_state.fiat_df)
-                        del st.session_state.editing_row_fiat
+                        del st.session_state.editing_row
                         st.session_state.fiat_table_version += 1
                         st.session_state.ui_version += 1
                         st.success("✅ Row updated!")
                         st.rerun()
                 with col_cancel:
                     if st.form_submit_button("❌ Cancel"):
-                        del st.session_state.editing_row_fiat
+                        del st.session_state.editing_row
                         st.rerun()
-        st.subheader("➕ Add New Fiat Transaction")
+        st.subheader("➕ Add New Fiat Entry")
         with st.form("add_fiat"):
-            col1, col2, col3, col4 = st.columns([1.2, 1.2, 1.2, 1.2])
+            col1, col2 = st.columns(2)
             with col1:
                 selected_date = st.date_input("Date", value=date(2026, 3, 25))
                 datum = date_to_excel_serial(selected_date)
             with col2:
                 czk = st.number_input("CZK", value=1000.0, step=0.01)
-            with col3:
-                eur = st.number_input("EUR", value=40.0, step=0.01)
-            with col4:
-                fee = st.number_input("Fee", value=1.0, step=0.01)
-            if st.form_submit_button("➕ Add Transaction"):
-                new_row = pd.DataFrame([{"Datum": datum, "CZK": czk, "EUR": eur, "Fee": fee,
-                                         "CZK/EUR": czk/eur if eur else 0,
-                                         "USDC": eur*1.12, "NI": "", "GG": "", "ER": ""}])
+            eur = st.number_input("EUR", value=40.0, step=0.01)
+            fee = st.number_input("Fee", value=1.0, step=0.01)
+            usdc = st.number_input("USDC", value=44.67, step=0.01)
+            czk_eur = round(czk / eur, 5) if eur > 0 else 0.0
+            if st.form_submit_button("➕ Add Entry"):
+                new_row = pd.DataFrame([{"Datum": datum, "CZK": czk, "EUR": eur, "Fee": fee, "CZK/EUR": czk_eur, "USDC": usdc, "NI": "", "GG": "", "ER": ""}])
                 st.session_state.fiat_df = pd.concat([st.session_state.fiat_df, new_row], ignore_index=True)
                 save_fiat(st.session_state.fiat_df)
                 st.session_state.fiat_table_version += 1
                 st.session_state.ui_version += 1
-                st.success("✅ Fiat transaction added!")
                 st.rerun()
