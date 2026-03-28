@@ -13,10 +13,13 @@ import streamlit.components.v1 as components
 
 st.set_page_config(page_title="Crypto Portfolio", layout="wide", initial_sidebar_state="expanded")
 
-# ====================== STRONGEST CUSTOM CSS (ALL TOP HEADERS FIXED + ZERO GAP) ======================
+# ====================== STRONGEST CUSTOM CSS (ALL ISSUES FIXED) ======================
 st.markdown("""
 <style>
-    /* === ABSOLUTE TOP + STRONGEST GLOSSY-HEADER (Portfolio Dashboard / Crypto Transactions / Fiat Transactions titles) === */
+    /* === ZERO TOP GAP + STRONGEST GLOSSY-HEADER (Portfolio Dashboard / Crypto / Fiat titles) === */
+    .stApp {
+        padding-top: 0 !important;
+    }
     .glossy-header {
         background: #0f172a !important;
         padding: 24px 30px !important;
@@ -28,7 +31,7 @@ st.markdown("""
         font-weight: 700 !important;
         color: #ffffff !important;
         letter-spacing: 1.1px !important;
-        margin-top: 8px !important;     /* minimal top spacing */
+        margin-top: 0 !important;          /* absolute top */
         margin-bottom: 20px !important;
     }
     .glossy-header:hover {
@@ -66,7 +69,7 @@ st.markdown("""
         color: #ffffff !important;
     }
 
-    /* PnL arrow always next to number (mobile fix) */
+    /* PnL arrows always NEXT to numbers (flex fix) */
     .pnl-content {
         display: flex !important;
         align-items: center !important;
@@ -74,7 +77,7 @@ st.markdown("""
         gap: 6px !important;
     }
 
-    /* Fee lines in Fiat summary */
+    /* Fee lines */
     .fee-line {
         font-size: 1.35rem !important;
         font-weight: 700 !important;
@@ -83,19 +86,15 @@ st.markdown("""
         margin-bottom: 4px !important;
     }
 
-    /* ZERO TOP GAP ON MOBILE + DESKTOP - header cards start right at the top */
-    .stApp {
-        padding-top: 0 !important;
-    }
+    /* MOBILE OVERRIDES */
     @media (max-width: 700px) {
-        .stApp { padding-top: 0 !important; }
-        .glossy-header { margin-top: 8px !important; margin-bottom: 20px !important; padding: 20px 24px !important; font-size: 24px !important; }
+        .glossy-header { margin-top: 0 !important; padding: 20px 24px !important; font-size: 24px !important; }
         .glossy-box { min-width: 98px !important; padding: 18px 14px !important; }
         .glossy-box > div:first-child { font-size: 12px !important; }
         .glossy-box > div:last-child { font-size: 21px !important; }
     }
 
-    /* === EXACT coin-grid + coin-card (same as original Home page - with gloss & hover) === */
+    /* === COIN-GRID + COIN-CARD (now fits TWO cards on mobile) === */
     .coin-grid {
         display: grid !important;
         grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)) !important;
@@ -110,7 +109,7 @@ st.markdown("""
         background: #0f172a !important;
         padding: 16px !important;
         border-radius: 20px !important;
-        box-shadow: 0 6px 20px rgba(0,0,0,0.3) !important;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.45) !important;
         transition: all 0.25s ease !important;
         cursor: pointer;
         position: relative !important;
@@ -119,7 +118,7 @@ st.markdown("""
     }
     .coin-card:hover {
         transform: translateY(-3px) !important;
-        box-shadow: 0 0 22px 6px var(--glow) !important;
+        box-shadow: 0 0 22px 8px var(--glow) !important;
         z-index: 10 !important;
     }
     .card-header { display: flex; align-items: center; margin-bottom: 14px; }
@@ -130,8 +129,13 @@ st.markdown("""
     .total { font-size: 1.18rem; margin-top: 8px; border-top: 1px solid rgba(255,255,255,0.12); padding-top: 8px; }
     .total-value { font-size: 1.28rem; }
 
+    /* MOBILE: fit TWO transaction cards side-by-side */
     @media (max-width: 700px) {
-        .coin-grid { grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)) !important; gap: 12px !important; padding: 28px 24px !important; }
+        .coin-grid { 
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)) !important; 
+            gap: 12px !important; 
+            padding: 28px 24px !important; 
+        }
         .coin-card { padding: 14px !important; }
     }
 
@@ -530,8 +534,8 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
 body{{background:transparent;color:white;font-family:sans-serif;margin:0;padding:0;}}
 .coin-grid {{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px;padding:32px 26px;box-sizing:border-box;max-height:520px;overflow-y:auto;scrollbar-width:none;background:transparent !important;}}
 .coin-grid::-webkit-scrollbar {{display:none;}}
-.coin-card {{background:#0f172a;padding:16px;border-radius:20px;box-shadow:0 6px 20px rgba(0,0,0,0.3);transition:all 0.25s ease;cursor:pointer;position:relative;z-index:1;outline:none !important;-webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none;}}
-.coin-card:hover {{transform:translateY(-3px);box-shadow:0 0 22px 6px var(--glow) !important;z-index:10;}}
+.coin-card {{background:#0f172a;padding:16px;border-radius:20px;box-shadow:0 10px 30px rgba(0,0,0,0.45);transition:all 0.25s ease;cursor:pointer;position:relative;z-index:1;outline:none !important;-webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none;}}
+.coin-card:hover {{transform:translateY(-3px);box-shadow:0 0 22px 8px var(--glow) !important;z-index:10;}}
 .card-header {{display:flex;align-items:center;margin-bottom:14px;}}
 .card-content {{display:flex;flex-direction:column;gap:8px;}}
 .label-value-row {{display:flex;justify-content:space-between;align-items:center;font-size:0.95rem;}}
@@ -540,7 +544,7 @@ body{{background:transparent;color:white;font-family:sans-serif;margin:0;padding
 .total {{font-size:1.18rem;margin-top:8px;border-top:1px solid rgba(255,255,255,0.12);padding-top:8px;}}
 .total-value {{font-size:1.28rem;}}
 @media (max-width: 700px) {{
-    .coin-grid {{grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px;padding:28px 24px;}}
+    .coin-grid {{grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;padding:28px 24px;}}
     .coin-card {{padding:14px;}}
 }}
 </style></head><body><div class="coin-grid">{cards_html}</div><script>
@@ -664,7 +668,7 @@ document.querySelectorAll('.coin-card').forEach(div => {{
                     else:
                         st.error(f"📉 Could not load {coin} chart. Try the **Refresh** button in sidebar.")
 
-    # ====================== CRYPTO TRANSACTIONS - EXACT SAME GRID AS HOME ======================
+    # ====================== CRYPTO TRANSACTIONS ======================
     elif st.session_state.page == "Crypto Transactions":
         glossy_header("Crypto Transactions", CRYPTO_ICON)
         df_display = st.session_state.crypto_df.copy()
