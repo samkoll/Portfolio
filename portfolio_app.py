@@ -14,19 +14,16 @@ import textwrap
 
 st.set_page_config(page_title="Portfolio", layout="wide", initial_sidebar_state="expanded")
 
-# ====================== CUSTOM CSS (FINAL - hover restored + buttons fully hidden) ======================
+# ====================== CUSTOM CSS (hover + glow restored, buttons fixed) ======================
 css = textwrap.dedent("""
 <style>
-    .stApp {
-        background: linear-gradient(180deg, #0f1724, #1e2a44);
-    }
+    .stApp { background: linear-gradient(180deg, #0f1724, #1e2a44); }
     .glossy-header {
         background: linear-gradient(90deg, #1e2a44, #26334f);
         border-radius: 22px;
         padding: 28px 32px;
         margin: 20px 0 28px 0;
-        box-shadow: 0 8px 25px rgba(0,0,0,0.4),
-                    inset 0 1px 0 rgba(255,255,255,0.15);
+        box-shadow: 0 8px 25px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.15);
         display: flex;
         align-items: center;
         font-size: 28px;
@@ -39,8 +36,7 @@ css = textwrap.dedent("""
         background: linear-gradient(145deg, #0f172a, #1e2a44);
         border-radius: 18px;
         padding: 22px 24px;
-        box-shadow: 0 8px 25px rgba(0,0,0,0.35),
-                    inset 0 1px 0 rgba(255,255,255,0.12);
+        box-shadow: 0 8px 25px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.12);
         text-align: center;
         min-width: 110px;
         transition: all 0.25s ease;
@@ -48,21 +44,6 @@ css = textwrap.dedent("""
     .glossy-box:hover {
         transform: translateY(-3px);
         box-shadow: 0 12px 30px rgba(0,255,157,0.25);
-    }
-    .glossy-box > div:first-child {
-        font-size: 14px;
-        font-weight: 600;
-        letter-spacing: 1.1px;
-        color: #e0e0e0;
-        opacity: 0.9;
-        margin-bottom: 6px;
-        line-height: 1.2;
-    }
-    .glossy-box > div:last-child {
-        font-size: 27px;
-        font-weight: 700;
-        line-height: 1.05;
-        color: #ffffff;
     }
     .fee-line {
         font-size: 1.35rem;
@@ -147,17 +128,16 @@ css = textwrap.dedent("""
         .tx-usdc { font-size: 1.3rem; }
         .tx-ticker-amount { font-size: 1.15rem; }
     }
-    /* COMPLETELY HIDE DUPLICATE BUTTONS */
+    /* Hide duplicate buttons */
     .stButton button[key*="edit_crypto_"],
     .stButton button[key*="del_crypto_"] {
         display: none !important;
         visibility: hidden !important;
-        height: 0px !important;
-        width: 0px !important;
+        height: 0 !important;
+        width: 0 !important;
         margin: 0 !important;
         padding: 0 !important;
         overflow: hidden !important;
-        position: absolute !important;
     }
     .price-pills-container {
         display: flex !important;
@@ -405,7 +385,7 @@ def get_ticker_color(ticker: str) -> str:
         return known[ticker]
     return f"#{hashlib.md5(ticker.encode()).hexdigest()[:6]}"
 
-# ====================== FORMATTING (ESCAPED $) ======================
+# ====================== FORMATTING ======================
 def format_money(val):
     try:
         val = float(val)
@@ -534,6 +514,7 @@ def glossy_header(title: str, icon_svg: str):
 
 with main_container.container(key=f"page_{st.session_state.page}_{st.session_state.ui_version}"):
     if st.session_state.page == "Home":
+        # === ORIGINAL HOME PAGE RESTORED EXACTLY ===
         glossy_header("Portfolio Dashboard", DASHBOARD_ICON)
 
         df_port, total_value, total_pnl, total_pnl_pct = calculate_portfolio(st.session_state.crypto_df)
@@ -709,14 +690,13 @@ document.querySelectorAll('.coin-card').forEach(div => {{
                     else:
                         st.error(f"📉 Could not load {coin} chart. Try the **Refresh** button in sidebar.")
 
-    # ====================== CRYPTO TRANSACTIONS (CLEAN - NO DUPLICATE BUTTONS) ======================
+    # ====================== CRYPTO TRANSACTIONS (FIXED CARDS) ======================
     elif st.session_state.page == "Crypto Transactions":
         glossy_header("Crypto Transactions", CRYPTO_ICON)
         df_display = st.session_state.crypto_df.copy()
         df_display['Date'] = df_display['Datum'].apply(format_datum)
         df_display = df_display.dropna(how='all').reset_index(drop=True)
 
-        # Beautiful cards
         st.markdown('<div class="transaction-grid">', unsafe_allow_html=True)
         for i, r in df_display.iterrows():
             usdc_str = format_money(r['USDC'])
@@ -742,8 +722,7 @@ document.querySelectorAll('.coin-card').forEach(div => {{
             st.markdown(card_html, unsafe_allow_html=True)
         st.markdown('</div>', unsafe_allow_html=True)
 
-        # Hidden buttons (kept in DOM for JS clicks)
-        st.markdown('<div style="display:none !important; visibility:hidden !important; height:0 !important; overflow:hidden !important;">', unsafe_allow_html=True)
+        # Hidden buttons (JS triggers these)
         for i, r in df_display.iterrows():
             col1, col2 = st.columns([1, 1], gap="small")
             with col1:
@@ -758,7 +737,6 @@ document.querySelectorAll('.coin-card').forEach(div => {{
                     st.session_state.ui_version += 1
                     st.success("✅ Transaction deleted!")
                     st.rerun()
-        st.markdown('</div>', unsafe_allow_html=True)
 
         # Edit form
         if st.session_state.editing_row_crypto is not None:
@@ -813,7 +791,7 @@ document.querySelectorAll('.coin-card').forEach(div => {{
                     st.success(f"✅ Added {amount} {ticker}")
                     st.rerun()
 
-    # ====================== FIAT TRANSACTIONS ======================
+    # ====================== FIAT TRANSACTIONS (unchanged) ======================
     elif st.session_state.page == "Fiat Transactions":
         total_czk = pd.to_numeric(st.session_state.fiat_df['CZK'], errors='coerce').fillna(0).sum()
         total_eur = pd.to_numeric(st.session_state.fiat_df['EUR'], errors='coerce').fillna(0).sum()
