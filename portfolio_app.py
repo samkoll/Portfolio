@@ -33,100 +33,82 @@ st.markdown("""
     margin-bottom: 18px !important;
 }
 
-/* === TRANSACTION CARDS - Wider, shorter, Invested/Amount/Price BESIDE ticker (same line) === */
-.transaction-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(380px, 1fr));
-    gap: 16px;
-    padding: 0 14px;
-}
-.transaction-card {
+/* === TRANSACTION ROWS - Compact hybrid between cards and table (for many transactions) === */
+.transaction-container {
     background: #0f172a;
-    border-radius: 18px;
-    padding: 18px 20px 14px;
-    box-shadow: 0 6px 20px rgba(0,0,0,0.3);
-    transition: all 0.25s ease;
-    position: relative;
-    display: flex;
-    flex-direction: column;
-    min-height: 138px;
-}
-.transaction-card:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 12px 30px rgba(0, 255, 157, 0.3);
-}
-
-/* Main header row: Logo + Ticker + Date + Invested/Amount/Price all on ONE line */
-.transaction-main-row {
+    border-radius: 16px;
+    margin-bottom: 10px;
+    padding: 14px 18px;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.3);
+    transition: all 0.2s ease;
     display: flex;
     align-items: center;
-    justify-content: space-between;
-    margin-bottom: 16px;
+    gap: 16px;
 }
-.transaction-left {
-    display: flex;
-    align-items: center;
-    gap: 14px;
-    flex: 1;
+.transaction-container:hover {
+    background: #141f38;
+    transform: translateX(4px);
+    box-shadow: 0 6px 20px rgba(0, 255, 157, 0.25);
 }
-.transaction-header img {
-    width: 42px;
-    height: 42px;
+.transaction-logo {
+    width: 38px;
+    height: 38px;
     border-radius: 50%;
     object-fit: contain;
+    flex-shrink: 0;
+}
+.transaction-info {
+    flex: 1;
+    min-width: 0;
+}
+.transaction-ticker-row {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
 }
 .transaction-ticker {
-    font-size: 1.28rem;
+    font-size: 1.22rem;
     font-weight: 700;
     color: #ffffff;
-    line-height: 1.05;
 }
 .transaction-date {
-    color: #aaa;
-    font-size: 0.92rem;
-    margin-top: 2px;
+    color: #888;
+    font-size: 0.88rem;
 }
-
-/* Right side: Invested / Amount / Price in one compact row */
 .transaction-values {
     display: flex;
-    gap: 24px;
-    text-align: right;
-    font-size: 1.02rem;
+    gap: 32px;
+    font-size: 1.0rem;
+    color: #ddd;
 }
-.transaction-values div {
-    min-width: 88px;
+.transaction-values strong {
+    color: #ffffff;
+    font-weight: 600;
 }
 .transaction-values small {
     color: #aaa;
     font-size: 0.82rem;
-    font-weight: 500;
     display: block;
-}
-.transaction-values strong {
-    font-weight: 700;
-    color: #ffffff;
+    margin-bottom: 1px;
 }
 .transaction-amount {
-    font-size: 1.04rem;
-    font-weight: 700;
     color: #ffffff;
+    font-weight: 700;
 }
-
 .transaction-buttons {
     display: flex;
-    gap: 12px;
-    margin-top: auto;
+    gap: 8px;
+    flex-shrink: 0;
 }
 .transaction-buttons button {
-    flex: 1;
-    padding: 10px 14px;
+    padding: 8px 14px;
     border: none;
-    border-radius: 11px;
+    border-radius: 10px;
     font-weight: 700;
-    font-size: 0.95rem;
+    font-size: 0.92rem;
     cursor: pointer;
     transition: all 0.2s ease;
+    min-width: 88px;
 }
 .transaction-buttons .delete-btn {
     background: #e63939;
@@ -143,7 +125,7 @@ st.markdown("""
     background: #00a17a;
 }
 
-/* Rest of the app styles (unchanged) */
+/* Big navigation cards with glossy shine */
 .stButton > button {
     background: #1e2a44 !important;
     color: #e0e0e0 !important;
@@ -169,6 +151,7 @@ st.markdown("""
     background: #263b5e !important;
     color: white !important;
 }
+/* Glossy shine for main content */
 .glossy-header,
 .glossy-box {
     position: relative;
@@ -241,6 +224,7 @@ st.markdown("""
     line-height: 1.05;
     color: #ffffff;
 }
+/* Fee lines in Fiat summary */
 .fee-line {
     font-size: 1.35rem;
     font-weight: 700;
@@ -248,6 +232,7 @@ st.markdown("""
     line-height: 1.1;
     margin-bottom: 4px;
 }
+/* MOBILE */
 @media (max-width: 700px) {
     .stApp { padding-top: 75px !important; }
     .glossy-header {
@@ -257,104 +242,16 @@ st.markdown("""
         font-size: 24px !important;
         min-height: 100px;
     }
-    .transaction-grid {
-        grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
-        padding: 0 10px;
-        gap: 14px;
+    .transaction-container {
+        padding: 12px 16px;
+        flex-wrap: wrap;
+        gap: 12px;
     }
-    .transaction-card {
-        padding: 16px 18px 12px;
-        min-height: 134px;
+    .transaction-values {
+        gap: 20px;
+        order: 3;
+        width: 100%;
     }
-    .transaction-values { gap: 18px; }
-}
-@media (max-width: 600px) {
-    .glossy-box {
-        min-width: 98px !important;
-        padding: 18px 14px !important;
-    }
-    .glossy-box > div:first-child { font-size: 12px !important; }
-    .glossy-box > div:last-child { font-size: 21px !important; }
-}
-.price-pills-container {
-    display: flex !important;
-    gap: 6px !important;
-    flex-wrap: nowrap !important;
-    overflow-x: auto !important;
-    padding-bottom: 4px;
-    scrollbar-width: none;
-}
-.price-pills-container::-webkit-scrollbar { display: none; }
-.price-pill, .avg-pill, .daily-pill {
-    padding: 7px 14px !important;
-    border-radius: 9999px !important;
-    white-space: nowrap !important;
-    flex-shrink: 0;
-    background: #0f172a !important;
-    display: inline-flex;
-    align-items: center;
-    gap: 5px;
-    font-size: 1.05rem;
-    font-weight: 700;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.12);
-}
-.price-pill span:last-child, .avg-pill span:last-child { font-size: 1.26rem; }
-.daily-pill {
-    color: #ff4d4d;
-    font-weight: 700;
-    padding: 4px 8px !important;
-    font-size: 0.88rem !important;
-}
-@media (max-width: 700px) {
-    .price-pills-container { gap: 4px !important; }
-    .price-pill, .avg-pill, .daily-pill { padding: 5px 10px !important; }
-    .daily-pill { padding: 3px 7px !important; font-size: 0.82rem !important; }
-    .price-pill span:first-child, .avg-pill span:first-child { font-size: 0.92rem !important; }
-    .price-pill span:last-child, .avg-pill span:last-child { font-size: 1.18rem !important; }
-}
-div[data-baseweb="select"] {
-    background: linear-gradient(90deg, #26334f, #1e2a44) !important;
-    border-radius: 9999px !important;
-    box-shadow: 0 6px 20px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.15) !important;
-    min-width: 148px !important;
-    max-width: 160px !important;
-    height: 39px !important;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
-}
-div[data-baseweb="select"] > div {
-    background: transparent !important;
-    border: none !important;
-    padding: 0 18px !important;
-    line-height: 1.35 !important;
-    display: flex !important;
-    align-items: center !important;
-    justify-content: space-between !important;
-    height: 100% !important;
-}
-div[data-baseweb="select"] * {
-    color: #ffffff !important;
-    font-weight: 700 !important;
-    font-size: 1.16rem !important;
-}
-[data-baseweb="popover"] [data-baseweb="menu"] {
-    background-color: #26334f !important;
-    border-radius: 9999px !important;
-    box-shadow: 0 12px 30px rgba(0,0,0,0.6) !important;
-    padding: 8px 6px !important;
-    margin-top: 6px !important;
-    border: 2px solid #00ff9d !important;
-}
-.glossy-header *, .glossy-box *, .coin-card *, .price-pill *, .avg-pill *, .daily-pill *, div[data-baseweb="select"] *, .charts-header * {
-    cursor: pointer !important;
-}
-.charts-header {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 14px;
-    color: #ffffff;
-    font-weight: 700;
-    font-size: 23px;
 }
 </style>
 """, unsafe_allow_html=True)
@@ -863,7 +760,7 @@ document.querySelectorAll('.coin-card').forEach(div => {{
                     else:
                         st.error(f"📉 Could not load {coin} chart. Try the **Refresh** button in sidebar.")
     
-    # ====================== CRYPTO TRANSACTIONS - Invested/Amount/Price VEDLE ticker (same line) ======================
+    # ====================== CRYPTO TRANSACTIONS - Compact row style (hybrid card + row) ======================
     elif st.session_state.page == "Crypto Transactions":
         glossy_header("Crypto Transactions", CRYPTO_ICON)
         
@@ -898,7 +795,7 @@ document.querySelectorAll('.coin-card').forEach(div => {{
         df_display['Date'] = df_display['Datum'].apply(format_datum)
         df_display = df_display.dropna(how='all').reset_index(drop=True)
         
-        cards_html = ""
+        rows_html = ""
         for i, r in df_display.iterrows():
             logo_url = get_ticker_logo(r['Ticker'])
             invested = format_money(r['USDC'])
@@ -906,24 +803,21 @@ document.querySelectorAll('.coin-card').forEach(div => {{
             price = format_money(r['Price'])
             date_str = r['Date']
             
-            cards_html += f"""
-<div class="transaction-card">
-    <div class="transaction-main-row">
-        <!-- Left: Logo + Ticker + Date -->
-        <div class="transaction-left">
-            <img src="{logo_url}" onerror="this.src='https://via.placeholder.com/42/1e2a44/ffffff?text={r['Ticker'][0]}';">
-            <div>
-                <div class="transaction-ticker">{r['Ticker']}</div>
-                <div class="transaction-date">{date_str}</div>
-            </div>
+            rows_html += f"""
+<div class="transaction-container">
+    <img src="{logo_url}" class="transaction-logo" onerror="this.src='https://via.placeholder.com/38/1e2a44/ffffff?text={r['Ticker'][0]}';">
+    
+    <div class="transaction-info">
+        <div class="transaction-ticker-row">
+            <span class="transaction-ticker">{r['Ticker']}</span>
+            <span class="transaction-date">{date_str}</span>
         </div>
-        
-        <!-- Right: Invested / Amount / Price - VEDLE ticker -->
-        <div class="transaction-values">
-            <div><small>Invested</small><br><strong>{invested}</strong></div>
-            <div><small>Amount</small><br><strong class="transaction-amount">{amount_val}</strong></div>
-            <div><small>Price</small><br><strong>{price}</strong></div>
-        </div>
+    </div>
+    
+    <div class="transaction-values">
+        <div><small>Invested</small><strong>{invested}</strong></div>
+        <div><small>Amount</small><strong class="transaction-amount">{amount_val}</strong></div>
+        <div><small>Price</small><strong>{price}</strong></div>
     </div>
     
     <div class="transaction-buttons">
@@ -937,22 +831,43 @@ document.querySelectorAll('.coin-card').forEach(div => {{
 <html>
 <head>
 <style>
-body {{ background: transparent; margin: 0; padding: 0; }}
-.transaction-grid {{ display: grid; grid-template-columns: repeat(auto-fit, minmax(380px, 1fr)); gap: 16px; padding: 0 14px; }}
-.transaction-card {{ background: #0f172a; border-radius: 18px; padding: 18px 20px 14px; box-shadow: 0 6px 20px rgba(0,0,0,0.3); transition: all 0.25s ease; min-height: 138px; }}
-.transaction-card:hover {{ transform: translateY(-4px); box-shadow: 0 12px 30px rgba(0, 255, 157, 0.3); }}
-.transaction-main-row {{ display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }}
-.transaction-left {{ display: flex; align-items: center; gap: 14px; flex: 1; }}
-.transaction-header img {{ width: 42px; height: 42px; border-radius: 50%; object-fit: contain; }}
-.transaction-ticker {{ font-size: 1.28rem; font-weight: 700; color: #ffffff; line-height: 1.05; }}
-.transaction-date {{ color: #aaa; font-size: 0.92rem; margin-top: 2px; }}
-.transaction-values {{ display: flex; gap: 24px; text-align: right; font-size: 1.02rem; }}
-.transaction-values div {{ min-width: 88px; }}
-.transaction-values small {{ color: #aaa; font-size: 0.82rem; font-weight: 500; display: block; }}
-.transaction-values strong {{ font-weight: 700; color: #ffffff; }}
-.transaction-amount {{ font-size: 1.04rem; font-weight: 700; color: #ffffff; }}
-.transaction-buttons {{ display: flex; gap: 12px; }}
-.transaction-buttons button {{ flex: 1; padding: 10px 14px; border: none; border-radius: 11px; font-weight: 700; font-size: 0.95rem; cursor: pointer; transition: all 0.2s ease; }}
+body {{ background: transparent; margin: 0; padding: 12px 0; }}
+.transaction-container {{ 
+    background: #0f172a; 
+    border-radius: 16px; 
+    margin-bottom: 10px; 
+    padding: 14px 18px; 
+    box-shadow: 0 4px 16px rgba(0,0,0,0.3); 
+    transition: all 0.2s ease; 
+    display: flex; 
+    align-items: center; 
+    gap: 16px; 
+}}
+.transaction-container:hover {{ 
+    background: #141f38; 
+    transform: translateX(4px); 
+    box-shadow: 0 6px 20px rgba(0, 255, 157, 0.25); 
+}}
+.transaction-logo {{ width: 38px; height: 38px; border-radius: 50%; object-fit: contain; flex-shrink: 0; }}
+.transaction-info {{ flex: 1; min-width: 0; }}
+.transaction-ticker-row {{ display: flex; align-items: baseline; gap: 10px; }}
+.transaction-ticker {{ font-size: 1.22rem; font-weight: 700; color: #ffffff; }}
+.transaction-date {{ color: #888; font-size: 0.88rem; }}
+.transaction-values {{ display: flex; gap: 32px; font-size: 1.0rem; color: #ddd; }}
+.transaction-values strong {{ color: #ffffff; font-weight: 600; }}
+.transaction-values small {{ color: #aaa; font-size: 0.82rem; display: block; margin-bottom: 1px; }}
+.transaction-amount {{ color: #ffffff; font-weight: 700; }}
+.transaction-buttons {{ display: flex; gap: 8px; flex-shrink: 0; }}
+.transaction-buttons button {{ 
+    padding: 8px 14px; 
+    border: none; 
+    border-radius: 10px; 
+    font-weight: 700; 
+    font-size: 0.92rem; 
+    cursor: pointer; 
+    transition: all 0.2s ease; 
+    min-width: 88px; 
+}}
 .transaction-buttons .delete-btn {{ background: #e63939; color: white; }}
 .transaction-buttons .delete-btn:hover {{ background: #c1121f; }}
 .transaction-buttons .edit-btn {{ background: #00b894; color: #0f1724; }}
@@ -960,9 +875,7 @@ body {{ background: transparent; margin: 0; padding: 0; }}
 </style>
 </head>
 <body>
-<div class="transaction-grid">
-{cards_html}
-</div>
+{rows_html}
 <script>
 function deleteTransaction(i) {{
     const input = window.parent.document.querySelector('input[aria-label="delete_trigger"]');
@@ -982,7 +895,7 @@ function editTransaction(i) {{
 </body>
 </html>
 """
-        components.html(full_html, height=560, scrolling=True)
+        components.html(full_html, height=720, scrolling=True)
         
         if 'editing_row_crypto' in st.session_state:
             edit_idx = st.session_state.editing_row_crypto
