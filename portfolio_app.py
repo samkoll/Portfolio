@@ -920,7 +920,7 @@ document.querySelectorAll('.coin-card').forEach(div => {{
                     else:
                         st.error(f"📉 Could not load {coin} chart. Try the **Refresh** button in sidebar.")
     
-    # ====================== CRYPTO TRANSACTIONS - AMOUNT MOVED TO RIGHT + MATCHING DASHBOARD STYLE ======================
+    # ====================== CRYPTO TRANSACTIONS - AMOUNT ON THE RIGHT + DASHBOARD STYLE ======================
     elif st.session_state.page == "Crypto Transactions":
         glossy_header("Crypto Transactions", CRYPTO_ICON)
         
