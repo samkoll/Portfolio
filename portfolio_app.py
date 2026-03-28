@@ -12,20 +12,25 @@ import hashlib
 import random
 
 # ====================== CONFIG ======================
-st.set_page_config(page_title="Portfolio", layout="wide", page_icon="logo.png")
+st.set_page_config(
+    page_title="Portfolio", 
+    layout="wide", 
+    page_icon="logo.png",
+    initial_sidebar_state="expanded"   # ← This forces the sidebar to stay visible (especially important on mobile)
+)
 
-# ====================== GLOBAL CSS (polished & clean + TARGETED BRANDING HIDE) ======================
+# ====================== GLOBAL CSS (TARGETED - keeps sidebar, removes ONLY branding) ======================
 st.markdown("""
 <style>
-/* === TARGETED CLEAN MODE - HIDE ONLY BRANDING, KEEP SIDEBAR INTACT === */
+/* === KEEP SIDEBAR + HAMBURGER MENU (mobile) === */
+/* Only hide the Streamlit/Cloud branding elements */
 #MainMenu {visibility: hidden !important;}
-header {visibility: hidden !important;}
 footer {visibility: hidden !important;}
 div[data-testid="stToolbar"] {display: none !important;}
 div[data-testid="stDecoration"] {display: none !important;}
 div[data-testid="stStatusWidget"] {display: none !important;}
 
-/* GitHub user + "Made with Streamlit" badge (bottom right) - this is the one you saw */
+/* Bottom-right GitHub user + Streamlit logo / viewer badge (this is what you saw) */
 .viewerBadge_container__1QSob,
 .styles_viewerBadge__1yB5_,
 .viewerBadge_link__1S137,
@@ -36,7 +41,9 @@ div[style*="made with streamlit"],
 .st-emotion-cache-1r4qjyz,
 .st-emotion-cache-1wb1j9c,
 .st-emotion-cache-1f3c2v8,
-div[data-testid="stMarkdownContainer"] p a[href*="streamlit"] {
+div[data-testid="stMarkdownContainer"] p a[href*="streamlit"],
+.st-emotion-cache-1f3c2v8 a,
+[data-testid="stAppViewContainer"] footer a {
     display: none !important;
 }
 
