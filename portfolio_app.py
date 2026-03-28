@@ -26,6 +26,13 @@ st.markdown("""
 .main, .block-container, .stMain {
     padding-top: 0px !important;
 }
+
+/* === PERFECT GAP FIX BETWEEN COIN GRID AND CHARTS === */
+#price-charts-section {
+    margin-top: -25px !important;
+    margin-bottom: 18px !important;
+}
+
 /* Big navigation cards with glossy shine */
 .stButton > button {
     background: #1e2a44 !important;
@@ -637,7 +644,7 @@ def glossy_header(title: str, icon_svg: str):
 # ====================== PAGES ======================
 with main_container.container(key=f"page_{st.session_state.page}_{st.session_state.ui_version}"):
     if st.session_state.page == "Home":
-        # === ORIGINAL HEADER RESTORED: using the green grid SVG icon (no custom logo.png in the card) ===
+        # === ORIGINAL HEADER RESTORED: using the green grid SVG icon ===
         glossy_header("Portfolio Dashboard", DASHBOARD_ICON)
         
         df_port, total_value, total_pnl, total_pnl_pct = calculate_portfolio(st.session_state.crypto_df)
@@ -712,9 +719,9 @@ document.querySelectorAll('.coin-card').forEach(div => {{
 </script><!-- VERSION:{st.session_state.ui_version} --></body></html>"""
         components.html(html, height=580, scrolling=True)
         
-        # ====================== CHARTS SECTION (GAP FIXED - PERFECTLY ALIGNED) ======================
+        # ====================== CHARTS SECTION - GAP NOW PERFECTLY MATCHED ======================
         st.markdown(f"""
-<div id="price-charts-section" class="glossy-box" style="background:#1e2a44;padding:18px 30px;border-radius:18px;margin:30px 0 18px 0;">
+<div id="price-charts-section" class="glossy-box" style="background:#1e2a44;padding:18px 30px;border-radius:18px;">
     <div class="charts-header">
         {CHARTS_ICON}
         <span>Charts</span>
