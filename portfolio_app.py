@@ -13,7 +13,7 @@ import streamlit.components.v1 as components
 
 st.set_page_config(page_title="Crypto Portfolio", layout="wide", initial_sidebar_state="expanded")
 
-# ====================== CUSTOM CSS - FULL ORIGINAL + STRONG GLOSSY-BOX + coin-grid ======================
+# ====================== CUSTOM CSS - EXACT ORIGINAL FROM YOUR FIRST MESSAGE ======================
 st.markdown("""
 <style>
     letter-spacing: 1.1px;
@@ -22,40 +22,29 @@ st.markdown("""
     margin-bottom: 6px;
     line-height: 1.2;
 }
-
-/* === FULL ORIGINAL GLOSSY-BOX (header summary cards) - HIGH SPECIFICITY === */
-.glossy-box {
-    background: #0f172a !important;
-    padding: 20px 24px !important;
-    border-radius: 20px !important;
-    box-shadow: 0 8px 25px rgba(0,0,0,0.35) !important;
-    text-align: center !important;
-}
 .glossy-box > div:first-child {
-    font-size: 15px !important;
-    font-weight: 600 !important;
-    letter-spacing: 1.1px !important;
-    color: #e0e0e0 !important;
-    opacity: 0.9 !important;
-    margin-bottom: 6px !important;
-    line-height: 1.2 !important;
+    font-size: 15px;
+    font-weight: 600;
+    letter-spacing: 1.1px;
+    color: #e0e0e0;
+    opacity: 0.9;
+    margin-bottom: 6px;
+    line-height: 1.2;
 }
 .glossy-box > div:last-child {
-    font-size: 27px !important;
-    font-weight: 700 !important;
-    line-height: 1.05 !important;
-    color: #ffffff !important;
+    font-size: 27px;
+    font-weight: 700;
+    line-height: 1.05;
+    color: #ffffff;
 }
-
 /* Fee lines in Fiat summary */
 .fee-line {
-    font-size: 1.35rem !important;
-    font-weight: 700 !important;
-    color: #ffffff !important;
-    line-height: 1.1 !important;
-    margin-bottom: 4px !important;
+    font-size: 1.35rem;
+    font-weight: 700;
+    color: #ffffff;
+    line-height: 1.1;
+    margin-bottom: 4px;
 }
-
 /* MOBILE: Make header smaller */
 @media (max-width: 700px) {
     .stApp {
@@ -82,7 +71,6 @@ st.markdown("""
         font-size: 21px !important;
     }
 }
-
 /* PRICE PILLS */
 .price-pills-container {
     display: flex !important;
@@ -127,7 +115,6 @@ st.markdown("""
     .price-pill span:last-child,
     .avg-pill span:last-child { font-size: 1.18rem !important; }
 }
-
 /* TIMEFRAME PILL */
 div[data-baseweb="select"] {
     background: linear-gradient(90deg, #26334f, #1e2a44) !important;
@@ -171,7 +158,28 @@ div[data-baseweb="select"] svg {
     fill: #e0e0e0 !important;
     margin-top: 0 !important;
 }
-
+/* Open menu */
+[data-baseweb="popover"] [data-baseweb="menu"] {
+    background-color: #26334f !important;
+    border-radius: 9999px !important;
+    box-shadow: 0 12px 30px rgba(0,0,0,0.6) !important;
+    padding: 8px 6px !important;
+    margin-top: 6px !important;
+    border: 2px solid #00ff9d !important;
+}
+[data-baseweb="option"] {
+    color: #e0e0e0 !important;
+    padding: 12px 24px !important;
+    border-radius: 9999px !important;
+    margin: 3px 4px !important;
+}
+[data-baseweb="option"][aria-selected="true"] {
+    background-color: #00ff9d !important;
+    color: #0f1724 !important;
+}
+[data-baseweb="option"]:hover {
+    background-color: #1e2a44 !important;
+}
 /* CURSOR FIX */
 .glossy-header *,
 .glossy-box *,
@@ -183,7 +191,6 @@ div[data-baseweb="select"] *,
 .charts-header * {
     cursor: pointer !important;
 }
-
 /* CHARTS HEADER */
 .charts-header {
     display: flex;
@@ -205,7 +212,7 @@ div[data-baseweb="select"] *,
     }
 }
 
-/* === EXACT coin-grid + coin-card from original Home page (used on Crypto Transactions) === */
+/* === EXACT coin-grid + coin-card from original Home page (now used on Crypto Transactions) === */
 .coin-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
@@ -793,13 +800,14 @@ document.querySelectorAll('.coin-card').forEach(div => {{
                     else:
                         st.error(f"📉 Could not load {coin} chart. Try the **Refresh** button in sidebar.")
 
-    # ====================== CRYPTO TRANSACTIONS - EXACT same grid as Home ======================
+    # ====================== CRYPTO TRANSACTIONS (exact same coin-grid as Home page) ======================
     elif st.session_state.page == "Crypto Transactions":
         glossy_header("Crypto Transactions", CRYPTO_ICON)
         df_display = st.session_state.crypto_df.copy()
         df_display['Date'] = df_display['Datum'].apply(format_datum)
         df_display = df_display.dropna(how='all').reset_index(drop=True)
 
+        # === EXACT same grid as Home page ===
         st.markdown('<div class="coin-grid">', unsafe_allow_html=True)
 
         for i, r in df_display.iterrows():
