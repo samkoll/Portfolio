@@ -158,19 +158,19 @@ div[data-testid="stMainBlockContainer"] {
 
 /* Swapped PnL Cards: Number absolute center, Text absolute bottom */
 .glossy-box.swapped {
-    min-height: 115px;
-    padding: 10px;
+    min-height: 94px;
+    padding: 10px 10px 30px 10px;
     align-items: center;
     justify-content: center;
 }
 .glossy-box.swapped > div:first-child {
-    font-size: 27px;
+    font-size: 26px;
     font-weight: 700;
     line-height: 1.05;
     color: #ffffff;
     margin-bottom: 0;
     position: relative;
-    top: -8px; /* Shifts up slightly to visibly center it perfectly above the absolute bottom text */
+    top: 0;
 }
 .glossy-box.swapped > div:last-child {
     font-size: 13.5px;
@@ -180,7 +180,7 @@ div[data-testid="stMainBlockContainer"] {
     opacity: 0.9;
     line-height: 1.2;
     position: absolute;
-    bottom: 14px;
+    bottom: 10px;
     left: 0;
     width: 100%;
     text-align: center;
@@ -280,11 +280,11 @@ div[data-testid="stMainBlockContainer"] {
         grid-template-columns: repeat(3, 1fr) !important; 
         gap: 8px; 
     }
-    .stats-layer { margin-top: -82px; } /* Much deeper tuck to hide values */
+    .stats-layer { margin-top: -52px; } /* Perfect tuck for 74px box */
     
-    .glossy-box.swapped { min-height: 105px; padding: 8px; }
-    .glossy-box.swapped > div:first-child { font-size: 18px !important; top: -8px; }
-    .glossy-box.swapped > div:last-child { font-size: 11.5px !important; bottom: 8px; }
+    .glossy-box.swapped { min-height: 74px; padding: 6px 6px 24px 6px; }
+    .glossy-box.swapped > div:first-child { font-size: 16px !important; top: 0px; margin-bottom: 0; }
+    .glossy-box.swapped > div:last-child { font-size: 11px !important; bottom: 6px; }
     
     .usdc-banner { padding: 16px 18px; margin-bottom: 24px; }
     .usdc-banner-left img { width: 36px; height: 36px; }
