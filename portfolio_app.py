@@ -526,7 +526,6 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                     <img src="{logo_url}" style="height:34px;width:34px;border-radius:50%;object-fit:contain;" onerror="this.src='https://via.placeholder.com/34/1e2a44/ffffff?text={ticker[0]}';">
                     <span style="color:#ffffff; font-size:1.2rem; font-weight:600;">{ticker}</span>
                 </div>
-                <span class="back-close">↺</span>
             </div>
             <div class="chart-container">
                 <canvas id="chart-{ticker}" width="400" height="145" style="width:100%; height:auto; max-height:145px;"></canvas>
@@ -570,7 +569,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
             color: white;
         }}
         /* Remove blue outline on click for all interactive elements */
-        .flip-card-front, .flip-card-back, .back-close, .flip-card {{
+        .flip-card-front, .flip-card-back, .flip-card {{
             outline: none;
             -webkit-tap-highlight-color: transparent;
         }}
@@ -624,7 +623,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
             background: #0f172a;
             box-shadow: 0 8px 24px rgba(0,0,0,0.3);
             border: 2px solid transparent;
-            overflow-y: hidden;  /* Remove scrolling on backs */
+            overflow-y: hidden;
         }}
         .flip-card-front {{
             display: flex;
@@ -697,28 +696,12 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
             align-items: center;
             font-weight: bold;
             font-size: 1rem;
-            margin-bottom: 6px;
+            margin-bottom: 10px;
             color: #00ff9d;
-        }}
-        .back-close {{
-            font-size: 1.3rem;
-            cursor: pointer;
-            background: rgba(255,255,255,0.1);
-            width: 28px;
-            height: 28px;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            border-radius: 50%;
-            transition: 0.2s;
-            color: white;
-        }}
-        .back-close:hover {{
-            background: rgba(255,255,255,0.3);
         }}
         .chart-container {{
             position: relative;
-            margin: 4px 0;
+            margin: 10px 0 6px 0;
             flex: 1;
             min-height: 145px;
         }}
@@ -731,7 +714,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
         .back-stats {{
             display: flex;
             justify-content: space-between;
-            align-items: center;
+            align-items: baseline;
             margin-top: 6px;
             padding-top: 6px;
             border-top: 1px solid rgba(255,255,255,0.15);
@@ -742,11 +725,12 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
         }}
         .current-item {{
             flex: 1.2;
+            text-align: left;
         }}
         .change-item {{
             flex: 0.8;
             text-align: left;
-            margin-left: -8px;
+            margin-left: -15px;
         }}
         .stat-label {{
             font-size: 0.7rem;
@@ -764,7 +748,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
             .flip-card, .static-card {{ height: 270px; }}
             .scroll-wrapper {{ padding: 12px 0px 16px 0px; }}
             .change-item {{
-                margin-left: -4px;
+                margin-left: -10px;
             }}
         }}
     </style>
@@ -933,22 +917,9 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                 }}
             }});
             
-            // Back click: flip back when clicking anywhere on the back (except if close button stops propagation)
+            // Back click: flip back when clicking anywhere on the back
             const backDiv = card.querySelector('.flip-card-back');
-            const closeBtn = backDiv.querySelector('.back-close');
-            if (closeBtn) {{
-                closeBtn.addEventListener('click', (e) => {{
-                    e.stopPropagation();
-                    card.classList.remove('flipped');
-                }});
-            }}
-            // Click on back area (not on close button) also flips back
             backDiv.addEventListener('click', (e) => {{
-                // If the click target is not the close button (or its children)
-                if (e.target === closeBtn || closeBtn.contains(e.target)) {{
-                    // Already handled by closeBtn listener
-                    return;
-                }}
                 card.classList.remove('flipped');
             }});
         }});
