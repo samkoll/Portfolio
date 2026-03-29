@@ -459,14 +459,10 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
 </div>"""
         st.markdown(value_box_html, unsafe_allow_html=True)
        
-        coin_list = [t for t in df_port['Ticker'] if t != 'USDC']
-       
-        # Build flip cards HTML
+        # Build flip cards HTML including USDC
         cards_html = ""
-        for idx, r in df_port.iterrows():
+        for _, r in df_port.iterrows():
             ticker = r['Ticker']
-            if ticker == 'USDC':
-                continue  # skip USDC from flip cards (optional)
             pnl = r['PnL']
             pnl_color = "#00ff9d" if pnl > 0 else "#ff4d4d" if pnl < 0 else "#aaaaaa"
             arrow = "▲" if pnl > 0 else "▼" if pnl < 0 else ""
@@ -476,7 +472,26 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
             pnl_pct_formatted = format_percent(abs(r['PnL %'])) if pd.notna(r['PnL %']) else ""
             live_price = r['Live']
            
-            cards_html += f"""
+            # For USDC: no flip chart, just a simple card (no back side chart)
+            if ticker == 'USDC':
+                cards_html += f"""
+<div class="static-card" data-border="{border_color}">
+    <div class="card-header">
+        <img src="{logo_url}" style="height:38px;width:38px;border-radius:50%;object-fit:contain;" onerror="this.src='https://via.placeholder.com/38/1e2a44/ffffff?text=U';">
+        <span style="font-weight:700;font-size:1.22rem;margin-left:10px;">{ticker}</span>
+    </div>
+    <div class="card-content">
+        <div class="label-value-row"><span class="label">Holdings</span><span class="value">{format_holdings(r['Holdings'], ticker)}</span></div>
+        <div class="label-value-row"><span class="label">Invested</span><span class="value">{format_money(r['USDC'])}</span></div>
+        <div class="label-value-row"><span class="label">PnL</span><span class="value" style="color:{pnl_color};">{arrow} {format_money(abs(pnl) if pd.notna(pnl) else "")}</span></div>
+        <div class="label-value-row"><span class="label">PnL %</span><span class="value" style="color:{pnl_color};">{arrow} {pnl_pct_formatted}</span></div>
+        <div class="label-value-row total"><span class="label">Value</span><span class="value total-value">{format_money(r['Value'])}</span></div>
+    </div>
+</div>
+"""
+            else:
+                # Flip card for crypto assets
+                cards_html += f"""
 <div class="flip-card" data-ticker="{ticker}" data-current-price="{live_price}" data-refresh="{st.session_state.refresh_key}" data-border="{border_color}">
     <div class="flip-card-inner">
         <div class="flip-card-front">
@@ -494,7 +509,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
         </div>
         <div class="flip-card-back">
             <div class="back-header">
-                <span>{ticker} - 30 Day Price</span>
+                <span>{ticker}</span>
                 <span class="back-close">↺</span>
             </div>
             <div class="chart-container">
@@ -507,7 +522,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
 </div>
 """
        
-        # Full HTML with flip styles and Chart.js logic
+        # Full HTML with flip styles and Chart.js logic, including static USDC card
         full_html = f"""
 <!DOCTYPE html>
 <html>
@@ -525,7 +540,8 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
         .scroll-wrapper {{
             overflow-y: auto;
             overflow-x: visible;
-            height: 590px;
+            height: auto;
+            max-height: 70vh;
             padding: 12px 12px 20px 12px;
             margin-bottom: 20px;
             scrollbar-width: none;
@@ -544,15 +560,12 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
         .flip-card {{
             background-color: transparent;
             width: 100%;
-            min-height: 480px;
             perspective: 1200px;
             cursor: pointer;
         }}
         .flip-card-inner {{
             position: relative;
             width: 100%;
-            height: 100%;
-            min-height: 480px;
             transition: transform 0.5s ease-in-out;
             transform-style: preserve-3d;
             border-radius: 20px;
@@ -563,7 +576,8 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
         .flip-card-front, .flip-card-back {{
             position: absolute;
             width: 100%;
-            min-height: 480px;
+            top: 0;
+            left: 0;
             backface-visibility: hidden;
             border-radius: 20px;
             padding: 16px;
@@ -575,6 +589,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
             display: flex;
             flex-direction: column;
             justify-content: space-between;
+            position: relative;
         }}
         .flip-card-back {{
             transform: rotateY(180deg);
@@ -582,6 +597,19 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
             flex-direction: column;
             justify-content: flex-start;
             overflow-y: auto;
+        }}
+        .static-card {{
+            background: #0f172a;
+            border-radius: 20px;
+            padding: 16px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+            border: 2px solid transparent;
+            transition: all 0.25s ease;
+        }}
+        .static-card:hover {{
+            border-color: var(--border);
+            transform: translateY(-4px);
+            box-shadow: 0 12px 28px rgba(0,0,0,0.5);
         }}
         .flip-card:hover .flip-card-front,
         .flip-card:hover .flip-card-back {{
@@ -633,6 +661,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
             justify-content: center;
             border-radius: 50%;
             transition: 0.2s;
+            color: white;
         }}
         .back-close:hover {{
             background: rgba(255,255,255,0.3);
@@ -655,7 +684,6 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
         }}
         @media (max-width: 700px) {{
             .coin-grid {{ grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px; }}
-            .flip-card, .flip-card-inner, .flip-card-front, .flip-card-back {{ min-height: 440px; }}
         }}
     </style>
 </head>
@@ -667,11 +695,10 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
 </div>
 <script>
     (function() {{
-        const cardElements = document.querySelectorAll('.flip-card');
+        const flipCards = document.querySelectorAll('.flip-card:not(.static-card)');
         const chartCache = {{}};
         const refreshKey = '{st.session_state.refresh_key}';
         
-        // Helper: fetch historical data from CryptoCompare
         async function fetchHistoricalData(ticker) {{
             const symbolMap = {{
                 'BTC':'BTC','ETH':'ETH','SOL':'SOL','HBAR':'HBAR',
@@ -696,13 +723,11 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
             }}
         }}
         
-        // Render chart using Chart.js
         async function renderChart(card, ticker, currentPrice) {{
             const canvas = card.querySelector(`canvas#chart-${{ticker}}`);
             const loadingDiv = card.querySelector(`.chart-loading`);
             if (!canvas) return;
             if (chartCache[ticker] && chartCache[ticker].chart) {{
-                // Chart already exists, just update if needed? Skip for simplicity
                 if (loadingDiv) loadingDiv.style.display = 'none';
                 return;
             }}
@@ -749,30 +774,25 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
             if (loadingDiv) loadingDiv.style.display = 'none';
         }}
         
-        // Flip logic
-        cardElements.forEach(card => {{
+        flipCards.forEach(card => {{
             const inner = card.querySelector('.flip-card-inner');
             const backDiv = card.querySelector('.flip-card-back');
             const ticker = card.getAttribute('data-ticker');
             const currentPrice = card.getAttribute('data-current-price');
-            // Set border color variable
             const border = card.getAttribute('data-border');
             card.style.setProperty('--border', border);
             
-            // Click on front -> flip
             const front = card.querySelector('.flip-card-front');
             front.addEventListener('click', (e) => {{
                 e.stopPropagation();
                 if (!card.classList.contains('flipped')) {{
                     card.classList.add('flipped');
-                    // Render chart when flipped first time
                     if (!chartCache[ticker] || !chartCache[ticker].chartObj) {{
                         renderChart(card, ticker, currentPrice);
                     }}
                 }}
             }});
             
-            // Click on back close button or back itself -> flip back
             const closeBtn = backDiv.querySelector('.back-close');
             if (closeBtn) {{
                 closeBtn.addEventListener('click', (e) => {{
@@ -787,7 +807,12 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
             }});
         }});
         
-        // If refresh_key changes, clear cache so charts refetch on next flip
+        // Set border for static cards
+        document.querySelectorAll('.static-card').forEach(card => {{
+            const border = card.getAttribute('data-border');
+            if (border) card.style.setProperty('--border', border);
+        }});
+        
         if (window.oldRefreshKey && window.oldRefreshKey !== refreshKey) {{
             for (let key in chartCache) {{
                 if (chartCache[key].chartObj) chartCache[key].chartObj.destroy();
