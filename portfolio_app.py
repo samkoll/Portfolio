@@ -521,28 +521,28 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
             </div>
         </div>
         <div class="flip-card-back">
-            <div class="back-header">
-                <div style="display:flex; align-items:center; gap:10px;">
+            <div class="back-top-row">
+                <div class="back-left">
                     <img src="{logo_url}" style="height:34px;width:34px;border-radius:50%;object-fit:contain;" onerror="this.src='https://via.placeholder.com/34/1e2a44/ffffff?text={ticker[0]}';">
-                    <span style="color:#ffffff; font-size:1.2rem; font-weight:600;">{ticker}</span>
+                    <span style="color:#ffffff; font-size:1.2rem; font-weight:600; margin-left:8px;">{ticker}</span>
+                </div>
+                <div class="back-right-stats">
+                    <div class="stat-group">
+                        <div class="stat-label">Current</div>
+                        <div class="value-change-row">
+                            <span class="current-value">${live_price:,.2f}</span>
+                            <span class="change-value" id="change-{ticker}">loading...</span>
+                        </div>
+                    </div>
+                    <div class="stat-group avg-group">
+                        <div class="stat-label">Avg</div>
+                        <div class="stat-value">${avg_price:,.2f}</div>
+                    </div>
                 </div>
             </div>
             <div class="chart-container">
                 <canvas id="chart-{ticker}" width="400" height="145" style="width:100%; height:auto; max-height:145px;"></canvas>
                 <div class="chart-loading" id="loading-{ticker}">Loading chart...</div>
-            </div>
-            <div class="back-stats">
-                <div class="stat-item current-item">
-                    <div class="stat-label">Current</div>
-                    <div class="value-change-row">
-                        <span class="current-value">${live_price:,.2f}</span>
-                        <span class="change-value" id="change-{ticker}">loading...</span>
-                    </div>
-                </div>
-                <div class="stat-item avg-item">
-                    <div class="stat-label">Avg</div>
-                    <div class="stat-value">${avg_price:,.2f}</div>
-                </div>
             </div>
         </div>
     </div>
@@ -634,7 +634,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
             transform: rotateY(180deg);
             display: flex;
             flex-direction: column;
-            justify-content: space-between;
+            justify-content: flex-start;
         }}
         .static-card {{
             background: #0f172a;
@@ -690,20 +690,60 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
             padding-top: 6px;
         }}
         .total-value {{ font-size: 1.15rem; font-weight: 700; }}
-        .back-header {{
+        /* New back layout */
+        .back-top-row {{
             display: flex;
             justify-content: space-between;
             align-items: center;
-            font-weight: bold;
-            font-size: 1rem;
-            margin-bottom: 10px;
-            color: #00ff9d;
+            margin-bottom: 12px;
+            flex-wrap: wrap;
+            gap: 8px;
+        }}
+        .back-left {{
+            display: flex;
+            align-items: center;
+        }}
+        .back-right-stats {{
+            display: flex;
+            gap: 20px;
+            align-items: baseline;
+        }}
+        .stat-group {{
+            text-align: right;
+        }}
+        .stat-group.avg-group {{
+            margin-left: 8px;
+        }}
+        .stat-label {{
+            font-size: 0.65rem;
+            color: #aaa;
+            margin-bottom: 2px;
+            font-weight: 500;
+        }}
+        .value-change-row {{
+            display: flex;
+            align-items: baseline;
+            gap: 6px;
+        }}
+        .current-value {{
+            font-size: 0.95rem;
+            font-weight: 700;
+            color: white;
+        }}
+        .change-value {{
+            font-size: 0.85rem;
+            font-weight: 600;
+        }}
+        .stat-value {{
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: white;
         }}
         .chart-container {{
             position: relative;
-            margin: 10px 0 6px 0;
+            margin: 4px 0 0 0;
             flex: 1;
-            min-height: 145px;
+            min-height: 155px;
         }}
         .chart-loading {{
             text-align: center;
@@ -711,56 +751,14 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
             padding: 10px;
             font-size: 0.85rem;
         }}
-        .back-stats {{
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            margin-top: 6px;
-            padding-top: 6px;
-            border-top: 1px solid rgba(255,255,255,0.15);
-            gap: 16px;
-        }}
-        .stat-item {{
-            flex: 1;
-        }}
-        .current-item {{
-            flex: 1.8;
-        }}
-        .avg-item {{
-            flex: 1;
-            text-align: right;
-        }}
-        .stat-label {{
-            font-size: 0.7rem;
-            color: #aaa;
-            margin-bottom: 4px;
-            font-weight: 500;
-        }}
-        .value-change-row {{
-            display: flex;
-            align-items: baseline;
-            gap: 8px;
-            flex-wrap: wrap;
-        }}
-        .current-value {{
-            font-size: 1rem;
-            font-weight: 700;
-            color: white;
-        }}
-        .change-value {{
-            font-size: 0.9rem;
-            font-weight: 600;
-        }}
-        .stat-value {{
-            font-size: 1rem;
-            font-weight: 600;
-            color: white;
-        }}
         @media (max-width: 700px) {{
             .coin-grid {{ grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 18px; }}
             .flip-card, .static-card {{ height: 270px; }}
             .scroll-wrapper {{ padding: 12px 0px 16px 0px; }}
-            .value-change-row {{ gap: 6px; }}
+            .back-right-stats {{ gap: 12px; }}
+            .current-value {{ font-size: 0.9rem; }}
+            .change-value {{ font-size: 0.8rem; }}
+            .stat-value {{ font-size: 0.9rem; }}
         }}
     </style>
 </head>
