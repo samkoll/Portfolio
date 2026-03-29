@@ -774,7 +774,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
             padding: 10px;
             font-size: 0.85rem;
         }}
-        /* Responsive shrinking for long prices (e.g., BTC) */
+        /* Responsive: larger text on mobile (user said too small) */
         @media (max-width: 700px) {{
             .coin-grid {{ grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 18px; }}
             .flip-card, .static-card {{ height: 270px; }}
@@ -784,27 +784,27 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                 margin-bottom: 14px;
             }}
             .back-right-stats {{ gap: 16px; }}
-            .current-value {{ font-size: 0.9rem; }}
-            .change-value {{ font-size: 0.8rem; }}
-            .stat-value {{ font-size: 0.9rem; }}
-            .stat-label {{ font-size: 0.6rem; }}
+            .current-value {{ font-size: 1.0rem; }}
+            .change-value {{ font-size: 0.9rem; }}
+            .stat-value {{ font-size: 1.0rem; }}
+            .stat-label {{ font-size: 0.65rem; }}
             .chart-container {{
                 margin-top: 14px;
                 min-height: 165px;
             }}
         }}
         @media (max-width: 550px) {{
-            .current-value {{ font-size: 0.8rem; }}
-            .change-value {{ font-size: 0.7rem; }}
-            .stat-value {{ font-size: 0.8rem; }}
-            .back-right-stats {{ gap: 10px; }}
+            .current-value {{ font-size: 0.95rem; }}
+            .change-value {{ font-size: 0.85rem; }}
+            .stat-value {{ font-size: 0.95rem; }}
+            .back-right-stats {{ gap: 12px; }}
         }}
         @media (max-width: 480px) {{
-            .current-value {{ font-size: 0.75rem; }}
-            .change-value {{ font-size: 0.65rem; }}
-            .stat-value {{ font-size: 0.75rem; }}
-            .stat-label {{ font-size: 0.55rem; }}
-            .back-right-stats {{ gap: 8px; }}
+            .current-value {{ font-size: 0.9rem; }}
+            .change-value {{ font-size: 0.8rem; }}
+            .stat-value {{ font-size: 0.9rem; }}
+            .stat-label {{ font-size: 0.6rem; }}
+            .back-right-stats {{ gap: 10px; }}
         }}
     </style>
 </head>
@@ -891,7 +891,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
             }}
             const datasets = [
                 {{
-                    label: 'Close Price (USD)',
+                    label: 'Close Price ($)',
                     data: hist.prices,
                     borderColor: chartColor,
                     backgroundColor: chartColor + '20',
@@ -902,7 +902,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                     pointBackgroundColor: chartColor
                 }},
                 {{
-                    label: 'Avg Price',
+                    label: 'Avg Price ($)',
                     data: new Array(hist.labels.length).fill(avgPrice),
                     borderColor: '#ffaa00',
                     borderWidth: 2,
