@@ -82,7 +82,7 @@ div[data-testid="stMainBlockContainer"] {
 .stats-layer {
     position: relative;
     z-index: 1;
-    margin-top: -65px; /* Tucks the top of the boxes behind the header */
+    margin-top: -68px; /* Tucks the top of the boxes behind the header */
     transition: margin-top 0.4s cubic-bezier(0.4, 0, 0.2, 1);
     margin-bottom: 24px;
 }
@@ -115,7 +115,14 @@ div[data-testid="stMainBlockContainer"] {
     width: 100% !important;
     margin-top: 68px;
     margin-bottom: 38px;
-    /* Removed all hover transition effects for the header */
+    transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.4s ease, border-color 0.4s ease;
+}
+
+/* Keep header elevated/hovered while the drawer is open */
+.dashboard-toggle:checked + .glossy-header-label .glossy-header {
+    transform: translateY(-4px) scale(1.01);
+    box-shadow: 0 15px 40px rgba(0, 0, 0, 0.5);
+    border-color: rgba(255, 255, 255, 0.15);
 }
 
 .glossy-box {
@@ -132,7 +139,6 @@ div[data-testid="stMainBlockContainer"] {
     display: flex;
     flex-direction: column;
     justify-content: center;
-    /* Removed hover effects for glossy boxes */
 }
 
 .glossy-box > div:first-child {
@@ -195,21 +201,7 @@ div[data-testid="stMainBlockContainer"] {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    transition: all 0.3s ease;
 }
-@media (hover: hover) {
-    .usdc-banner:hover {
-        transform: translateY(-4px);
-        border-color: #2775ca;
-        box-shadow: 0 12px 28px rgba(0,0,0,0.5), 0 0 15px rgba(39,117,202,0.4);
-    }
-}
-.usdc-banner.touch-hover {
-    transform: translateY(-4px);
-    border-color: #2775ca;
-    box-shadow: 0 12px 28px rgba(0,0,0,0.5), 0 0 15px rgba(39,117,202,0.4);
-}
-
 .usdc-banner-left {
     display: flex;
     align-items: center;
@@ -281,17 +273,19 @@ div[data-testid="stMainBlockContainer"] {
     .glossy-box > div:first-child { font-size: 10px !important; }
     .glossy-box > div:last-child { font-size: 21px !important; }
     
+    /* Stronger tuck and forced single row for mobile */
     .stats-layer-inner { 
         grid-template-columns: repeat(3, 1fr) !important; 
         gap: 8px; 
     }
     
-    /* Perfect deep tuck to completely hide the pinned top numbers */
-    .stats-layer { margin-top: -55px; margin-bottom: 18px; } 
+    /* Perfect deep tuck to completely hide the pinned top numbers (leaves exactly 20px for text) */
+    .stats-layer { margin-top: -75px; margin-bottom: 18px; } 
     
-    .glossy-box.swapped { min-height: 80px; }
-    .glossy-box.swapped > div:first-child { font-size: 16px !important; top: 16px; }
-    .glossy-box.swapped > div:last-child { font-size: 10px !important; bottom: 8px; }
+    .glossy-box.swapped { min-height: 95px; }
+    .glossy-box.swapped > div:first-child { font-size: 16px !important; top: 12px; }
+    /* Perfectly flush bottom label to peek out */
+    .glossy-box.swapped > div:last-child { font-size: 10px !important; bottom: 6px; }
     
     .usdc-banner { padding: 16px 18px; margin-bottom: 24px; }
     .usdc-banner-left img { width: 36px; height: 36px; }
@@ -924,7 +918,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
     (function() {{
         // --- Handle Mobile Touch "Hover" and Drawer closing ---
         document.addEventListener('click', (e) => {{
-            const touchHoverTarget = e.target.closest('.usdc-banner, .transaction-card');
+            const touchHoverTarget = e.target.closest('.transaction-card');
             
             // Remove touch-hover from elements that weren't just clicked
             document.querySelectorAll('.touch-hover').forEach(el => {{
@@ -940,7 +934,6 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
             
             // Smart Click-Away: Close dashboard drawer if clicking outside of it
             const dashToggle = window.parent.document.getElementById('dash-toggle');
-            const dashWrapper = window.parent.document.querySelector('.dashboard-wrapper');
             if (dashToggle && dashToggle.checked) {{
                 // Check if the click happened inside the dashboard drawer
                 const isClickInsideDash = e.target.closest('.dashboard-wrapper');
@@ -1599,6 +1592,15 @@ function editTransaction(i) {{
 <div>Fees</div>
 </div>
 </div>
+<script>
+document.addEventListener('click', (e) => {{
+    const target = e.target.closest('.glossy-box');
+    document.querySelectorAll('.glossy-box.touch-hover').forEach(el => {{
+        if (el !== target) el.classList.remove('touch-hover');
+    }});
+    if (target) target.classList.toggle('touch-hover');
+}});
+</script>
 """
         st.markdown(summary_html, unsafe_allow_html=True)
 
