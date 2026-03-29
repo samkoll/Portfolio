@@ -717,18 +717,19 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
     </div>
 </div>"""
        
-        # Fixed HTML: wrapper handles scrolling and provides padding, grid has no padding
+        # Updated HTML: increased padding and added margin-bottom
         html = f"""<html><head><style>
 body{{background:transparent;color:white;font-family:sans-serif;margin:0;padding:0;}}
 .scroll-wrapper {{
     overflow-y: auto;
-    height: 580px;
-    padding: 20px 12px;
-    scrollbar-width: none;   /* hide scrollbar */
-    -ms-overflow-style: none; /* IE/Edge */
+    height: 590px;                /* increased to accommodate extra padding */
+    padding: 25px 20px;           /* more padding for glow */
+    margin-bottom: 20px;          /* space between cards and charts */
+    scrollbar-width: none;
+    -ms-overflow-style: none;
 }}
 .scroll-wrapper::-webkit-scrollbar {{
-    display: none;           /* Chrome/Safari */
+    display: none;
 }}
 .coin-grid {{
     display: grid;
@@ -767,7 +768,7 @@ body{{background:transparent;color:white;font-family:sans-serif;margin:0;padding
 @media (max-width: 700px) {{
     .coin-grid {{grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px;}}
     .coin-card {{padding:14px;}}
-    .scroll-wrapper {{padding: 16px 8px;}}
+    .scroll-wrapper {{padding: 20px 12px; height: 570px;}}
 }}
 </style></head><body><div class="scroll-wrapper"><div class="coin-grid">{cards_html}</div></div><script>
 function switchToTabAndScroll(index){{
@@ -784,7 +785,7 @@ document.querySelectorAll('.coin-card').forEach(div => {{
     div.style.setProperty('--glow', div.getAttribute('data-glow'));
 }});
 </script><!-- VERSION:{st.session_state.ui_version} --></body></html>"""
-        components.html(html, height=620, scrolling=False)  # increased height to match wrapper's 580 + some margin
+        components.html(html, height=650, scrolling=False)  # increased height to match wrapper + margin
 
         st.markdown(f"""
 <div id="price-charts-section" class="glossy-box" style="background:#1e2a44;padding:18px 20px;border-radius:18px;">
