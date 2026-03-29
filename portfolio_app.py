@@ -441,7 +441,7 @@ if 'delete_trigger' not in st.session_state:
 if 'edit_trigger' not in st.session_state:
     st.session_state.edit_trigger = ""
 
-# ====================== HANDLE SWIPE REFRESH ======================
+# ====================== HANDLE SWIPE REFRESH WITH STATE PRESERVATION ======================
 # Check if refresh was triggered via query parameter
 query_params = st.query_params
 if "swipe_refresh" in query_params and query_params["swipe_refresh"] == "1":
@@ -785,7 +785,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
             padding: 10px;
             font-size: 0.85rem;
         }}
-        /* Responsive: larger text on mobile (user said too small) */
+        /* Responsive: larger text on mobile */
         @media (max-width: 700px) {{
             .coin-grid {{ grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 18px; }}
             .flip-card, .static-card {{ height: 270px; }}
@@ -818,36 +818,60 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
             .back-right-stats {{ gap: 10px; }}
         }}
 
-        /* Swipe-to-refresh styles */
+        /* Swipe-to-refresh styles - fixed at top of page */
         #swipe-overlay {{
             position: fixed;
             top: 0;
             left: 0;
             right: 0;
             height: 100px;
-            z-index: 9999;
+            z-index: 10000;
             pointer-events: none;
             display: flex;
             justify-content: center;
             align-items: flex-start;
             transition: all 0.2s ease;
         }}
-        .spinner {{
+        .refresh-indicator {{
             margin-top: -60px;
-            width: 40px;
-            height: 40px;
+            width: 44px;
+            height: 44px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: margin-top 0.2s ease;
+            background: rgba(15,23,42,0.9);
+            border-radius: 50%;
+            backdrop-filter: blur(4px);
+        }}
+        .spinner {{
+            width: 28px;
+            height: 28px;
             border: 3px solid rgba(255,255,255,0.3);
             border-top: 3px solid #00ff9d;
             border-radius: 50%;
             animation: spin 0.8s linear infinite;
-            transition: margin-top 0.2s ease;
+        }}
+        .checkmark {{
+            width: 28px;
+            height: 28px;
+            color: #00ff9d;
+            font-size: 24px;
+            font-weight: bold;
+            line-height: 1;
+            text-align: center;
+            animation: fadeOut 0.5s ease-out forwards;
         }}
         @keyframes spin {{
             0% {{ transform: rotate(0deg); }}
             100% {{ transform: rotate(360deg); }}
         }}
-        .spinner.visible {{
-            margin-top: 20px;
+        @keyframes fadeOut {{
+            0% {{ opacity: 1; transform: scale(1); }}
+            100% {{ opacity: 0; transform: scale(1.5); }}
+        }}
+        .refresh-indicator.visible {{
+            margin-top: 15px;
         }}
     </style>
 </head>
@@ -860,23 +884,57 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
 
 <!-- Swipe to refresh overlay -->
 <div id="swipe-overlay">
-    <div class="spinner" id="refresh-spinner"></div>
+    <div class="refresh-indicator" id="refresh-indicator">
+        <div class="spinner" id="refresh-spinner"></div>
+    </div>
 </div>
 
 <script>
     (function() {{
-        // Swipe-to-refresh implementation
+        // --- State preservation: store flipped cards before refresh ---
+        function saveFlippedState() {{
+            const flippedCards = [];
+            document.querySelectorAll('.flip-card').forEach(card => {{
+                if (card.classList.contains('flipped')) {{
+                    const ticker = card.getAttribute('data-ticker');
+                    if (ticker) flippedCards.push(ticker);
+                }}
+            }});
+            localStorage.setItem('flippedCards', JSON.stringify(flippedCards));
+        }}
+        
+        function restoreFlippedState() {{
+            const saved = localStorage.getItem('flippedCards');
+            if (!saved) return;
+            const flippedTickers = JSON.parse(saved);
+            document.querySelectorAll('.flip-card').forEach(card => {{
+                const ticker = card.getAttribute('data-ticker');
+                if (flippedTickers.includes(ticker)) {{
+                    card.classList.add('flipped');
+                    // Trigger chart loading if needed
+                    const currentPrice = parseFloat(card.getAttribute('data-current-price'));
+                    const avgPrice = parseFloat(card.getAttribute('data-avg-price'));
+                    const chartColor = card.getAttribute('data-chart-color');
+                    if (!chartCache[ticker] || !chartCache[ticker].chartObj) {{
+                        renderChart(card, ticker, currentPrice, avgPrice, chartColor);
+                        update24hChange(card, ticker);
+                    }}
+                }}
+            }});
+            localStorage.removeItem('flippedCards');
+        }}
+        
+        // --- Swipe-to-refresh implementation ---
         let touchStartY = 0;
         let isDragging = false;
-        let refreshThreshold = 80; // pixels to pull down
+        let refreshThreshold = 80;
         let isRefreshing = false;
+        const indicator = document.getElementById('refresh-indicator');
         const spinner = document.getElementById('refresh-spinner');
-        const overlay = document.getElementById('swipe-overlay');
         
         // Only enable on touch devices
         if ('ontouchstart' in window) {{
             document.body.addEventListener('touchstart', function(e) {{
-                // Only trigger if near the top (scrollY <= 10)
                 if (window.scrollY <= 10 && !isRefreshing) {{
                     touchStartY = e.touches[0].clientY;
                     isDragging = true;
@@ -888,12 +946,11 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                 const currentY = e.touches[0].clientY;
                 const diff = currentY - touchStartY;
                 if (diff > 0 && window.scrollY <= 10) {{
-                    // Prevent default to stop page scrolling while pulling
                     e.preventDefault();
                     const pullDistance = Math.min(diff, refreshThreshold);
                     const progress = pullDistance / refreshThreshold;
-                    spinner.style.marginTop = (20 * progress) + 'px';
-                    spinner.style.opacity = progress;
+                    const marginTop = 15 * progress;
+                    indicator.style.marginTop = marginTop + 'px';
                     if (pullDistance >= refreshThreshold) {{
                         spinner.style.borderTopColor = '#00ff9d';
                     }}
@@ -908,17 +965,17 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                 const endY = e.changedTouches[0].clientY;
                 const diff = endY - touchStartY;
                 if (diff >= refreshThreshold && window.scrollY <= 10) {{
-                    // Trigger refresh
                     isRefreshing = true;
-                    spinner.classList.add('visible');
+                    // Save current flipped state
+                    saveFlippedState();
+                    // Show spinner and trigger refresh
+                    indicator.classList.add('visible');
                     // Add query parameter to trigger refresh in Streamlit
                     const url = new URL(window.location.href);
                     url.searchParams.set('swipe_refresh', '1');
                     window.location.href = url.toString();
                 }} else {{
-                    // Reset spinner position
-                    spinner.style.marginTop = '-60px';
-                    spinner.style.opacity = '0';
+                    indicator.style.marginTop = '-60px';
                 }}
                 isDragging = false;
             }});
@@ -1089,11 +1146,29 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
             if (border) card.style.setProperty('--border', border);
         }});
         
+        // Restore flipped state after page load (if any)
+        restoreFlippedState();
+        
         if (window.oldRefreshKey && window.oldRefreshKey !== refreshKey) {{
             for (let key in chartCache) {{
                 if (chartCache[key].chartObj) chartCache[key].chartObj.destroy();
             }}
             window.chartCache = {{}};
+            // Show success checkmark briefly after refresh
+            const indicatorDiv = document.getElementById('refresh-indicator');
+            if (indicatorDiv) {{
+                const checkSpan = document.createElement('div');
+                checkSpan.className = 'checkmark';
+                checkSpan.innerHTML = '✓';
+                indicatorDiv.innerHTML = '';
+                indicatorDiv.appendChild(checkSpan);
+                indicatorDiv.classList.add('visible');
+                setTimeout(() => {{
+                    indicatorDiv.classList.remove('visible');
+                    indicatorDiv.innerHTML = '<div class="spinner" id="refresh-spinner"></div>';
+                    indicatorDiv.style.marginTop = '-60px';
+                }}, 800);
+            }}
         }}
         window.oldRefreshKey = refreshKey;
     }})();
