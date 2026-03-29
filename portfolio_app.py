@@ -822,20 +822,14 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
             localStorage.removeItem('flippedCards');
         }}
         
-        // --- Create beautiful spinner in parent window ---
+        // --- Create spinner in parent window (Streamlit main page) ---
         let parentSpinnerElement = null;
         
         function createParentSpinner() {{
             if (parentSpinnerElement) return;
             try {{
                 const parentDoc = window.parent.document;
-                if (parentDoc.getElementById('swipe-refresh-overlay')) {{
-                    // Overlay exists, just reset its margin-top
-                    const existingOverlay = parentDoc.getElementById('swipe-refresh-overlay');
-                    const indicator = existingOverlay.querySelector('.refresh-indicator');
-                    if (indicator) indicator.style.marginTop = '-60px';
-                    return;
-                }}
+                if (parentDoc.getElementById('swipe-refresh-overlay')) return;
                 const overlay = parentDoc.createElement('div');
                 overlay.id = 'swipe-refresh-overlay';
                 overlay.style.cssText = `
@@ -859,22 +853,22 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                     display: flex;
                     align-items: center;
                     justify-content: center;
-                    transition: margin-top 0.25s cubic-bezier(0.2, 0.9, 0.4, 1.1);
+                    transition: margin-top 0.2s ease-out;
                     background: rgba(15,23,42,0.95);
                     border-radius: 50%;
                     backdrop-filter: blur(4px);
-                    box-shadow: 0 0 15px rgba(0,255,157,0.3);
-                    border: 1px solid rgba(0,255,157,0.5);
+                    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+                    border: 1px solid rgba(0,255,157,0.3);
                 `;
                 const spinner = parentDoc.createElement('div');
                 spinner.className = 'spinner';
                 spinner.style.cssText = `
-                    width: 28px;
-                    height: 28px;
-                    border: 3px solid rgba(255,255,255,0.2);
+                    width: 30px;
+                    height: 30px;
+                    border: 3px solid rgba(255,255,255,0.3);
                     border-top: 3px solid #00ff9d;
                     border-radius: 50%;
-                    animation: spin 0.7s linear infinite;
+                    animation: spin 0.8s linear infinite;
                 `;
                 indicator.appendChild(spinner);
                 overlay.appendChild(indicator);
@@ -886,6 +880,10 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                     @keyframes spin {{
                         0% {{ transform: rotate(0deg); }}
                         100% {{ transform: rotate(360deg); }}
+                    }}
+                    @keyframes fadeOut {{
+                        0% {{ opacity: 1; transform: scale(1); }}
+                        100% {{ opacity: 0; transform: scale(1.5); }}
                     }}
                 `;
                 parentDoc.head.appendChild(style);
@@ -900,9 +898,43 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
             }}
         }}
         
-        function hideParentSpinner() {{
+        function showParentCheckmark() {{
             if (parentSpinnerElement) {{
-                parentSpinnerElement.indicator.style.marginTop = '-60px';
+                const parentDoc = window.parent.document;
+                const checkSpan = parentDoc.createElement('div');
+                checkSpan.className = 'checkmark';
+                checkSpan.style.cssText = `
+                    width: 30px;
+                    height: 30px;
+                    color: #00ff9d;
+                    font-size: 26px;
+                    font-weight: bold;
+                    line-height: 1;
+                    text-align: center;
+                    animation: fadeOut 0.5s ease-out forwards;
+                `;
+                checkSpan.textContent = '✓';
+                parentSpinnerElement.indicator.innerHTML = '';
+                parentSpinnerElement.indicator.appendChild(checkSpan);
+                parentSpinnerElement.indicator.style.marginTop = '15px';
+                setTimeout(() => {{
+                    if (parentSpinnerElement) {{
+                        parentSpinnerElement.indicator.style.marginTop = '-60px';
+                        parentSpinnerElement.indicator.innerHTML = '';
+                        const newSpinner = parentDoc.createElement('div');
+                        newSpinner.className = 'spinner';
+                        newSpinner.style.cssText = `
+                            width: 30px;
+                            height: 30px;
+                            border: 3px solid rgba(255,255,255,0.3);
+                            border-top: 3px solid #00ff9d;
+                            border-radius: 50%;
+                            animation: spin 0.8s linear infinite;
+                        `;
+                        parentSpinnerElement.indicator.appendChild(newSpinner);
+                        parentSpinnerElement.spinner = newSpinner;
+                    }}
+                }}, 800);
             }}
         }}
         
@@ -916,6 +948,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
         
         if ('ontouchstart' in window) {{
             document.addEventListener('touchstart', function(e) {{
+                // Allow swipe anywhere when scrolled to top (scrollY <= 5)
                 if (window.scrollY <= 5 && !isRefreshing) {{
                     touchStartY = e.touches[0].clientY;
                     isDragging = true;
@@ -953,7 +986,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                     url.searchParams.set('swipe_refresh', '1');
                     window.location.href = url.toString();
                 }} else {{
-                    hideParentSpinner();
+                    setParentSpinnerMarginTop('-60px');
                 }}
                 isDragging = false;
             }});
@@ -1124,14 +1157,13 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
         
         restoreFlippedState();
         
-        // After refresh, hide the spinner
         const urlParams = new URLSearchParams(window.location.search);
         if (urlParams.has('swipe_refresh') || (window.oldRefreshKey && window.oldRefreshKey !== refreshKey)) {{
             for (let key in chartCache) {{
                 if (chartCache[key].chartObj) chartCache[key].chartObj.destroy();
             }}
             window.chartCache = {{}};
-            hideParentSpinner();
+            showParentCheckmark();
             if (urlParams.has('swipe_refresh')) {{
                 const newUrl = window.location.pathname;
                 window.history.replaceState({{}}, document.title, newUrl);
