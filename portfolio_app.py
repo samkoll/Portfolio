@@ -533,9 +533,17 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                 <div class="chart-loading" id="loading-{ticker}">Loading chart...</div>
             </div>
             <div class="back-stats">
-                <div class="stat-item"><div class="stat-label">Current</div><div class="stat-value">${live_price:,.2f}</div></div>
-                <div class="stat-item"><div class="stat-label">24h Change</div><div class="stat-value" id="change-{ticker}">loading...</div></div>
-                <div class="stat-item"><div class="stat-label">Avg</div><div class="stat-value">${avg_price:,.2f}</div></div>
+                <div class="stat-item current-item">
+                    <div class="stat-label">Current</div>
+                    <div class="stat-value">${live_price:,.2f}</div>
+                </div>
+                <div class="stat-item change-item">
+                    <div class="stat-value" id="change-{ticker}">loading...</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-label">Avg</div>
+                    <div class="stat-value">${avg_price:,.2f}</div>
+                </div>
             </div>
         </div>
     </div>
@@ -718,14 +726,22 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
         .back-stats {{
             display: flex;
             justify-content: space-between;
+            align-items: center;
             margin-top: 6px;
             padding-top: 6px;
             border-top: 1px solid rgba(255,255,255,0.15);
-            gap: 12px;
         }}
         .stat-item {{
             text-align: center;
             flex: 1;
+        }}
+        .current-item {{
+            flex: 1.2;
+        }}
+        .change-item {{
+            flex: 0.8;
+            text-align: left;
+            margin-left: -8px;
         }}
         .stat-label {{
             font-size: 0.7rem;
@@ -734,7 +750,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
             font-weight: 500;
         }}
         .stat-value {{
-            font-size: 0.85rem;
+            font-size: 0.9rem;
             font-weight: 600;
             color: white;
         }}
@@ -742,6 +758,9 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
             .coin-grid {{ grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 18px; }}
             .flip-card, .static-card {{ height: 270px; }}
             .scroll-wrapper {{ padding: 12px 0px 16px 0px; }}
+            .change-item {{
+                margin-left: -4px;
+            }}
         }}
     </style>
 </head>
