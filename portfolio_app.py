@@ -472,7 +472,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                 cards_html += f"""
 <div class="static-card usdc-card" data-border="{border_color}">
     <div class="card-header-usdc">
-        <div class="header-left">
+        <div class="header-logo-row" style="display:flex; align-items:center;">
             <img src="{logo_url}" style="height:44px;width:44px;border-radius:50%;object-fit:contain;" onerror="this.src='https://via.placeholder.com/44/1e2a44/ffffff?text=U';">
             <span style="font-weight:700;font-size:1.3rem;margin-left:12px;color:#ffffff;">{ticker}</span>
         </div>
@@ -493,19 +493,23 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
     <div class="flip-card-inner">
         <div class="flip-card-front">
             <div class="card-header">
-                <div class="header-left">
-                    <img src="{logo_url}" style="height:44px;width:44px;border-radius:50%;object-fit:contain;" onerror="this.src='https://via.placeholder.com/44/1e2a44/ffffff?text={ticker[0]}';">
-                    <span style="font-weight:700;font-size:1.3rem;margin-left:12px;color:#ffffff;">{ticker}</span>
+                <div class="header-left-container">
+                    <div class="header-logo-row">
+                        <img src="{logo_url}" style="height:44px;width:44px;border-radius:50%;object-fit:contain;" onerror="this.src='https://via.placeholder.com/44/1e2a44/ffffff?text={ticker[0]}';">
+                        <span style="font-weight:700;font-size:1.3rem;margin-left:12px;color:#ffffff;">{ticker}</span>
+                    </div>
+                    <div class="header-price-row">
+                        <div class="stat-group" style="align-items: flex-start;">
+                            <div class="stat-label">Current</div>
+                            <div class="current-value">${live_price_formatted}</div>
+                        </div>
+                        <div class="stat-group" style="align-items: flex-start;">
+                            <div class="stat-label">24h</div>
+                            <div class="change-value" id="change-{ticker}">...</div>
+                        </div>
+                    </div>
                 </div>
                 <div class="header-right">
-                    <div class="stat-group">
-                        <div class="stat-label">Current</div>
-                        <div class="current-value">${live_price_formatted}</div>
-                    </div>
-                    <div class="stat-group">
-                        <div class="stat-label">24h</div>
-                        <div class="change-value" id="change-{ticker}">...</div>
-                    </div>
                     <div class="stat-group">
                         <div class="stat-label">Avg</div>
                         <div class="stat-value">${avg_price_formatted}</div>
@@ -560,7 +564,6 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
             padding: 12px 0px 20px 0px;
             margin-bottom: 20px;
             scroll-snap-type: x mandatory; /* Enable scroll snapping */
-            scroll-behavior: smooth;
             -webkit-overflow-scrolling: touch;
             
             /* Completely hide scrollbars */
@@ -585,7 +588,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
         .flip-card {{
             flex: 0 0 420px; /* Made wider */
             background-color: transparent;
-            height: 280px;
+            height: 290px;
             perspective: 1200px;
             cursor: pointer;
             scroll-snap-align: center; /* Snap to center */
@@ -629,7 +632,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
             background: #0f172a;
             border-radius: 18px;
             padding: 14px 18px;
-            height: 280px;
+            height: 290px;
             display: flex;
             flex-direction: column;
             justify-content: space-between;
@@ -666,18 +669,26 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
             margin-bottom: 12px;
             width: 100%;
         }}
-        .header-left {{
+        .header-left-container {{
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
+            flex-shrink: 0;
+        }}
+        .header-logo-row {{
             display: flex;
             align-items: center;
-            flex-shrink: 0;
-            margin-right: 6px;
+        }}
+        .header-price-row {{
+            display: flex;
+            flex-direction: row;
+            gap: 16px;
+            margin-top: 10px;
         }}
         .header-right {{
             display: flex;
-            flex-direction: row;
-            gap: 12px;
+            flex-direction: column;
             align-items: flex-end;
-            justify-content: flex-end;
             text-align: right;
             flex: 1;
         }}
@@ -744,16 +755,16 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
         
         @media (max-width: 700px) {{
             /* Fit phone width perfectly with snapping */
-            .flip-card, .static-card {{ flex: 0 0 85vw; height: 270px; }}
+            .flip-card, .static-card {{ flex: 0 0 85vw; height: 280px; }}
             .coin-grid {{ padding: 0 7.5vw; gap: 16px; }}
             
             /* Responsive fonts and padding to prevent overflow */
             .flip-card-front, .flip-card-back, .static-card {{ padding: 12px 10px; }}
-            .header-right {{ gap: 6px; }}
-            .current-value, .stat-value, .change-value {{ font-size: min(3.3vw, 0.9rem); letter-spacing: -0.3px; }}
+            .header-price-row {{ gap: 10px; margin-top: 8px; }}
+            .current-value, .stat-value, .change-value {{ font-size: min(3.8vw, 0.95rem); letter-spacing: -0.3px; }}
             .stat-label {{ font-size: min(2.5vw, 0.65rem); }}
-            .header-left span {{ font-size: min(4vw, 1.1rem) !important; margin-left: 6px !important; }}
-            .header-left img {{ height: 30px !important; width: 30px !important; }}
+            .header-logo-row span {{ font-size: min(4vw, 1.1rem) !important; margin-left: 6px !important; }}
+            .header-logo-row img {{ height: 32px !important; width: 32px !important; }}
         }}
     </style>
 </head>
@@ -773,8 +784,8 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                 // Detect vertical scroll to convert to horizontal
                 if (Math.abs(evt.deltaY) > Math.abs(evt.deltaX)) {{
                     evt.preventDefault();
-                    // Using scrollBy with smooth behavior glides to the next snap point beautifully
-                    scrollContainer.scrollBy({{ left: evt.deltaY > 0 ? 300 : -300, behavior: 'smooth' }});
+                    // Using a smaller step (200) instead of 300 makes it slower/more controlled on PC
+                    scrollContainer.scrollBy({{ left: evt.deltaY > 0 ? 200 : -200, behavior: 'smooth' }});
                 }}
             }}, {{ passive: false }});
         }}
@@ -990,7 +1001,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
 </body>
 </html>
 """
-        components.html(full_html, height=330, scrolling=False)
+        components.html(full_html, height=340, scrolling=False)
 
     # ====================== CRYPTO TRANSACTIONS ======================
     elif st.session_state.page == "Crypto Transactions":
@@ -1069,7 +1080,6 @@ body {{ background: transparent; margin: 0; padding: 0; }}
     overflow-y: hidden;
     padding-bottom: 20px;
     scroll-snap-type: x mandatory; /* Enable scroll snapping */
-    scroll-behavior: smooth;
     -webkit-overflow-scrolling: touch;
     
     /* Hide scrollbar completely */
@@ -1211,7 +1221,8 @@ if (txScrollContainer) {{
     txScrollContainer.addEventListener('wheel', (evt) => {{
         if (Math.abs(evt.deltaY) > Math.abs(evt.deltaX)) {{
             evt.preventDefault();
-            txScrollContainer.scrollBy({{ left: evt.deltaY > 0 ? 300 : -300, behavior: 'smooth' }});
+            // Lower scroll jump step for slower PC scrolling
+            txScrollContainer.scrollBy({{ left: evt.deltaY > 0 ? 200 : -200, behavior: 'smooth' }});
         }}
     }}, {{ passive: false }});
 }}
