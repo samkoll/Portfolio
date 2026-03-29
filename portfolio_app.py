@@ -82,7 +82,7 @@ div[data-testid="stMainBlockContainer"] {
 .stats-layer {
     position: relative;
     z-index: 1;
-    margin-top: -68px; /* Tucks the top of the boxes behind the header */
+    margin-top: -65px; /* Tucks the top of the boxes behind the header */
     transition: margin-top 0.4s cubic-bezier(0.4, 0, 0.2, 1);
     margin-bottom: 24px;
 }
@@ -102,7 +102,6 @@ div[data-testid="stMainBlockContainer"] {
     border: 1px solid rgba(255,255,255,0.05);
     border-radius: 18px;
     box-shadow: 0 10px 30px rgba(0,0,0,0.4);
-    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
     padding: 32px 24px;
     min-height: 130px;
     font-size: 29px;
@@ -116,21 +115,7 @@ div[data-testid="stMainBlockContainer"] {
     width: 100% !important;
     margin-top: 68px;
     margin-bottom: 38px;
-}
-
-/* PC Hover and Sync with Dashboard Toggle */
-@media (hover: hover) {
-    .glossy-header:hover {
-        transform: translateY(-4px) scale(1.01);
-        box-shadow: 0 15px 40px rgba(0, 0, 0, 0.5);
-        border-color: rgba(255, 255, 255, 0.15);
-    }
-}
-/* Keep header elevated/hovered while the drawer is open */
-.dashboard-toggle:checked + .glossy-header-label .glossy-header {
-    transform: translateY(-4px) scale(1.01);
-    box-shadow: 0 15px 40px rgba(0, 0, 0, 0.5);
-    border-color: rgba(255, 255, 255, 0.15);
+    /* Removed all hover transition effects for the header */
 }
 
 .glossy-box {
@@ -140,7 +125,6 @@ div[data-testid="stMainBlockContainer"] {
     border: 1px solid rgba(255,255,255,0.05);
     border-radius: 18px;
     box-shadow: 0 8px 24px rgba(0,0,0,0.4);
-    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
     padding: 28px 30px;
     text-align: center;
     flex: 1;
@@ -148,14 +132,7 @@ div[data-testid="stMainBlockContainer"] {
     display: flex;
     flex-direction: column;
     justify-content: center;
-}
-
-@media (hover: hover) {
-    .glossy-box:hover {
-        transform: translateY(-4px) scale(1.02);
-        box-shadow: 0 12px 32px rgba(255,255,255,0.1);
-        border-color: rgba(255,255,255,0.15);
-    }
+    /* Removed hover effects for glossy boxes */
 }
 
 .glossy-box > div:first-child {
@@ -174,21 +151,22 @@ div[data-testid="stMainBlockContainer"] {
     color: #ffffff;
 }
 
-/* Swapped PnL Cards: Number absolute center, Text absolute bottom */
+/* Swapped PnL Cards: Absolute Top Number, Absolute Bottom Text */
 .glossy-box.swapped {
     min-height: 94px;
-    padding: 10px 10px 30px 10px;
-    align-items: center;
-    justify-content: center;
+    padding: 0;
+    display: block;
 }
 .glossy-box.swapped > div:first-child {
     font-size: 26px;
     font-weight: 700;
     line-height: 1.05;
     color: #ffffff;
-    margin-bottom: 0;
-    position: relative;
-    top: -2px; 
+    position: absolute;
+    top: 22px; 
+    left: 0;
+    width: 100%;
+    text-align: center;
 }
 .glossy-box.swapped > div:last-child {
     font-size: 11px;
@@ -198,7 +176,7 @@ div[data-testid="stMainBlockContainer"] {
     color: #94a3b8;
     line-height: 1.2;
     position: absolute;
-    bottom: 10px;
+    bottom: 12px;
     left: 0;
     width: 100%;
     text-align: center;
@@ -303,20 +281,17 @@ div[data-testid="stMainBlockContainer"] {
     .glossy-box > div:first-child { font-size: 10px !important; }
     .glossy-box > div:last-child { font-size: 21px !important; }
     
-    /* Stronger tuck and forced single row for mobile */
     .stats-layer-inner { 
         grid-template-columns: repeat(3, 1fr) !important; 
         gap: 8px; 
     }
     
-    /* Perfect deep tuck to completely hide the numbers */
-    .stats-layer { margin-top: -72px; margin-bottom: 18px; } 
+    /* Perfect deep tuck to completely hide the pinned top numbers */
+    .stats-layer { margin-top: -55px; margin-bottom: 18px; } 
     
-    /* Box remains 94px tall to give enough room for numbers to hide */
-    .glossy-box.swapped { min-height: 94px; padding: 6px 6px 24px 6px; }
-    .glossy-box.swapped > div:first-child { font-size: 16px !important; top: -2px; margin-bottom: 0; }
-    /* Perfectly flush bottom label to peek out */
-    .glossy-box.swapped > div:last-child { font-size: 9.5px !important; bottom: 6px; }
+    .glossy-box.swapped { min-height: 80px; }
+    .glossy-box.swapped > div:first-child { font-size: 16px !important; top: 16px; }
+    .glossy-box.swapped > div:last-child { font-size: 10px !important; bottom: 8px; }
     
     .usdc-banner { padding: 16px 18px; margin-bottom: 24px; }
     .usdc-banner-left img { width: 36px; height: 36px; }
@@ -1624,15 +1599,6 @@ function editTransaction(i) {{
 <div>Fees</div>
 </div>
 </div>
-<script>
-document.addEventListener('click', (e) => {{
-    const target = e.target.closest('.glossy-box');
-    document.querySelectorAll('.glossy-box.touch-hover').forEach(el => {{
-        if (el !== target) el.classList.remove('touch-hover');
-    }});
-    if (target) target.classList.toggle('touch-hover');
-}});
-</script>
 """
         st.markdown(summary_html, unsafe_allow_html=True)
 
