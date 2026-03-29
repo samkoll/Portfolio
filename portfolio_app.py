@@ -559,7 +559,11 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
             overflow-x: auto;
             padding: 12px 0px 20px 0px;
             margin-bottom: 20px;
-            /* Hide scrollbar completely */
+            scroll-snap-type: x mandatory; /* Enable scroll snapping */
+            scroll-behavior: smooth;
+            -webkit-overflow-scrolling: touch;
+            
+            /* Completely hide scrollbars */
             scrollbar-width: none; /* Firefox */
             -ms-overflow-style: none;  /* IE and Edge */
         }}
@@ -574,7 +578,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
             flex-wrap: nowrap;
             gap: 24px;
             width: max-content;
-            padding-right: 24px;
+            padding: 0 24px; /* Default desktop padding */
             background: transparent !important;
             overflow: visible !important;
         }}
@@ -584,6 +588,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
             height: 280px;
             perspective: 1200px;
             cursor: pointer;
+            scroll-snap-align: center; /* Snap to center */
         }}
         .flip-card-inner {{
             position: relative;
@@ -602,7 +607,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
             height: 100%;
             backface-visibility: hidden;
             border-radius: 18px;
-            padding: 12px 14px;
+            padding: 14px 18px;
             background: #0f172a;
             box-shadow: 0 8px 24px rgba(0,0,0,0.3);
             border: 2px solid transparent;
@@ -623,7 +628,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
             flex: 0 0 420px; /* Made wider */
             background: #0f172a;
             border-radius: 18px;
-            padding: 12px 14px;
+            padding: 14px 18px;
             height: 280px;
             display: flex;
             flex-direction: column;
@@ -632,6 +637,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
             border: 2px solid transparent;
             transition: all 0.25s ease;
             overflow: hidden;
+            scroll-snap-align: center; /* Snap to center */
         }}
         .static-card.usdc-card:hover {{
             transform: none;
@@ -658,18 +664,22 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
             justify-content: space-between;
             align-items: flex-start;
             margin-bottom: 12px;
+            width: 100%;
         }}
         .header-left {{
             display: flex;
             align-items: center;
             flex-shrink: 0;
+            margin-right: 6px;
         }}
         .header-right {{
             display: flex;
             flex-direction: row;
             gap: 12px;
-            align-items: flex-start;
+            align-items: flex-end;
+            justify-content: flex-end;
             text-align: right;
+            flex: 1;
         }}
         .stat-group {{
             display: flex;
@@ -733,11 +743,17 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
         }}
         
         @media (max-width: 700px) {{
-            /* Fits phone whole width */
-            .flip-card, .static-card {{ flex: 0 0 90vw; height: 270px; }}
-            .scroll-wrapper {{ padding: 12px 0px 16px 0px; }}
-            .header-right {{ gap: 8px; }}
-            .current-value, .stat-value, .change-value {{ font-size: 0.9rem; }}
+            /* Fit phone width perfectly with snapping */
+            .flip-card, .static-card {{ flex: 0 0 85vw; height: 270px; }}
+            .coin-grid {{ padding: 0 7.5vw; gap: 16px; }}
+            
+            /* Responsive fonts and padding to prevent overflow */
+            .flip-card-front, .flip-card-back, .static-card {{ padding: 12px 10px; }}
+            .header-right {{ gap: 6px; }}
+            .current-value, .stat-value, .change-value {{ font-size: min(3.3vw, 0.9rem); letter-spacing: -0.3px; }}
+            .stat-label {{ font-size: min(2.5vw, 0.65rem); }}
+            .header-left span {{ font-size: min(4vw, 1.1rem) !important; margin-left: 6px !important; }}
+            .header-left img {{ height: 30px !important; width: 30px !important; }}
         }}
     </style>
 </head>
@@ -754,9 +770,11 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
         const scrollContainer = document.getElementById('scrollContainer');
         if (scrollContainer) {{
             scrollContainer.addEventListener('wheel', (evt) => {{
-                if (evt.deltaY !== 0) {{
+                // Detect vertical scroll to convert to horizontal
+                if (Math.abs(evt.deltaY) > Math.abs(evt.deltaX)) {{
                     evt.preventDefault();
-                    scrollContainer.scrollLeft += evt.deltaY;
+                    // Using scrollBy with smooth behavior glides to the next snap point beautifully
+                    scrollContainer.scrollBy({{ left: evt.deltaY > 0 ? 300 : -300, behavior: 'smooth' }});
                 }}
             }}, {{ passive: false }});
         }}
@@ -1050,7 +1068,13 @@ body {{ background: transparent; margin: 0; padding: 0; }}
     overflow-x: auto;
     overflow-y: hidden;
     padding-bottom: 20px;
+    scroll-snap-type: x mandatory; /* Enable scroll snapping */
+    scroll-behavior: smooth;
+    -webkit-overflow-scrolling: touch;
+    
+    /* Hide scrollbar completely */
     scrollbar-width: none;
+    -ms-overflow-style: none;
 }}
 .transaction-grid-wrapper::-webkit-scrollbar {{ display: none; }}
 
@@ -1059,11 +1083,11 @@ body {{ background: transparent; margin: 0; padding: 0; }}
     flex-direction: row;
     flex-wrap: nowrap;
     gap: 16px;
-    padding: 10px 6px 10px 6px;
+    padding: 10px 24px;
     width: max-content;
 }}
 .transaction-card {{
-    flex: 0 0 420px; /* Wider */
+    flex: 0 0 420px; /* Wider PC format */
     background: #0f172a;
     border-radius: 18px;
     padding: 18px 20px 14px;
@@ -1074,6 +1098,7 @@ body {{ background: transparent; margin: 0; padding: 0; }}
     flex-direction: column;
     min-height: 138px;
     overflow: hidden;
+    scroll-snap-align: center; /* Snap to center */
 }}
 .transaction-card:hover {{
     transform: translateY(-4px);
@@ -1164,7 +1189,11 @@ body {{ background: transparent; margin: 0; padding: 0; }}
 
 @media (max-width: 700px) {{
     .transaction-card {{
-        flex: 0 0 90vw; /* Fits phone entirely */
+        flex: 0 0 85vw; /* Fits phone correctly with snapping */
+    }}
+    .transaction-grid {{
+        padding: 10px 7.5vw;
+        gap: 16px;
     }}
 }}
 </style>
@@ -1180,9 +1209,9 @@ body {{ background: transparent; margin: 0; padding: 0; }}
 const txScrollContainer = document.getElementById('txScrollContainer');
 if (txScrollContainer) {{
     txScrollContainer.addEventListener('wheel', (evt) => {{
-        if (evt.deltaY !== 0) {{
+        if (Math.abs(evt.deltaY) > Math.abs(evt.deltaX)) {{
             evt.preventDefault();
-            txScrollContainer.scrollLeft += evt.deltaY;
+            txScrollContainer.scrollBy({{ left: evt.deltaY > 0 ? 300 : -300, behavior: 'smooth' }});
         }}
     }}, {{ passive: false }});
 }}
