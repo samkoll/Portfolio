@@ -14,15 +14,12 @@ import random
 # ====================== CONFIG ======================
 st.set_page_config(page_title="Portfolio", layout="wide", page_icon="logo.png")
 
-# ====================== GLOBAL CSS (Polished + Closer to Edges) ======================
+# ====================== GLOBAL CSS ======================
 st.markdown("""
 <style>
-/* ====================== GLOBAL LAYOUT - CLOSER TO EDGES ====================== */
 .stApp {
     background: linear-gradient(180deg, #0f1724 0%, #0a0f1c 100%) !important;
 }
-
-/* Remove excessive Streamlit default padding - content hugs the edges */
 .main .block-container,
 .stMain .block-container,
 div[data-testid="stMainBlockContainer"] {
@@ -31,8 +28,6 @@ div[data-testid="stMainBlockContainer"] {
     padding-top: 0px !important;
     max-width: 100% !important;
 }
-
-/* Slightly more breathing room on very wide screens */
 @media (min-width: 1200px) {
     .main .block-container,
     div[data-testid="stMainBlockContainer"] {
@@ -40,8 +35,6 @@ div[data-testid="stMainBlockContainer"] {
         padding-right: 18px !important;
     }
 }
-
-/* Mobile - comfortable but much closer to edges */
 @media (max-width: 768px) {
     .main .block-container,
     div[data-testid="stMainBlockContainer"] {
@@ -49,13 +42,9 @@ div[data-testid="stMainBlockContainer"] {
         padding-right: 8px !important;
     }
 }
-
-/* Clean top spacing */
 .main, .block-container, .stMain {
     padding-top: 0px !important;
 }
-
-/* Glossy Header - Closer to top */
 .glossy-header {
     position: relative;
     overflow: hidden;
@@ -77,12 +66,10 @@ div[data-testid="stMainBlockContainer"] {
     margin-top: 68px;
     margin-bottom: 38px;
 }
-
 .glossy-header:hover {
     transform: translateY(-4px) scale(1.03);
     box-shadow: 0 15px 40px rgba(255,255,255,0.15);
 }
-
 .glossy-box {
     position: relative;
     overflow: hidden;
@@ -98,12 +85,10 @@ div[data-testid="stMainBlockContainer"] {
     flex-direction: column;
     justify-content: center;
 }
-
 .glossy-box:hover {
     transform: translateY(-4px) scale(1.03);
     box-shadow: 0 15px 40px rgba(255,255,255,0.15);
 }
-
 .glossy-box > div:first-child {
     font-size: 13.5px;
     font-weight: 500;
@@ -113,15 +98,12 @@ div[data-testid="stMainBlockContainer"] {
     margin-bottom: 6px;
     line-height: 1.2;
 }
-
 .glossy-box > div:last-child {
     font-size: 27px;
     font-weight: 700;
     line-height: 1.05;
     color: #ffffff;
 }
-
-/* Buttons */
 .stButton > button {
     background: #1e2a44 !important;
     color: #e0e0e0 !important;
@@ -139,14 +121,12 @@ div[data-testid="stMainBlockContainer"] {
     box-shadow: 0 4px 15px rgba(0,0,0,0.25) !important;
     transition: all 0.3s ease !important;
 }
-
 .stButton > button:hover {
     transform: translateY(-4px) !important;
     box-shadow: 0 12px 30px rgba(255, 255, 255, 0.25) !important;
     background: #263b5e !important;
     color: white !important;
 }
-
 @media (max-width: 700px) {
     .stApp { padding-top: 72px !important; }
     .glossy-header {
@@ -157,7 +137,6 @@ div[data-testid="stMainBlockContainer"] {
         min-height: 100px;
     }
 }
-
 @media (max-width: 600px) {
     .glossy-box {
         min-width: 98px !important;
@@ -332,15 +311,9 @@ def get_ticker_color(ticker: str) -> str:
 
 def get_chart_color(ticker: str) -> str:
     color_map = {
-        'BTC': '#f7931a',   # orange
-        'ETH': '#627eea',   # blue
-        'SOL': '#9b59b6',   # purple
-        'HBAR': '#00b4d8',  # cyan
-        'XRP': '#1e3a8a',   # dark blue
-        'BNB': '#f4c430',   # yellow
-        'TRX': '#ff2d55',   # red
-        'LINK': '#2ecc71',  # green
-        'SUI': '#60a5fa',   # light blue
+        'BTC': '#f7931a', 'ETH': '#627eea', 'SOL': '#9b59b6',
+        'HBAR': '#00b4d8', 'XRP': '#1e3a8a', 'BNB': '#f4c430',
+        'TRX': '#ff2d55', 'LINK': '#2ecc71', 'SUI': '#60a5fa',
     }
     return color_map.get(ticker.upper(), '#00ff9d')
 
@@ -374,8 +347,7 @@ def format_percent(val):
 def format_price(val):
     try:
         val = float(val)
-        if pd.isna(val):
-            return ""
+        if pd.isna(val): return ""
         if abs(val) < 1:
             return f"{val:.4f}"
         else:
@@ -440,7 +412,7 @@ if 'delete_trigger' not in st.session_state:
 if 'edit_trigger' not in st.session_state:
     st.session_state.edit_trigger = ""
 
-# ====================== HANDLE SWIPE REFRESH WITH STATE PRESERVATION ======================
+# ====================== HANDLE SWIPE REFRESH ======================
 query_params = st.query_params
 if "swipe_refresh" in query_params and query_params["swipe_refresh"] == "1":
     st.session_state.refresh_key = random.randint(100000, 999999)
@@ -478,7 +450,6 @@ def glossy_header(title: str, icon_svg: str):
     html = f"""<div class="glossy-header">{icon_svg}<span style="margin-left:12px;">{title}</span></div>"""
     st.markdown(html, unsafe_allow_html=True)
 
-# ====================== PAGES ======================
 with main_container.container(key=f"page_{st.session_state.page}_{st.session_state.ui_version}"):
     if st.session_state.page == "Home":
         glossy_header("Portfolio Dashboard", DASHBOARD_ICON)
@@ -819,7 +790,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
 
 <script>
     (function() {{
-        // --- State preservation: store flipped cards before refresh ---
+        // --- State preservation ---
         function saveFlippedState() {{
             const flippedCards = [];
             document.querySelectorAll('.flip-card').forEach(card => {{
@@ -851,14 +822,13 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
             localStorage.removeItem('flippedCards');
         }}
         
-        // --- Create spinner in parent window (Streamlit main page) at the very top ---
+        // --- Create spinner in parent window (Streamlit main page) ---
         let parentSpinnerElement = null;
         
         function createParentSpinner() {{
             if (parentSpinnerElement) return;
             try {{
                 const parentDoc = window.parent.document;
-                // Check if overlay already exists
                 if (parentDoc.getElementById('swipe-refresh-overlay')) return;
                 const overlay = parentDoc.createElement('div');
                 overlay.id = 'swipe-refresh-overlay';
@@ -868,7 +838,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                     left: 0;
                     right: 0;
                     height: 100px;
-                    z-index: 100000;
+                    z-index: 999999;
                     pointer-events: none;
                     display: flex;
                     justify-content: center;
@@ -884,10 +854,11 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                     align-items: center;
                     justify-content: center;
                     transition: margin-top 0.2s ease-out;
-                    background: rgba(15,23,42,0.9);
+                    background: rgba(15,23,42,0.95);
                     border-radius: 50%;
                     backdrop-filter: blur(4px);
-                    box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+                    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+                    border: 1px solid rgba(0,255,157,0.3);
                 `;
                 const spinner = parentDoc.createElement('div');
                 spinner.className = 'spinner';
@@ -904,7 +875,6 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                 parentDoc.body.appendChild(overlay);
                 parentSpinnerElement = {{ overlay, indicator, spinner }};
                 
-                // Add keyframe animations to parent document
                 const style = parentDoc.createElement('style');
                 style.textContent = `
                     @keyframes spin {{
@@ -919,6 +889,12 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                 parentDoc.head.appendChild(style);
             }} catch(e) {{
                 console.warn("Cannot access parent window", e);
+            }}
+        }}
+        
+        function setParentSpinnerMarginTop(marginTop) {{
+            if (parentSpinnerElement) {{
+                parentSpinnerElement.indicator.style.marginTop = marginTop;
             }}
         }}
         
@@ -962,16 +938,9 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
             }}
         }}
         
-        function setParentSpinnerMarginTop(marginTop) {{
-            if (parentSpinnerElement) {{
-                parentSpinnerElement.indicator.style.marginTop = marginTop;
-            }}
-        }}
-        
-        // Create the spinner in the parent page
         createParentSpinner();
         
-        // --- Swipe-to-refresh: only from the very top 100px of the screen, and only when scrolled to top ---
+        // --- Swipe-to-refresh ---
         let touchStartY = 0;
         let isDragging = false;
         let refreshThreshold = 80;
@@ -979,8 +948,8 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
         
         if ('ontouchstart' in window) {{
             document.addEventListener('touchstart', function(e) {{
-                // Only if page is at the top and touch is within top 100px of the screen
-                if (window.scrollY <= 5 && e.touches[0].clientY < 100 && !isRefreshing) {{
+                // Allow swipe anywhere when scrolled to top (scrollY <= 5)
+                if (window.scrollY <= 5 && !isRefreshing) {{
                     touchStartY = e.touches[0].clientY;
                     isDragging = true;
                 }}
@@ -997,7 +966,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                     const marginTop = 15 * progress;
                     setParentSpinnerMarginTop(marginTop + 'px');
                     if (pullDistance >= refreshThreshold && parentSpinnerElement && parentSpinnerElement.spinner) {{
-                        parentSpinnerElement.spinner.style.borderTopColor = '#00ff9d';
+                        parentSpinnerElement.spinner.style.borderTopColor = '#ffaa00';
                     }}
                 }}
             }}, {{ passive: false }});
