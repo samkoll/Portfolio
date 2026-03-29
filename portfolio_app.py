@@ -830,7 +830,6 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
             display: flex;
             justify-content: center;
             align-items: flex-start;
-            transition: all 0.2s ease;
         }}
         .refresh-indicator {{
             margin-top: -60px;
@@ -839,10 +838,11 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
             display: flex;
             align-items: center;
             justify-content: center;
-            transition: margin-top 0.2s ease;
+            transition: margin-top 0.2s ease-out;
             background: rgba(15,23,42,0.9);
             border-radius: 50%;
             backdrop-filter: blur(4px);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
         }}
         .spinner {{
             width: 28px;
@@ -924,7 +924,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
             localStorage.removeItem('flippedCards');
         }}
         
-        // --- Swipe-to-refresh implementation ---
+        // --- Swipe-to-refresh implementation (only at very top) ---
         let touchStartY = 0;
         let isDragging = false;
         let refreshThreshold = 80;
@@ -934,18 +934,21 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
         
         // Only enable on touch devices
         if ('ontouchstart' in window) {{
-            document.body.addEventListener('touchstart', function(e) {{
-                if (window.scrollY <= 10 && !isRefreshing) {{
+            // Use document to capture touches anywhere, but only act if near top
+            document.addEventListener('touchstart', function(e) {{
+                // Only trigger if page is at the very top (scrollY <= 5) and touch is near top edge (clientY < 80)
+                if (window.scrollY <= 5 && e.touches[0].clientY < 80 && !isRefreshing) {{
                     touchStartY = e.touches[0].clientY;
                     isDragging = true;
                 }}
             }});
             
-            document.body.addEventListener('touchmove', function(e) {{
+            document.addEventListener('touchmove', function(e) {{
                 if (!isDragging || isRefreshing) return;
                 const currentY = e.touches[0].clientY;
                 const diff = currentY - touchStartY;
-                if (diff > 0 && window.scrollY <= 10) {{
+                if (diff > 0 && window.scrollY <= 5) {{
+                    // Prevent default to stop page scroll while pulling
                     e.preventDefault();
                     const pullDistance = Math.min(diff, refreshThreshold);
                     const progress = pullDistance / refreshThreshold;
@@ -955,16 +958,16 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                         spinner.style.borderTopColor = '#00ff9d';
                     }}
                 }}
-            }});
+            }}, {{ passive: false }});
             
-            document.body.addEventListener('touchend', function(e) {{
+            document.addEventListener('touchend', function(e) {{
                 if (!isDragging || isRefreshing) {{
                     isDragging = false;
                     return;
                 }}
                 const endY = e.changedTouches[0].clientY;
                 const diff = endY - touchStartY;
-                if (diff >= refreshThreshold && window.scrollY <= 10) {{
+                if (diff >= refreshThreshold && window.scrollY <= 5) {{
                     isRefreshing = true;
                     // Save current flipped state
                     saveFlippedState();
@@ -1149,24 +1152,26 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
         // Restore flipped state after page load (if any)
         restoreFlippedState();
         
+        // Check if refresh just happened (refresh key changed)
         if (window.oldRefreshKey && window.oldRefreshKey !== refreshKey) {{
+            // Clear chart cache
             for (let key in chartCache) {{
                 if (chartCache[key].chartObj) chartCache[key].chartObj.destroy();
             }}
             window.chartCache = {{}};
             // Show success checkmark briefly after refresh
             const indicatorDiv = document.getElementById('refresh-indicator');
-            if (indicatorDiv) {{
-                const checkSpan = document.createElement('div');
-                checkSpan.className = 'checkmark';
-                checkSpan.innerHTML = '✓';
-                indicatorDiv.innerHTML = '';
-                indicatorDiv.appendChild(checkSpan);
-                indicatorDiv.classList.add('visible');
+            const refreshIndicator = document.getElementById('refresh-indicator');
+            if (refreshIndicator) {{
+                // Clear content and show checkmark
+                refreshIndicator.innerHTML = '<div class="checkmark">✓</div>';
+                refreshIndicator.classList.add('visible');
                 setTimeout(() => {{
-                    indicatorDiv.classList.remove('visible');
-                    indicatorDiv.innerHTML = '<div class="spinner" id="refresh-spinner"></div>';
-                    indicatorDiv.style.marginTop = '-60px';
+                    refreshIndicator.classList.remove('visible');
+                    refreshIndicator.innerHTML = '<div class="spinner" id="refresh-spinner"></div>';
+                    refreshIndicator.style.marginTop = '-60px';
+                    // Re-attach spinner reference
+                    window.spinner = document.getElementById('refresh-spinner');
                 }}, 800);
             }}
         }}
