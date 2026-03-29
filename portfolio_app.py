@@ -371,6 +371,19 @@ def format_percent(val):
     except:
         return ""
 
+def format_price(val):
+    """Format price with 4 decimals if < 1, otherwise 2 decimals"""
+    try:
+        val = float(val)
+        if pd.isna(val):
+            return ""
+        if abs(val) < 1:
+            return f"{val:.4f}"
+        else:
+            return f"{val:,.2f}"
+    except:
+        return str(val)
+
 # ====================== PORTFOLIO CALC ======================
 def calculate_portfolio(crypto_df):
     if 'last_known_prices' not in st.session_state:
@@ -485,6 +498,8 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
             pnl_pct_formatted = format_percent(abs(r['PnL %'])) if pd.notna(r['PnL %']) else ""
             live_price = r['Live']
             avg_price = r['AVG']
+            live_price_formatted = format_price(live_price)
+            avg_price_formatted = format_price(avg_price)
            
             if ticker == 'USDC':
                 cards_html += f"""
@@ -530,13 +545,13 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                     <div class="stat-group">
                         <div class="stat-label">Current</div>
                         <div class="value-change-row">
-                            <span class="current-value">${live_price:,.2f}</span>
+                            <span class="current-value">${live_price_formatted}</span>
                             <span class="change-value" id="change-{ticker}">loading...</span>
                         </div>
                     </div>
                     <div class="stat-group avg-group">
                         <div class="stat-label">Avg</div>
-                        <div class="stat-value">${avg_price:,.2f}</div>
+                        <div class="stat-value">${avg_price_formatted}</div>
                     </div>
                 </div>
             </div>
@@ -690,7 +705,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
             padding-top: 6px;
         }}
         .total-value {{ font-size: 1.15rem; font-weight: 700; }}
-        /* Back layout - right stats always on the right */
+        /* Back layout - right stats always on the right, text left-aligned */
         .back-top-row {{
             display: flex;
             justify-content: space-between;
@@ -706,20 +721,19 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
         }}
         .back-right-stats {{
             display: flex;
-            gap: 20px;
+            gap: 24px;
             align-items: baseline;
             flex-shrink: 1;
-            text-align: right;
             justify-content: flex-end;
         }}
         .stat-group {{
-            text-align: right;
+            text-align: left;
         }}
         .stat-group.avg-group {{
             margin-left: 0;
         }}
         .stat-label {{
-            font-size: 0.65rem;
+            font-size: 0.7rem;
             color: #aaa;
             margin-bottom: 2px;
             font-weight: 500;
@@ -728,22 +742,22 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
         .value-change-row {{
             display: flex;
             align-items: baseline;
-            gap: 6px;
-            justify-content: flex-end;
+            gap: 8px;
+            justify-content: flex-start;
         }}
         .current-value {{
-            font-size: 0.95rem;
+            font-size: 1.05rem;
             font-weight: 700;
             color: white;
             white-space: nowrap;
         }}
         .change-value {{
-            font-size: 0.85rem;
+            font-size: 0.95rem;
             font-weight: 600;
             white-space: nowrap;
         }}
         .stat-value {{
-            font-size: 0.95rem;
+            font-size: 1.05rem;
             font-weight: 600;
             color: white;
             white-space: nowrap;
@@ -760,6 +774,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
             padding: 10px;
             font-size: 0.85rem;
         }}
+        /* Responsive shrinking for long prices (e.g., BTC) */
         @media (max-width: 700px) {{
             .coin-grid {{ grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 18px; }}
             .flip-card, .static-card {{ height: 270px; }}
@@ -768,20 +783,27 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                 gap: 8px;
                 margin-bottom: 14px;
             }}
-            .back-right-stats {{ gap: 12px; }}
-            .current-value {{ font-size: 0.85rem; }}
-            .change-value {{ font-size: 0.75rem; }}
-            .stat-value {{ font-size: 0.85rem; }}
+            .back-right-stats {{ gap: 16px; }}
+            .current-value {{ font-size: 0.9rem; }}
+            .change-value {{ font-size: 0.8rem; }}
+            .stat-value {{ font-size: 0.9rem; }}
             .stat-label {{ font-size: 0.6rem; }}
             .chart-container {{
                 margin-top: 14px;
                 min-height: 165px;
             }}
         }}
-        @media (max-width: 480px) {{
+        @media (max-width: 550px) {{
             .current-value {{ font-size: 0.8rem; }}
             .change-value {{ font-size: 0.7rem; }}
             .stat-value {{ font-size: 0.8rem; }}
+            .back-right-stats {{ gap: 10px; }}
+        }}
+        @media (max-width: 480px) {{
+            .current-value {{ font-size: 0.75rem; }}
+            .change-value {{ font-size: 0.65rem; }}
+            .stat-value {{ font-size: 0.75rem; }}
+            .stat-label {{ font-size: 0.55rem; }}
             .back-right-stats {{ gap: 8px; }}
         }}
     </style>
