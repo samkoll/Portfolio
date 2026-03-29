@@ -275,11 +275,16 @@ div[data-testid="stMainBlockContainer"] {
     .glossy-box > div:first-child { font-size: 12px !important; }
     .glossy-box > div:last-child { font-size: 21px !important; }
     
-    .glossy-box.swapped { min-height: 105px; }
-    .glossy-box.swapped > div:first-child { font-size: 21px !important; top: -6px; }
-    .glossy-box.swapped > div:last-child { font-size: 12px !important; bottom: 10px; }
+    /* Stronger tuck and forced single row for mobile */
+    .stats-layer-inner { 
+        grid-template-columns: repeat(3, 1fr) !important; 
+        gap: 8px; 
+    }
+    .stats-layer { margin-top: -82px; } /* Much deeper tuck to hide values */
     
-    .stats-layer { margin-top: -65px; } /* Ensures the tuck properly hides the center number */
+    .glossy-box.swapped { min-height: 105px; padding: 8px; }
+    .glossy-box.swapped > div:first-child { font-size: 18px !important; top: -8px; }
+    .glossy-box.swapped > div:last-child { font-size: 11.5px !important; bottom: 8px; }
     
     .usdc-banner { padding: 16px 18px; margin-bottom: 24px; }
     .usdc-banner-left img { width: 36px; height: 36px; }
