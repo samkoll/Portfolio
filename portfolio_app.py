@@ -717,12 +717,43 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
     </div>
 </div>"""
        
+        # UPDATED HTML: wrapper div with padding and negative margin on grid to allow shadow overflow
         html = f"""<html><head><style>
 body{{background:transparent;color:white;font-family:sans-serif;margin:0;padding:0;}}
-.coin-grid {{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px;padding:20px 12px;box-sizing:border-box;max-height:520px;overflow-y:auto;scrollbar-width:none;background:transparent !important;}}
-.coin-grid::-webkit-scrollbar {{display:none;}}
-.coin-card {{background:#0f172a;padding:16px;border-radius:20px;box-shadow:0 6px 20px rgba(0,0,0,0.3);transition:all 0.25s ease;cursor:pointer;position:relative;z-index:1;outline:none !important;-webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none;}}
-.coin-card:hover {{transform:translateY(-3px);box-shadow:0 0 22px 6px var(--glow) !important;z-index:10;}}
+.scroll-wrapper {{
+    overflow-y: auto;
+    height: 580px;
+    padding: 12px;  /* extra space for shadows */
+}}
+.coin-grid {{
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 14px;
+    margin: -12px;   /* pull grid back to original position */
+    box-sizing: border-box;
+    background: transparent !important;
+    overflow: visible !important;  /* allow shadows to extend */
+}}
+.coin-grid::-webkit-scrollbar {{display: none;}}
+.coin-card {{
+    background:#0f172a;
+    padding:16px;
+    border-radius:20px;
+    box-shadow:0 6px 20px rgba(0,0,0,0.3);
+    transition:all 0.25s ease;
+    cursor:pointer;
+    position:relative;
+    z-index:1;
+    outline:none !important;
+    -webkit-tap-highlight-color:transparent;
+    user-select:none;
+    -webkit-user-select:none;
+}}
+.coin-card:hover {{
+    transform:translateY(-3px);
+    box-shadow:0 0 22px 6px var(--glow) !important;
+    z-index:10;
+}}
 .card-header {{display:flex;align-items:center;margin-bottom:14px;}}
 .card-content {{display:flex;flex-direction:column;gap:8px;}}
 .label-value-row {{display:flex;justify-content:space-between;align-items:center;font-size:0.95rem;}}
@@ -731,10 +762,10 @@ body{{background:transparent;color:white;font-family:sans-serif;margin:0;padding
 .total {{font-size:1.18rem;margin-top:8px;border-top:1px solid rgba(255,255,255,0.12);padding-top:8px;}}
 .total-value {{font-size:1.28rem;}}
 @media (max-width: 700px) {{
-    .coin-grid {{grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px;padding:16px 8px;}}
+    .coin-grid {{grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px;}}
     .coin-card {{padding:14px;}}
 }}
-</style></head><body><div class="coin-grid">{cards_html}</div><script>
+</style></head><body><div class="scroll-wrapper"><div class="coin-grid">{cards_html}</div></div><script>
 function switchToTabAndScroll(index){{
     const tabs = window.parent.document.querySelectorAll('.stTabs button');
     if (tabs && tabs[index]) tabs[index].click();
@@ -749,7 +780,7 @@ document.querySelectorAll('.coin-card').forEach(div => {{
     div.style.setProperty('--glow', div.getAttribute('data-glow'));
 }});
 </script><!-- VERSION:{st.session_state.ui_version} --></body></html>"""
-        components.html(html, height=580, scrolling=True)
+        components.html(html, height=600, scrolling=False)  # height increased to accommodate padding
        
         st.markdown(f"""
 <div id="price-charts-section" class="glossy-box" style="background:#1e2a44;padding:18px 20px;border-radius:18px;">
