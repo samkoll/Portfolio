@@ -252,11 +252,6 @@ div[data-testid="stMainBlockContainer"] {
     color: #ffffff;
 }
 
-/* Coin Grid */
-.coin-grid {
-    padding: 20px 12px !important;
-}
-
 /* Price pills */
 .price-pills-container {
     display: flex !important;
@@ -331,9 +326,6 @@ div[data-testid="stMainBlockContainer"] {
         grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
         padding: 0 4px;
         gap: 14px;
-    }
-    .coin-grid {
-        padding: 16px 8px !important;
     }
 }
 
@@ -694,7 +686,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
             pnl_color = "#00ff9d" if pnl > 0 else "#ff4d4d" if pnl < 0 else "#aaaaaa"
             arrow = "▲" if pnl > 0 else "▼" if pnl < 0 else ""
             base_color = get_ticker_color(r['Ticker'])
-            glow_color = '#ffffff77' if base_color == '#000000' else base_color + '77'
+            border_color = base_color if base_color != '#000000' else '#ffffff'
             ticker = r['Ticker']
             onclick = f"onclick=\"switchToTabAndScroll({coin_list.index(ticker)})\" " if ticker != 'USDC' else ""
             row_class = "clickable-row" if ticker != 'USDC' else ""
@@ -703,7 +695,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
             pnl_pct_formatted = format_percent(abs(r['PnL %'])) if pd.notna(r['PnL %']) else ""
            
             cards_html += f"""
-<div class="coin-card {row_class}" data-glow="{glow_color}" {onclick}>
+<div class="coin-card {row_class}" data-border="{border_color}" {onclick}>
     <div class="card-header">
         <img src="{logo_url}" style="height:38px;width:38px;border-radius:50%;object-fit:contain;" onerror="this.src='https://via.placeholder.com/38/1e2a44/ffffff?text={ticker[0]}';">
         <span style="font-weight:700;font-size:1.22rem;margin-left:10px;">{ticker}</span>
@@ -717,13 +709,13 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
     </div>
 </div>"""
        
-        # Updated HTML: increased padding, reduced glow intensity
+        # New HTML without glow, using border highlight and scale
         html = f"""<html><head><style>
 body{{background:transparent;color:white;font-family:sans-serif;margin:0;padding:0;}}
 .scroll-wrapper {{
     overflow-y: auto;
     height: 590px;
-    padding: 30px 25px;          /* increased padding for glow room */
+    padding: 0;               /* no padding, cards go edge to edge */
     margin-bottom: 20px;
     scrollbar-width: none;
     -ms-overflow-style: none;
@@ -752,10 +744,12 @@ body{{background:transparent;color:white;font-family:sans-serif;margin:0;padding
     -webkit-tap-highlight-color:transparent;
     user-select:none;
     -webkit-user-select:none;
+    border: 2px solid transparent;
 }}
 .coin-card:hover {{
-    transform:translateY(-3px);
-    box-shadow:0 0 15px 6px var(--glow) !important;   /* reduced spread and offset */
+    transform:translateY(-3px) scale(1.02);
+    border: 2px solid var(--border);
+    box-shadow:0 12px 25px rgba(0,0,0,0.4);
     z-index:10;
 }}
 .card-header {{display:flex;align-items:center;margin-bottom:14px;}}
@@ -768,7 +762,6 @@ body{{background:transparent;color:white;font-family:sans-serif;margin:0;padding
 @media (max-width: 700px) {{
     .coin-grid {{grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px;}}
     .coin-card {{padding:14px;}}
-    .scroll-wrapper {{padding: 25px 15px; height: 570px;}}
 }}
 </style></head><body><div class="scroll-wrapper"><div class="coin-grid">{cards_html}</div></div><script>
 function switchToTabAndScroll(index){{
@@ -782,10 +775,10 @@ function switchToTabAndScroll(index){{
     }}, 180);
 }}
 document.querySelectorAll('.coin-card').forEach(div => {{
-    div.style.setProperty('--glow', div.getAttribute('data-glow'));
+    div.style.setProperty('--border', div.getAttribute('data-border'));
 }});
 </script><!-- VERSION:{st.session_state.ui_version} --></body></html>"""
-        components.html(html, height=660, scrolling=False)  # increased height to match wrapper + margin
+        components.html(html, height=640, scrolling=False)
 
         st.markdown(f"""
 <div id="price-charts-section" class="glossy-box" style="background:#1e2a44;padding:18px 20px;border-radius:18px;">
