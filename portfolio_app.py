@@ -534,12 +534,12 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
             <div class="back-stats">
                 <div class="stat-item current-item">
                     <div class="stat-label">Current</div>
-                    <div class="stat-value">${live_price:,.2f}</div>
+                    <div class="value-change-row">
+                        <span class="current-value">${live_price:,.2f}</span>
+                        <span class="change-value" id="change-{ticker}">loading...</span>
+                    </div>
                 </div>
-                <div class="stat-item change-item">
-                    <div class="stat-value" id="change-{ticker}">loading...</div>
-                </div>
-                <div class="stat-item">
+                <div class="stat-item avg-item">
                     <div class="stat-label">Avg</div>
                     <div class="stat-value">${avg_price:,.2f}</div>
                 </div>
@@ -714,32 +714,45 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
         .back-stats {{
             display: flex;
             justify-content: space-between;
-            align-items: baseline;
+            align-items: flex-start;
             margin-top: 6px;
             padding-top: 6px;
             border-top: 1px solid rgba(255,255,255,0.15);
+            gap: 16px;
         }}
         .stat-item {{
-            text-align: center;
             flex: 1;
         }}
         .current-item {{
-            flex: 1.2;
-            text-align: left;
+            flex: 1.8;
         }}
-        .change-item {{
-            flex: 0.8;
-            text-align: left;
-            margin-left: -15px;
+        .avg-item {{
+            flex: 1;
+            text-align: right;
         }}
         .stat-label {{
             font-size: 0.7rem;
             color: #aaa;
-            margin-bottom: 2px;
+            margin-bottom: 4px;
             font-weight: 500;
         }}
-        .stat-value {{
+        .value-change-row {{
+            display: flex;
+            align-items: baseline;
+            gap: 8px;
+            flex-wrap: wrap;
+        }}
+        .current-value {{
+            font-size: 1rem;
+            font-weight: 700;
+            color: white;
+        }}
+        .change-value {{
             font-size: 0.9rem;
+            font-weight: 600;
+        }}
+        .stat-value {{
+            font-size: 1rem;
             font-weight: 600;
             color: white;
         }}
@@ -747,9 +760,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
             .coin-grid {{ grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 18px; }}
             .flip-card, .static-card {{ height: 270px; }}
             .scroll-wrapper {{ padding: 12px 0px 16px 0px; }}
-            .change-item {{
-                margin-left: -10px;
-            }}
+            .value-change-row {{ gap: 6px; }}
         }}
     </style>
 </head>
@@ -884,15 +895,15 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
         }}
         
         async function update24hChange(card, ticker) {{
-            const statDiv = card.querySelector(`#change-${{ticker}}`);
-            if (!statDiv) return;
+            const changeSpan = card.querySelector(`#change-${{ticker}}`);
+            if (!changeSpan) return;
             const change = await fetch24hChange(ticker);
             if (change !== null) {{
                 const sign = change >= 0 ? '▲' : '▼';
                 const color = change >= 0 ? '#00ff9d' : '#ff4d4d';
-                statDiv.innerHTML = `<span style="color:${{color}};">${{sign}} ${{Math.abs(change).toFixed(2)}}%</span>`;
+                changeSpan.innerHTML = `<span style="color:${{color}};">${{sign}} ${{Math.abs(change).toFixed(2)}}%</span>`;
             }} else {{
-                statDiv.innerHTML = `N/A`;
+                changeSpan.innerHTML = `N/A`;
             }}
         }}
         
