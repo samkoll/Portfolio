@@ -500,10 +500,11 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                 <div class="header-right">
                     <div class="stat-group">
                         <div class="stat-label">Current</div>
-                        <div class="value-change-row">
-                            <span class="current-value">${live_price_formatted}</span>
-                            <span class="change-value" id="change-{ticker}">...</span>
-                        </div>
+                        <div class="current-value">${live_price_formatted}</div>
+                    </div>
+                    <div class="stat-group">
+                        <div class="stat-label">24h</div>
+                        <div class="change-value" id="change-{ticker}">...</div>
                     </div>
                     <div class="stat-group">
                         <div class="stat-label">Avg</div>
@@ -558,23 +559,13 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
             overflow-x: auto;
             padding: 12px 0px 20px 0px;
             margin-bottom: 20px;
+            /* Hide scrollbar completely */
+            scrollbar-width: none; /* Firefox */
+            -ms-overflow-style: none;  /* IE and Edge */
         }}
         
-        /* Custom horizontal scrollbar for PC */
         .scroll-wrapper::-webkit-scrollbar {{
-            height: 8px;
-            display: block;
-        }}
-        .scroll-wrapper::-webkit-scrollbar-track {{
-            background: rgba(255, 255, 255, 0.05);
-            border-radius: 10px;
-        }}
-        .scroll-wrapper::-webkit-scrollbar-thumb {{
-            background: rgba(255, 255, 255, 0.2);
-            border-radius: 10px;
-        }}
-        .scroll-wrapper::-webkit-scrollbar-thumb:hover {{
-            background: rgba(255, 255, 255, 0.3);
+            display: none; /* Chrome, Safari, Opera */
         }}
 
         .coin-grid {{
@@ -588,7 +579,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
             overflow: visible !important;
         }}
         .flip-card {{
-            flex: 0 0 340px;
+            flex: 0 0 420px; /* Made wider */
             background-color: transparent;
             height: 280px;
             perspective: 1200px;
@@ -626,10 +617,10 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
             transform: rotateY(180deg);
             display: flex;
             flex-direction: column;
-            padding: 16px; /* slightly more padding for chart breathing room */
+            padding: 16px; 
         }}
         .static-card {{
-            flex: 0 0 340px;
+            flex: 0 0 420px; /* Made wider */
             background: #0f172a;
             border-radius: 18px;
             padding: 12px 14px;
@@ -675,8 +666,9 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
         }}
         .header-right {{
             display: flex;
-            gap: 16px;
-            align-items: baseline;
+            flex-direction: row;
+            gap: 12px;
+            align-items: flex-start;
             text-align: right;
         }}
         .stat-group {{
@@ -690,25 +682,9 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
             margin-bottom: 2px;
             font-weight: 500;
         }}
-        .value-change-row {{
-            display: flex;
-            align-items: baseline;
-            gap: 6px;
-        }}
-        .current-value {{
-            font-size: 1.05rem;
+        .current-value, .stat-value, .change-value {{
+            font-size: 0.98rem;
             font-weight: 700;
-            color: white;
-            white-space: nowrap;
-        }}
-        .change-value {{
-            font-size: 0.85rem;
-            font-weight: 600;
-            white-space: nowrap;
-        }}
-        .stat-value {{
-            font-size: 1.05rem;
-            font-weight: 600;
             color: white;
             white-space: nowrap;
         }}
@@ -757,23 +733,16 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
         }}
         
         @media (max-width: 700px) {{
-            .flip-card, .static-card {{ flex: 0 0 300px; height: 270px; }}
+            /* Fits phone whole width */
+            .flip-card, .static-card {{ flex: 0 0 90vw; height: 270px; }}
             .scroll-wrapper {{ padding: 12px 0px 16px 0px; }}
-            .header-right {{ gap: 12px; }}
-            .current-value {{ font-size: 1.0rem; }}
-            .change-value {{ font-size: 0.85rem; }}
-            .stat-value {{ font-size: 1.0rem; }}
-        }}
-        @media (max-width: 550px) {{
-            .current-value {{ font-size: 0.95rem; }}
-            .change-value {{ font-size: 0.8rem; }}
-            .stat-value {{ font-size: 0.95rem; }}
-            .header-right {{ gap: 10px; }}
+            .header-right {{ gap: 8px; }}
+            .current-value, .stat-value, .change-value {{ font-size: 0.9rem; }}
         }}
     </style>
 </head>
 <body>
-<div class="scroll-wrapper">
+<div class="scroll-wrapper" id="scrollContainer">
     <div class="coin-grid">
         {cards_html}
     </div>
@@ -781,6 +750,17 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
 
 <script>
     (function() {{
+        // --- Wheel scrolling for PC ---
+        const scrollContainer = document.getElementById('scrollContainer');
+        if (scrollContainer) {{
+            scrollContainer.addEventListener('wheel', (evt) => {{
+                if (evt.deltaY !== 0) {{
+                    evt.preventDefault();
+                    scrollContainer.scrollLeft += evt.deltaY;
+                }}
+            }}, {{ passive: false }});
+        }}
+
         // --- State preservation ---
         function saveFlippedState() {{
             const flippedCards = [];
@@ -1070,23 +1050,9 @@ body {{ background: transparent; margin: 0; padding: 0; }}
     overflow-x: auto;
     overflow-y: hidden;
     padding-bottom: 20px;
+    scrollbar-width: none;
 }}
-/* Custom horizontal scrollbar for PC */
-.transaction-grid-wrapper::-webkit-scrollbar {{
-    height: 8px;
-    display: block;
-}}
-.transaction-grid-wrapper::-webkit-scrollbar-track {{
-    background: rgba(255, 255, 255, 0.05);
-    border-radius: 10px;
-}}
-.transaction-grid-wrapper::-webkit-scrollbar-thumb {{
-    background: rgba(255, 255, 255, 0.2);
-    border-radius: 10px;
-}}
-.transaction-grid-wrapper::-webkit-scrollbar-thumb:hover {{
-    background: rgba(255, 255, 255, 0.3);
-}}
+.transaction-grid-wrapper::-webkit-scrollbar {{ display: none; }}
 
 .transaction-grid {{
     display: flex;
@@ -1097,7 +1063,7 @@ body {{ background: transparent; margin: 0; padding: 0; }}
     width: max-content;
 }}
 .transaction-card {{
-    flex: 0 0 380px;
+    flex: 0 0 420px; /* Wider */
     background: #0f172a;
     border-radius: 18px;
     padding: 18px 20px 14px;
@@ -1195,15 +1161,32 @@ body {{ background: transparent; margin: 0; padding: 0; }}
 .transaction-buttons .edit-btn:hover {{
     background: #00a17a;
 }}
+
+@media (max-width: 700px) {{
+    .transaction-card {{
+        flex: 0 0 90vw; /* Fits phone entirely */
+    }}
+}}
 </style>
 </head>
 <body>
-<div class="transaction-grid-wrapper">
+<div class="transaction-grid-wrapper" id="txScrollContainer">
     <div class="transaction-grid">
     {cards_html}
     </div>
 </div>
 <script>
+// --- Wheel scrolling for PC ---
+const txScrollContainer = document.getElementById('txScrollContainer');
+if (txScrollContainer) {{
+    txScrollContainer.addEventListener('wheel', (evt) => {{
+        if (evt.deltaY !== 0) {{
+            evt.preventDefault();
+            txScrollContainer.scrollLeft += evt.deltaY;
+        }}
+    }}, {{ passive: false }});
+}}
+
 function deleteTransaction(i) {{
     const input = window.parent.document.querySelector('input[aria-label="delete_trigger"]');
     if (input) {{
