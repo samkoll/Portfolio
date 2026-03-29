@@ -717,14 +717,14 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
     </div>
 </div>"""
        
-        # Updated HTML: increased padding and added margin-bottom
+        # Updated HTML: increased padding, reduced glow intensity
         html = f"""<html><head><style>
 body{{background:transparent;color:white;font-family:sans-serif;margin:0;padding:0;}}
 .scroll-wrapper {{
     overflow-y: auto;
-    height: 590px;                /* increased to accommodate extra padding */
-    padding: 25px 20px;           /* more padding for glow */
-    margin-bottom: 20px;          /* space between cards and charts */
+    height: 590px;
+    padding: 30px 25px;          /* increased padding for glow room */
+    margin-bottom: 20px;
     scrollbar-width: none;
     -ms-overflow-style: none;
 }}
@@ -755,7 +755,7 @@ body{{background:transparent;color:white;font-family:sans-serif;margin:0;padding
 }}
 .coin-card:hover {{
     transform:translateY(-3px);
-    box-shadow:0 0 22px 6px var(--glow) !important;
+    box-shadow:0 0 15px 6px var(--glow) !important;   /* reduced spread and offset */
     z-index:10;
 }}
 .card-header {{display:flex;align-items:center;margin-bottom:14px;}}
@@ -768,7 +768,7 @@ body{{background:transparent;color:white;font-family:sans-serif;margin:0;padding
 @media (max-width: 700px) {{
     .coin-grid {{grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px;}}
     .coin-card {{padding:14px;}}
-    .scroll-wrapper {{padding: 20px 12px; height: 570px;}}
+    .scroll-wrapper {{padding: 25px 15px; height: 570px;}}
 }}
 </style></head><body><div class="scroll-wrapper"><div class="coin-grid">{cards_html}</div></div><script>
 function switchToTabAndScroll(index){{
@@ -785,7 +785,7 @@ document.querySelectorAll('.coin-card').forEach(div => {{
     div.style.setProperty('--glow', div.getAttribute('data-glow'));
 }});
 </script><!-- VERSION:{st.session_state.ui_version} --></body></html>"""
-        components.html(html, height=650, scrolling=False)  # increased height to match wrapper + margin
+        components.html(html, height=660, scrolling=False)  # increased height to match wrapper + margin
 
         st.markdown(f"""
 <div id="price-charts-section" class="glossy-box" style="background:#1e2a44;padding:18px 20px;border-radius:18px;">
