@@ -853,22 +853,22 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                     display: flex;
                     align-items: center;
                     justify-content: center;
-                    transition: margin-top 0.2s ease-out;
+                    transition: margin-top 0.25s cubic-bezier(0.2, 0.9, 0.4, 1.1);
                     background: rgba(15,23,42,0.95);
                     border-radius: 50%;
                     backdrop-filter: blur(4px);
                     box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-                    border: 1px solid rgba(0,255,157,0.3);
+                    border: 1px solid rgba(0,255,157,0.4);
                 `;
                 const spinner = parentDoc.createElement('div');
                 spinner.className = 'spinner';
                 spinner.style.cssText = `
-                    width: 30px;
-                    height: 30px;
-                    border: 3px solid rgba(255,255,255,0.3);
+                    width: 28px;
+                    height: 28px;
+                    border: 3px solid rgba(255,255,255,0.2);
                     border-top: 3px solid #00ff9d;
                     border-radius: 50%;
-                    animation: spin 0.8s linear infinite;
+                    animation: spin 0.7s linear infinite;
                 `;
                 indicator.appendChild(spinner);
                 overlay.appendChild(indicator);
@@ -880,10 +880,6 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                     @keyframes spin {{
                         0% {{ transform: rotate(0deg); }}
                         100% {{ transform: rotate(360deg); }}
-                    }}
-                    @keyframes fadeOut {{
-                        0% {{ opacity: 1; transform: scale(1); }}
-                        100% {{ opacity: 0; transform: scale(1.5); }}
                     }}
                 `;
                 parentDoc.head.appendChild(style);
@@ -898,43 +894,9 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
             }}
         }}
         
-        function showParentCheckmark() {{
+        function hideParentSpinner() {{
             if (parentSpinnerElement) {{
-                const parentDoc = window.parent.document;
-                const checkSpan = parentDoc.createElement('div');
-                checkSpan.className = 'checkmark';
-                checkSpan.style.cssText = `
-                    width: 30px;
-                    height: 30px;
-                    color: #00ff9d;
-                    font-size: 26px;
-                    font-weight: bold;
-                    line-height: 1;
-                    text-align: center;
-                    animation: fadeOut 0.5s ease-out forwards;
-                `;
-                checkSpan.textContent = '✓';
-                parentSpinnerElement.indicator.innerHTML = '';
-                parentSpinnerElement.indicator.appendChild(checkSpan);
-                parentSpinnerElement.indicator.style.marginTop = '15px';
-                setTimeout(() => {{
-                    if (parentSpinnerElement) {{
-                        parentSpinnerElement.indicator.style.marginTop = '-60px';
-                        parentSpinnerElement.indicator.innerHTML = '';
-                        const newSpinner = parentDoc.createElement('div');
-                        newSpinner.className = 'spinner';
-                        newSpinner.style.cssText = `
-                            width: 30px;
-                            height: 30px;
-                            border: 3px solid rgba(255,255,255,0.3);
-                            border-top: 3px solid #00ff9d;
-                            border-radius: 50%;
-                            animation: spin 0.8s linear infinite;
-                        `;
-                        parentSpinnerElement.indicator.appendChild(newSpinner);
-                        parentSpinnerElement.spinner = newSpinner;
-                    }}
-                }}, 800);
+                parentSpinnerElement.indicator.style.marginTop = '-60px';
             }}
         }}
         
@@ -948,7 +910,6 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
         
         if ('ontouchstart' in window) {{
             document.addEventListener('touchstart', function(e) {{
-                // Allow swipe anywhere when scrolled to top (scrollY <= 5)
                 if (window.scrollY <= 5 && !isRefreshing) {{
                     touchStartY = e.touches[0].clientY;
                     isDragging = true;
@@ -981,12 +942,13 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                 if (diff >= refreshThreshold && window.scrollY <= 5) {{
                     isRefreshing = true;
                     saveFlippedState();
+                    // Show spinner and trigger refresh
                     setParentSpinnerMarginTop('15px');
                     const url = new URL(window.location.href);
                     url.searchParams.set('swipe_refresh', '1');
                     window.location.href = url.toString();
                 }} else {{
-                    setParentSpinnerMarginTop('-60px');
+                    hideParentSpinner();
                 }}
                 isDragging = false;
             }});
@@ -1157,13 +1119,15 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
         
         restoreFlippedState();
         
+        // After refresh, hide the spinner (it may have been left visible)
         const urlParams = new URLSearchParams(window.location.search);
         if (urlParams.has('swipe_refresh') || (window.oldRefreshKey && window.oldRefreshKey !== refreshKey)) {{
             for (let key in chartCache) {{
                 if (chartCache[key].chartObj) chartCache[key].chartObj.destroy();
             }}
             window.chartCache = {{}};
-            showParentCheckmark();
+            // Hide the spinner
+            hideParentSpinner();
             if (urlParams.has('swipe_refresh')) {{
                 const newUrl = window.location.pathname;
                 window.history.replaceState({{}}, document.title, newUrl);
