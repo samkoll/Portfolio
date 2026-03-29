@@ -822,14 +822,20 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
             localStorage.removeItem('flippedCards');
         }}
         
-        // --- Create spinner in parent window (Streamlit main page) ---
+        // --- Create beautiful spinner in parent window ---
         let parentSpinnerElement = null;
         
         function createParentSpinner() {{
             if (parentSpinnerElement) return;
             try {{
                 const parentDoc = window.parent.document;
-                if (parentDoc.getElementById('swipe-refresh-overlay')) return;
+                if (parentDoc.getElementById('swipe-refresh-overlay')) {{
+                    // Overlay exists, just reset its margin-top
+                    const existingOverlay = parentDoc.getElementById('swipe-refresh-overlay');
+                    const indicator = existingOverlay.querySelector('.refresh-indicator');
+                    if (indicator) indicator.style.marginTop = '-60px';
+                    return;
+                }}
                 const overlay = parentDoc.createElement('div');
                 overlay.id = 'swipe-refresh-overlay';
                 overlay.style.cssText = `
@@ -857,8 +863,8 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                     background: rgba(15,23,42,0.95);
                     border-radius: 50%;
                     backdrop-filter: blur(4px);
-                    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-                    border: 1px solid rgba(0,255,157,0.4);
+                    box-shadow: 0 0 15px rgba(0,255,157,0.3);
+                    border: 1px solid rgba(0,255,157,0.5);
                 `;
                 const spinner = parentDoc.createElement('div');
                 spinner.className = 'spinner';
@@ -942,7 +948,6 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                 if (diff >= refreshThreshold && window.scrollY <= 5) {{
                     isRefreshing = true;
                     saveFlippedState();
-                    // Show spinner and trigger refresh
                     setParentSpinnerMarginTop('15px');
                     const url = new URL(window.location.href);
                     url.searchParams.set('swipe_refresh', '1');
@@ -1119,14 +1124,13 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
         
         restoreFlippedState();
         
-        // After refresh, hide the spinner (it may have been left visible)
+        // After refresh, hide the spinner
         const urlParams = new URLSearchParams(window.location.search);
         if (urlParams.has('swipe_refresh') || (window.oldRefreshKey && window.oldRefreshKey !== refreshKey)) {{
             for (let key in chartCache) {{
                 if (chartCache[key].chartObj) chartCache[key].chartObj.destroy();
             }}
             window.chartCache = {{}};
-            // Hide the spinner
             hideParentSpinner();
             if (urlParams.has('swipe_refresh')) {{
                 const newUrl = window.location.pathname;
