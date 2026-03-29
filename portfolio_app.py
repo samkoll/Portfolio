@@ -817,75 +817,12 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
             .stat-label {{ font-size: 0.6rem; }}
             .back-right-stats {{ gap: 10px; }}
         }}
-
-        /* Swipe-to-refresh styles - fixed at the very top of the iframe (top of page content) */
-        #swipe-overlay {{
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 100px;
-            z-index: 10000;
-            pointer-events: none;
-            display: flex;
-            justify-content: center;
-            align-items: flex-start;
-        }}
-        .refresh-indicator {{
-            margin-top: -60px;
-            width: 50px;
-            height: 50px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: margin-top 0.2s ease-out;
-            background: rgba(15,23,42,0.9);
-            border-radius: 50%;
-            backdrop-filter: blur(4px);
-            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
-        }}
-        .spinner {{
-            width: 30px;
-            height: 30px;
-            border: 3px solid rgba(255,255,255,0.3);
-            border-top: 3px solid #00ff9d;
-            border-radius: 50%;
-            animation: spin 0.8s linear infinite;
-        }}
-        .checkmark {{
-            width: 30px;
-            height: 30px;
-            color: #00ff9d;
-            font-size: 26px;
-            font-weight: bold;
-            line-height: 1;
-            text-align: center;
-            animation: fadeOut 0.5s ease-out forwards;
-        }}
-        @keyframes spin {{
-            0% {{ transform: rotate(0deg); }}
-            100% {{ transform: rotate(360deg); }}
-        }}
-        @keyframes fadeOut {{
-            0% {{ opacity: 1; transform: scale(1); }}
-            100% {{ opacity: 0; transform: scale(1.5); }}
-        }}
-        .refresh-indicator.visible {{
-            margin-top: 15px;
-        }}
     </style>
 </head>
 <body>
 <div class="scroll-wrapper">
     <div class="coin-grid">
         {cards_html}
-    </div>
-</div>
-
-<!-- Swipe to refresh overlay -->
-<div id="swipe-overlay">
-    <div class="refresh-indicator" id="refresh-indicator">
-        <div class="spinner" id="refresh-spinner"></div>
     </div>
 </div>
 
@@ -924,19 +861,138 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
             localStorage.removeItem('flippedCards');
         }}
         
+        // --- Create spinner in parent window (Streamlit's main page) ---
+        let parentSpinnerElement = null;
+        
+        function createParentSpinner() {{
+            if (parentSpinnerElement) return;
+            try {{
+                const parentDoc = window.parent.document;
+                const overlay = parentDoc.createElement('div');
+                overlay.id = 'swipe-refresh-overlay';
+                overlay.style.cssText = `
+                    position: fixed;
+                    top: 0;
+                    left: 0;
+                    right: 0;
+                    height: 100px;
+                    z-index: 100000;
+                    pointer-events: none;
+                    display: flex;
+                    justify-content: center;
+                    align-items: flex-start;
+                `;
+                const indicator = parentDoc.createElement('div');
+                indicator.className = 'refresh-indicator';
+                indicator.style.cssText = `
+                    margin-top: -60px;
+                    width: 50px;
+                    height: 50px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    transition: margin-top 0.2s ease-out;
+                    background: rgba(15,23,42,0.9);
+                    border-radius: 50%;
+                    backdrop-filter: blur(4px);
+                    box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+                `;
+                const spinner = parentDoc.createElement('div');
+                spinner.className = 'spinner';
+                spinner.style.cssText = `
+                    width: 30px;
+                    height: 30px;
+                    border: 3px solid rgba(255,255,255,0.3);
+                    border-top: 3px solid #00ff9d;
+                    border-radius: 50%;
+                    animation: spin 0.8s linear infinite;
+                `;
+                indicator.appendChild(spinner);
+                overlay.appendChild(indicator);
+                parentDoc.body.appendChild(overlay);
+                parentSpinnerElement = {{ overlay, indicator, spinner }};
+                
+                // Add keyframe animation to parent document
+                const style = parentDoc.createElement('style');
+                style.textContent = `
+                    @keyframes spin {{
+                        0% {{ transform: rotate(0deg); }}
+                        100% {{ transform: rotate(360deg); }}
+                    }}
+                    @keyframes fadeOut {{
+                        0% {{ opacity: 1; transform: scale(1); }}
+                        100% {{ opacity: 0; transform: scale(1.5); }}
+                    }}
+                `;
+                parentDoc.head.appendChild(style);
+            }} catch(e) {{
+                console.warn("Cannot access parent window", e);
+            }}
+        }}
+        
+        function showParentSpinner() {{
+            if (parentSpinnerElement) {{
+                parentSpinnerElement.indicator.style.marginTop = '15px';
+            }}
+        }}
+        
+        function hideParentSpinner() {{
+            if (parentSpinnerElement) {{
+                parentSpinnerElement.indicator.style.marginTop = '-60px';
+            }}
+        }}
+        
+        function showParentCheckmark() {{
+            if (parentSpinnerElement) {{
+                const checkSpan = parentSpinnerElement.indicator.ownerDocument.createElement('div');
+                checkSpan.className = 'checkmark';
+                checkSpan.style.cssText = `
+                    width: 30px;
+                    height: 30px;
+                    color: #00ff9d;
+                    font-size: 26px;
+                    font-weight: bold;
+                    line-height: 1;
+                    text-align: center;
+                    animation: fadeOut 0.5s ease-out forwards;
+                `;
+                checkSpan.textContent = '✓';
+                parentSpinnerElement.indicator.innerHTML = '';
+                parentSpinnerElement.indicator.appendChild(checkSpan);
+                parentSpinnerElement.indicator.style.marginTop = '15px';
+                setTimeout(() => {{
+                    if (parentSpinnerElement) {{
+                        parentSpinnerElement.indicator.style.marginTop = '-60px';
+                        parentSpinnerElement.indicator.innerHTML = '';
+                        const newSpinner = parentSpinnerElement.indicator.ownerDocument.createElement('div');
+                        newSpinner.className = 'spinner';
+                        newSpinner.style.cssText = `
+                            width: 30px;
+                            height: 30px;
+                            border: 3px solid rgba(255,255,255,0.3);
+                            border-top: 3px solid #00ff9d;
+                            border-radius: 50%;
+                            animation: spin 0.8s linear infinite;
+                        `;
+                        parentSpinnerElement.indicator.appendChild(newSpinner);
+                        parentSpinnerElement.spinner = newSpinner;
+                    }}
+                }}, 800);
+            }}
+        }}
+        
+        // Create the parent spinner once
+        createParentSpinner();
+        
         // --- Swipe-to-refresh: only triggers when pulling from top 80px and scrolled to top ---
         let touchStartY = 0;
         let isDragging = false;
         let refreshThreshold = 80;
         let isRefreshing = false;
-        const indicator = document.getElementById('refresh-indicator');
-        const spinner = document.getElementById('refresh-spinner');
         
         // Only enable on touch devices
         if ('ontouchstart' in window) {{
-            // Listen on document to capture touches anywhere
             document.addEventListener('touchstart', function(e) {{
-                // Only trigger if page is at the very top (scrollY <= 5) AND touch started within top 80px
                 if (window.scrollY <= 5 && e.touches[0].clientY < 80 && !isRefreshing) {{
                     touchStartY = e.touches[0].clientY;
                     isDragging = true;
@@ -948,14 +1004,15 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                 const currentY = e.touches[0].clientY;
                 const diff = currentY - touchStartY;
                 if (diff > 0 && window.scrollY <= 5) {{
-                    // Prevent default to stop page scroll while pulling
                     e.preventDefault();
                     const pullDistance = Math.min(diff, refreshThreshold);
                     const progress = pullDistance / refreshThreshold;
                     const marginTop = 15 * progress;
-                    indicator.style.marginTop = marginTop + 'px';
-                    if (pullDistance >= refreshThreshold) {{
-                        spinner.style.borderTopColor = '#00ff9d';
+                    if (parentSpinnerElement) {{
+                        parentSpinnerElement.indicator.style.marginTop = marginTop + 'px';
+                    }}
+                    if (pullDistance >= refreshThreshold && parentSpinnerElement && parentSpinnerElement.spinner) {{
+                        parentSpinnerElement.spinner.style.borderTopColor = '#00ff9d';
                     }}
                 }}
             }}, {{ passive: false }});
@@ -969,16 +1026,17 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                 const diff = endY - touchStartY;
                 if (diff >= refreshThreshold && window.scrollY <= 5) {{
                     isRefreshing = true;
-                    // Save current flipped state
                     saveFlippedState();
-                    // Show spinner and trigger refresh
-                    indicator.classList.add('visible');
-                    // Add query parameter to trigger refresh in Streamlit
+                    if (parentSpinnerElement) {{
+                        parentSpinnerElement.indicator.style.marginTop = '15px';
+                    }}
                     const url = new URL(window.location.href);
                     url.searchParams.set('swipe_refresh', '1');
                     window.location.href = url.toString();
                 }} else {{
-                    indicator.style.marginTop = '-60px';
+                    if (parentSpinnerElement) {{
+                        parentSpinnerElement.indicator.style.marginTop = '-60px';
+                    }}
                 }}
                 isDragging = false;
             }});
@@ -1124,7 +1182,6 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
             const border = card.getAttribute('data-border');
             card.style.setProperty('--border', border);
             
-            // Front click to flip
             const front = card.querySelector('.flip-card-front');
             front.addEventListener('click', (e) => {{
                 e.stopPropagation();
@@ -1137,7 +1194,6 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                 }}
             }});
             
-            // Back click: flip back when clicking anywhere on the back
             const backDiv = card.querySelector('.flip-card-back');
             backDiv.addEventListener('click', (e) => {{
                 card.classList.remove('flipped');
@@ -1149,29 +1205,15 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
             if (border) card.style.setProperty('--border', border);
         }});
         
-        // Restore flipped state after page load (if any)
         restoreFlippedState();
         
-        // Check if refresh just happened (refresh key changed or URL param)
         const urlParams = new URLSearchParams(window.location.search);
         if (urlParams.has('swipe_refresh') || (window.oldRefreshKey && window.oldRefreshKey !== refreshKey)) {{
-            // Clear chart cache
             for (let key in chartCache) {{
                 if (chartCache[key].chartObj) chartCache[key].chartObj.destroy();
             }}
             window.chartCache = {{}};
-            // Show success checkmark
-            const refreshIndicator = document.getElementById('refresh-indicator');
-            if (refreshIndicator) {{
-                refreshIndicator.innerHTML = '<div class="checkmark">✓</div>';
-                refreshIndicator.classList.add('visible');
-                setTimeout(() => {{
-                    refreshIndicator.classList.remove('visible');
-                    refreshIndicator.innerHTML = '<div class="spinner" id="refresh-spinner"></div>';
-                    refreshIndicator.style.marginTop = '-60px';
-                }}, 800);
-            }}
-            // Remove the param from URL to avoid showing checkmark again on next load
+            showParentCheckmark();
             if (urlParams.has('swipe_refresh')) {{
                 const newUrl = window.location.pathname;
                 window.history.replaceState({{}}, document.title, newUrl);
