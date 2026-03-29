@@ -491,7 +491,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
 <div class="static-card" data-border="{border_color}">
     <div class="card-header">
         <img src="{logo_url}" style="height:38px;width:38px;border-radius:50%;object-fit:contain;" onerror="this.src='https://via.placeholder.com/38/1e2a44/ffffff?text=U';">
-        <span style="font-weight:700;font-size:1.22rem;margin-left:10px;">{ticker}</span>
+        <span style="font-weight:700;font-size:1.22rem;margin-left:10px;color:#ffffff;">{ticker}</span>
     </div>
     <div class="card-content">
         <div class="label-value-row"><span class="label">Holdings</span><span class="value">{format_holdings(r['Holdings'], ticker)}</span></div>
@@ -510,7 +510,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
         <div class="flip-card-front">
             <div class="card-header">
                 <img src="{logo_url}" style="height:38px;width:38px;border-radius:50%;object-fit:contain;" onerror="this.src='https://via.placeholder.com/38/1e2a44/ffffff?text={ticker[0]}';">
-                <span style="font-weight:700;font-size:1.22rem;margin-left:10px;">{ticker}</span>
+                <span style="font-weight:700;font-size:1.22rem;margin-left:10px;color:#ffffff;">{ticker}</span>
             </div>
             <div class="card-content">
                 <div class="label-value-row"><span class="label">Holdings</span><span class="value">{format_holdings(r['Holdings'], ticker)}</span></div>
@@ -524,7 +524,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
             <div class="back-header">
                 <div style="display:flex; align-items:center; gap:8px;">
                     <img src="{logo_url}" style="height:28px;width:28px;border-radius:50%;object-fit:contain;" onerror="this.src='https://via.placeholder.com/28/1e2a44/ffffff?text={ticker[0]}';">
-                    <span>{ticker}</span>
+                    <span style="color:#ffffff;">{ticker}</span>
                 </div>
                 <span class="back-close">↺</span>
             </div>
@@ -550,18 +550,24 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <style>
         * {{ box-sizing: border-box; }}
-        body {{
-            background: transparent;
+        html, body {{
             margin: 0;
             padding: 0;
+            width: 100%;
+            overflow-x: hidden;
+            background: transparent;
+        }}
+        body {{
             font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+            color: white;
         }}
         .scroll-wrapper {{
+            width: 100%;
             overflow-y: auto;
             overflow-x: visible;
             height: auto;
             max-height: 70vh;
-            padding: 12px 12px 20px 12px;
+            padding: 12px 0px 20px 0px;
             margin-bottom: 20px;
             scrollbar-width: none;
             -ms-overflow-style: none;
@@ -571,6 +577,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
             gap: 20px;
+            width: 100%;
             box-sizing: border-box;
             background: transparent !important;
             overflow: visible !important;
@@ -715,6 +722,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
         @media (max-width: 700px) {{
             .coin-grid {{ grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; }}
             .flip-card, .static-card {{ height: 440px; }}
+            .scroll-wrapper {{ padding: 12px 0px 16px 0px; }}
         }}
     </style>
 </head>
