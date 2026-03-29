@@ -3,6 +3,8 @@ import pandas as pd
 from datetime import datetime, timedelta, date
 import time
 import streamlit.components.v1 as components
+import plotly.graph_objects as go
+from plotly.subplots import make_subplots
 import requests
 import json
 from pathlib import Path
@@ -150,6 +152,7 @@ div[data-testid="stMainBlockContainer"] {
 DASHBOARD_ICON = '''<svg xmlns="http://www.w3.org/2000/svg" width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="#00ff9d" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>'''
 CRYPTO_ICON = '''<svg xmlns="http://www.w3.org/2000/svg" width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="#00ff9d" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M14.5 8.5L9.5 13.5"/><path d="M9.5 8.5L14.5 13.5"/></svg>'''
 FIAT_ICON = '''<svg xmlns="http://www.w3.org/2000/svg" width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="#00ff9d" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M6 8h12"/><path d="M6 12h12"/><path d="M6 16h12"/></svg>'''
+CHARTS_ICON = '''<svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#00ff9d" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M17 17l-4-4-3 3-4-4"/></svg>'''
 
 DATA_DIR = Path("data")
 DATA_DIR.mkdir(exist_ok=True)
@@ -450,6 +453,7 @@ def glossy_header(title: str, icon_svg: str):
 with main_container.container(key=f"page_{st.session_state.page}_{st.session_state.ui_version}"):
     if st.session_state.page == "Home":
         glossy_header("Portfolio Dashboard", DASHBOARD_ICON)
+
         df_port, total_value, total_pnl, total_pnl_pct = calculate_portfolio(st.session_state.crypto_df)
 
         value_box_html = f"""
@@ -474,6 +478,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
             avg_price = r['AVG']
             live_price_formatted = format_price(live_price)
             avg_price_formatted = format_price(avg_price)
+
             if ticker == 'USDC':
                 cards_html += f"""
 <div class="static-card usdc-card" data-border="{border_color}">
@@ -545,15 +550,29 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <style>
         * {{ box-sizing: border-box; }}
-        html, body {{ margin:0; padding:0; width:100%; overflow-x:hidden; background:transparent; }}
-        body {{ font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif; color:white; }}
-        .flip-card-front, .flip-card-back, .flip-card {{ outline:none; -webkit-tap-highlight-color:transparent; }}
+        html, body {{
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            overflow-x: hidden;
+            background: transparent;
+        }}
+        body {{
+            font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+            color: white;
+        }}
+        .flip-card-front, .flip-card-back, .flip-card {{
+            outline: none;
+            -webkit-tap-highlight-color: transparent;
+        }}
         .scroll-wrapper {{
             width: 100%;
-            height: calc(100vh - 380px);
             overflow-y: auto;
-            overflow-x: hidden;
-            padding: 12px 0 20px 0;
+            overflow-x: visible;
+            height: auto;
+            max-height: 70vh;
+            padding: 12px 0px 20px 0px;
+            margin-bottom: 20px;
             scrollbar-width: none;
             -ms-overflow-style: none;
         }}
@@ -564,294 +583,575 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
             gap: 24px;
             width: 100%;
             box-sizing: border-box;
+            background: transparent !important;
+            overflow: visible !important;
         }}
-        .flip-card {{ background:transparent; width:100%; height:280px; perspective:1200px; cursor:pointer; }}
-        .flip-card-inner {{ position:relative; width:100%; height:100%; transition:transform 0.5s ease-in-out; transform-style:preserve-3d; border-radius:18px; }}
-        .flip-card.flipped .flip-card-inner {{ transform:rotateY(180deg); }}
-        .flip-card-front, .flip-card-back {{ position:absolute; width:100%; height:100%; backface-visibility:hidden; border-radius:18px; padding:12px 14px; background:#0f172a; box-shadow:0 8px 24px rgba(0,0,0,0.3); border:2px solid transparent; }}
-        .flip-card-front {{ display:flex; flex-direction:column; justify-content:space-between; }}
-        .flip-card-back {{ transform:rotateY(180deg); display:flex; flex-direction:column; justify-content:flex-start; }}
-        .static-card {{ background:#0f172a; border-radius:18px; padding:12px 14px; height:280px; display:flex; flex-direction:column; justify-content:space-between; box-shadow:0 8px 24px rgba(0,0,0,0.3); border:2px solid transparent; transition:all 0.25s ease; }}
-        .static-card.usdc-card:hover {{ transform:none; box-shadow:0 8px 24px rgba(0,0,0,0.3); border-color:var(--border); }}
-        .static-card:hover, .flip-card:hover .flip-card-front, .flip-card:hover .flip-card-back {{ border-color:var(--border); transform:translateY(-4px); box-shadow:0 12px 28px rgba(0,0,0,0.5); }}
-        .card-header {{ display:flex; align-items:center; margin-bottom:8px; }}
-        .card-content {{ display:flex; flex-direction:column; gap:8px; }}
-        .label-value-row {{ display:flex; justify-content:space-between; align-items:center; font-size:0.95rem; line-height:1.3; }}
-        .label {{ color:#aaa; font-weight:500; }}
-        .value {{ font-weight:600; color:white; font-size:1rem; }}
-        .total {{ font-size:1.05rem; margin-top:6px; border-top:1px solid rgba(255,255,255,0.15); padding-top:6px; }}
-        .total-value {{ font-size:1.15rem; font-weight:700; }}
-        .back-top-row {{ display:flex; justify-content:space-between; align-items:center; margin-bottom:18px; flex-wrap:nowrap; gap:12px; }}
-        .back-left {{ display:flex; align-items:center; flex-shrink:0; }}
-        .back-right-stats {{ display:flex; gap:24px; align-items:baseline; flex-shrink:1; justify-content:flex-end; }}
-        .stat-group {{ text-align:left; }}
-        .stat-label {{ font-size:0.7rem; color:#aaa; margin-bottom:2px; font-weight:500; white-space:nowrap; }}
-        .value-change-row {{ display:flex; align-items:baseline; gap:8px; }}
-        .current-value {{ font-size:1.05rem; font-weight:700; color:white; white-space:nowrap; }}
-        .change-value {{ font-size:0.95rem; font-weight:600; white-space:nowrap; }}
-        .stat-value {{ font-size:1.05rem; font-weight:600; color:white; white-space:nowrap; }}
-        .chart-container {{ position:relative; margin:16px 0 0 0; flex:1; min-height:175px; }}
-        .chart-loading {{ text-align:center; color:#ccc; padding:10px; font-size:0.85rem; }}
-        @media (max-width:700px) {{
-            .coin-grid {{ grid-template-columns:repeat(auto-fit,minmax(300px,1fr)); gap:18px; }}
-            .flip-card, .static-card {{ height:270px; }}
-            .scroll-wrapper {{ padding:12px 0 16px 0; }}
+        .flip-card {{
+            background-color: transparent;
+            width: 100%;
+            height: 280px;
+            perspective: 1200px;
+            cursor: pointer;
+        }}
+        .flip-card-inner {{
+            position: relative;
+            width: 100%;
+            height: 100%;
+            transition: transform 0.5s ease-in-out;
+            transform-style: preserve-3d;
+            border-radius: 18px;
+        }}
+        .flip-card.flipped .flip-card-inner {{
+            transform: rotateY(180deg);
+        }}
+        .flip-card-front, .flip-card-back {{
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            border-radius: 18px;
+            padding: 12px 14px;
+            background: #0f172a;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+            border: 2px solid transparent;
+            overflow-y: hidden;
+        }}
+        .flip-card-front {{
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }}
+        .flip-card-back {{
+            transform: rotateY(180deg);
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
+        }}
+        .static-card {{
+            background: #0f172a;
+            border-radius: 18px;
+            padding: 12px 14px;
+            height: 280px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+            border: 2px solid transparent;
+            transition: all 0.25s ease;
+        }}
+        .static-card.usdc-card:hover {{
+            transform: none;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+            border-color: var(--border);
+        }}
+        .static-card:hover {{
+            border-color: var(--border);
+            transform: translateY(-4px);
+            box-shadow: 0 12px 28px rgba(0,0,0,0.5);
+        }}
+        .flip-card:hover .flip-card-front,
+        .flip-card:hover .flip-card-back {{
+            border-color: var(--border);
+            box-shadow: 0 12px 28px rgba(0,0,0,0.5);
+        }}
+        .card-header {{
+            display: flex;
+            align-items: center;
+            margin-bottom: 8px;
+        }}
+        .card-content {{
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }}
+        .label-value-row {{
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.95rem;
+            line-height: 1.3;
+        }}
+        .label {{ color: #aaa; font-weight: 500; }}
+        .value {{ font-weight: 600; color: white; font-size: 1rem; }}
+        .total {{
+            font-size: 1.05rem;
+            margin-top: 6px;
+            border-top: 1px solid rgba(255,255,255,0.15);
+            padding-top: 6px;
+        }}
+        .total-value {{ font-size: 1.15rem; font-weight: 700; }}
+        .back-top-row {{
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 18px;
+            flex-wrap: nowrap;
+            gap: 12px;
+        }}
+        .back-left {{
+            display: flex;
+            align-items: center;
+            flex-shrink: 0;
+        }}
+        .back-right-stats {{
+            display: flex;
+            gap: 24px;
+            align-items: baseline;
+            flex-shrink: 1;
+            justify-content: flex-end;
+        }}
+        .stat-group {{
+            text-align: left;
+        }}
+        .stat-group.avg-group {{
+            margin-left: 0;
+        }}
+        .stat-label {{
+            font-size: 0.7rem;
+            color: #aaa;
+            margin-bottom: 2px;
+            font-weight: 500;
+            white-space: nowrap;
+        }}
+        .value-change-row {{
+            display: flex;
+            align-items: baseline;
+            gap: 8px;
+            justify-content: flex-start;
+        }}
+        .current-value {{
+            font-size: 1.05rem;
+            font-weight: 700;
+            color: white;
+            white-space: nowrap;
+        }}
+        .change-value {{
+            font-size: 0.95rem;
+            font-weight: 600;
+            white-space: nowrap;
+        }}
+        .stat-value {{
+            font-size: 1.05rem;
+            font-weight: 600;
+            color: white;
+            white-space: nowrap;
+        }}
+        .chart-container {{
+            position: relative;
+            margin: 16px 0 0 0;
+            flex: 1;
+            min-height: 175px;
+        }}
+        .chart-loading {{
+            text-align: center;
+            color: #ccc;
+            padding: 10px;
+            font-size: 0.85rem;
+        }}
+        @media (max-width: 700px) {{
+            .coin-grid {{ grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 18px; }}
+            .flip-card, .static-card {{ height: 270px; }}
+            .scroll-wrapper {{ padding: 12px 0px 16px 0px; }}
+            .back-top-row {{
+                gap: 8px;
+                margin-bottom: 14px;
+            }}
+            .back-right-stats {{ gap: 16px; }}
+            .current-value {{ font-size: 1.0rem; }}
+            .change-value {{ font-size: 0.9rem; }}
+            .stat-value {{ font-size: 1.0rem; }}
+            .stat-label {{ font-size: 0.65rem; }}
+            .chart-container {{
+                margin-top: 14px;
+                min-height: 165px;
+            }}
+        }}
+        @media (max-width: 550px) {{
+            .current-value {{ font-size: 0.95rem; }}
+            .change-value {{ font-size: 0.85rem; }}
+            .stat-value {{ font-size: 0.95rem; }}
+            .back-right-stats {{ gap: 12px; }}
+        }}
+        @media (max-width: 480px) {{
+            .current-value {{ font-size: 0.9rem; }}
+            .change-value {{ font-size: 0.8rem; }}
+            .stat-value {{ font-size: 0.9rem; }}
+            .stat-label {{ font-size: 0.6rem; }}
+            .back-right-stats {{ gap: 10px; }}
         }}
     </style>
 </head>
 <body>
-<div class="scroll-wrapper" id="coin-scroll-wrapper">
+<div class="scroll-wrapper">
     <div class="coin-grid">
         {cards_html}
     </div>
 </div>
 
 <script>
-(function() {{
-    let parentSpinnerElement = null;
-    let isRefreshing = false;
-    const refreshThreshold = 80;
-
-    function createParentSpinner() {{
-        if (parentSpinnerElement) return;
-        try {{
-            const parentDoc = window.parent.document;
-            let overlay = parentDoc.getElementById('swipe-refresh-overlay');
-            if (!overlay) {{
-                overlay = parentDoc.createElement('div');
+    (function() {{
+        // --- State preservation ---
+        function saveFlippedState() {{
+            const flippedCards = [];
+            document.querySelectorAll('.flip-card').forEach(card => {{
+                if (card.classList.contains('flipped')) {{
+                    const ticker = card.getAttribute('data-ticker');
+                    if (ticker) flippedCards.push(ticker);
+                }}
+            }});
+            localStorage.setItem('flippedCards', JSON.stringify(flippedCards));
+        }}
+        
+        function restoreFlippedState() {{
+            const saved = localStorage.getItem('flippedCards');
+            if (!saved) return;
+            const flippedTickers = JSON.parse(saved);
+            document.querySelectorAll('.flip-card').forEach(card => {{
+                const ticker = card.getAttribute('data-ticker');
+                if (flippedTickers.includes(ticker)) {{
+                    card.classList.add('flipped');
+                    const currentPrice = parseFloat(card.getAttribute('data-current-price'));
+                    const avgPrice = parseFloat(card.getAttribute('data-avg-price'));
+                    const chartColor = card.getAttribute('data-chart-color');
+                    if (!chartCache[ticker] || !chartCache[ticker].chartObj) {{
+                        renderChart(card, ticker, currentPrice, avgPrice, chartColor);
+                        update24hChange(card, ticker);
+                    }}
+                }}
+            }});
+            localStorage.removeItem('flippedCards');
+        }}
+        
+        // --- Create beautiful spinner in parent window ---
+        let parentSpinnerElement = null;
+        
+        function createParentSpinner() {{
+            if (parentSpinnerElement) return;
+            try {{
+                const parentDoc = window.parent.document;
+                if (parentDoc.getElementById('swipe-refresh-overlay')) {{
+                    // Overlay exists, just reset its margin-top
+                    const existingOverlay = parentDoc.getElementById('swipe-refresh-overlay');
+                    const indicator = existingOverlay.querySelector('.refresh-indicator');
+                    if (indicator) indicator.style.marginTop = '-60px';
+                    return;
+                }}
+                const overlay = parentDoc.createElement('div');
                 overlay.id = 'swipe-refresh-overlay';
-                overlay.style.cssText = `position:fixed;top:0;left:0;right:0;height:100px;z-index:999999;pointer-events:none;display:flex;justify-content:center;align-items:flex-start;`;
+                overlay.style.cssText = `
+                    position: fixed;
+                    top: 0;
+                    left: 0;
+                    right: 0;
+                    height: 100px;
+                    z-index: 999999;
+                    pointer-events: none;
+                    display: flex;
+                    justify-content: center;
+                    align-items: flex-start;
+                `;
                 const indicator = parentDoc.createElement('div');
                 indicator.className = 'refresh-indicator';
-                indicator.style.cssText = `margin-top:-60px;width:50px;height:50px;display:flex;align-items:center;justify-content:center;transition:margin-top .25s cubic-bezier(0.2,0.9,0.4,1.1);background:rgba(15,23,42,0.95);border-radius:50%;backdrop-filter:blur(4px);box-shadow:0 0 15px rgba(0,255,157,0.3);border:1px solid rgba(0,255,157,0.5);`;
+                indicator.style.cssText = `
+                    margin-top: -60px;
+                    width: 50px;
+                    height: 50px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    transition: margin-top 0.25s cubic-bezier(0.2, 0.9, 0.4, 1.1);
+                    background: rgba(15,23,42,0.95);
+                    border-radius: 50%;
+                    backdrop-filter: blur(4px);
+                    box-shadow: 0 0 15px rgba(0,255,157,0.3);
+                    border: 1px solid rgba(0,255,157,0.5);
+                `;
                 const spinner = parentDoc.createElement('div');
-                spinner.style.cssText = `width:28px;height:28px;border:3px solid rgba(255,255,255,0.2);border-top:3px solid #00ff9d;border-radius:50%;animation:spin 0.7s linear infinite;`;
+                spinner.className = 'spinner';
+                spinner.style.cssText = `
+                    width: 28px;
+                    height: 28px;
+                    border: 3px solid rgba(255,255,255,0.2);
+                    border-top: 3px solid #00ff9d;
+                    border-radius: 50%;
+                    animation: spin 0.7s linear infinite;
+                `;
                 indicator.appendChild(spinner);
                 overlay.appendChild(indicator);
                 parentDoc.body.appendChild(overlay);
-
+                parentSpinnerElement = {{ overlay, indicator, spinner }};
+                
                 const style = parentDoc.createElement('style');
-                style.textContent = `@keyframes spin {{0%{{transform:rotate(0deg)}}100%{{transform:rotate(360deg)}}}}`;
+                style.textContent = `
+                    @keyframes spin {{
+                        0% {{ transform: rotate(0deg); }}
+                        100% {{ transform: rotate(360deg); }}
+                    }}
+                `;
                 parentDoc.head.appendChild(style);
+            }} catch(e) {{
+                console.warn("Cannot access parent window", e);
             }}
-            parentSpinnerElement = {{ overlay: overlay, indicator: overlay.querySelector('.refresh-indicator') }};
-        }} catch(e) {{}}
-    }}
-
-    function setSpinner(margin) {{ if (parentSpinnerElement) parentSpinnerElement.indicator.style.marginTop = margin; }}
-    function hideSpinner() {{ setSpinner('-60px'); }}
-
-    createParentSpinner();
-
-    const scrollWrapper = document.getElementById('coin-scroll-wrapper');
-    let touchStartY = 0, isDragging = false;
-
-    if ('ontouchstart' in window) {{
-        document.addEventListener('touchstart', e => {{
-            if (scrollWrapper.scrollTop > 8 || isRefreshing) return;
-            touchStartY = e.touches[0].clientY;
-            isDragging = true;
-        }}, {{passive: true}});
-
-        document.addEventListener('touchmove', e => {{
-            if (!isDragging || isRefreshing) return;
-            const diff = e.touches[0].clientY - touchStartY;
-            if (diff > 0 && scrollWrapper.scrollTop <= 5) {{
-                e.preventDefault();
-                const pull = Math.min(diff, refreshThreshold);
-                setSpinner((15 * (pull / refreshThreshold)) + 'px');
+        }}
+        
+        function setParentSpinnerMarginTop(marginTop) {{
+            if (parentSpinnerElement) {{
+                parentSpinnerElement.indicator.style.marginTop = marginTop;
             }}
-        }}, {{passive: false}});
-
-        document.addEventListener('touchend', e => {{
-            if (!isDragging || isRefreshing) {{ isDragging = false; return; }}
-            const diff = e.changedTouches[0].clientY - touchStartY;
-            if (diff >= refreshThreshold && scrollWrapper.scrollTop <= 5) {{
-                isRefreshing = true;
-                setSpinner('15px');
-                const url = new URL(window.location.href);
-                url.searchParams.set('swipe_refresh', '1');
-                window.location.href = url.toString();
-            }} else hideSpinner();
-            isDragging = false;
-        }});
-    }}
-
-    setSpinner('15px');
-    setTimeout(hideSpinner, 1100);
-
-    const urlParams = new URLSearchParams(window.location.search);
-    if (urlParams.has('swipe_refresh')) {{
-        hideSpinner();
-        window.history.replaceState({{}}, document.title, window.location.pathname);
-    }}
-
-    function saveFlippedState() {{
-        const flippedCards = [];
-        document.querySelectorAll('.flip-card').forEach(card => {{
-            if (card.classList.contains('flipped')) {{
-                const ticker = card.getAttribute('data-ticker');
-                if (ticker) flippedCards.push(ticker);
+        }}
+        
+        function hideParentSpinner() {{
+            if (parentSpinnerElement) {{
+                parentSpinnerElement.indicator.style.marginTop = '-60px';
             }}
-        }});
-        localStorage.setItem('flippedCards', JSON.stringify(flippedCards));
-    }}
-
-    function restoreFlippedState() {{
-        const saved = localStorage.getItem('flippedCards');
-        if (!saved) return;
-        const flippedTickers = JSON.parse(saved);
-        document.querySelectorAll('.flip-card').forEach(card => {{
-            const ticker = card.getAttribute('data-ticker');
-            if (flippedTickers.includes(ticker)) {{
-                card.classList.add('flipped');
+        }}
+        
+        createParentSpinner();
+        
+        // --- Swipe-to-refresh ---
+        let touchStartY = 0;
+        let isDragging = false;
+        let refreshThreshold = 80;
+        let isRefreshing = false;
+        
+        if ('ontouchstart' in window) {{
+            document.addEventListener('touchstart', function(e) {{
+                if (window.scrollY <= 5 && !isRefreshing) {{
+                    touchStartY = e.touches[0].clientY;
+                    isDragging = true;
+                }}
+            }});
+            
+            document.addEventListener('touchmove', function(e) {{
+                if (!isDragging || isRefreshing) return;
+                const currentY = e.touches[0].clientY;
+                const diff = currentY - touchStartY;
+                if (diff > 0 && window.scrollY <= 5) {{
+                    e.preventDefault();
+                    const pullDistance = Math.min(diff, refreshThreshold);
+                    const progress = pullDistance / refreshThreshold;
+                    const marginTop = 15 * progress;
+                    setParentSpinnerMarginTop(marginTop + 'px');
+                    if (pullDistance >= refreshThreshold && parentSpinnerElement && parentSpinnerElement.spinner) {{
+                        parentSpinnerElement.spinner.style.borderTopColor = '#ffaa00';
+                    }}
+                }}
+            }}, {{ passive: false }});
+            
+            document.addEventListener('touchend', function(e) {{
+                if (!isDragging || isRefreshing) {{
+                    isDragging = false;
+                    return;
+                }}
+                const endY = e.changedTouches[0].clientY;
+                const diff = endY - touchStartY;
+                if (diff >= refreshThreshold && window.scrollY <= 5) {{
+                    isRefreshing = true;
+                    saveFlippedState();
+                    setParentSpinnerMarginTop('15px');
+                    const url = new URL(window.location.href);
+                    url.searchParams.set('swipe_refresh', '1');
+                    window.location.href = url.toString();
+                }} else {{
+                    hideParentSpinner();
+                }}
+                isDragging = false;
+            }});
+        }}
+        
+        const flipCards = document.querySelectorAll('.flip-card');
+        const chartCache = {{}};
+        const refreshKey = '{st.session_state.refresh_key}';
+        
+        async function fetch24hChange(ticker) {{
+            const symbolMap = {{
+                'BTC':'BTC','ETH':'ETH','SOL':'SOL','HBAR':'HBAR',
+                'XRP':'XRP','BNB':'BNB','TRX':'TRX','LINK':'LINK','SUI':'SUI'
+            }};
+            const sym = symbolMap[ticker.toUpperCase()];
+            if (!sym) return null;
+            const url = `https://min-api.cryptocompare.com/data/v2/histoday?fsym=${{sym}}&tsym=USD&limit=2`;
+            try {{
+                const resp = await fetch(url, {{ headers: {{ 'User-Agent': 'Mozilla/5.0' }} }});
+                const data = await resp.json();
+                if (data && data.Data && data.Data.Data && data.Data.Data.length >= 2) {{
+                    const yesterdayClose = data.Data.Data[0].close;
+                    const todayClose = data.Data.Data[1].close;
+                    const change = ((todayClose - yesterdayClose) / yesterdayClose) * 100;
+                    return change;
+                }}
+                return null;
+            }} catch(e) {{
+                console.error("24h change error", ticker, e);
+                return null;
             }}
-        }});
-        localStorage.removeItem('flippedCards');
-    }}
-
-    const flipCards = document.querySelectorAll('.flip-card');
-    const chartCache = {{}};
-    const refreshKey = '{st.session_state.refresh_key}';
-
-    async function fetch24hChange(ticker) {{
-        const symbolMap = {{'BTC':'BTC','ETH':'ETH','SOL':'SOL','HBAR':'HBAR','XRP':'XRP','BNB':'BNB','TRX':'TRX','LINK':'LINK','SUI':'SUI'}};
-        const sym = symbolMap[ticker.toUpperCase()];
-        if (!sym) return null;
-        const url = `https://min-api.cryptocompare.com/data/v2/histoday?fsym=${{sym}}&tsym=USD&limit=2`;
-        try {{
-            const resp = await fetch(url, {{ headers: {{ 'User-Agent': 'Mozilla/5.0' }} }});
-            const data = await resp.json();
-            if (data && data.Data && data.Data.Data && data.Data.Data.length >= 2) {{
-                const yesterdayClose = data.Data.Data[0].close;
-                const todayClose = data.Data.Data[1].close;
-                return ((todayClose - yesterdayClose) / yesterdayClose) * 100;
+        }}
+        
+        async function fetchHistoricalData(ticker) {{
+            const symbolMap = {{
+                'BTC':'BTC','ETH':'ETH','SOL':'SOL','HBAR':'HBAR',
+                'XRP':'XRP','BNB':'BNB','TRX':'TRX','LINK':'LINK','SUI':'SUI'
+            }};
+            const sym = symbolMap[ticker.toUpperCase()];
+            if (!sym) return null;
+            const url = `https://min-api.cryptocompare.com/data/v2/histoday?fsym=${{sym}}&tsym=USD&limit=30`;
+            try {{
+                const resp = await fetch(url, {{ headers: {{ 'User-Agent': 'Mozilla/5.0' }} }});
+                const data = await resp.json();
+                if (data && data.Data && data.Data.Data) {{
+                    const ohlc = data.Data.Data;
+                    const labels = ohlc.map(d => {{
+                        const dt = new Date(d.time * 1000);
+                        return `${{dt.getDate().toString().padStart(2,'0')}}/${{(dt.getMonth()+1).toString().padStart(2,'0')}}`;
+                    }});
+                    const prices = ohlc.map(d => d.close);
+                    return {{ labels, prices }};
+                }}
+                return null;
+            }} catch(e) {{
+                console.error("Fetch error for", ticker, e);
+                return null;
             }}
-            return null;
-        }} catch(e) {{ return null; }}
-    }}
-
-    async function fetchHistoricalData(ticker) {{
-        const symbolMap = {{'BTC':'BTC','ETH':'ETH','SOL':'SOL','HBAR':'HBAR','XRP':'XRP','BNB':'BNB','TRX':'TRX','LINK':'LINK','SUI':'SUI'}};
-        const sym = symbolMap[ticker.toUpperCase()];
-        if (!sym) return null;
-        const url = `https://min-api.cryptocompare.com/data/v2/histoday?fsym=${{sym}}&tsym=USD&limit=30`;
-        try {{
-            const resp = await fetch(url, {{ headers: {{ 'User-Agent': 'Mozilla/5.0' }} }});
-            const data = await resp.json();
-            if (data && data.Data && data.Data.Data) {{
-                const ohlc = data.Data.Data;
-                const labels = ohlc.map(d => {{
-                    const dt = new Date(d.time * 1000);
-                    return `${{dt.getDate().toString().padStart(2,'0')}}/${{(dt.getMonth()+1).toString().padStart(2,'0')}}`;
-                }});
-                const prices = ohlc.map(d => d.close);
-                return {{ labels, prices }};
+        }}
+        
+        async function renderChart(card, ticker, currentPrice, avgPrice, chartColor) {{
+            const canvas = card.querySelector(`canvas#chart-${{ticker}}`);
+            const loadingDiv = card.querySelector(`.chart-loading`);
+            if (!canvas) return;
+            if (chartCache[ticker] && chartCache[ticker].chart) {{
+                if (loadingDiv) loadingDiv.style.display = 'none';
+                return;
             }}
-            return null;
-        }} catch(e) {{ return null; }}
-    }}
-
-    async function renderChart(card, ticker, currentPrice, avgPrice, chartColor) {{
-        const canvas = card.querySelector(`canvas#chart-${{ticker}}`);
-        const loadingDiv = card.querySelector(`.chart-loading`);
-        if (!canvas) return;
-        if (chartCache[ticker] && chartCache[ticker].chartObj) {{
+            if (loadingDiv) loadingDiv.style.display = 'block';
+            const hist = await fetchHistoricalData(ticker);
+            if (!hist || hist.prices.length === 0) {{
+                if (loadingDiv) loadingDiv.innerText = 'Failed to load chart data';
+                return;
+            }}
+            const ctx = canvas.getContext('2d');
+            if (chartCache[ticker] && chartCache[ticker].chartObj) {{
+                chartCache[ticker].chartObj.destroy();
+            }}
+            const datasets = [
+                {{
+                    label: 'Close Price ($)',
+                    data: hist.prices,
+                    borderColor: chartColor,
+                    backgroundColor: chartColor + '20',
+                    borderWidth: 2,
+                    fill: true,
+                    tension: 0.2,
+                    pointRadius: 2,
+                    pointBackgroundColor: chartColor
+                }},
+                {{
+                    label: 'Avg Price ($)',
+                    data: new Array(hist.labels.length).fill(avgPrice),
+                    borderColor: '#ffaa00',
+                    borderWidth: 2,
+                    borderDash: [5, 5],
+                    fill: false,
+                    pointRadius: 0,
+                    type: 'line'
+                }}
+            ];
+            const newChart = new Chart(ctx, {{
+                type: 'line',
+                data: {{
+                    labels: hist.labels,
+                    datasets: datasets
+                }},
+                options: {{
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    plugins: {{
+                        legend: {{ display: false }},
+                        tooltip: {{ mode: 'index', intersect: false }}
+                    }},
+                    scales: {{
+                        x: {{ ticks: {{ color: '#ccc', maxRotation: 45, autoSkip: true, maxTicksLimit: 6 }}, grid: {{ color: 'rgba(255,255,255,0.1)' }} }},
+                        y: {{ ticks: {{ color: '#ccc' }}, grid: {{ color: 'rgba(255,255,255,0.1)' }} }}
+                    }}
+                }}
+            }});
+            chartCache[ticker] = {{ chartObj: newChart, data: hist }};
             if (loadingDiv) loadingDiv.style.display = 'none';
-            return;
         }}
-        if (loadingDiv) loadingDiv.style.display = 'block';
-        const hist = await fetchHistoricalData(ticker);
-        if (!hist || hist.prices.length === 0) {{
-            if (loadingDiv) loadingDiv.innerText = 'Failed to load chart data';
-            return;
-        }}
-        const ctx = canvas.getContext('2d');
-        if (chartCache[ticker] && chartCache[ticker].chartObj) chartCache[ticker].chartObj.destroy();
-        const newChart = new Chart(ctx, {{
-            type: 'line',
-            data: {{
-                labels: hist.labels,
-                datasets: [
-                    {{ label: 'Close Price ($)', data: hist.prices, borderColor: chartColor, backgroundColor: chartColor + '20', borderWidth: 2, fill: true, tension: 0.2, pointRadius: 2, pointBackgroundColor: chartColor }},
-                    {{ label: 'Avg Price ($)', data: new Array(hist.labels.length).fill(avgPrice), borderColor: '#ffaa00', borderWidth: 2, borderDash: [5, 5], fill: false, pointRadius: 0, type: 'line' }}
-                ]
-            }},
-            options: {{
-                responsive: true,
-                maintainAspectRatio: true,
-                plugins: {{ legend: {{ display: false }}, tooltip: {{ mode: 'index', intersect: false }} }},
-                scales: {{
-                    x: {{ ticks: {{ color: '#ccc', maxRotation: 45, autoSkip: true, maxTicksLimit: 6 }}, grid: {{ color: 'rgba(255,255,255,0.1)' }} }},
-                    y: {{ ticks: {{ color: '#ccc' }}, grid: {{ color: 'rgba(255,255,255,0.1)' }} }}
-                }}
+        
+        async function update24hChange(card, ticker) {{
+            const changeSpan = card.querySelector(`#change-${{ticker}}`);
+            if (!changeSpan) return;
+            const change = await fetch24hChange(ticker);
+            if (change !== null) {{
+                const sign = change >= 0 ? '▲' : '▼';
+                const color = change >= 0 ? '#00ff9d' : '#ff4d4d';
+                changeSpan.innerHTML = `<span style="color:${{color}};">${{sign}} ${{Math.abs(change).toFixed(2)}}%</span>`;
+            }} else {{
+                changeSpan.innerHTML = `N/A`;
             }}
-        }});
-        chartCache[ticker] = {{ chartObj: newChart }};
-        if (loadingDiv) loadingDiv.style.display = 'none';
-    }}
-
-    async function update24hChange(card, ticker) {{
-        const changeSpan = card.querySelector(`#change-${{ticker}}`);
-        if (!changeSpan) return;
-        const change = await fetch24hChange(ticker);
-        if (change !== null) {{
-            const sign = change >= 0 ? '▲' : '▼';
-            const color = change >= 0 ? '#00ff9d' : '#ff4d4d';
-            changeSpan.innerHTML = `<span style="color:${{color}};">${{sign}} ${{Math.abs(change).toFixed(2)}}%</span>`;
-        }} else {{
-            changeSpan.innerHTML = `N/A`;
         }}
-    }}
-
-    flipCards.forEach(card => {{
-        const ticker = card.getAttribute('data-ticker');
-        const currentPrice = parseFloat(card.getAttribute('data-current-price'));
-        const avgPrice = parseFloat(card.getAttribute('data-avg-price'));
-        const chartColor = card.getAttribute('data-chart-color');
-        const border = card.getAttribute('data-border');
-        card.style.setProperty('--border', border);
-
-        const front = card.querySelector('.flip-card-front');
-        front.addEventListener('click', (e) => {{
-            e.stopPropagation();
-            if (!card.classList.contains('flipped')) {{
-                card.classList.add('flipped');
-                if (!chartCache[ticker] || !chartCache[ticker].chartObj) {{
-                    renderChart(card, ticker, currentPrice, avgPrice, chartColor);
-                    update24hChange(card, ticker);
+        
+        flipCards.forEach(card => {{
+            const ticker = card.getAttribute('data-ticker');
+            const currentPrice = parseFloat(card.getAttribute('data-current-price'));
+            const avgPrice = parseFloat(card.getAttribute('data-avg-price'));
+            const chartColor = card.getAttribute('data-chart-color');
+            const border = card.getAttribute('data-border');
+            card.style.setProperty('--border', border);
+            
+            const front = card.querySelector('.flip-card-front');
+            front.addEventListener('click', (e) => {{
+                e.stopPropagation();
+                if (!card.classList.contains('flipped')) {{
+                    card.classList.add('flipped');
+                    if (!chartCache[ticker] || !chartCache[ticker].chartObj) {{
+                        renderChart(card, ticker, currentPrice, avgPrice, chartColor);
+                        update24hChange(card, ticker);
+                    }}
                 }}
-            }}
+            }});
+            
+            const backDiv = card.querySelector('.flip-card-back');
+            backDiv.addEventListener('click', (e) => {{
+                card.classList.remove('flipped');
+            }});
         }});
-
-        const backDiv = card.querySelector('.flip-card-back');
-        backDiv.addEventListener('click', () => card.classList.remove('flipped'));
-    }});
-
-    document.querySelectorAll('.static-card').forEach(card => {{
-        const border = card.getAttribute('data-border');
-        if (border) card.style.setProperty('--border', border);
-    }});
-
-    restoreFlippedState();
-
-    if (urlParams.has('swipe_refresh')) {{
-        for (let key in chartCache) if (chartCache[key].chartObj) chartCache[key].chartObj.destroy();
-        window.chartCache = {{}};
-    }}
-    window.oldRefreshKey = refreshKey;
-}})();
+        
+        document.querySelectorAll('.static-card').forEach(card => {{
+            const border = card.getAttribute('data-border');
+            if (border) card.style.setProperty('--border', border);
+        }});
+        
+        restoreFlippedState();
+        
+        // After refresh, hide the spinner
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.has('swipe_refresh') || (window.oldRefreshKey && window.oldRefreshKey !== refreshKey)) {{
+            for (let key in chartCache) {{
+                if (chartCache[key].chartObj) chartCache[key].chartObj.destroy();
+            }}
+            window.chartCache = {{}};
+            hideParentSpinner();
+            if (urlParams.has('swipe_refresh')) {{
+                const newUrl = window.location.pathname;
+                window.history.replaceState({{}}, document.title, newUrl);
+            }}
+        }}
+        window.oldRefreshKey = refreshKey;
+    }})();
 </script>
 </body>
 </html>
 """
-        components.html(full_html, height=760, scrolling=False)
+        components.html(full_html, height=680, scrolling=False)
 
     # ====================== CRYPTO TRANSACTIONS ======================
     elif st.session_state.page == "Crypto Transactions":
         glossy_header("Crypto Transactions", CRYPTO_ICON)
+
         delete_trigger = st.text_input("delete_trigger", value=st.session_state.delete_trigger, label_visibility="collapsed", key="delete_trigger_hidden")
         edit_trigger = st.text_input("edit_trigger", value=st.session_state.edit_trigger, label_visibility="collapsed", key="edit_trigger_hidden")
+
         if delete_trigger and delete_trigger != st.session_state.delete_trigger:
             try:
                 idx = int(delete_trigger)
@@ -865,6 +1165,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
             except:
                 pass
             st.session_state.delete_trigger = delete_trigger
+
         if edit_trigger and edit_trigger != st.session_state.edit_trigger:
             try:
                 idx = int(edit_trigger)
@@ -874,9 +1175,11 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
             except:
                 pass
             st.session_state.edit_trigger = edit_trigger
+
         df_display = st.session_state.crypto_df.copy()
         df_display['Date'] = df_display['Datum'].apply(format_datum)
         df_display = df_display.dropna(how='all').reset_index(drop=True)
+
         cards_html = ""
         for i, r in df_display.iterrows():
             logo_url = get_ticker_logo(r['Ticker'])
@@ -884,6 +1187,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
             amount_val = format_holdings(r['Amount'], r['Ticker'])
             price = format_money(r['Price'])
             date_str = r['Date']
+
             cards_html += f"""
 <div class="transaction-card">
     <div class="transaction-main-row">
@@ -906,29 +1210,104 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
     </div>
 </div>
 """
+
         full_html = f"""
 <html>
 <head>
 <style>
 body {{ background: transparent; margin: 0; padding: 0; }}
 .transaction-grid {{ display: grid; grid-template-columns: repeat(auto-fit, minmax(380px, 1fr)); gap: 16px; padding: 0 6px; }}
-.transaction-card {{ background: #0f172a; border-radius: 18px; padding: 18px 20px 14px; box-shadow: 0 6px 20px rgba(0,0,0,0.3); transition: all 0.25s ease; position: relative; display: flex; flex-direction: column; min-height: 138px; }}
-.transaction-card:hover {{ transform: translateY(-4px); box-shadow: 0 12px 30px rgba(0, 255, 157, 0.3); }}
-.transaction-main-row {{ display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }}
-.transaction-left {{ display: flex; align-items: center; gap: 14px; flex: 1; }}
-.transaction-ticker {{ font-size: 1.28rem; font-weight: 700; color: #ffffff; line-height: 1.05; }}
-.transaction-date {{ color: #aaa; font-size: 0.92rem; margin-top: 2px; }}
-.transaction-values {{ display: flex; gap: 24px; text-align: right; font-size: 1.02rem; }}
-.transaction-values div {{ min-width: 88px; }}
-.transaction-values small {{ color: #aaa; font-size: 0.82rem; font-weight: 500; display: block; }}
-.transaction-values strong {{ font-weight: 700; color: #ffffff; }}
-.transaction-amount {{ font-size: 1.04rem; font-weight: 700; color: #ffffff; }}
-.transaction-buttons {{ display: flex; gap: 12px; margin-top: auto; }}
-.transaction-buttons button {{ flex: 1; padding: 10px 14px; border: none; border-radius: 11px; font-weight: 700; font-size: 0.95rem; cursor: pointer; transition: all 0.2s ease; }}
-.transaction-buttons .delete-btn {{ background: #e63939; color: white; }}
-.transaction-buttons .delete-btn:hover {{ background: #c1121f; }}
-.transaction-buttons .edit-btn {{ background: #00b894; color: #0f1724; }}
-.transaction-buttons .edit-btn:hover {{ background: #00a17a; }}
+.transaction-card {{
+    background: #0f172a;
+    border-radius: 18px;
+    padding: 18px 20px 14px;
+    box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+    transition: all 0.25s ease;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    min-height: 138px;
+}}
+.transaction-card:hover {{
+    transform: translateY(-4px);
+    box-shadow: 0 12px 30px rgba(0, 255, 157, 0.3);
+}}
+.transaction-main-row {{
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 16px;
+}}
+.transaction-left {{
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    flex: 1;
+}}
+.transaction-ticker {{
+    font-size: 1.28rem;
+    font-weight: 700;
+    color: #ffffff;
+    line-height: 1.05;
+}}
+.transaction-date {{
+    color: #aaa;
+    font-size: 0.92rem;
+    margin-top: 2px;
+}}
+.transaction-values {{
+    display: flex;
+    gap: 24px;
+    text-align: right;
+    font-size: 1.02rem;
+}}
+.transaction-values div {{
+    min-width: 88px;
+}}
+.transaction-values small {{
+    color: #aaa;
+    font-size: 0.82rem;
+    font-weight: 500;
+    display: block;
+}}
+.transaction-values strong {{
+    font-weight: 700;
+    color: #ffffff;
+}}
+.transaction-amount {{
+    font-size: 1.04rem;
+    font-weight: 700;
+    color: #ffffff;
+}}
+.transaction-buttons {{
+    display: flex;
+    gap: 12px;
+    margin-top: auto;
+}}
+.transaction-buttons button {{
+    flex: 1;
+    padding: 10px 14px;
+    border: none;
+    border-radius: 11px;
+    font-weight: 700;
+    font-size: 0.95rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}}
+.transaction-buttons .delete-btn {{
+    background: #e63939;
+    color: white;
+}}
+.transaction-buttons .delete-btn:hover {{
+    background: #c1121f;
+}}
+.transaction-buttons .edit-btn {{
+    background: #00b894;
+    color: #0f1724;
+}}
+.transaction-buttons .edit-btn:hover {{
+    background: #00a17a;
+}}
 </style>
 </head>
 <body>
@@ -938,11 +1317,17 @@ body {{ background: transparent; margin: 0; padding: 0; }}
 <script>
 function deleteTransaction(i) {{
     const input = window.parent.document.querySelector('input[aria-label="delete_trigger"]');
-    if (input) {{ input.value = i; input.dispatchEvent(new Event('change')); }}
+    if (input) {{
+        input.value = i;
+        input.dispatchEvent(new Event('change'));
+    }}
 }}
 function editTransaction(i) {{
     const input = window.parent.document.querySelector('input[aria-label="edit_trigger"]');
-    if (input) {{ input.value = i; input.dispatchEvent(new Event('change')); }}
+    if (input) {{
+        input.value = i;
+        input.dispatchEvent(new Event('change'));
+    }}
 }}
 </script>
 </body>
@@ -1008,7 +1393,8 @@ function editTransaction(i) {{
         total_eur = pd.to_numeric(st.session_state.fiat_df['EUR'], errors='coerce').fillna(0).sum()
         total_usdc = pd.to_numeric(st.session_state.fiat_df['USDC'], errors='coerce').fillna(0).sum()
         fees_eur = pd.to_numeric(st.session_state.fiat_df['Fee'], errors='coerce').fillna(0).sum()
-        fees_czk = (pd.to_numeric(st.session_state.fiat_df['Fee'], errors='coerce').fillna(0) * pd.to_numeric(st.session_state.fiat_df['CZK/EUR'], errors='coerce').fillna(0)).sum()
+        fees_czk = (pd.to_numeric(st.session_state.fiat_df['Fee'], errors='coerce').fillna(0) *
+                    pd.to_numeric(st.session_state.fiat_df['CZK/EUR'], errors='coerce').fillna(0)).sum()
 
         glossy_header("Fiat Transactions", FIAT_ICON)
 
