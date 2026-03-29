@@ -490,8 +490,8 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                 cards_html += f"""
 <div class="static-card usdc-card" data-border="{border_color}">
     <div class="card-header">
-        <img src="{logo_url}" style="height:38px;width:38px;border-radius:50%;object-fit:contain;" onerror="this.src='https://via.placeholder.com/38/1e2a44/ffffff?text=U';">
-        <span style="font-weight:700;font-size:1.22rem;margin-left:10px;color:#ffffff;">{ticker}</span>
+        <img src="{logo_url}" style="height:44px;width:44px;border-radius:50%;object-fit:contain;" onerror="this.src='https://via.placeholder.com/44/1e2a44/ffffff?text=U';">
+        <span style="font-weight:700;font-size:1.4rem;margin-left:12px;color:#ffffff;">{ticker}</span>
     </div>
     <div class="card-content">
         <div class="label-value-row"><span class="label">Holdings</span><span class="value">{format_holdings(r['Holdings'], ticker)}</span></div>
@@ -509,8 +509,8 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
     <div class="flip-card-inner">
         <div class="flip-card-front">
             <div class="card-header">
-                <img src="{logo_url}" style="height:38px;width:38px;border-radius:50%;object-fit:contain;" onerror="this.src='https://via.placeholder.com/38/1e2a44/ffffff?text={ticker[0]}';">
-                <span style="font-weight:700;font-size:1.22rem;margin-left:10px;color:#ffffff;">{ticker}</span>
+                <img src="{logo_url}" style="height:44px;width:44px;border-radius:50%;object-fit:contain;" onerror="this.src='https://via.placeholder.com/44/1e2a44/ffffff?text={ticker[0]}';">
+                <span style="font-weight:700;font-size:1.4rem;margin-left:12px;color:#ffffff;">{ticker}</span>
             </div>
             <div class="card-content">
                 <div class="label-value-row"><span class="label">Holdings</span><span class="value">{format_holdings(r['Holdings'], ticker)}</span></div>
@@ -522,14 +522,14 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
         </div>
         <div class="flip-card-back">
             <div class="back-header">
-                <div style="display:flex; align-items:center; gap:8px;">
-                    <img src="{logo_url}" style="height:28px;width:28px;border-radius:50%;object-fit:contain;" onerror="this.src='https://via.placeholder.com/28/1e2a44/ffffff?text={ticker[0]}';">
-                    <span style="color:#ffffff;">{ticker}</span>
+                <div style="display:flex; align-items:center; gap:10px;">
+                    <img src="{logo_url}" style="height:34px;width:34px;border-radius:50%;object-fit:contain;" onerror="this.src='https://via.placeholder.com/34/1e2a44/ffffff?text={ticker[0]}';">
+                    <span style="color:#ffffff; font-size:1.2rem; font-weight:600;">{ticker}</span>
                 </div>
                 <span class="back-close">↺</span>
             </div>
             <div class="chart-container">
-                <canvas id="chart-{ticker}" width="400" height="130" style="width:100%; height:auto; max-height:130px;"></canvas>
+                <canvas id="chart-{ticker}" width="400" height="160" style="width:100%; height:auto; max-height:160px;"></canvas>
                 <div class="chart-loading" id="loading-{ticker}">Loading chart...</div>
             </div>
             <div class="back-stats">
@@ -575,18 +575,18 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
         .scroll-wrapper::-webkit-scrollbar {{ display: none; }}
         .coin-grid {{
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-            gap: 20px;
+            grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+            gap: 24px;
             width: 100%;
             box-sizing: border-box;
             background: transparent !important;
             overflow: visible !important;
         }}
-        /* Compact cards - smaller height */
+        /* Card sizes - original height */
         .flip-card {{
             background-color: transparent;
             width: 100%;
-            height: 230px;
+            height: 280px;
             perspective: 1200px;
             cursor: pointer;
         }}
@@ -596,7 +596,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
             height: 100%;
             transition: transform 0.5s ease-in-out;
             transform-style: preserve-3d;
-            border-radius: 16px;
+            border-radius: 18px;
         }}
         .flip-card.flipped .flip-card-inner {{
             transform: rotateY(180deg);
@@ -606,8 +606,8 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
             width: 100%;
             height: 100%;
             backface-visibility: hidden;
-            border-radius: 16px;
-            padding: 6px 8px;
+            border-radius: 18px;
+            padding: 12px 14px;
             background: #0f172a;
             box-shadow: 0 8px 24px rgba(0,0,0,0.3);
             border: 2px solid transparent;
@@ -622,13 +622,13 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
             transform: rotateY(180deg);
             display: flex;
             flex-direction: column;
-            justify-content: flex-start;
+            justify-content: space-between;
         }}
         .static-card {{
             background: #0f172a;
-            border-radius: 16px;
-            padding: 6px 8px;
-            height: 230px;
+            border-radius: 18px;
+            padding: 12px 14px;
+            height: 280px;
             display: flex;
             flex-direction: column;
             justify-content: space-between;
@@ -655,44 +655,44 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
         .card-header {{
             display: flex;
             align-items: center;
-            margin-bottom: 2px;
+            margin-bottom: 8px;
         }}
         .card-content {{
             display: flex;
             flex-direction: column;
-            gap: 1px;
+            gap: 8px;
         }}
         .label-value-row {{
             display: flex;
             justify-content: space-between;
             align-items: center;
-            font-size: 0.8rem;
-            line-height: 1.2;
+            font-size: 0.95rem;
+            line-height: 1.3;
         }}
         .label {{ color: #aaa; font-weight: 500; }}
-        .value {{ font-weight: 600; color: white; }}
+        .value {{ font-weight: 600; color: white; font-size: 1rem; }}
         .total {{
-            font-size: 0.9rem;
-            margin-top: 2px;
-            border-top: 1px solid rgba(255,255,255,0.12);
-            padding-top: 2px;
+            font-size: 1.05rem;
+            margin-top: 6px;
+            border-top: 1px solid rgba(255,255,255,0.15);
+            padding-top: 6px;
         }}
-        .total-value {{ font-size: 1rem; }}
+        .total-value {{ font-size: 1.15rem; font-weight: 700; }}
         .back-header {{
             display: flex;
             justify-content: space-between;
             align-items: center;
             font-weight: bold;
-            font-size: 0.9rem;
-            margin-bottom: 2px;
+            font-size: 1rem;
+            margin-bottom: 6px;
             color: #00ff9d;
         }}
         .back-close {{
-            font-size: 1.2rem;
+            font-size: 1.3rem;
             cursor: pointer;
             background: rgba(255,255,255,0.1);
-            width: 24px;
-            height: 24px;
+            width: 28px;
+            height: 28px;
             display: inline-flex;
             align-items: center;
             justify-content: center;
@@ -705,32 +705,33 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
         }}
         .chart-container {{
             position: relative;
-            margin: 0;
+            margin: 4px 0;
             flex: 1;
-            min-height: 130px;
+            min-height: 160px;
         }}
         .chart-loading {{
             text-align: center;
             color: #ccc;
             padding: 10px;
-            font-size: 0.8rem;
+            font-size: 0.85rem;
         }}
         .back-stats {{
             display: flex;
             justify-content: space-between;
-            margin-top: 2px;
-            padding-top: 2px;
-            border-top: 1px solid rgba(255,255,255,0.12);
-            font-size: 0.7rem;
+            margin-top: 6px;
+            padding-top: 6px;
+            border-top: 1px solid rgba(255,255,255,0.15);
+            font-size: 0.8rem;
             color: #ddd;
         }}
         .stat-item {{
             text-align: center;
             flex: 1;
+            font-weight: 500;
         }}
         @media (max-width: 700px) {{
-            .coin-grid {{ grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; }}
-            .flip-card, .static-card {{ height: 220px; }}
+            .coin-grid {{ grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 18px; }}
+            .flip-card, .static-card {{ height: 270px; }}
             .scroll-wrapper {{ padding: 12px 0px 16px 0px; }}
         }}
     </style>
@@ -886,6 +887,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
             const border = card.getAttribute('data-border');
             card.style.setProperty('--border', border);
             
+            // Front click to flip
             const front = card.querySelector('.flip-card-front');
             front.addEventListener('click', (e) => {{
                 e.stopPropagation();
@@ -898,6 +900,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                 }}
             }});
             
+            // Back click: flip back when clicking anywhere on the back (except if close button stops propagation)
             const backDiv = card.querySelector('.flip-card-back');
             const closeBtn = backDiv.querySelector('.back-close');
             if (closeBtn) {{
@@ -906,10 +909,14 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                     card.classList.remove('flipped');
                 }});
             }}
+            // Click on back area (not on close button) also flips back
             backDiv.addEventListener('click', (e) => {{
-                if (e.target === backDiv || e.target.classList.contains('back-close')) {{
-                    card.classList.remove('flipped');
+                // If the click target is not the close button (or its children)
+                if (e.target === closeBtn || closeBtn.contains(e.target)) {{
+                    // Already handled by closeBtn listener
+                    return;
                 }}
+                card.classList.remove('flipped');
             }});
         }});
         
@@ -930,7 +937,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
 </body>
 </html>
 """
-        components.html(full_html, height=640, scrolling=False)
+        components.html(full_html, height=680, scrolling=False)
    
     # ====================== CRYPTO TRANSACTIONS ======================
     elif st.session_state.page == "Crypto Transactions":
