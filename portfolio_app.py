@@ -156,13 +156,21 @@ div[data-testid="stMainBlockContainer"] {
     color: #ffffff;
 }
 
-/* For swapped PnL Cards to hide numbers but peek labels */
+/* Swapped PnL Cards: Number absolute center, Text absolute bottom */
+.glossy-box.swapped {
+    min-height: 115px;
+    padding: 10px;
+    align-items: center;
+    justify-content: center;
+}
 .glossy-box.swapped > div:first-child {
     font-size: 27px;
     font-weight: 700;
     line-height: 1.05;
     color: #ffffff;
-    margin-bottom: 6px;
+    margin-bottom: 0;
+    position: relative;
+    top: -8px; /* Shifts up slightly to visibly center it perfectly above the absolute bottom text */
 }
 .glossy-box.swapped > div:last-child {
     font-size: 13.5px;
@@ -171,6 +179,11 @@ div[data-testid="stMainBlockContainer"] {
     color: #e0e0e0;
     opacity: 0.9;
     line-height: 1.2;
+    position: absolute;
+    bottom: 14px;
+    left: 0;
+    width: 100%;
+    text-align: center;
 }
 
 /* USDC Banner Styles */
@@ -262,10 +275,11 @@ div[data-testid="stMainBlockContainer"] {
     .glossy-box > div:first-child { font-size: 12px !important; }
     .glossy-box > div:last-child { font-size: 21px !important; }
     
-    .glossy-box.swapped > div:first-child { font-size: 21px !important; }
-    .glossy-box.swapped > div:last-child { font-size: 12px !important; }
+    .glossy-box.swapped { min-height: 105px; }
+    .glossy-box.swapped > div:first-child { font-size: 21px !important; top: -6px; }
+    .glossy-box.swapped > div:last-child { font-size: 12px !important; bottom: 10px; }
     
-    .stats-layer { margin-top: -65px; } /* Mobile adjustment for peek */
+    .stats-layer { margin-top: -65px; } /* Ensures the tuck properly hides the center number */
     
     .usdc-banner { padding: 16px 18px; margin-bottom: 24px; }
     .usdc-banner-left img { width: 36px; height: 36px; }
