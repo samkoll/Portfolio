@@ -533,9 +533,9 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                 <div class="chart-loading" id="loading-{ticker}">Loading chart...</div>
             </div>
             <div class="back-stats">
-                <div class="stat-item">Current: ${live_price:,.2f}</div>
-                <div class="stat-item" id="change-{ticker}">24h change: loading...</div>
-                <div class="stat-item">Avg: ${avg_price:,.2f}</div>
+                <div class="stat-item"><div class="stat-label">Current</div><div class="stat-value">${live_price:,.2f}</div></div>
+                <div class="stat-item"><div class="stat-label">24h Change</div><div class="stat-value" id="change-{ticker}">loading...</div></div>
+                <div class="stat-item"><div class="stat-label">Avg</div><div class="stat-value">${avg_price:,.2f}</div></div>
             </div>
         </div>
     </div>
@@ -721,13 +721,22 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
             margin-top: 6px;
             padding-top: 6px;
             border-top: 1px solid rgba(255,255,255,0.15);
-            font-size: 0.8rem;
-            color: #ddd;
+            gap: 12px;
         }}
         .stat-item {{
             text-align: center;
             flex: 1;
+        }}
+        .stat-label {{
+            font-size: 0.7rem;
+            color: #aaa;
+            margin-bottom: 2px;
             font-weight: 500;
+        }}
+        .stat-value {{
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: white;
         }}
         @media (max-width: 700px) {{
             .coin-grid {{ grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 18px; }}
@@ -867,15 +876,15 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
         }}
         
         async function update24hChange(card, ticker) {{
-            const changeSpan = card.querySelector(`#change-${{ticker}}`);
-            if (!changeSpan) return;
+            const statDiv = card.querySelector(`#change-${{ticker}}`);
+            if (!statDiv) return;
             const change = await fetch24hChange(ticker);
             if (change !== null) {{
                 const sign = change >= 0 ? '▲' : '▼';
                 const color = change >= 0 ? '#00ff9d' : '#ff4d4d';
-                changeSpan.innerHTML = `24h change: <span style="color:${{color}};">${{sign}} ${{Math.abs(change).toFixed(2)}}%</span>`;
+                statDiv.innerHTML = `<span style="color:${{color}};">${{sign}} ${{Math.abs(change).toFixed(2)}}%</span>`;
             }} else {{
-                changeSpan.innerHTML = `24h change: N/A`;
+                statDiv.innerHTML = `N/A`;
             }}
         }}
         
