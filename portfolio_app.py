@@ -491,7 +491,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
 <div class="static-card usdc-card" data-border="{border_color}">
     <div class="card-header">
         <img src="{logo_url}" style="height:44px;width:44px;border-radius:50%;object-fit:contain;" onerror="this.src='https://via.placeholder.com/44/1e2a44/ffffff?text=U';">
-        <span style="font-weight:700;font-size:1.4rem;margin-left:12px;color:#ffffff;">{ticker}</span>
+        <span style="font-weight:700;font-size:1.3rem;margin-left:12px;color:#ffffff;">{ticker}</span>
     </div>
     <div class="card-content">
         <div class="label-value-row"><span class="label">Holdings</span><span class="value">{format_holdings(r['Holdings'], ticker)}</span></div>
@@ -510,7 +510,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
         <div class="flip-card-front">
             <div class="card-header">
                 <img src="{logo_url}" style="height:44px;width:44px;border-radius:50%;object-fit:contain;" onerror="this.src='https://via.placeholder.com/44/1e2a44/ffffff?text={ticker[0]}';">
-                <span style="font-weight:700;font-size:1.4rem;margin-left:12px;color:#ffffff;">{ticker}</span>
+                <span style="font-weight:700;font-size:1.3rem;margin-left:12px;color:#ffffff;">{ticker}</span>
             </div>
             <div class="card-content">
                 <div class="label-value-row"><span class="label">Holdings</span><span class="value">{format_holdings(r['Holdings'], ticker)}</span></div>
@@ -523,8 +523,8 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
         <div class="flip-card-back">
             <div class="back-top-row">
                 <div class="back-left">
-                    <img src="{logo_url}" style="height:34px;width:34px;border-radius:50%;object-fit:contain;" onerror="this.src='https://via.placeholder.com/34/1e2a44/ffffff?text={ticker[0]}';">
-                    <span style="color:#ffffff; font-size:1.2rem; font-weight:600; margin-left:8px;">{ticker}</span>
+                    <img src="{logo_url}" style="height:44px;width:44px;border-radius:50%;object-fit:contain;" onerror="this.src='https://via.placeholder.com/44/1e2a44/ffffff?text={ticker[0]}';">
+                    <span style="color:#ffffff; font-size:1.3rem; font-weight:700; margin-left:12px;">{ticker}</span>
                 </div>
                 <div class="back-right-stats">
                     <div class="stat-group">
@@ -541,7 +541,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                 </div>
             </div>
             <div class="chart-container">
-                <canvas id="chart-{ticker}" width="400" height="145" style="width:100%; height:auto; max-height:145px;"></canvas>
+                <canvas id="chart-{ticker}" width="400" height="155" style="width:100%; height:auto; max-height:155px;"></canvas>
                 <div class="chart-loading" id="loading-{ticker}">Loading chart...</div>
             </div>
         </div>
@@ -695,7 +695,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 12px;
+            margin-bottom: 16px;
             flex-wrap: wrap;
             gap: 8px;
         }}
@@ -741,9 +741,9 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
         }}
         .chart-container {{
             position: relative;
-            margin: 4px 0 0 0;
+            margin: 12px 0 0 0;
             flex: 1;
-            min-height: 155px;
+            min-height: 165px;
         }}
         .chart-loading {{
             text-align: center;
@@ -759,6 +759,10 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
             .current-value {{ font-size: 0.9rem; }}
             .change-value {{ font-size: 0.8rem; }}
             .stat-value {{ font-size: 0.9rem; }}
+            .chart-container {{
+                margin-top: 10px;
+                min-height: 155px;
+            }}
         }}
     </style>
 </head>
@@ -843,6 +847,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
             if (chartCache[ticker] && chartCache[ticker].chartObj) {{
                 chartCache[ticker].chartObj.destroy();
             }}
+            // Only the price line, no avg line to avoid duplicate tooltip values
             const datasets = [
                 {{
                     label: 'Close Price (USD)',
@@ -856,19 +861,6 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                     pointBackgroundColor: chartColor
                 }}
             ];
-            if (avgPrice > 0) {{
-                const avgData = new Array(hist.labels.length).fill(avgPrice);
-                datasets.push({{
-                    label: 'Avg: $' + avgPrice.toFixed(2),
-                    data: avgData,
-                    borderColor: '#ffaa00',
-                    borderWidth: 2,
-                    borderDash: [5, 5],
-                    fill: false,
-                    pointRadius: 0,
-                    type: 'line'
-                }});
-            }}
             const newChart = new Chart(ctx, {{
                 type: 'line',
                 data: {{
