@@ -140,15 +140,31 @@ div[data-testid="stMainBlockContainer"] {
     transform: translateY(-4px) scale(1.03);
     box-shadow: 0 15px 40px rgba(255,255,255,0.15);
 }
-/* Swapped styles: first-child is now the value, last-child is the label */
 .glossy-box > div:first-child {
+    font-size: 13.5px;
+    font-weight: 500;
+    letter-spacing: 1.1px;
+    color: #e0e0e0;
+    opacity: 0.9;
+    margin-bottom: 6px;
+    line-height: 1.2;
+}
+.glossy-box > div:last-child {
+    font-size: 27px;
+    font-weight: 700;
+    line-height: 1.05;
+    color: #ffffff;
+}
+
+/* For swapped PnL Cards to hide numbers but peek labels */
+.glossy-box.swapped > div:first-child {
     font-size: 27px;
     font-weight: 700;
     line-height: 1.05;
     color: #ffffff;
     margin-bottom: 6px;
 }
-.glossy-box > div:last-child {
+.glossy-box.swapped > div:last-child {
     font-size: 13.5px;
     font-weight: 500;
     letter-spacing: 1.1px;
@@ -243,8 +259,11 @@ div[data-testid="stMainBlockContainer"] {
         min-width: 98px !important;
         padding: 18px 14px !important;
     }
-    .glossy-box > div:first-child { font-size: 21px !important; }
-    .glossy-box > div:last-child { font-size: 12px !important; }
+    .glossy-box > div:first-child { font-size: 12px !important; }
+    .glossy-box > div:last-child { font-size: 21px !important; }
+    
+    .glossy-box.swapped > div:first-child { font-size: 21px !important; }
+    .glossy-box.swapped > div:last-child { font-size: 12px !important; }
     
     .stats-layer { margin-top: -65px; } /* Mobile adjustment for peek */
     
@@ -572,9 +591,9 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
     
     <div class="stats-layer">
         <div class="stats-layer-inner">
-            <div class="glossy-box"><div>{format_money(total_value)}</div><div>Total Value</div></div>
-            <div class="glossy-box"><div><span style="color:{'#00ff9d' if total_pnl>=0 else '#ff4d4d'}">{"▲" if total_pnl>0 else "▼" if total_pnl<0 else ""} {format_money(abs(total_pnl))}</span></div><div>PnL</div></div>
-            <div class="glossy-box"><div><span style="color:{'#00ff9d' if total_pnl_pct>=0 else '#ff4d4d'}">{"▲" if total_pnl_pct>0 else "▼" if total_pnl_pct<0 else ""} {abs(total_pnl_pct):.2f}%</span></div><div>PnL %</div></div>
+            <div class="glossy-box swapped"><div>{format_money(total_value)}</div><div>Total Value</div></div>
+            <div class="glossy-box swapped"><div><span style="color:{'#00ff9d' if total_pnl>=0 else '#ff4d4d'}">{"▲" if total_pnl>0 else "▼" if total_pnl<0 else ""} {format_money(abs(total_pnl))}</span></div><div>PnL</div></div>
+            <div class="glossy-box swapped"><div><span style="color:{'#00ff9d' if total_pnl_pct>=0 else '#ff4d4d'}">{"▲" if total_pnl_pct>0 else "▼" if total_pnl_pct<0 else ""} {abs(total_pnl_pct):.2f}%</span></div><div>PnL %</div></div>
         </div>
     </div>
 </div>
@@ -1398,12 +1417,12 @@ function editTransaction(i) {{
 
         summary_html = f"""
 <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:20px;margin-bottom:30px;">
-    <div class="glossy-box"><div>{total_czk:,.2f}</div><div>Total CZK</div></div>
-    <div class="glossy-box"><div>{total_eur:,.2f}</div><div>Total EUR</div></div>
-    <div class="glossy-box"><div>{format_money(total_usdc)}</div><div>Total USDC</div></div>
+    <div class="glossy-box"><div>Total CZK</div><div>{total_czk:,.2f}</div></div>
+    <div class="glossy-box"><div>Total EUR</div><div>{total_eur:,.2f}</div></div>
+    <div class="glossy-box"><div>Total USDC</div><div>{format_money(total_usdc)}</div></div>
     <div class="glossy-box">
-        <div style="font-size:22px; font-weight:700; color:#fff; margin-bottom:6px;">{fees_eur:,.2f} EUR / {fees_czk:,.2f} CZK</div>
         <div>Fees</div>
+        <div style="font-size:22px; font-weight:700; color:#fff; margin-top:6px;">{fees_eur:,.2f} EUR / {fees_czk:,.2f} CZK</div>
     </div>
 </div>"""
         st.markdown(summary_html, unsafe_allow_html=True)
