@@ -503,7 +503,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
 </div>
 """
             else:
-                chart_color = get_chart_color(ticker)
+                chart_color = border_color  # Use the card border color for the chart
                 cards_html += f"""
 <div class="flip-card" data-ticker="{ticker}" data-current-price="{live_price}" data-avg-price="{avg_price}" data-refresh="{st.session_state.refresh_key}" data-border="{border_color}" data-chart-color="{chart_color}" data-logo="{logo_url}">
     <div class="flip-card-inner">
@@ -690,7 +690,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
             padding-top: 6px;
         }}
         .total-value {{ font-size: 1.15rem; font-weight: 700; }}
-        /* New back layout */
+        /* Back layout - left aligned stats */
         .back-top-row {{
             display: flex;
             justify-content: space-between;
@@ -705,14 +705,14 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
         }}
         .back-right-stats {{
             display: flex;
-            gap: 20px;
+            gap: 24px;
             align-items: baseline;
         }}
         .stat-group {{
-            text-align: right;
+            text-align: left;
         }}
         .stat-group.avg-group {{
-            margin-left: 8px;
+            margin-left: 0;
         }}
         .stat-label {{
             font-size: 0.65rem;
@@ -723,7 +723,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
         .value-change-row {{
             display: flex;
             align-items: baseline;
-            gap: 6px;
+            gap: 8px;
         }}
         .current-value {{
             font-size: 0.95rem;
@@ -755,7 +755,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
             .coin-grid {{ grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 18px; }}
             .flip-card, .static-card {{ height: 270px; }}
             .scroll-wrapper {{ padding: 12px 0px 16px 0px; }}
-            .back-right-stats {{ gap: 12px; }}
+            .back-right-stats {{ gap: 16px; }}
             .current-value {{ font-size: 0.9rem; }}
             .change-value {{ font-size: 0.8rem; }}
             .stat-value {{ font-size: 0.9rem; }}
@@ -847,7 +847,6 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
             if (chartCache[ticker] && chartCache[ticker].chartObj) {{
                 chartCache[ticker].chartObj.destroy();
             }}
-            // Only the price line, no avg line to avoid duplicate tooltip values
             const datasets = [
                 {{
                     label: 'Close Price (USD)',
@@ -859,6 +858,16 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                     tension: 0.2,
                     pointRadius: 2,
                     pointBackgroundColor: chartColor
+                }},
+                {{
+                    label: 'Avg Price: $' + avgPrice.toFixed(2),
+                    data: new Array(hist.labels.length).fill(avgPrice),
+                    borderColor: '#ffaa00',
+                    borderWidth: 2,
+                    borderDash: [5, 5],
+                    fill: false,
+                    pointRadius: 0,
+                    type: 'line'
                 }}
             ];
             const newChart = new Chart(ctx, {{
