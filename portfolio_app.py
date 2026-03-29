@@ -717,24 +717,27 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
     </div>
 </div>"""
        
-        # UPDATED HTML: wrapper div with padding and negative margin on grid to allow shadow overflow
+        # Fixed HTML: wrapper handles scrolling and provides padding, grid has no padding
         html = f"""<html><head><style>
 body{{background:transparent;color:white;font-family:sans-serif;margin:0;padding:0;}}
 .scroll-wrapper {{
     overflow-y: auto;
     height: 580px;
-    padding: 12px;  /* extra space for shadows */
+    padding: 20px 12px;
+    scrollbar-width: none;   /* hide scrollbar */
+    -ms-overflow-style: none; /* IE/Edge */
+}}
+.scroll-wrapper::-webkit-scrollbar {{
+    display: none;           /* Chrome/Safari */
 }}
 .coin-grid {{
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
     gap: 14px;
-    margin: -12px;   /* pull grid back to original position */
     box-sizing: border-box;
     background: transparent !important;
-    overflow: visible !important;  /* allow shadows to extend */
+    overflow: visible !important;
 }}
-.coin-grid::-webkit-scrollbar {{display: none;}}
 .coin-card {{
     background:#0f172a;
     padding:16px;
@@ -764,6 +767,7 @@ body{{background:transparent;color:white;font-family:sans-serif;margin:0;padding
 @media (max-width: 700px) {{
     .coin-grid {{grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px;}}
     .coin-card {{padding:14px;}}
+    .scroll-wrapper {{padding: 16px 8px;}}
 }}
 </style></head><body><div class="scroll-wrapper"><div class="coin-grid">{cards_html}</div></div><script>
 function switchToTabAndScroll(index){{
@@ -780,8 +784,8 @@ document.querySelectorAll('.coin-card').forEach(div => {{
     div.style.setProperty('--glow', div.getAttribute('data-glow'));
 }});
 </script><!-- VERSION:{st.session_state.ui_version} --></body></html>"""
-        components.html(html, height=600, scrolling=False)  # height increased to accommodate padding
-       
+        components.html(html, height=620, scrolling=False)  # increased height to match wrapper's 580 + some margin
+
         st.markdown(f"""
 <div id="price-charts-section" class="glossy-box" style="background:#1e2a44;padding:18px 20px;border-radius:18px;">
     <div class="charts-header">
@@ -790,7 +794,7 @@ document.querySelectorAll('.coin-card').forEach(div => {{
     </div>
 </div>
 """, unsafe_allow_html=True)
-       
+
         if coin_list:
             selected_tab = st.tabs(coin_list)
             for i, coin in enumerate(coin_list):
