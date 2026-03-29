@@ -541,7 +541,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                 </div>
             </div>
             <div class="chart-container">
-                <canvas id="chart-{ticker}" width="400" height="155" style="width:100%; height:auto; max-height:155px;"></canvas>
+                <canvas id="chart-{ticker}" width="400" height="165" style="width:100%; height:auto; max-height:165px;"></canvas>
                 <div class="chart-loading" id="loading-{ticker}">Loading chart...</div>
             </div>
         </div>
@@ -690,26 +690,30 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
             padding-top: 6px;
         }}
         .total-value {{ font-size: 1.15rem; font-weight: 700; }}
-        /* Back layout - left aligned stats */
+        /* Back layout - right stats always on the right */
         .back-top-row {{
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 16px;
-            flex-wrap: wrap;
-            gap: 8px;
+            margin-bottom: 18px;
+            flex-wrap: nowrap;
+            gap: 12px;
         }}
         .back-left {{
             display: flex;
             align-items: center;
+            flex-shrink: 0;
         }}
         .back-right-stats {{
             display: flex;
-            gap: 24px;
+            gap: 20px;
             align-items: baseline;
+            flex-shrink: 1;
+            text-align: right;
+            justify-content: flex-end;
         }}
         .stat-group {{
-            text-align: left;
+            text-align: right;
         }}
         .stat-group.avg-group {{
             margin-left: 0;
@@ -719,31 +723,36 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
             color: #aaa;
             margin-bottom: 2px;
             font-weight: 500;
+            white-space: nowrap;
         }}
         .value-change-row {{
             display: flex;
             align-items: baseline;
-            gap: 8px;
+            gap: 6px;
+            justify-content: flex-end;
         }}
         .current-value {{
             font-size: 0.95rem;
             font-weight: 700;
             color: white;
+            white-space: nowrap;
         }}
         .change-value {{
             font-size: 0.85rem;
             font-weight: 600;
+            white-space: nowrap;
         }}
         .stat-value {{
             font-size: 0.95rem;
             font-weight: 600;
             color: white;
+            white-space: nowrap;
         }}
         .chart-container {{
             position: relative;
-            margin: 12px 0 0 0;
+            margin: 16px 0 0 0;
             flex: 1;
-            min-height: 165px;
+            min-height: 175px;
         }}
         .chart-loading {{
             text-align: center;
@@ -755,14 +764,25 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
             .coin-grid {{ grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 18px; }}
             .flip-card, .static-card {{ height: 270px; }}
             .scroll-wrapper {{ padding: 12px 0px 16px 0px; }}
-            .back-right-stats {{ gap: 16px; }}
-            .current-value {{ font-size: 0.9rem; }}
-            .change-value {{ font-size: 0.8rem; }}
-            .stat-value {{ font-size: 0.9rem; }}
-            .chart-container {{
-                margin-top: 10px;
-                min-height: 155px;
+            .back-top-row {{
+                gap: 8px;
+                margin-bottom: 14px;
             }}
+            .back-right-stats {{ gap: 12px; }}
+            .current-value {{ font-size: 0.85rem; }}
+            .change-value {{ font-size: 0.75rem; }}
+            .stat-value {{ font-size: 0.85rem; }}
+            .stat-label {{ font-size: 0.6rem; }}
+            .chart-container {{
+                margin-top: 14px;
+                min-height: 165px;
+            }}
+        }}
+        @media (max-width: 480px) {{
+            .current-value {{ font-size: 0.8rem; }}
+            .change-value {{ font-size: 0.7rem; }}
+            .stat-value {{ font-size: 0.8rem; }}
+            .back-right-stats {{ gap: 8px; }}
         }}
     </style>
 </head>
@@ -860,7 +880,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                     pointBackgroundColor: chartColor
                 }},
                 {{
-                    label: 'Avg Price: $' + avgPrice.toFixed(2),
+                    label: 'Avg Price',
                     data: new Array(hist.labels.length).fill(avgPrice),
                     borderColor: '#ffaa00',
                     borderWidth: 2,
