@@ -575,13 +575,27 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
     white-space: nowrap;
 }
 
-/* optional scrollbar styling */
 .scroll-wrapper::-webkit-scrollbar {
     height: 8px;
 }
+
 .scroll-wrapper::-webkit-scrollbar-thumb {
     background: rgba(255,255,255,0.2);
     border-radius: 10px;
+}
+
+.coin-grid {
+    display: flex;
+    flex-direction: row;
+    gap: 24px;
+    width: max-content;
+}
+
+.flip-card,
+.static-card {
+    min-width: 320px;
+    max-width: 320px;
+    flex: 0 0 auto;
 }
 
 /* ===== FORCE ONE ROW ===== */
