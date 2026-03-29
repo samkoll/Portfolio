@@ -488,7 +488,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
            
             if ticker == 'USDC':
                 cards_html += f"""
-<div class="static-card" data-border="{border_color}">
+<div class="static-card usdc-card" data-border="{border_color}">
     <div class="card-header">
         <img src="{logo_url}" style="height:38px;width:38px;border-radius:50%;object-fit:contain;" onerror="this.src='https://via.placeholder.com/38/1e2a44/ffffff?text=U';">
         <span style="font-weight:700;font-size:1.22rem;margin-left:10px;color:#ffffff;">{ticker}</span>
@@ -529,7 +529,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                 <span class="back-close">↺</span>
             </div>
             <div class="chart-container">
-                <canvas id="chart-{ticker}" width="400" height="140" style="width:100%; height:auto; max-height:140px;"></canvas>
+                <canvas id="chart-{ticker}" width="400" height="130" style="width:100%; height:auto; max-height:130px;"></canvas>
                 <div class="chart-loading" id="loading-{ticker}">Loading chart...</div>
             </div>
             <div class="back-stats">
@@ -582,11 +582,11 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
             background: transparent !important;
             overflow: visible !important;
         }}
-        /* Ultra compact card */
+        /* Compact cards - smaller height */
         .flip-card {{
             background-color: transparent;
             width: 100%;
-            height: 260px;
+            height: 230px;
             perspective: 1200px;
             cursor: pointer;
         }}
@@ -607,7 +607,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
             height: 100%;
             backface-visibility: hidden;
             border-radius: 16px;
-            padding: 8px;
+            padding: 6px 8px;
             background: #0f172a;
             box-shadow: 0 8px 24px rgba(0,0,0,0.3);
             border: 2px solid transparent;
@@ -627,14 +627,20 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
         .static-card {{
             background: #0f172a;
             border-radius: 16px;
-            padding: 8px;
-            height: 260px;
+            padding: 6px 8px;
+            height: 230px;
             display: flex;
             flex-direction: column;
             justify-content: space-between;
             box-shadow: 0 8px 24px rgba(0,0,0,0.3);
             border: 2px solid transparent;
             transition: all 0.25s ease;
+        }}
+        /* No hover pop animation for USDC card */
+        .static-card.usdc-card:hover {{
+            transform: none;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+            border-color: var(--border);
         }}
         .static-card:hover {{
             border-color: var(--border);
@@ -649,36 +655,36 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
         .card-header {{
             display: flex;
             align-items: center;
-            margin-bottom: 4px;
+            margin-bottom: 2px;
         }}
         .card-content {{
             display: flex;
             flex-direction: column;
-            gap: 2px;
+            gap: 1px;
         }}
         .label-value-row {{
             display: flex;
             justify-content: space-between;
             align-items: center;
-            font-size: 0.85rem;
+            font-size: 0.8rem;
             line-height: 1.2;
         }}
         .label {{ color: #aaa; font-weight: 500; }}
         .value {{ font-weight: 600; color: white; }}
         .total {{
-            font-size: 1rem;
-            margin-top: 4px;
+            font-size: 0.9rem;
+            margin-top: 2px;
             border-top: 1px solid rgba(255,255,255,0.12);
-            padding-top: 4px;
+            padding-top: 2px;
         }}
-        .total-value {{ font-size: 1.1rem; }}
+        .total-value {{ font-size: 1rem; }}
         .back-header {{
             display: flex;
             justify-content: space-between;
             align-items: center;
             font-weight: bold;
-            font-size: 1rem;
-            margin-bottom: 4px;
+            font-size: 0.9rem;
+            margin-bottom: 2px;
             color: #00ff9d;
         }}
         .back-close {{
@@ -701,7 +707,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
             position: relative;
             margin: 0;
             flex: 1;
-            min-height: 140px;
+            min-height: 130px;
         }}
         .chart-loading {{
             text-align: center;
@@ -715,7 +721,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
             margin-top: 2px;
             padding-top: 2px;
             border-top: 1px solid rgba(255,255,255,0.12);
-            font-size: 0.75rem;
+            font-size: 0.7rem;
             color: #ddd;
         }}
         .stat-item {{
@@ -724,7 +730,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
         }}
         @media (max-width: 700px) {{
             .coin-grid {{ grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; }}
-            .flip-card, .static-card {{ height: 250px; }}
+            .flip-card, .static-card {{ height: 220px; }}
             .scroll-wrapper {{ padding: 12px 0px 16px 0px; }}
         }}
     </style>
