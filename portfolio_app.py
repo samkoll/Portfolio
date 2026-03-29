@@ -565,54 +565,23 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
             outline: none;
             -webkit-tap-highlight-color: transparent;
         }}
-        /* ===== HORIZONTAL SCROLL ONLY ===== */
-.scroll-wrapper {
-    width: 100%;
-    overflow-x: auto;
-    overflow-y: hidden;
-    padding: 12px 0px 20px 0px;
-    margin-bottom: 20px;
-    white-space: nowrap;
-}
-
-.scroll-wrapper::-webkit-scrollbar {
-    height: 8px;
-}
-
-.scroll-wrapper::-webkit-scrollbar-thumb {
-    background: rgba(255,255,255,0.2);
-    border-radius: 10px;
-}
-
-.coin-grid {
-    display: flex;
-    flex-direction: row;
-    gap: 24px;
-    width: max-content;
-}
-
-.flip-card,
-.static-card {
-    min-width: 320px;
-    max-width: 320px;
-    flex: 0 0 auto;
-}
-
-/* ===== FORCE ONE ROW ===== */
-.coin-grid {
-    display: flex;
-    flex-direction: row;
-    gap: 24px;
-    width: max-content;
-}
-
-/* ===== FIX CARD SIZE ===== */
-.flip-card,
-.static-card {
-    min-width: 320px;
-    max-width: 320px;
-    flex: 0 0 auto;
-}
+        .scroll-wrapper {{
+            width: 100%;
+            overflow-y: auto;
+            overflow-x: visible;
+            height: auto;
+            max-height: 70vh;
+            padding: 12px 0px 20px 0px;
+            margin-bottom: 20px;
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+        }}
+        .scroll-wrapper::-webkit-scrollbar {{ display: none; }}
+        .coin-grid {{
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+            gap: 24px;
+            width: 100%;
             box-sizing: border-box;
             background: transparent !important;
             overflow: visible !important;
