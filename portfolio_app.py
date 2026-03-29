@@ -3,8 +3,6 @@ import pandas as pd
 from datetime import datetime, timedelta, date
 import time
 import streamlit.components.v1 as components
-import plotly.graph_objects as go
-from plotly.subplots import make_subplots
 import requests
 import json
 from pathlib import Path
@@ -152,7 +150,6 @@ div[data-testid="stMainBlockContainer"] {
 DASHBOARD_ICON = '''<svg xmlns="http://www.w3.org/2000/svg" width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="#00ff9d" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>'''
 CRYPTO_ICON = '''<svg xmlns="http://www.w3.org/2000/svg" width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="#00ff9d" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M14.5 8.5L9.5 13.5"/><path d="M9.5 8.5L14.5 13.5"/></svg>'''
 FIAT_ICON = '''<svg xmlns="http://www.w3.org/2000/svg" width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="#00ff9d" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M6 8h12"/><path d="M6 12h12"/><path d="M6 16h12"/></svg>'''
-CHARTS_ICON = '''<svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#00ff9d" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M17 17l-4-4-3 3-4-4"/></svg>'''
 
 DATA_DIR = Path("data")
 DATA_DIR.mkdir(exist_ok=True)
@@ -412,14 +409,6 @@ if 'delete_trigger' not in st.session_state:
 if 'edit_trigger' not in st.session_state:
     st.session_state.edit_trigger = ""
 
-# ====================== HANDLE SWIPE REFRESH ======================
-query_params = st.query_params
-if "swipe_refresh" in query_params and query_params["swipe_refresh"] == "1":
-    st.session_state.refresh_key = random.randint(100000, 999999)
-    st.session_state.ui_version += 1
-    st.query_params.clear()
-    st.rerun()
-
 # ====================== SIDEBAR ======================
 with st.sidebar:
     nav_items = [
@@ -567,28 +556,27 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
         }}
         .scroll-wrapper {{
             width: 100%;
-            overflow-y: auto;
-            overflow-x: visible;
-            height: auto;
-            max-height: 70vh;
+            overflow-y: hidden;
+            overflow-x: auto;
             padding: 12px 0px 20px 0px;
             margin-bottom: 20px;
-            scrollbar-width: none;
-            -ms-overflow-style: none;
+            scrollbar-width: none; /* Firefox */
+            -ms-overflow-style: none;  /* IE and Edge */
         }}
-        .scroll-wrapper::-webkit-scrollbar {{ display: none; }}
+        .scroll-wrapper::-webkit-scrollbar {{ display: none; }} /* Chrome, Safari, Opera */
         .coin-grid {{
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+            display: flex;
+            flex-direction: row;
+            flex-wrap: nowrap;
             gap: 24px;
-            width: 100%;
-            box-sizing: border-box;
+            width: max-content;
+            padding-right: 24px;
             background: transparent !important;
             overflow: visible !important;
         }}
         .flip-card {{
+            flex: 0 0 340px;
             background-color: transparent;
-            width: 100%;
             height: 280px;
             perspective: 1200px;
             cursor: pointer;
@@ -628,6 +616,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
             justify-content: flex-start;
         }}
         .static-card {{
+            flex: 0 0 340px;
             background: #0f172a;
             border-radius: 18px;
             padding: 12px 14px;
@@ -749,8 +738,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
             font-size: 0.85rem;
         }}
         @media (max-width: 700px) {{
-            .coin-grid {{ grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 18px; }}
-            .flip-card, .static-card {{ height: 270px; }}
+            .flip-card, .static-card {{ flex: 0 0 300px; height: 270px; }}
             .scroll-wrapper {{ padding: 12px 0px 16px 0px; }}
             .back-top-row {{
                 gap: 8px;
@@ -820,176 +808,6 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                 }}
             }});
             localStorage.removeItem('flippedCards');
-        }}
-        
-        // --- Create spinner in parent window (Streamlit main page) ---
-        let parentSpinnerElement = null;
-        
-        function createParentSpinner() {{
-            if (parentSpinnerElement) return;
-            try {{
-                const parentDoc = window.parent.document;
-                if (parentDoc.getElementById('swipe-refresh-overlay')) return;
-                const overlay = parentDoc.createElement('div');
-                overlay.id = 'swipe-refresh-overlay';
-                overlay.style.cssText = `
-                    position: fixed;
-                    top: 0;
-                    left: 0;
-                    right: 0;
-                    height: 100px;
-                    z-index: 999999;
-                    pointer-events: none;
-                    display: flex;
-                    justify-content: center;
-                    align-items: flex-start;
-                `;
-                const indicator = parentDoc.createElement('div');
-                indicator.className = 'refresh-indicator';
-                indicator.style.cssText = `
-                    margin-top: -60px;
-                    width: 50px;
-                    height: 50px;
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                    transition: margin-top 0.2s ease-out;
-                    background: rgba(15,23,42,0.95);
-                    border-radius: 50%;
-                    backdrop-filter: blur(4px);
-                    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-                    border: 1px solid rgba(0,255,157,0.3);
-                `;
-                const spinner = parentDoc.createElement('div');
-                spinner.className = 'spinner';
-                spinner.style.cssText = `
-                    width: 30px;
-                    height: 30px;
-                    border: 3px solid rgba(255,255,255,0.3);
-                    border-top: 3px solid #00ff9d;
-                    border-radius: 50%;
-                    animation: spin 0.8s linear infinite;
-                `;
-                indicator.appendChild(spinner);
-                overlay.appendChild(indicator);
-                parentDoc.body.appendChild(overlay);
-                parentSpinnerElement = {{ overlay, indicator, spinner }};
-                
-                const style = parentDoc.createElement('style');
-                style.textContent = `
-                    @keyframes spin {{
-                        0% {{ transform: rotate(0deg); }}
-                        100% {{ transform: rotate(360deg); }}
-                    }}
-                    @keyframes fadeOut {{
-                        0% {{ opacity: 1; transform: scale(1); }}
-                        100% {{ opacity: 0; transform: scale(1.5); }}
-                    }}
-                `;
-                parentDoc.head.appendChild(style);
-            }} catch(e) {{
-                console.warn("Cannot access parent window", e);
-            }}
-        }}
-        
-        function setParentSpinnerMarginTop(marginTop) {{
-            if (parentSpinnerElement) {{
-                parentSpinnerElement.indicator.style.marginTop = marginTop;
-            }}
-        }}
-        
-        function showParentCheckmark() {{
-            if (parentSpinnerElement) {{
-                const parentDoc = window.parent.document;
-                const checkSpan = parentDoc.createElement('div');
-                checkSpan.className = 'checkmark';
-                checkSpan.style.cssText = `
-                    width: 30px;
-                    height: 30px;
-                    color: #00ff9d;
-                    font-size: 26px;
-                    font-weight: bold;
-                    line-height: 1;
-                    text-align: center;
-                    animation: fadeOut 0.5s ease-out forwards;
-                `;
-                checkSpan.textContent = '✓';
-                parentSpinnerElement.indicator.innerHTML = '';
-                parentSpinnerElement.indicator.appendChild(checkSpan);
-                parentSpinnerElement.indicator.style.marginTop = '15px';
-                setTimeout(() => {{
-                    if (parentSpinnerElement) {{
-                        parentSpinnerElement.indicator.style.marginTop = '-60px';
-                        parentSpinnerElement.indicator.innerHTML = '';
-                        const newSpinner = parentDoc.createElement('div');
-                        newSpinner.className = 'spinner';
-                        newSpinner.style.cssText = `
-                            width: 30px;
-                            height: 30px;
-                            border: 3px solid rgba(255,255,255,0.3);
-                            border-top: 3px solid #00ff9d;
-                            border-radius: 50%;
-                            animation: spin 0.8s linear infinite;
-                        `;
-                        parentSpinnerElement.indicator.appendChild(newSpinner);
-                        parentSpinnerElement.spinner = newSpinner;
-                    }}
-                }}, 800);
-            }}
-        }}
-        
-        createParentSpinner();
-        
-        // --- Swipe-to-refresh ---
-        let touchStartY = 0;
-        let isDragging = false;
-        let refreshThreshold = 80;
-        let isRefreshing = false;
-        
-        if ('ontouchstart' in window) {{
-            document.addEventListener('touchstart', function(e) {{
-                // Allow swipe anywhere when scrolled to top (scrollY <= 5)
-                if (window.scrollY <= 5 && !isRefreshing) {{
-                    touchStartY = e.touches[0].clientY;
-                    isDragging = true;
-                }}
-            }});
-            
-            document.addEventListener('touchmove', function(e) {{
-                if (!isDragging || isRefreshing) return;
-                const currentY = e.touches[0].clientY;
-                const diff = currentY - touchStartY;
-                if (diff > 0 && window.scrollY <= 5) {{
-                    e.preventDefault();
-                    const pullDistance = Math.min(diff, refreshThreshold);
-                    const progress = pullDistance / refreshThreshold;
-                    const marginTop = 15 * progress;
-                    setParentSpinnerMarginTop(marginTop + 'px');
-                    if (pullDistance >= refreshThreshold && parentSpinnerElement && parentSpinnerElement.spinner) {{
-                        parentSpinnerElement.spinner.style.borderTopColor = '#ffaa00';
-                    }}
-                }}
-            }}, {{ passive: false }});
-            
-            document.addEventListener('touchend', function(e) {{
-                if (!isDragging || isRefreshing) {{
-                    isDragging = false;
-                    return;
-                }}
-                const endY = e.changedTouches[0].clientY;
-                const diff = endY - touchStartY;
-                if (diff >= refreshThreshold && window.scrollY <= 5) {{
-                    isRefreshing = true;
-                    saveFlippedState();
-                    setParentSpinnerMarginTop('15px');
-                    const url = new URL(window.location.href);
-                    url.searchParams.set('swipe_refresh', '1');
-                    window.location.href = url.toString();
-                }} else {{
-                    setParentSpinnerMarginTop('-60px');
-                }}
-                isDragging = false;
-            }});
         }}
         
         const flipCards = document.querySelectorAll('.flip-card');
@@ -1157,17 +975,11 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
         
         restoreFlippedState();
         
-        const urlParams = new URLSearchParams(window.location.search);
-        if (urlParams.has('swipe_refresh') || (window.oldRefreshKey && window.oldRefreshKey !== refreshKey)) {{
+        if (window.oldRefreshKey && window.oldRefreshKey !== refreshKey) {{
             for (let key in chartCache) {{
                 if (chartCache[key].chartObj) chartCache[key].chartObj.destroy();
             }}
             window.chartCache = {{}};
-            showParentCheckmark();
-            if (urlParams.has('swipe_refresh')) {{
-                const newUrl = window.location.pathname;
-                window.history.replaceState({{}}, document.title, newUrl);
-            }}
         }}
         window.oldRefreshKey = refreshKey;
     }})();
@@ -1175,7 +987,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
 </body>
 </html>
 """
-        components.html(full_html, height=680, scrolling=False)
+        components.html(full_html, height=330, scrolling=False)
 
     # ====================== CRYPTO TRANSACTIONS ======================
     elif st.session_state.page == "Crypto Transactions":
@@ -1248,8 +1060,25 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
 <head>
 <style>
 body {{ background: transparent; margin: 0; padding: 0; }}
-.transaction-grid {{ display: grid; grid-template-columns: repeat(auto-fit, minmax(380px, 1fr)); gap: 16px; padding: 0 6px; }}
+.transaction-grid-wrapper {{
+    width: 100%;
+    overflow-x: auto;
+    overflow-y: hidden;
+    padding-bottom: 20px;
+    scrollbar-width: none;
+}}
+.transaction-grid-wrapper::-webkit-scrollbar {{ display: none; }}
+
+.transaction-grid {{
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    gap: 16px;
+    padding: 10px 6px 10px 6px;
+    width: max-content;
+}}
 .transaction-card {{
+    flex: 0 0 380px;
     background: #0f172a;
     border-radius: 18px;
     padding: 18px 20px 14px;
@@ -1275,6 +1104,12 @@ body {{ background: transparent; margin: 0; padding: 0; }}
     align-items: center;
     gap: 14px;
     flex: 1;
+}}
+.transaction-left img {{
+    height: 42px;
+    width: 42px;
+    border-radius: 50%;
+    object-fit: contain;
 }}
 .transaction-ticker {{
     font-size: 1.28rem;
@@ -1343,8 +1178,10 @@ body {{ background: transparent; margin: 0; padding: 0; }}
 </style>
 </head>
 <body>
-<div class="transaction-grid">
-{cards_html}
+<div class="transaction-grid-wrapper">
+    <div class="transaction-grid">
+    {cards_html}
+    </div>
 </div>
 <script>
 function deleteTransaction(i) {{
@@ -1365,7 +1202,7 @@ function editTransaction(i) {{
 </body>
 </html>
 """
-        components.html(full_html, height=560, scrolling=True)
+        components.html(full_html, height=210, scrolling=False)
 
         if 'editing_row_crypto' in st.session_state:
             edit_idx = st.session_state.editing_row_crypto
