@@ -43,6 +43,58 @@ div[data-testid="stMainBlockContainer"] {
 .main, .block-container, .stMain {
     padding-top: 0px !important;
 }
+
+/* Dashboard Pullable Drawer Styles */
+.dashboard-wrapper {
+    position: relative;
+    z-index: 10;
+}
+.glossy-header-label {
+    cursor: pointer;
+    display: block;
+    position: relative;
+    z-index: 3;
+    -webkit-tap-highlight-color: transparent;
+}
+.home-header {
+    margin-bottom: 0 !important;
+    padding-bottom: 34px !important; /* space for the pull indicator */
+}
+.pull-indicator {
+    position: absolute;
+    bottom: 8px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 16px;
+    color: #aaa;
+    opacity: 0.8;
+    transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    animation: bounce-down 2s infinite;
+}
+@keyframes bounce-down {
+    0%, 100% { transform: translateX(-50%) translateY(0); }
+    50% { transform: translateX(-50%) translateY(4px); }
+}
+.dashboard-toggle:checked + .glossy-header-label .pull-indicator {
+    transform: translateX(-50%) rotate(180deg);
+    animation: none;
+}
+.stats-layer {
+    position: relative;
+    z-index: 1;
+    margin-top: -68px; /* Tucks the top of the boxes behind the header */
+    transition: margin-top 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    margin-bottom: 24px;
+}
+.dashboard-toggle:checked ~ .stats-layer {
+    margin-top: 14px; /* Drops down */
+}
+.stats-layer-inner {
+    display: grid; 
+    grid-template-columns: repeat(auto-fit, minmax(98px, 1fr)); 
+    gap: 14px;
+}
+
 .glossy-header {
     position: relative;
     overflow: hidden;
@@ -68,6 +120,7 @@ div[data-testid="stMainBlockContainer"] {
     transform: translateY(-4px) scale(1.03);
     box-shadow: 0 15px 40px rgba(255,255,255,0.15);
 }
+
 .glossy-box {
     position: relative;
     overflow: hidden;
@@ -87,20 +140,21 @@ div[data-testid="stMainBlockContainer"] {
     transform: translateY(-4px) scale(1.03);
     box-shadow: 0 15px 40px rgba(255,255,255,0.15);
 }
+/* Swapped styles: first-child is now the value, last-child is the label */
 .glossy-box > div:first-child {
+    font-size: 27px;
+    font-weight: 700;
+    line-height: 1.05;
+    color: #ffffff;
+    margin-bottom: 6px;
+}
+.glossy-box > div:last-child {
     font-size: 13.5px;
     font-weight: 500;
     letter-spacing: 1.1px;
     color: #e0e0e0;
     opacity: 0.9;
-    margin-bottom: 6px;
     line-height: 1.2;
-}
-.glossy-box > div:last-child {
-    font-size: 27px;
-    font-weight: 700;
-    line-height: 1.05;
-    color: #ffffff;
 }
 
 /* USDC Banner Styles */
@@ -148,7 +202,7 @@ div[data-testid="stMainBlockContainer"] {
 .usdc-banner-amount {
     font-size: 1.7rem;
     font-weight: 700;
-    color: #00ff9d;
+    color: #ffffff;
 }
 
 .stButton > button {
@@ -189,8 +243,10 @@ div[data-testid="stMainBlockContainer"] {
         min-width: 98px !important;
         padding: 18px 14px !important;
     }
-    .glossy-box > div:first-child { font-size: 12px !important; }
-    .glossy-box > div:last-child { font-size: 21px !important; }
+    .glossy-box > div:first-child { font-size: 21px !important; }
+    .glossy-box > div:last-child { font-size: 12px !important; }
+    
+    .stats-layer { margin-top: -65px; } /* Mobile adjustment for peek */
     
     .usdc-banner { padding: 16px 18px; margin-bottom: 24px; }
     .usdc-banner-left img { width: 36px; height: 36px; }
@@ -496,7 +552,6 @@ def glossy_header(title: str, icon_svg: str):
 
 with main_container.container(key=f"page_{st.session_state.page}_{st.session_state.ui_version}"):
     if st.session_state.page == "Home":
-        glossy_header("Portfolio Dashboard", DASHBOARD_ICON)
 
         df_port, total_value, total_pnl, total_pnl_pct = calculate_portfolio(st.session_state.crypto_df)
         
@@ -505,10 +560,23 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
         usdc_holdings = usdc_row['Holdings'] if usdc_row is not None else 0
 
         value_box_html = f"""
-<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(98px, 1fr)); gap: 14px; margin-bottom: 20px;">
-    <div class="glossy-box"><div>Total Value</div><div>{format_money(total_value)}</div></div>
-    <div class="glossy-box"><div>PnL</div><div style="color:{'#00ff9d' if total_pnl>=0 else '#ff4d4d'}">{"▲" if total_pnl>0 else "▼" if total_pnl<0 else ""} {format_money(abs(total_pnl))}</div></div>
-    <div class="glossy-box"><div>PnL %</div><div style="color:{'#00ff9d' if total_pnl_pct>=0 else '#ff4d4d'}">{"▲" if total_pnl_pct>0 else "▼" if total_pnl_pct<0 else ""} {abs(total_pnl_pct):.2f}%</div></div>
+<div class="dashboard-wrapper">
+    <input type="checkbox" id="dash-toggle" class="dashboard-toggle" style="display:none;">
+    
+    <label for="dash-toggle" class="glossy-header-label">
+        <div class="glossy-header home-header">
+            {DASHBOARD_ICON}<span style="margin-left:12px;">Portfolio Dashboard</span>
+            <div class="pull-indicator">▼</div>
+        </div>
+    </label>
+    
+    <div class="stats-layer">
+        <div class="stats-layer-inner">
+            <div class="glossy-box"><div>{format_money(total_value)}</div><div>Total Value</div></div>
+            <div class="glossy-box"><div><span style="color:{'#00ff9d' if total_pnl>=0 else '#ff4d4d'}">{"▲" if total_pnl>0 else "▼" if total_pnl<0 else ""} {format_money(abs(total_pnl))}</span></div><div>PnL</div></div>
+            <div class="glossy-box"><div><span style="color:{'#00ff9d' if total_pnl_pct>=0 else '#ff4d4d'}">{"▲" if total_pnl_pct>0 else "▼" if total_pnl_pct<0 else ""} {abs(total_pnl_pct):.2f}%</span></div><div>PnL %</div></div>
+        </div>
+    </div>
 </div>
 
 <div class="usdc-banner">
@@ -1330,10 +1398,13 @@ function editTransaction(i) {{
 
         summary_html = f"""
 <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:20px;margin-bottom:30px;">
-    <div class="glossy-box"><div>Total CZK</div><div>{total_czk:,.2f}</div></div>
-    <div class="glossy-box"><div>Total EUR</div><div>{total_eur:,.2f}</div></div>
-    <div class="glossy-box"><div>Total USDC</div><div>{format_money(total_usdc)}</div></div>
-    <div class="glossy-box"><div>Fees</div><div class="fee-line">{fees_eur:,.2f} EUR</div><div class="fee-line" style="font-size:22px;">{fees_czk:,.2f} CZK</div></div>
+    <div class="glossy-box"><div>{total_czk:,.2f}</div><div>Total CZK</div></div>
+    <div class="glossy-box"><div>{total_eur:,.2f}</div><div>Total EUR</div></div>
+    <div class="glossy-box"><div>{format_money(total_usdc)}</div><div>Total USDC</div></div>
+    <div class="glossy-box">
+        <div style="font-size:22px; font-weight:700; color:#fff; margin-bottom:6px;">{fees_eur:,.2f} EUR / {fees_czk:,.2f} CZK</div>
+        <div>Fees</div>
+    </div>
 </div>"""
         st.markdown(summary_html, unsafe_allow_html=True)
 
