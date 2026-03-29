@@ -66,7 +66,7 @@ div[data-testid="stMainBlockContainer"] {
     left: 50%;
     transform: translateX(-50%);
     font-size: 16px;
-    color: #aaa;
+    color: #64748b;
     opacity: 0.8;
     transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
     animation: bounce-down 2s infinite;
@@ -98,15 +98,16 @@ div[data-testid="stMainBlockContainer"] {
 .glossy-header {
     position: relative;
     overflow: hidden;
-    background: #26334f;
+    background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+    border: 1px solid rgba(255,255,255,0.05);
     border-radius: 18px;
-    box-shadow: 0 12px 35px rgba(0,0,0,0.35);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.4);
     transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
     padding: 32px 24px;
     min-height: 130px;
     font-size: 29px;
     font-weight: 700;
-    letter-spacing: 1.8px;
+    letter-spacing: 1.5px;
     line-height: 1.1;
     display: flex;
     align-items: center;
@@ -117,16 +118,18 @@ div[data-testid="stMainBlockContainer"] {
     margin-bottom: 38px;
 }
 .glossy-header:hover {
-    transform: translateY(-4px) scale(1.03);
-    box-shadow: 0 15px 40px rgba(255,255,255,0.15);
+    transform: translateY(-4px) scale(1.01);
+    box-shadow: 0 15px 40px rgba(0, 255, 157, 0.15);
+    border-color: rgba(0, 255, 157, 0.3);
 }
 
 .glossy-box {
     position: relative;
     overflow: hidden;
-    background: #26334f;
+    background: linear-gradient(180deg, #162032 0%, #0f172a 100%);
+    border: 1px solid rgba(255,255,255,0.05);
     border-radius: 18px;
-    box-shadow: 0 12px 35px rgba(0,0,0,0.35);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.4);
     transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
     padding: 28px 30px;
     text-align: center;
@@ -137,15 +140,16 @@ div[data-testid="stMainBlockContainer"] {
     justify-content: center;
 }
 .glossy-box:hover {
-    transform: translateY(-4px) scale(1.03);
-    box-shadow: 0 15px 40px rgba(255,255,255,0.15);
+    transform: translateY(-4px) scale(1.02);
+    box-shadow: 0 12px 32px rgba(255,255,255,0.1);
+    border-color: rgba(255,255,255,0.15);
 }
 .glossy-box > div:first-child {
-    font-size: 13.5px;
-    font-weight: 500;
-    letter-spacing: 1.1px;
-    color: #e0e0e0;
-    opacity: 0.9;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: #94a3b8;
     margin-bottom: 6px;
     line-height: 1.2;
 }
@@ -170,14 +174,14 @@ div[data-testid="stMainBlockContainer"] {
     color: #ffffff;
     margin-bottom: 0;
     position: relative;
-    top: 0;
+    top: -2px; 
 }
 .glossy-box.swapped > div:last-child {
-    font-size: 13.5px;
-    font-weight: 500;
-    letter-spacing: 1.1px;
-    color: #e0e0e0;
-    opacity: 0.9;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: #94a3b8;
     line-height: 1.2;
     position: absolute;
     bottom: 10px;
@@ -190,19 +194,21 @@ div[data-testid="stMainBlockContainer"] {
 .usdc-banner {
     position: relative;
     overflow: hidden;
-    background: #26334f;
+    background: #0f172a;
+    border: 2px solid rgba(39, 117, 202, 0.4);
     border-radius: 18px;
-    box-shadow: 0 12px 35px rgba(0,0,0,0.35);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.3);
     padding: 20px 26px;
     margin-bottom: 30px;
     display: flex;
     align-items: center;
     justify-content: space-between;
-    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: all 0.3s ease;
 }
 .usdc-banner:hover {
-    transform: translateY(-4px) scale(1.01);
-    box-shadow: 0 15px 40px rgba(255,255,255,0.15);
+    transform: translateY(-4px);
+    border-color: #2775ca;
+    box-shadow: 0 12px 28px rgba(0,0,0,0.5), 0 0 15px rgba(39,117,202,0.4);
 }
 .usdc-banner-left {
     display: flex;
@@ -226,7 +232,7 @@ div[data-testid="stMainBlockContainer"] {
 .usdc-banner-subtitle {
     font-size: 0.95rem;
     font-weight: 500;
-    color: #aaa;
+    color: #94a3b8;
 }
 .usdc-banner-amount {
     font-size: 1.7rem;
@@ -272,7 +278,7 @@ div[data-testid="stMainBlockContainer"] {
         min-width: 98px !important;
         padding: 18px 14px !important;
     }
-    .glossy-box > div:first-child { font-size: 12px !important; }
+    .glossy-box > div:first-child { font-size: 10px !important; }
     .glossy-box > div:last-child { font-size: 21px !important; }
     
     /* Stronger tuck and forced single row for mobile */
@@ -280,11 +286,11 @@ div[data-testid="stMainBlockContainer"] {
         grid-template-columns: repeat(3, 1fr) !important; 
         gap: 8px; 
     }
-    .stats-layer { margin-top: -75px; margin-bottom: 18px; } /* Perfect deep tuck */
+    .stats-layer { margin-top: -55px; margin-bottom: 18px; } /* Perfect deep tuck */
     
-    .glossy-box.swapped { min-height: 85px; padding: 6px 6px 24px 6px; }
-    .glossy-box.swapped > div:first-child { font-size: 16px !important; top: -12px; margin-bottom: 0; }
-    .glossy-box.swapped > div:last-child { font-size: 10.5px !important; bottom: 6px; }
+    .glossy-box.swapped { min-height: 78px; padding: 6px 6px 24px 6px; }
+    .glossy-box.swapped > div:first-child { font-size: 16px !important; top: -2px; margin-bottom: 0; }
+    .glossy-box.swapped > div:last-child { font-size: 9.5px !important; bottom: 6px; }
     
     .usdc-banner { padding: 16px 18px; margin-bottom: 24px; }
     .usdc-banner-left img { width: 36px; height: 36px; }
@@ -615,7 +621,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
 </div>
 </div>
 </div>
-<div class="usdc-banner" style="--border: #2775ca; box-shadow: 0 6px 16px rgba(0,0,0,0.4), 0 0 6px var(--border);">
+<div class="usdc-banner">
 <div class="usdc-banner-left">
 <img src="{get_ticker_logo('USDC')}" onerror="this.src='https://via.placeholder.com/42/1e2a44/ffffff?text=U';">
 <div class="usdc-banner-title">USDC <span class="usdc-banner-subtitle">(Available Cash)</span></div>
@@ -1032,6 +1038,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                     const chartColor = card.getAttribute('data-chart-color');
                     if (!chartCache[ticker] || !chartCache[ticker].chartObj) {{
                         renderChart(card, ticker, currentPrice, avgPrice, chartColor);
+                        update24hChange(card, ticker);
                     }}
                 }}
             }});
@@ -1196,11 +1203,6 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
             backDiv.addEventListener('click', (e) => {{
                 card.classList.remove('flipped');
             }});
-        }});
-        
-        document.querySelectorAll('.static-card').forEach(card => {{
-            const border = card.getAttribute('data-border');
-            if (border) card.style.setProperty('--border', border);
         }});
         
         restoreFlippedState();
@@ -1532,7 +1534,7 @@ function editTransaction(i) {{
 <div class="glossy-box swapped"><div>{total_eur:,.2f}</div><div>Total EUR</div></div>
 <div class="glossy-box swapped"><div>{format_money(total_usdc)}</div><div>Total USDC</div></div>
 <div class="glossy-box swapped">
-<div style="font-size:22px; font-weight:700; color:#fff; margin-bottom:6px;">{fees_eur:,.2f} EUR / {fees_czk:,.2f} CZK</div>
+<div style="font-size:22px; font-weight:700; color:#fff; margin-bottom:0; position:relative; top:-2px;">{fees_eur:,.2f} EUR / {fees_czk:,.2f} CZK</div>
 <div>Fees</div>
 </div>
 </div>
