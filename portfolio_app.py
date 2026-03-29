@@ -529,7 +529,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                 <span class="back-close">↺</span>
             </div>
             <div class="chart-container">
-                <canvas id="chart-{ticker}" width="400" height="180" style="width:100%; height:auto; max-height:180px;"></canvas>
+                <canvas id="chart-{ticker}" width="400" height="140" style="width:100%; height:auto; max-height:140px;"></canvas>
                 <div class="chart-loading" id="loading-{ticker}">Loading chart...</div>
             </div>
             <div class="back-stats">
@@ -582,11 +582,11 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
             background: transparent !important;
             overflow: visible !important;
         }}
-        /* Compact card height */
+        /* Ultra compact card */
         .flip-card {{
             background-color: transparent;
             width: 100%;
-            height: 340px;
+            height: 260px;
             perspective: 1200px;
             cursor: pointer;
         }}
@@ -596,7 +596,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
             height: 100%;
             transition: transform 0.5s ease-in-out;
             transform-style: preserve-3d;
-            border-radius: 20px;
+            border-radius: 16px;
         }}
         .flip-card.flipped .flip-card-inner {{
             transform: rotateY(180deg);
@@ -606,8 +606,8 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
             width: 100%;
             height: 100%;
             backface-visibility: hidden;
-            border-radius: 20px;
-            padding: 12px;
+            border-radius: 16px;
+            padding: 8px;
             background: #0f172a;
             box-shadow: 0 8px 24px rgba(0,0,0,0.3);
             border: 2px solid transparent;
@@ -626,9 +626,9 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
         }}
         .static-card {{
             background: #0f172a;
-            border-radius: 20px;
-            padding: 12px;
-            height: 340px;
+            border-radius: 16px;
+            padding: 8px;
+            height: 260px;
             display: flex;
             flex-direction: column;
             justify-content: space-between;
@@ -649,43 +649,44 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
         .card-header {{
             display: flex;
             align-items: center;
-            margin-bottom: 8px;
+            margin-bottom: 4px;
         }}
         .card-content {{
             display: flex;
             flex-direction: column;
-            gap: 6px;
+            gap: 2px;
         }}
         .label-value-row {{
             display: flex;
             justify-content: space-between;
             align-items: center;
-            font-size: 0.9rem;
+            font-size: 0.85rem;
+            line-height: 1.2;
         }}
         .label {{ color: #aaa; font-weight: 500; }}
         .value {{ font-weight: 600; color: white; }}
         .total {{
-            font-size: 1.1rem;
-            margin-top: 6px;
+            font-size: 1rem;
+            margin-top: 4px;
             border-top: 1px solid rgba(255,255,255,0.12);
-            padding-top: 6px;
+            padding-top: 4px;
         }}
-        .total-value {{ font-size: 1.2rem; }}
+        .total-value {{ font-size: 1.1rem; }}
         .back-header {{
             display: flex;
             justify-content: space-between;
             align-items: center;
             font-weight: bold;
-            font-size: 1.1rem;
-            margin-bottom: 8px;
+            font-size: 1rem;
+            margin-bottom: 4px;
             color: #00ff9d;
         }}
         .back-close {{
             font-size: 1.2rem;
             cursor: pointer;
             background: rgba(255,255,255,0.1);
-            width: 28px;
-            height: 28px;
+            width: 24px;
+            height: 24px;
             display: inline-flex;
             align-items: center;
             justify-content: center;
@@ -698,22 +699,23 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
         }}
         .chart-container {{
             position: relative;
-            margin: 4px 0;
+            margin: 0;
             flex: 1;
-            min-height: 160px;
+            min-height: 140px;
         }}
         .chart-loading {{
             text-align: center;
             color: #ccc;
-            padding: 20px;
+            padding: 10px;
+            font-size: 0.8rem;
         }}
         .back-stats {{
             display: flex;
             justify-content: space-between;
-            margin-top: 6px;
-            padding-top: 6px;
+            margin-top: 2px;
+            padding-top: 2px;
             border-top: 1px solid rgba(255,255,255,0.12);
-            font-size: 0.8rem;
+            font-size: 0.75rem;
             color: #ddd;
         }}
         .stat-item {{
@@ -722,7 +724,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
         }}
         @media (max-width: 700px) {{
             .coin-grid {{ grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; }}
-            .flip-card, .static-card {{ height: 330px; }}
+            .flip-card, .static-card {{ height: 250px; }}
             .scroll-wrapper {{ padding: 12px 0px 16px 0px; }}
         }}
     </style>
