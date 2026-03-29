@@ -331,7 +331,6 @@ def get_ticker_color(ticker: str) -> str:
     return f"#{hashlib.md5(ticker.encode()).hexdigest()[:6]}"
 
 def get_chart_color(ticker: str) -> str:
-    # Return nice colors for charts
     color_map = {
         'BTC': '#f7931a',   # orange
         'ETH': '#627eea',   # blue
@@ -474,7 +473,6 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
 </div>"""
         st.markdown(value_box_html, unsafe_allow_html=True)
        
-        # Build flip cards HTML including USDC
         cards_html = ""
         for _, r in df_port.iterrows():
             ticker = r['Ticker']
@@ -488,7 +486,6 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
             live_price = r['Live']
             avg_price = r['AVG']
            
-            # For USDC: no flip chart, just a simple card (no back side chart)
             if ticker == 'USDC':
                 cards_html += f"""
 <div class="static-card" data-border="{border_color}">
@@ -506,10 +503,9 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
 </div>
 """
             else:
-                # Flip card for crypto assets
                 chart_color = get_chart_color(ticker)
                 cards_html += f"""
-<div class="flip-card" data-ticker="{ticker}" data-current-price="{live_price}" data-avg-price="{avg_price}" data-refresh="{st.session_state.refresh_key}" data-border="{border_color}" data-chart-color="{chart_color}">
+<div class="flip-card" data-ticker="{ticker}" data-current-price="{live_price}" data-avg-price="{avg_price}" data-refresh="{st.session_state.refresh_key}" data-border="{border_color}" data-chart-color="{chart_color}" data-logo="{logo_url}">
     <div class="flip-card-inner">
         <div class="flip-card-front">
             <div class="card-header">
@@ -526,7 +522,10 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
         </div>
         <div class="flip-card-back">
             <div class="back-header">
-                <span>{ticker}</span>
+                <div style="display:flex; align-items:center; gap:8px;">
+                    <img src="{logo_url}" style="height:28px;width:28px;border-radius:50%;object-fit:contain;" onerror="this.src='https://via.placeholder.com/28/1e2a44/ffffff?text={ticker[0]}';">
+                    <span>{ticker}</span>
+                </div>
                 <span class="back-close">↺</span>
             </div>
             <div class="chart-container">
@@ -536,14 +535,13 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
             <div class="back-stats">
                 <div class="stat-item">Current: ${live_price:,.2f}</div>
                 <div class="stat-item" id="change-{ticker}">24h change: loading...</div>
-                <div class="stat-item">Avg price: ${avg_price:,.2f}</div>
+                <div class="stat-item">Avg: ${avg_price:,.2f}</div>
             </div>
         </div>
     </div>
 </div>
 """
        
-        # Full HTML with flip styles and Chart.js logic
         full_html = f"""
 <!DOCTYPE html>
 <html>
@@ -577,7 +575,6 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
             background: transparent !important;
             overflow: visible !important;
         }}
-        /* Flip card container - fixed height to match front/back */
         .flip-card {{
             background-color: transparent;
             width: 100%;
@@ -733,7 +730,6 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
         const chartCache = {{}};
         const refreshKey = '{st.session_state.refresh_key}';
         
-        // Fetch 24h change
         async function fetch24hChange(ticker) {{
             const symbolMap = {{
                 'BTC':'BTC','ETH':'ETH','SOL':'SOL','HBAR':'HBAR',
@@ -800,8 +796,6 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
             if (chartCache[ticker] && chartCache[ticker].chartObj) {{
                 chartCache[ticker].chartObj.destroy();
             }}
-            
-            // Prepare datasets: price line + average line (constant)
             const datasets = [
                 {{
                     label: 'Close Price (USD)',
@@ -815,11 +809,10 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                     pointBackgroundColor: chartColor
                 }}
             ];
-            // Add average line if avgPrice > 0
             if (avgPrice > 0) {{
                 const avgData = new Array(hist.labels.length).fill(avgPrice);
                 datasets.push({{
-                    label: `Avg: $${avgPrice.toFixed(2)}`,
+                    label: 'Avg: $' + avgPrice.toFixed(2),
                     data: avgData,
                     borderColor: '#ffaa00',
                     borderWidth: 2,
@@ -829,7 +822,6 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                     type: 'line'
                 }});
             }}
-            
             const newChart = new Chart(ctx, {{
                 type: 'line',
                 data: {{
@@ -853,7 +845,6 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
             if (loadingDiv) loadingDiv.style.display = 'none';
         }}
         
-        // Update 24h change display
         async function update24hChange(card, ticker) {{
             const changeSpan = card.querySelector(`#change-${{ticker}}`);
             if (!changeSpan) return;
@@ -902,7 +893,6 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
             }});
         }});
         
-        // Set border for static cards
         document.querySelectorAll('.static-card').forEach(card => {{
             const border = card.getAttribute('data-border');
             if (border) card.style.setProperty('--border', border);
