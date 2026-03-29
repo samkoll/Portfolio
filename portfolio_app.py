@@ -578,32 +578,30 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
         usdc_row = df_port[df_port['Ticker'] == 'USDC'].iloc[0] if not df_port[df_port['Ticker'] == 'USDC'].empty else None
         usdc_holdings = usdc_row['Holdings'] if usdc_row is not None else 0
 
+        # Unindented string to prevent markdown rendering issues
         value_box_html = f"""
 <div class="dashboard-wrapper">
-    <input type="checkbox" id="dash-toggle" class="dashboard-toggle" style="display:none;">
-    
-    <label for="dash-toggle" class="glossy-header-label">
-        <div class="glossy-header home-header">
-            {DASHBOARD_ICON}<span style="margin-left:12px;">Portfolio Dashboard</span>
-            <div class="pull-indicator">▼</div>
-        </div>
-    </label>
-    
-    <div class="stats-layer">
-        <div class="stats-layer-inner">
-            <div class="glossy-box swapped"><div>{format_money(total_value)}</div><div>Total Value</div></div>
-            <div class="glossy-box swapped"><div><span style="color:{'#00ff9d' if total_pnl>=0 else '#ff4d4d'}">{"▲" if total_pnl>0 else "▼" if total_pnl<0 else ""} {format_money(abs(total_pnl))}</span></div><div>PnL</div></div>
-            <div class="glossy-box swapped"><div><span style="color:{'#00ff9d' if total_pnl_pct>=0 else '#ff4d4d'}">{"▲" if total_pnl_pct>0 else "▼" if total_pnl_pct<0 else ""} {abs(total_pnl_pct):.2f}%</span></div><div>PnL %</div></div>
-        </div>
-    </div>
+<input type="checkbox" id="dash-toggle" class="dashboard-toggle" style="display:none;">
+<label for="dash-toggle" class="glossy-header-label">
+<div class="glossy-header home-header">
+{DASHBOARD_ICON}<span style="margin-left:12px;">Portfolio Dashboard</span>
+<div class="pull-indicator">▼</div>
 </div>
-
+</label>
+<div class="stats-layer">
+<div class="stats-layer-inner">
+<div class="glossy-box swapped"><div>{format_money(total_value)}</div><div>Total Value</div></div>
+<div class="glossy-box swapped"><div><span style="color:{'#00ff9d' if total_pnl>=0 else '#ff4d4d'}">{"▲" if total_pnl>0 else "▼" if total_pnl<0 else ""} {format_money(abs(total_pnl))}</span></div><div>PnL</div></div>
+<div class="glossy-box swapped"><div><span style="color:{'#00ff9d' if total_pnl_pct>=0 else '#ff4d4d'}">{"▲" if total_pnl_pct>0 else "▼" if total_pnl_pct<0 else ""} {abs(total_pnl_pct):.2f}%</span></div><div>PnL %</div></div>
+</div>
+</div>
+</div>
 <div class="usdc-banner">
-    <div class="usdc-banner-left">
-        <img src="{get_ticker_logo('USDC')}" onerror="this.src='https://via.placeholder.com/42/1e2a44/ffffff?text=U';">
-        <div class="usdc-banner-title">USDC <span class="usdc-banner-subtitle">(Available Cash)</span></div>
-    </div>
-    <div class="usdc-banner-amount">{format_holdings(usdc_holdings, 'USDC')}</div>
+<div class="usdc-banner-left">
+<img src="{get_ticker_logo('USDC')}" onerror="this.src='https://via.placeholder.com/42/1e2a44/ffffff?text=U';">
+<div class="usdc-banner-title">USDC <span class="usdc-banner-subtitle">(Available Cash)</span></div>
+</div>
+<div class="usdc-banner-amount">{format_holdings(usdc_holdings, 'USDC')}</div>
 </div>
 """
         st.markdown(value_box_html, unsafe_allow_html=True)
@@ -1415,16 +1413,18 @@ function editTransaction(i) {{
 
         glossy_header("Fiat Transactions", FIAT_ICON)
 
+        # Unindented to prevent markdown code block rendering
         summary_html = f"""
 <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:20px;margin-bottom:30px;">
-    <div class="glossy-box"><div>Total CZK</div><div>{total_czk:,.2f}</div></div>
-    <div class="glossy-box"><div>Total EUR</div><div>{total_eur:,.2f}</div></div>
-    <div class="glossy-box"><div>Total USDC</div><div>{format_money(total_usdc)}</div></div>
-    <div class="glossy-box">
-        <div>Fees</div>
-        <div style="font-size:22px; font-weight:700; color:#fff; margin-top:6px;">{fees_eur:,.2f} EUR / {fees_czk:,.2f} CZK</div>
-    </div>
-</div>"""
+<div class="glossy-box swapped"><div>{total_czk:,.2f}</div><div>Total CZK</div></div>
+<div class="glossy-box swapped"><div>{total_eur:,.2f}</div><div>Total EUR</div></div>
+<div class="glossy-box swapped"><div>{format_money(total_usdc)}</div><div>Total USDC</div></div>
+<div class="glossy-box swapped">
+<div style="font-size:22px; font-weight:700; color:#fff; margin-bottom:6px;">{fees_eur:,.2f} EUR / {fees_czk:,.2f} CZK</div>
+<div>Fees</div>
+</div>
+</div>
+"""
         st.markdown(summary_html, unsafe_allow_html=True)
 
         df_clean = st.session_state.fiat_df.dropna(how='all').reset_index(drop=True)
