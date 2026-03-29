@@ -118,6 +118,7 @@ div[data-testid="stMainBlockContainer"] {
     margin-bottom: 38px;
 }
 
+/* PC Hover and Sync with Dashboard Toggle */
 @media (hover: hover) {
     .glossy-header:hover {
         transform: translateY(-4px) scale(1.01);
@@ -125,7 +126,8 @@ div[data-testid="stMainBlockContainer"] {
         border-color: rgba(255, 255, 255, 0.15);
     }
 }
-.glossy-header.touch-hover {
+/* Keep header elevated/hovered while the drawer is open */
+.dashboard-toggle:checked + .glossy-header-label .glossy-header {
     transform: translateY(-4px) scale(1.01);
     box-shadow: 0 15px 40px rgba(0, 0, 0, 0.5);
     border-color: rgba(255, 255, 255, 0.15);
@@ -154,11 +156,6 @@ div[data-testid="stMainBlockContainer"] {
         box-shadow: 0 12px 32px rgba(255,255,255,0.1);
         border-color: rgba(255,255,255,0.15);
     }
-}
-.glossy-box.touch-hover {
-    transform: translateY(-4px) scale(1.02);
-    box-shadow: 0 12px 32px rgba(255,255,255,0.1);
-    border-color: rgba(255,255,255,0.15);
 }
 
 .glossy-box > div:first-child {
@@ -313,12 +310,13 @@ div[data-testid="stMainBlockContainer"] {
     }
     
     /* Perfect deep tuck to completely hide the numbers */
-    .stats-layer { margin-top: -68px; margin-bottom: 18px; } 
+    .stats-layer { margin-top: -72px; margin-bottom: 18px; } 
     
-    .glossy-box.swapped { min-height: 78px; padding: 6px 6px 24px 6px; }
+    /* Box remains 94px tall to give enough room for numbers to hide */
+    .glossy-box.swapped { min-height: 94px; padding: 6px 6px 24px 6px; }
     .glossy-box.swapped > div:first-child { font-size: 16px !important; top: -2px; margin-bottom: 0; }
     /* Perfectly flush bottom label to peek out */
-    .glossy-box.swapped > div:last-child { font-size: 9.5px !important; bottom: 3px; }
+    .glossy-box.swapped > div:last-child { font-size: 9.5px !important; bottom: 6px; }
     
     .usdc-banner { padding: 16px 18px; margin-bottom: 24px; }
     .usdc-banner-left img { width: 36px; height: 36px; }
@@ -802,7 +800,8 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
             border-radius: 18px;
             padding: 14px 18px;
             background: #0f172a;
-            box-shadow: 0 8px 24px rgba(0,0,0,0.3); /* Neutral unhovered shadow */
+            /* Default slight border glow taking the dynamic color */
+            box-shadow: 0 8px 24px rgba(0,0,0,0.3); 
             border: 2px solid transparent;
             overflow: hidden; /* Prevent internal scrolling */
         }}
@@ -818,21 +817,19 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
             padding: 16px; 
         }}
         
-        /* PC Hover Effects */
+        /* Interactive dynamic colored border glow */
         @media (hover: hover) {{
             .flip-card:hover .flip-card-front,
             .flip-card:hover .flip-card-back {{
                 border-color: var(--border);
-                /* Subtle border-colored glow on hover */
-                box-shadow: 0 12px 28px rgba(0,0,0,0.5), 0 0 8px var(--border);
+                box-shadow: 0 12px 28px rgba(0,0,0,0.5), 0 0 12px var(--border);
             }}
         }}
         
-        /* Mobile Touch "Hover" equivalent */
         .flip-card.touch-hover .flip-card-front,
         .flip-card.touch-hover .flip-card-back {{
             border-color: var(--border);
-            box-shadow: 0 12px 28px rgba(0,0,0,0.5), 0 0 8px var(--border);
+            box-shadow: 0 12px 28px rgba(0,0,0,0.5), 0 0 12px var(--border);
         }}
         
         .card-header {{
@@ -950,9 +947,9 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
 
 <script>
     (function() {{
-        // --- Handle Mobile Touch "Hover" Un-sticking globally ---
+        // --- Handle Mobile Touch "Hover" and Drawer closing ---
         document.addEventListener('click', (e) => {{
-            const touchHoverTarget = e.target.closest('.usdc-banner, .transaction-card, .glossy-box, .glossy-header');
+            const touchHoverTarget = e.target.closest('.usdc-banner, .transaction-card');
             
             // Remove touch-hover from elements that weren't just clicked
             document.querySelectorAll('.touch-hover').forEach(el => {{
@@ -961,9 +958,20 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                 }}
             }});
 
-            // Toggle touch-hover on the clicked element (if it's not a flip card, handled below)
+            // Toggle touch-hover on the clicked element (except flip card which has custom logic below)
             if (touchHoverTarget && !touchHoverTarget.classList.contains('flip-card')) {{
                 touchHoverTarget.classList.toggle('touch-hover');
+            }}
+            
+            // Smart Click-Away: Close dashboard drawer if clicking outside of it
+            const dashToggle = window.parent.document.getElementById('dash-toggle');
+            const dashWrapper = window.parent.document.querySelector('.dashboard-wrapper');
+            if (dashToggle && dashToggle.checked) {{
+                // Check if the click happened inside the dashboard drawer
+                const isClickInsideDash = e.target.closest('.dashboard-wrapper');
+                if (!isClickInsideDash) {{
+                    dashToggle.checked = false; // Close drawer
+                }}
             }}
         }});
 
