@@ -117,10 +117,18 @@ div[data-testid="stMainBlockContainer"] {
     margin-top: 68px;
     margin-bottom: 38px;
 }
-.glossy-header:hover {
+
+@media (hover: hover) {
+    .glossy-header:hover {
+        transform: translateY(-4px) scale(1.01);
+        box-shadow: 0 15px 40px rgba(0, 0, 0, 0.5);
+        border-color: rgba(255, 255, 255, 0.15);
+    }
+}
+.glossy-header.touch-hover {
     transform: translateY(-4px) scale(1.01);
-    box-shadow: 0 15px 40px rgba(0, 255, 157, 0.15);
-    border-color: rgba(0, 255, 157, 0.3);
+    box-shadow: 0 15px 40px rgba(0, 0, 0, 0.5);
+    border-color: rgba(255, 255, 255, 0.15);
 }
 
 .glossy-box {
@@ -139,11 +147,20 @@ div[data-testid="stMainBlockContainer"] {
     flex-direction: column;
     justify-content: center;
 }
-.glossy-box:hover {
+
+@media (hover: hover) {
+    .glossy-box:hover {
+        transform: translateY(-4px) scale(1.02);
+        box-shadow: 0 12px 32px rgba(255,255,255,0.1);
+        border-color: rgba(255,255,255,0.15);
+    }
+}
+.glossy-box.touch-hover {
     transform: translateY(-4px) scale(1.02);
     box-shadow: 0 12px 32px rgba(255,255,255,0.1);
     border-color: rgba(255,255,255,0.15);
 }
+
 .glossy-box > div:first-child {
     font-size: 12px;
     font-weight: 600;
@@ -205,11 +222,19 @@ div[data-testid="stMainBlockContainer"] {
     justify-content: space-between;
     transition: all 0.3s ease;
 }
-.usdc-banner:hover {
+@media (hover: hover) {
+    .usdc-banner:hover {
+        transform: translateY(-4px);
+        border-color: #2775ca;
+        box-shadow: 0 12px 28px rgba(0,0,0,0.5), 0 0 15px rgba(39,117,202,0.4);
+    }
+}
+.usdc-banner.touch-hover {
     transform: translateY(-4px);
     border-color: #2775ca;
     box-shadow: 0 12px 28px rgba(0,0,0,0.5), 0 0 15px rgba(39,117,202,0.4);
 }
+
 .usdc-banner-left {
     display: flex;
     align-items: center;
@@ -286,11 +311,14 @@ div[data-testid="stMainBlockContainer"] {
         grid-template-columns: repeat(3, 1fr) !important; 
         gap: 8px; 
     }
-    .stats-layer { margin-top: -55px; margin-bottom: 18px; } /* Perfect deep tuck */
+    
+    /* Perfect deep tuck to completely hide the numbers */
+    .stats-layer { margin-top: -68px; margin-bottom: 18px; } 
     
     .glossy-box.swapped { min-height: 78px; padding: 6px 6px 24px 6px; }
     .glossy-box.swapped > div:first-child { font-size: 16px !important; top: -2px; margin-bottom: 0; }
-    .glossy-box.swapped > div:last-child { font-size: 9.5px !important; bottom: 6px; }
+    /* Perfectly flush bottom label to peek out */
+    .glossy-box.swapped > div:last-child { font-size: 9.5px !important; bottom: 3px; }
     
     .usdc-banner { padding: 16px 18px; margin-bottom: 24px; }
     .usdc-banner-left img { width: 36px; height: 36px; }
@@ -621,7 +649,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
 </div>
 </div>
 </div>
-<div class="usdc-banner">
+<div class="usdc-banner" style="--border: #2775ca;">
 <div class="usdc-banner-left">
 <img src="{get_ticker_logo('USDC')}" onerror="this.src='https://via.placeholder.com/42/1e2a44/ffffff?text=U';">
 <div class="usdc-banner-title">USDC <span class="usdc-banner-subtitle">(Available Cash)</span></div>
@@ -774,8 +802,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
             border-radius: 18px;
             padding: 14px 18px;
             background: #0f172a;
-            /* Added slight colored glow to the cards */
-            box-shadow: 0 6px 16px rgba(0,0,0,0.4), 0 0 6px var(--border);
+            box-shadow: 0 8px 24px rgba(0,0,0,0.3); /* Neutral unhovered shadow */
             border: 2px solid transparent;
             overflow: hidden; /* Prevent internal scrolling */
         }}
@@ -791,10 +818,21 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
             padding: 16px; 
         }}
         
-        .flip-card:hover .flip-card-front,
-        .flip-card:hover .flip-card-back {{
+        /* PC Hover Effects */
+        @media (hover: hover) {{
+            .flip-card:hover .flip-card-front,
+            .flip-card:hover .flip-card-back {{
+                border-color: var(--border);
+                /* Subtle border-colored glow on hover */
+                box-shadow: 0 12px 28px rgba(0,0,0,0.5), 0 0 8px var(--border);
+            }}
+        }}
+        
+        /* Mobile Touch "Hover" equivalent */
+        .flip-card.touch-hover .flip-card-front,
+        .flip-card.touch-hover .flip-card-back {{
             border-color: var(--border);
-            box-shadow: 0 12px 28px rgba(0,0,0,0.5), 0 0 10px var(--border);
+            box-shadow: 0 12px 28px rgba(0,0,0,0.5), 0 0 8px var(--border);
         }}
         
         .card-header {{
@@ -912,6 +950,23 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
 
 <script>
     (function() {{
+        // --- Handle Mobile Touch "Hover" Un-sticking globally ---
+        document.addEventListener('click', (e) => {{
+            const touchHoverTarget = e.target.closest('.usdc-banner, .transaction-card, .glossy-box, .glossy-header');
+            
+            // Remove touch-hover from elements that weren't just clicked
+            document.querySelectorAll('.touch-hover').forEach(el => {{
+                if (el !== touchHoverTarget && !el.classList.contains('flip-card')) {{
+                    el.classList.remove('touch-hover');
+                }}
+            }});
+
+            // Toggle touch-hover on the clicked element (if it's not a flip card, handled below)
+            if (touchHoverTarget && !touchHoverTarget.classList.contains('flip-card')) {{
+                touchHoverTarget.classList.toggle('touch-hover');
+            }}
+        }});
+
         // --- Wheel scrolling for PC ---
         const scrollContainer = document.getElementById('scrollContainer');
         if (scrollContainer) {{
@@ -1033,6 +1088,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                 const ticker = card.getAttribute('data-ticker');
                 if (flippedTickers.includes(ticker)) {{
                     card.classList.add('flipped');
+                    card.classList.add('touch-hover');
                     const currentPrice = parseFloat(card.getAttribute('data-current-price'));
                     const avgPrice = parseFloat(card.getAttribute('data-avg-price'));
                     const chartColor = card.getAttribute('data-chart-color');
@@ -1191,8 +1247,11 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
             const front = card.querySelector('.flip-card-front');
             front.addEventListener('click', (e) => {{
                 e.stopPropagation();
+                
+                // Toggle flipped state and touch-hover properly for mobile
                 if (!card.classList.contains('flipped')) {{
                     card.classList.add('flipped');
+                    card.classList.add('touch-hover');
                     if (!chartCache[ticker] || !chartCache[ticker].chartObj) {{
                         renderChart(card, ticker, currentPrice, avgPrice, chartColor);
                     }}
@@ -1201,7 +1260,10 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
             
             const backDiv = card.querySelector('.flip-card-back');
             backDiv.addEventListener('click', (e) => {{
+                e.stopPropagation();
+                // 2nd tap safely unflips and completely removes hover states on mobile
                 card.classList.remove('flipped');
+                card.classList.remove('touch-hover');
             }});
         }});
         
@@ -1328,10 +1390,17 @@ body {{ background: transparent; margin: 0; padding: 0; }}
     overflow: hidden;
     scroll-snap-align: center; /* Snap to center */
 }}
-.transaction-card:hover {{
-    transform: translateY(-4px);
-    box-shadow: 0 12px 30px rgba(0, 255, 157, 0.3);
+@media (hover: hover) {{
+    .transaction-card:hover {{
+        transform: translateY(-4px);
+        box-shadow: 0 12px 30px rgba(0, 0, 0, 0.4);
+    }}
 }}
+.transaction-card.touch-hover {{
+    transform: translateY(-4px);
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.4);
+}}
+
 .transaction-main-row {{
     display: flex;
     align-items: center;
@@ -1433,6 +1502,15 @@ body {{ background: transparent; margin: 0; padding: 0; }}
     </div>
 </div>
 <script>
+// --- Mobile Touch Hover Fix ---
+document.addEventListener('click', (e) => {{
+    const touchHoverTarget = e.target.closest('.transaction-card');
+    document.querySelectorAll('.touch-hover').forEach(el => {{
+        if (el !== touchHoverTarget) el.classList.remove('touch-hover');
+    }});
+    if (touchHoverTarget) touchHoverTarget.classList.toggle('touch-hover');
+}});
+
 // --- Wheel scrolling for PC ---
 const txScrollContainer = document.getElementById('txScrollContainer');
 if (txScrollContainer) {{
@@ -1538,6 +1616,15 @@ function editTransaction(i) {{
 <div>Fees</div>
 </div>
 </div>
+<script>
+document.addEventListener('click', (e) => {{
+    const target = e.target.closest('.glossy-box');
+    document.querySelectorAll('.glossy-box.touch-hover').forEach(el => {{
+        if (el !== target) el.classList.remove('touch-hover');
+    }});
+    if (target) target.classList.toggle('touch-hover');
+}});
+</script>
 """
         st.markdown(summary_html, unsafe_allow_html=True)
 
