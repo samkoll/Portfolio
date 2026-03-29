@@ -412,14 +412,6 @@ if 'delete_trigger' not in st.session_state:
 if 'edit_trigger' not in st.session_state:
     st.session_state.edit_trigger = ""
 
-# ====================== HANDLE SWIPE REFRESH ======================
-query_params = st.query_params
-if "swipe_refresh" in query_params and query_params["swipe_refresh"] == "1":
-    st.session_state.refresh_key = random.randint(100000, 999999)
-    st.session_state.ui_version += 1
-    st.query_params.clear()
-    st.rerun()
-
 # ====================== SIDEBAR ======================
 with st.sidebar:
     nav_items = [
@@ -453,6 +445,14 @@ def glossy_header(title: str, icon_svg: str):
 with main_container.container(key=f"page_{st.session_state.page}_{st.session_state.ui_version}"):
     if st.session_state.page == "Home":
         glossy_header("Portfolio Dashboard", DASHBOARD_ICON)
+
+        # Hidden trigger to handle pull-to-refresh safely from Javascript
+        refresh_trigger = st.text_input("refresh_trigger", value=st.session_state.get("swipe_refresh_val", ""), label_visibility="collapsed", key="refresh_trigger_hidden")
+        if refresh_trigger and refresh_trigger != st.session_state.get("swipe_refresh_val", ""):
+            st.session_state.swipe_refresh_val = refresh_trigger
+            st.session_state.refresh_key = random.randint(100000, 999999)
+            st.session_state.ui_version += 1
+            st.rerun()
 
         df_port, total_value, total_pnl, total_pnl_pct = calculate_portfolio(st.session_state.crypto_df)
 
@@ -829,13 +829,17 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
             if (parentSpinnerElement) return;
             try {{
                 const parentDoc = window.parent.document;
-                if (parentDoc.getElementById('swipe-refresh-overlay')) {{
-                    // Overlay exists, just reset its margin-top
-                    const existingOverlay = parentDoc.getElementById('swipe-refresh-overlay');
+                
+                // 1) Re-link if it already exists from a previous run
+                const existingOverlay = parentDoc.getElementById('swipe-refresh-overlay');
+                if (existingOverlay) {{
                     const indicator = existingOverlay.querySelector('.refresh-indicator');
-                    if (indicator) indicator.style.marginTop = '-60px';
+                    const spinner = existingOverlay.querySelector('.spinner');
+                    parentSpinnerElement = {{ overlay: existingOverlay, indicator: indicator, spinner: spinner }};
                     return;
                 }}
+                
+                // 2) Otherwise create it
                 const overlay = parentDoc.createElement('div');
                 overlay.id = 'swipe-refresh-overlay';
                 overlay.style.cssText = `
@@ -895,18 +899,34 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
         }}
         
         function setParentSpinnerMarginTop(marginTop) {{
-            if (parentSpinnerElement) {{
+            if (parentSpinnerElement && parentSpinnerElement.indicator) {{
                 parentSpinnerElement.indicator.style.marginTop = marginTop;
             }}
         }}
         
         function hideParentSpinner() {{
-            if (parentSpinnerElement) {{
+            if (parentSpinnerElement && parentSpinnerElement.indicator) {{
                 parentSpinnerElement.indicator.style.marginTop = '-60px';
+                if(parentSpinnerElement.spinner) {{
+                    parentSpinnerElement.spinner.style.borderTopColor = '#00ff9d';
+                }}
             }}
         }}
         
         createParentSpinner();
+        
+        // --- Trigger Python Refresh Safely ---
+        function triggerPythonRefresh() {{
+            const input = window.parent.document.querySelector('input[aria-label="refresh_trigger"]');
+            if (input) {{
+                input.value = Date.now().toString();
+                input.dispatchEvent(new Event('input', {{ bubbles: true }}));
+                input.dispatchEvent(new Event('change', {{ bubbles: true }}));
+            }} else {{
+                // fallback hide just in case
+                setTimeout(() => hideParentSpinner(), 2000); 
+            }}
+        }}
         
         // --- Swipe-to-refresh ---
         let touchStartY = 0;
@@ -916,7 +936,11 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
         
         if ('ontouchstart' in window) {{
             document.addEventListener('touchstart', function(e) {{
-                if (window.scrollY <= 5 && !isRefreshing) {{
+                const scrollWrapper = document.querySelector('.scroll-wrapper');
+                // Check if scroll wrapper is at top
+                const isAtTop = scrollWrapper ? scrollWrapper.scrollTop <= 5 : window.scrollY <= 5;
+                
+                if (isAtTop && !isRefreshing) {{
                     touchStartY = e.touches[0].clientY;
                     isDragging = true;
                 }}
@@ -924,17 +948,27 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
             
             document.addEventListener('touchmove', function(e) {{
                 if (!isDragging || isRefreshing) return;
+                
+                const scrollWrapper = document.querySelector('.scroll-wrapper');
+                const isAtTop = scrollWrapper ? scrollWrapper.scrollTop <= 5 : window.scrollY <= 5;
+                
                 const currentY = e.touches[0].clientY;
                 const diff = currentY - touchStartY;
-                if (diff > 0 && window.scrollY <= 5) {{
+                
+                // ONLY trigger if we are pulling DOWN and at the TOP of the scrollable box
+                if (diff > 0 && isAtTop) {{
                     e.preventDefault();
                     const pullDistance = Math.min(diff, refreshThreshold);
                     const progress = pullDistance / refreshThreshold;
                     const marginTop = 15 * progress;
                     setParentSpinnerMarginTop(marginTop + 'px');
+                    
                     if (pullDistance >= refreshThreshold && parentSpinnerElement && parentSpinnerElement.spinner) {{
                         parentSpinnerElement.spinner.style.borderTopColor = '#ffaa00';
                     }}
+                }} else if (diff < 0) {{
+                    // Scrolling down the page normally, cancel swipe tracking
+                    isDragging = false;
                 }}
             }}, {{ passive: false }});
             
@@ -943,15 +977,20 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                     isDragging = false;
                     return;
                 }}
+                
+                const scrollWrapper = document.querySelector('.scroll-wrapper');
+                const isAtTop = scrollWrapper ? scrollWrapper.scrollTop <= 5 : window.scrollY <= 5;
+                
                 const endY = e.changedTouches[0].clientY;
                 const diff = endY - touchStartY;
-                if (diff >= refreshThreshold && window.scrollY <= 5) {{
+                
+                if (diff >= refreshThreshold && isAtTop) {{
                     isRefreshing = true;
                     saveFlippedState();
                     setParentSpinnerMarginTop('15px');
-                    const url = new URL(window.location.href);
-                    url.searchParams.set('swipe_refresh', '1');
-                    window.location.href = url.toString();
+                    
+                    // Trigger the real Streamlit refresh instead of just reloading the iframe!
+                    triggerPythonRefresh();
                 }} else {{
                     hideParentSpinner();
                 }}
@@ -1124,18 +1163,15 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
         
         restoreFlippedState();
         
-        // After refresh, hide the spinner
-        const urlParams = new URLSearchParams(window.location.search);
-        if (urlParams.has('swipe_refresh') || (window.oldRefreshKey && window.oldRefreshKey !== refreshKey)) {{
+        // Hide spinner unconditionally when this component loads
+        // (If the parent app just refreshed, we want the spinner tucked away immediately)
+        hideParentSpinner();
+        
+        if (window.oldRefreshKey && window.oldRefreshKey !== refreshKey) {{
             for (let key in chartCache) {{
                 if (chartCache[key].chartObj) chartCache[key].chartObj.destroy();
             }}
             window.chartCache = {{}};
-            hideParentSpinner();
-            if (urlParams.has('swipe_refresh')) {{
-                const newUrl = window.location.pathname;
-                window.history.replaceState({{}}, document.title, newUrl);
-            }}
         }}
         window.oldRefreshKey = refreshKey;
     }})();
