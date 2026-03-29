@@ -818,7 +818,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
             .back-right-stats {{ gap: 10px; }}
         }}
 
-        /* Swipe-to-refresh styles - fixed at top of page */
+        /* Swipe-to-refresh styles - fixed at very top of page */
         #swipe-overlay {{
             position: fixed;
             top: 0;
@@ -833,8 +833,8 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
         }}
         .refresh-indicator {{
             margin-top: -60px;
-            width: 44px;
-            height: 44px;
+            width: 50px;
+            height: 50px;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -845,18 +845,18 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
             box-shadow: 0 2px 8px rgba(0,0,0,0.3);
         }}
         .spinner {{
-            width: 28px;
-            height: 28px;
+            width: 30px;
+            height: 30px;
             border: 3px solid rgba(255,255,255,0.3);
             border-top: 3px solid #00ff9d;
             border-radius: 50%;
             animation: spin 0.8s linear infinite;
         }}
         .checkmark {{
-            width: 28px;
-            height: 28px;
+            width: 30px;
+            height: 30px;
             color: #00ff9d;
-            font-size: 24px;
+            font-size: 26px;
             font-weight: bold;
             line-height: 1;
             text-align: center;
@@ -924,7 +924,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
             localStorage.removeItem('flippedCards');
         }}
         
-        // --- Swipe-to-refresh implementation (only at very top) ---
+        // --- Swipe-to-refresh: works anywhere when scrolled to top ---
         let touchStartY = 0;
         let isDragging = false;
         let refreshThreshold = 80;
@@ -934,10 +934,10 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
         
         // Only enable on touch devices
         if ('ontouchstart' in window) {{
-            // Use document to capture touches anywhere, but only act if near top
+            // Listen on document to capture touches anywhere
             document.addEventListener('touchstart', function(e) {{
-                // Only trigger if page is at the very top (scrollY <= 5) and touch is near top edge (clientY < 80)
-                if (window.scrollY <= 5 && e.touches[0].clientY < 80 && !isRefreshing) {{
+                // Only trigger if page is at the very top (scrollY <= 5) and not already refreshing
+                if (window.scrollY <= 5 && !isRefreshing) {{
                     touchStartY = e.touches[0].clientY;
                     isDragging = true;
                 }}
@@ -1153,26 +1153,29 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
         restoreFlippedState();
         
         // Check if refresh just happened (refresh key changed)
-        if (window.oldRefreshKey && window.oldRefreshKey !== refreshKey) {{
+        // Also check URL for swipe_refresh param to show checkmark
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.has('swipe_refresh') || (window.oldRefreshKey && window.oldRefreshKey !== refreshKey)) {{
             // Clear chart cache
             for (let key in chartCache) {{
                 if (chartCache[key].chartObj) chartCache[key].chartObj.destroy();
             }}
             window.chartCache = {{}};
-            // Show success checkmark briefly after refresh
-            const indicatorDiv = document.getElementById('refresh-indicator');
+            // Show success checkmark
             const refreshIndicator = document.getElementById('refresh-indicator');
             if (refreshIndicator) {{
-                // Clear content and show checkmark
                 refreshIndicator.innerHTML = '<div class="checkmark">✓</div>';
                 refreshIndicator.classList.add('visible');
                 setTimeout(() => {{
                     refreshIndicator.classList.remove('visible');
                     refreshIndicator.innerHTML = '<div class="spinner" id="refresh-spinner"></div>';
                     refreshIndicator.style.marginTop = '-60px';
-                    // Re-attach spinner reference
-                    window.spinner = document.getElementById('refresh-spinner');
                 }}, 800);
+            }}
+            // Remove the param from URL to avoid showing checkmark again on next load
+            if (urlParams.has('swipe_refresh')) {{
+                const newUrl = window.location.pathname;
+                window.history.replaceState({{}}, document.title, newUrl);
             }}
         }}
         window.oldRefreshKey = refreshKey;
