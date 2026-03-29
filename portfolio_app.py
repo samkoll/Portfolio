@@ -529,7 +529,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                 <span class="back-close">↺</span>
             </div>
             <div class="chart-container">
-                <canvas id="chart-{ticker}" width="400" height="160" style="width:100%; height:auto; max-height:160px;"></canvas>
+                <canvas id="chart-{ticker}" width="400" height="145" style="width:100%; height:auto; max-height:145px;"></canvas>
                 <div class="chart-loading" id="loading-{ticker}">Loading chart...</div>
             </div>
             <div class="back-stats">
@@ -569,6 +569,11 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
             font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
             color: white;
         }}
+        /* Remove blue outline on click for all interactive elements */
+        .flip-card-front, .flip-card-back, .back-close, .flip-card {{
+            outline: none;
+            -webkit-tap-highlight-color: transparent;
+        }}
         .scroll-wrapper {{
             width: 100%;
             overflow-y: auto;
@@ -590,7 +595,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
             background: transparent !important;
             overflow: visible !important;
         }}
-        /* Card sizes - original height */
+        /* Card sizes - original height, no scrolling on backs */
         .flip-card {{
             background-color: transparent;
             width: 100%;
@@ -619,7 +624,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
             background: #0f172a;
             box-shadow: 0 8px 24px rgba(0,0,0,0.3);
             border: 2px solid transparent;
-            overflow-y: auto;
+            overflow-y: hidden;  /* Remove scrolling on backs */
         }}
         .flip-card-front {{
             display: flex;
@@ -715,7 +720,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
             position: relative;
             margin: 4px 0;
             flex: 1;
-            min-height: 160px;
+            min-height: 145px;
         }}
         .chart-loading {{
             text-align: center;
