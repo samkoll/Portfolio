@@ -441,6 +441,17 @@ if 'delete_trigger' not in st.session_state:
 if 'edit_trigger' not in st.session_state:
     st.session_state.edit_trigger = ""
 
+# ====================== HANDLE SWIPE REFRESH ======================
+# Check if refresh was triggered via query parameter
+query_params = st.query_params
+if "swipe_refresh" in query_params and query_params["swipe_refresh"] == "1":
+    # Perform refresh
+    st.session_state.refresh_key = random.randint(100000, 999999)
+    st.session_state.ui_version += 1
+    # Clear the query param to avoid infinite refresh
+    st.query_params.clear()
+    st.rerun()
+
 # ====================== SIDEBAR ======================
 with st.sidebar:
     nav_items = [
@@ -806,6 +817,38 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
             .stat-label {{ font-size: 0.6rem; }}
             .back-right-stats {{ gap: 10px; }}
         }}
+
+        /* Swipe-to-refresh styles */
+        #swipe-overlay {{
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 100px;
+            z-index: 9999;
+            pointer-events: none;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            transition: all 0.2s ease;
+        }}
+        .spinner {{
+            margin-top: -60px;
+            width: 40px;
+            height: 40px;
+            border: 3px solid rgba(255,255,255,0.3);
+            border-top: 3px solid #00ff9d;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            transition: margin-top 0.2s ease;
+        }}
+        @keyframes spin {{
+            0% {{ transform: rotate(0deg); }}
+            100% {{ transform: rotate(360deg); }}
+        }}
+        .spinner.visible {{
+            margin-top: 20px;
+        }}
     </style>
 </head>
 <body>
@@ -814,8 +857,73 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
         {cards_html}
     </div>
 </div>
+
+<!-- Swipe to refresh overlay -->
+<div id="swipe-overlay">
+    <div class="spinner" id="refresh-spinner"></div>
+</div>
+
 <script>
     (function() {{
+        // Swipe-to-refresh implementation
+        let touchStartY = 0;
+        let isDragging = false;
+        let refreshThreshold = 80; // pixels to pull down
+        let isRefreshing = false;
+        const spinner = document.getElementById('refresh-spinner');
+        const overlay = document.getElementById('swipe-overlay');
+        
+        // Only enable on touch devices
+        if ('ontouchstart' in window) {{
+            document.body.addEventListener('touchstart', function(e) {{
+                // Only trigger if near the top (scrollY <= 10)
+                if (window.scrollY <= 10 && !isRefreshing) {{
+                    touchStartY = e.touches[0].clientY;
+                    isDragging = true;
+                }}
+            }});
+            
+            document.body.addEventListener('touchmove', function(e) {{
+                if (!isDragging || isRefreshing) return;
+                const currentY = e.touches[0].clientY;
+                const diff = currentY - touchStartY;
+                if (diff > 0 && window.scrollY <= 10) {{
+                    // Prevent default to stop page scrolling while pulling
+                    e.preventDefault();
+                    const pullDistance = Math.min(diff, refreshThreshold);
+                    const progress = pullDistance / refreshThreshold;
+                    spinner.style.marginTop = (20 * progress) + 'px';
+                    spinner.style.opacity = progress;
+                    if (pullDistance >= refreshThreshold) {{
+                        spinner.style.borderTopColor = '#00ff9d';
+                    }}
+                }}
+            }});
+            
+            document.body.addEventListener('touchend', function(e) {{
+                if (!isDragging || isRefreshing) {{
+                    isDragging = false;
+                    return;
+                }}
+                const endY = e.changedTouches[0].clientY;
+                const diff = endY - touchStartY;
+                if (diff >= refreshThreshold && window.scrollY <= 10) {{
+                    // Trigger refresh
+                    isRefreshing = true;
+                    spinner.classList.add('visible');
+                    // Add query parameter to trigger refresh in Streamlit
+                    const url = new URL(window.location.href);
+                    url.searchParams.set('swipe_refresh', '1');
+                    window.location.href = url.toString();
+                }} else {{
+                    // Reset spinner position
+                    spinner.style.marginTop = '-60px';
+                    spinner.style.opacity = '0';
+                }}
+                isDragging = false;
+            }});
+        }}
+        
         const flipCards = document.querySelectorAll('.flip-card');
         const chartCache = {{}};
         const refreshKey = '{st.session_state.refresh_key}';
