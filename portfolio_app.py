@@ -709,13 +709,14 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
     </div>
 </div>"""
        
-        # New HTML without glow, using border highlight and scale
+        # Fixed CSS to prevent clipping on hover
         html = f"""<html><head><style>
 body{{background:transparent;color:white;font-family:sans-serif;margin:0;padding:0;}}
 .scroll-wrapper {{
     overflow-y: auto;
+    overflow-x: visible;
     height: 590px;
-    padding: 0;               /* no padding, cards go edge to edge */
+    padding: 12px 12px 20px 12px;
     margin-bottom: 20px;
     scrollbar-width: none;
     -ms-overflow-style: none;
@@ -726,7 +727,7 @@ body{{background:transparent;color:white;font-family:sans-serif;margin:0;padding
 .coin-grid {{
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-    gap: 14px;
+    gap: 16px;
     box-sizing: border-box;
     background: transparent !important;
     overflow: visible !important;
@@ -745,11 +746,12 @@ body{{background:transparent;color:white;font-family:sans-serif;margin:0;padding
     user-select:none;
     -webkit-user-select:none;
     border: 2px solid transparent;
+    margin: 0;
 }}
 .coin-card:hover {{
-    transform:translateY(-3px) scale(1.02);
+    transform:translateY(-4px) scale(1.02);
     border: 2px solid var(--border);
-    box-shadow:0 12px 25px rgba(0,0,0,0.4);
+    box-shadow:0 16px 28px rgba(0,0,0,0.5);
     z-index:10;
 }}
 .card-header {{display:flex;align-items:center;margin-bottom:14px;}}
@@ -762,6 +764,7 @@ body{{background:transparent;color:white;font-family:sans-serif;margin:0;padding
 @media (max-width: 700px) {{
     .coin-grid {{grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px;}}
     .coin-card {{padding:14px;}}
+    .scroll-wrapper {{padding: 8px 8px 16px 8px;}}
 }}
 </style></head><body><div class="scroll-wrapper"><div class="coin-grid">{cards_html}</div></div><script>
 function switchToTabAndScroll(index){{
