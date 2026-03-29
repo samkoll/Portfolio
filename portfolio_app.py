@@ -330,6 +330,21 @@ def get_ticker_color(ticker: str) -> str:
         return known[ticker]
     return f"#{hashlib.md5(ticker.encode()).hexdigest()[:6]}"
 
+def get_chart_color(ticker: str) -> str:
+    # Return nice colors for charts
+    color_map = {
+        'BTC': '#f7931a',   # orange
+        'ETH': '#627eea',   # blue
+        'SOL': '#9b59b6',   # purple
+        'HBAR': '#00b4d8',  # cyan
+        'XRP': '#1e3a8a',   # dark blue
+        'BNB': '#f4c430',   # yellow
+        'TRX': '#ff2d55',   # red
+        'LINK': '#2ecc71',  # green
+        'SUI': '#60a5fa',   # light blue
+    }
+    return color_map.get(ticker.upper(), '#00ff9d')
+
 # ====================== FORMATTING ======================
 def format_money(val):
     try:
@@ -471,6 +486,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
             logo_url = get_ticker_logo(ticker)
             pnl_pct_formatted = format_percent(abs(r['PnL %'])) if pd.notna(r['PnL %']) else ""
             live_price = r['Live']
+            avg_price = r['AVG']
            
             # For USDC: no flip chart, just a simple card (no back side chart)
             if ticker == 'USDC':
@@ -491,8 +507,9 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
 """
             else:
                 # Flip card for crypto assets
+                chart_color = get_chart_color(ticker)
                 cards_html += f"""
-<div class="flip-card" data-ticker="{ticker}" data-current-price="{live_price}" data-refresh="{st.session_state.refresh_key}" data-border="{border_color}">
+<div class="flip-card" data-ticker="{ticker}" data-current-price="{live_price}" data-avg-price="{avg_price}" data-refresh="{st.session_state.refresh_key}" data-border="{border_color}" data-chart-color="{chart_color}">
     <div class="flip-card-inner">
         <div class="flip-card-front">
             <div class="card-header">
@@ -516,13 +533,17 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                 <canvas id="chart-{ticker}" width="400" height="200" style="width:100%; height:auto; max-height:220px;"></canvas>
                 <div class="chart-loading" id="loading-{ticker}">Loading chart...</div>
             </div>
-            <div class="current-price-label">Current: ${live_price:,.2f}</div>
+            <div class="back-stats">
+                <div class="stat-item">Current: ${live_price:,.2f}</div>
+                <div class="stat-item" id="change-{ticker}">24h change: loading...</div>
+                <div class="stat-item">Avg price: ${avg_price:,.2f}</div>
+            </div>
         </div>
     </div>
 </div>
 """
        
-        # Full HTML with flip styles and Chart.js logic, including static USDC card
+        # Full HTML with flip styles and Chart.js logic
         full_html = f"""
 <!DOCTYPE html>
 <html>
@@ -550,22 +571,24 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
         .scroll-wrapper::-webkit-scrollbar {{ display: none; }}
         .coin-grid {{
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
             gap: 20px;
             box-sizing: border-box;
             background: transparent !important;
             overflow: visible !important;
         }}
-        /* Flip card container */
+        /* Flip card container - fixed height to match front/back */
         .flip-card {{
             background-color: transparent;
             width: 100%;
+            height: 460px;
             perspective: 1200px;
             cursor: pointer;
         }}
         .flip-card-inner {{
             position: relative;
             width: 100%;
+            height: 100%;
             transition: transform 0.5s ease-in-out;
             transform-style: preserve-3d;
             border-radius: 20px;
@@ -576,32 +599,34 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
         .flip-card-front, .flip-card-back {{
             position: absolute;
             width: 100%;
-            top: 0;
-            left: 0;
+            height: 100%;
             backface-visibility: hidden;
             border-radius: 20px;
             padding: 16px;
             background: #0f172a;
             box-shadow: 0 8px 24px rgba(0,0,0,0.3);
             border: 2px solid transparent;
+            overflow-y: auto;
         }}
         .flip-card-front {{
             display: flex;
             flex-direction: column;
             justify-content: space-between;
-            position: relative;
         }}
         .flip-card-back {{
             transform: rotateY(180deg);
             display: flex;
             flex-direction: column;
             justify-content: flex-start;
-            overflow-y: auto;
         }}
         .static-card {{
             background: #0f172a;
             border-radius: 20px;
             padding: 16px;
+            height: 460px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
             box-shadow: 0 8px 24px rgba(0,0,0,0.3);
             border: 2px solid transparent;
             transition: all 0.25s ease;
@@ -668,22 +693,31 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
         }}
         .chart-container {{
             position: relative;
-            margin: 10px 0;
+            margin: 5px 0;
+            flex: 1;
+            min-height: 200px;
         }}
         .chart-loading {{
             text-align: center;
             color: #ccc;
             padding: 20px;
         }}
-        .current-price-label {{
+        .back-stats {{
+            display: flex;
+            justify-content: space-between;
+            margin-top: 10px;
+            padding-top: 8px;
+            border-top: 1px solid rgba(255,255,255,0.12);
+            font-size: 0.85rem;
+            color: #ddd;
+        }}
+        .stat-item {{
             text-align: center;
-            font-size: 1rem;
-            margin-top: 12px;
-            color: #00ff9d;
-            font-weight: 600;
+            flex: 1;
         }}
         @media (max-width: 700px) {{
-            .coin-grid {{ grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px; }}
+            .coin-grid {{ grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; }}
+            .flip-card, .static-card {{ height: 440px; }}
         }}
     </style>
 </head>
@@ -695,9 +729,34 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
 </div>
 <script>
     (function() {{
-        const flipCards = document.querySelectorAll('.flip-card:not(.static-card)');
+        const flipCards = document.querySelectorAll('.flip-card');
         const chartCache = {{}};
         const refreshKey = '{st.session_state.refresh_key}';
+        
+        // Fetch 24h change
+        async function fetch24hChange(ticker) {{
+            const symbolMap = {{
+                'BTC':'BTC','ETH':'ETH','SOL':'SOL','HBAR':'HBAR',
+                'XRP':'XRP','BNB':'BNB','TRX':'TRX','LINK':'LINK','SUI':'SUI'
+            }};
+            const sym = symbolMap[ticker.toUpperCase()];
+            if (!sym) return null;
+            const url = `https://min-api.cryptocompare.com/data/v2/histoday?fsym=${{sym}}&tsym=USD&limit=2`;
+            try {{
+                const resp = await fetch(url, {{ headers: {{ 'User-Agent': 'Mozilla/5.0' }} }});
+                const data = await resp.json();
+                if (data && data.Data && data.Data.Data && data.Data.Data.length >= 2) {{
+                    const yesterdayClose = data.Data.Data[0].close;
+                    const todayClose = data.Data.Data[1].close;
+                    const change = ((todayClose - yesterdayClose) / yesterdayClose) * 100;
+                    return change;
+                }}
+                return null;
+            }} catch(e) {{
+                console.error("24h change error", ticker, e);
+                return null;
+            }}
+        }}
         
         async function fetchHistoricalData(ticker) {{
             const symbolMap = {{
@@ -723,7 +782,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
             }}
         }}
         
-        async function renderChart(card, ticker, currentPrice) {{
+        async function renderChart(card, ticker, currentPrice, avgPrice, chartColor) {{
             const canvas = card.querySelector(`canvas#chart-${{ticker}}`);
             const loadingDiv = card.querySelector(`.chart-loading`);
             if (!canvas) return;
@@ -741,21 +800,41 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
             if (chartCache[ticker] && chartCache[ticker].chartObj) {{
                 chartCache[ticker].chartObj.destroy();
             }}
+            
+            // Prepare datasets: price line + average line (constant)
+            const datasets = [
+                {{
+                    label: 'Close Price (USD)',
+                    data: hist.prices,
+                    borderColor: chartColor,
+                    backgroundColor: chartColor + '20',
+                    borderWidth: 2,
+                    fill: true,
+                    tension: 0.2,
+                    pointRadius: 2,
+                    pointBackgroundColor: chartColor
+                }}
+            ];
+            // Add average line if avgPrice > 0
+            if (avgPrice > 0) {{
+                const avgData = new Array(hist.labels.length).fill(avgPrice);
+                datasets.push({{
+                    label: `Avg: $${avgPrice.toFixed(2)}`,
+                    data: avgData,
+                    borderColor: '#ffaa00',
+                    borderWidth: 2,
+                    borderDash: [5, 5],
+                    fill: false,
+                    pointRadius: 0,
+                    type: 'line'
+                }});
+            }}
+            
             const newChart = new Chart(ctx, {{
                 type: 'line',
                 data: {{
                     labels: hist.labels,
-                    datasets: [{{
-                        label: 'Close Price (USD)',
-                        data: hist.prices,
-                        borderColor: '#00ff9d',
-                        backgroundColor: 'rgba(0,255,157,0.1)',
-                        borderWidth: 2,
-                        fill: true,
-                        tension: 0.2,
-                        pointRadius: 2,
-                        pointBackgroundColor: '#00ff9d'
-                    }}]
+                    datasets: datasets
                 }},
                 options: {{
                     responsive: true,
@@ -774,11 +853,25 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
             if (loadingDiv) loadingDiv.style.display = 'none';
         }}
         
+        // Update 24h change display
+        async function update24hChange(card, ticker) {{
+            const changeSpan = card.querySelector(`#change-${{ticker}}`);
+            if (!changeSpan) return;
+            const change = await fetch24hChange(ticker);
+            if (change !== null) {{
+                const sign = change >= 0 ? '▲' : '▼';
+                const color = change >= 0 ? '#00ff9d' : '#ff4d4d';
+                changeSpan.innerHTML = `24h change: <span style="color:${{color}};">${{sign}} ${{Math.abs(change).toFixed(2)}}%</span>`;
+            }} else {{
+                changeSpan.innerHTML = `24h change: N/A`;
+            }}
+        }}
+        
         flipCards.forEach(card => {{
-            const inner = card.querySelector('.flip-card-inner');
-            const backDiv = card.querySelector('.flip-card-back');
             const ticker = card.getAttribute('data-ticker');
-            const currentPrice = card.getAttribute('data-current-price');
+            const currentPrice = parseFloat(card.getAttribute('data-current-price'));
+            const avgPrice = parseFloat(card.getAttribute('data-avg-price'));
+            const chartColor = card.getAttribute('data-chart-color');
             const border = card.getAttribute('data-border');
             card.style.setProperty('--border', border);
             
@@ -788,11 +881,13 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                 if (!card.classList.contains('flipped')) {{
                     card.classList.add('flipped');
                     if (!chartCache[ticker] || !chartCache[ticker].chartObj) {{
-                        renderChart(card, ticker, currentPrice);
+                        renderChart(card, ticker, currentPrice, avgPrice, chartColor);
+                        update24hChange(card, ticker);
                     }}
                 }}
             }});
             
+            const backDiv = card.querySelector('.flip-card-back');
             const closeBtn = backDiv.querySelector('.back-close');
             if (closeBtn) {{
                 closeBtn.addEventListener('click', (e) => {{
