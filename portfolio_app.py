@@ -549,7 +549,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
     <meta charset="UTF-8">
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <style>
-        * {{ box-sizing: border-box; margin: 0; padding: 0; }}
+        * {{ box-sizing: border-box; }}
         html, body {{
             margin: 0;
             padding: 0;
@@ -582,11 +582,11 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
             background: transparent !important;
             overflow: visible !important;
         }}
-        /* Ultra compact card - fixed height, no gaps */
+        /* Ultra compact card */
         .flip-card {{
             background-color: transparent;
             width: 100%;
-            height: 280px;
+            height: 260px;
             perspective: 1200px;
             cursor: pointer;
         }}
@@ -607,19 +607,11 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
             height: 100%;
             backface-visibility: hidden;
             border-radius: 16px;
-            padding: 10px;
+            padding: 8px;
             background: #0f172a;
             box-shadow: 0 8px 24px rgba(0,0,0,0.3);
             border: 2px solid transparent;
             overflow-y: auto;
-        }}
-        /* Hover effect for all cards */
-        .flip-card:hover .flip-card-front,
-        .flip-card:hover .flip-card-back,
-        .static-card:hover {{
-            border-color: var(--border);
-            transform: translateY(-4px);
-            box-shadow: 0 12px 28px rgba(0,0,0,0.5);
         }}
         .flip-card-front {{
             display: flex;
@@ -630,13 +622,13 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
             transform: rotateY(180deg);
             display: flex;
             flex-direction: column;
-            justify-content: space-between;
+            justify-content: flex-start;
         }}
         .static-card {{
             background: #0f172a;
             border-radius: 16px;
-            padding: 10px;
-            height: 280px;
+            padding: 8px;
+            height: 260px;
             display: flex;
             flex-direction: column;
             justify-content: space-between;
@@ -644,23 +636,32 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
             border: 2px solid transparent;
             transition: all 0.25s ease;
         }}
+        .static-card:hover {{
+            border-color: var(--border);
+            transform: translateY(-4px);
+            box-shadow: 0 12px 28px rgba(0,0,0,0.5);
+        }}
+        .flip-card:hover .flip-card-front,
+        .flip-card:hover .flip-card-back {{
+            border-color: var(--border);
+            box-shadow: 0 12px 28px rgba(0,0,0,0.5);
+        }}
         .card-header {{
             display: flex;
             align-items: center;
-            margin-bottom: 0;
+            margin-bottom: 4px;
         }}
         .card-content {{
             display: flex;
             flex-direction: column;
-            gap: 4px;
-            margin-top: 0;
+            gap: 2px;
         }}
         .label-value-row {{
             display: flex;
             justify-content: space-between;
             align-items: center;
-            font-size: 0.9rem;
-            line-height: 1.3;
+            font-size: 0.85rem;
+            line-height: 1.2;
         }}
         .label {{ color: #aaa; font-weight: 500; }}
         .value {{ font-weight: 600; color: white; }}
@@ -698,23 +699,21 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
         }}
         .chart-container {{
             position: relative;
+            margin: 0;
             flex: 1;
-            display: flex;
-            align-items: center;
-            justify-content: center;
             min-height: 140px;
-            margin: 4px 0;
         }}
         .chart-loading {{
             text-align: center;
             color: #ccc;
+            padding: 10px;
             font-size: 0.8rem;
         }}
         .back-stats {{
             display: flex;
             justify-content: space-between;
-            margin-top: 4px;
-            padding-top: 4px;
+            margin-top: 2px;
+            padding-top: 2px;
             border-top: 1px solid rgba(255,255,255,0.12);
             font-size: 0.75rem;
             color: #ddd;
@@ -725,7 +724,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
         }}
         @media (max-width: 700px) {{
             .coin-grid {{ grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; }}
-            .flip-card, .static-card {{ height: 270px; }}
+            .flip-card, .static-card {{ height: 250px; }}
             .scroll-wrapper {{ padding: 12px 0px 16px 0px; }}
         }}
     </style>
