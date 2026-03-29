@@ -372,7 +372,6 @@ def format_percent(val):
         return ""
 
 def format_price(val):
-    """Format price with 4 decimals if < 1, otherwise 2 decimals"""
     try:
         val = float(val)
         if pd.isna(val):
@@ -442,13 +441,10 @@ if 'edit_trigger' not in st.session_state:
     st.session_state.edit_trigger = ""
 
 # ====================== HANDLE SWIPE REFRESH WITH STATE PRESERVATION ======================
-# Check if refresh was triggered via query parameter
 query_params = st.query_params
 if "swipe_refresh" in query_params and query_params["swipe_refresh"] == "1":
-    # Perform refresh
     st.session_state.refresh_key = random.randint(100000, 999999)
     st.session_state.ui_version += 1
-    # Clear the query param to avoid infinite refresh
     st.query_params.clear()
     st.rerun()
 
@@ -486,9 +482,9 @@ def glossy_header(title: str, icon_svg: str):
 with main_container.container(key=f"page_{st.session_state.page}_{st.session_state.ui_version}"):
     if st.session_state.page == "Home":
         glossy_header("Portfolio Dashboard", DASHBOARD_ICON)
-       
+
         df_port, total_value, total_pnl, total_pnl_pct = calculate_portfolio(st.session_state.crypto_df)
-       
+
         value_box_html = f"""
 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(98px, 1fr)); gap: 14px; margin-bottom: 30px;">
     <div class="glossy-box"><div>Total Value</div><div>{format_money(total_value)}</div></div>
@@ -496,7 +492,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
     <div class="glossy-box"><div>PnL %</div><div style="color:{'#00ff9d' if total_pnl_pct>=0 else '#ff4d4d'}">{"▲" if total_pnl_pct>0 else "▼" if total_pnl_pct<0 else ""} {abs(total_pnl_pct):.2f}%</div></div>
 </div>"""
         st.markdown(value_box_html, unsafe_allow_html=True)
-       
+
         cards_html = ""
         for _, r in df_port.iterrows():
             ticker = r['Ticker']
@@ -511,7 +507,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
             avg_price = r['AVG']
             live_price_formatted = format_price(live_price)
             avg_price_formatted = format_price(avg_price)
-           
+
             if ticker == 'USDC':
                 cards_html += f"""
 <div class="static-card usdc-card" data-border="{border_color}">
@@ -529,7 +525,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
 </div>
 """
             else:
-                chart_color = border_color  # Use the card border color for the chart
+                chart_color = border_color
                 cards_html += f"""
 <div class="flip-card" data-ticker="{ticker}" data-current-price="{live_price}" data-avg-price="{avg_price}" data-refresh="{st.session_state.refresh_key}" data-border="{border_color}" data-chart-color="{chart_color}" data-logo="{logo_url}">
     <div class="flip-card-inner">
@@ -574,7 +570,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
     </div>
 </div>
 """
-       
+
         full_html = f"""
 <!DOCTYPE html>
 <html>
@@ -594,7 +590,6 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
             font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
             color: white;
         }}
-        /* Remove blue outline on click for all interactive elements */
         .flip-card-front, .flip-card-back, .flip-card {{
             outline: none;
             -webkit-tap-highlight-color: transparent;
@@ -620,7 +615,6 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
             background: transparent !important;
             overflow: visible !important;
         }}
-        /* Card sizes - original height, no scrolling on backs */
         .flip-card {{
             background-color: transparent;
             width: 100%;
@@ -674,7 +668,6 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
             border: 2px solid transparent;
             transition: all 0.25s ease;
         }}
-        /* No hover pop animation for USDC card */
         .static-card.usdc-card:hover {{
             transform: none;
             box-shadow: 0 8px 24px rgba(0,0,0,0.3);
@@ -716,7 +709,6 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
             padding-top: 6px;
         }}
         .total-value {{ font-size: 1.15rem; font-weight: 700; }}
-        /* Back layout - right stats always on the right, text left-aligned */
         .back-top-row {{
             display: flex;
             justify-content: space-between;
@@ -785,7 +777,6 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
             padding: 10px;
             font-size: 0.85rem;
         }}
-        /* Responsive: larger text on mobile */
         @media (max-width: 700px) {{
             .coin-grid {{ grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 18px; }}
             .flip-card, .static-card {{ height: 270px; }}
@@ -848,7 +839,6 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                 const ticker = card.getAttribute('data-ticker');
                 if (flippedTickers.includes(ticker)) {{
                     card.classList.add('flipped');
-                    // Trigger chart loading if needed
                     const currentPrice = parseFloat(card.getAttribute('data-current-price'));
                     const avgPrice = parseFloat(card.getAttribute('data-avg-price'));
                     const chartColor = card.getAttribute('data-chart-color');
@@ -861,13 +851,15 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
             localStorage.removeItem('flippedCards');
         }}
         
-        // --- Create spinner in parent window (Streamlit's main page) ---
+        // --- Create spinner in parent window (Streamlit main page) at the very top ---
         let parentSpinnerElement = null;
         
         function createParentSpinner() {{
             if (parentSpinnerElement) return;
             try {{
                 const parentDoc = window.parent.document;
+                // Check if overlay already exists
+                if (parentDoc.getElementById('swipe-refresh-overlay')) return;
                 const overlay = parentDoc.createElement('div');
                 overlay.id = 'swipe-refresh-overlay';
                 overlay.style.cssText = `
@@ -912,7 +904,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                 parentDoc.body.appendChild(overlay);
                 parentSpinnerElement = {{ overlay, indicator, spinner }};
                 
-                // Add keyframe animation to parent document
+                // Add keyframe animations to parent document
                 const style = parentDoc.createElement('style');
                 style.textContent = `
                     @keyframes spin {{
@@ -930,21 +922,10 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
             }}
         }}
         
-        function showParentSpinner() {{
-            if (parentSpinnerElement) {{
-                parentSpinnerElement.indicator.style.marginTop = '15px';
-            }}
-        }}
-        
-        function hideParentSpinner() {{
-            if (parentSpinnerElement) {{
-                parentSpinnerElement.indicator.style.marginTop = '-60px';
-            }}
-        }}
-        
         function showParentCheckmark() {{
             if (parentSpinnerElement) {{
-                const checkSpan = parentSpinnerElement.indicator.ownerDocument.createElement('div');
+                const parentDoc = window.parent.document;
+                const checkSpan = parentDoc.createElement('div');
                 checkSpan.className = 'checkmark';
                 checkSpan.style.cssText = `
                     width: 30px;
@@ -964,7 +945,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                     if (parentSpinnerElement) {{
                         parentSpinnerElement.indicator.style.marginTop = '-60px';
                         parentSpinnerElement.indicator.innerHTML = '';
-                        const newSpinner = parentSpinnerElement.indicator.ownerDocument.createElement('div');
+                        const newSpinner = parentDoc.createElement('div');
                         newSpinner.className = 'spinner';
                         newSpinner.style.cssText = `
                             width: 30px;
@@ -981,19 +962,25 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
             }}
         }}
         
-        // Create the parent spinner once
+        function setParentSpinnerMarginTop(marginTop) {{
+            if (parentSpinnerElement) {{
+                parentSpinnerElement.indicator.style.marginTop = marginTop;
+            }}
+        }}
+        
+        // Create the spinner in the parent page
         createParentSpinner();
         
-        // --- Swipe-to-refresh: only triggers when pulling from top 80px and scrolled to top ---
+        // --- Swipe-to-refresh: only from the very top 100px of the screen, and only when scrolled to top ---
         let touchStartY = 0;
         let isDragging = false;
         let refreshThreshold = 80;
         let isRefreshing = false;
         
-        // Only enable on touch devices
         if ('ontouchstart' in window) {{
             document.addEventListener('touchstart', function(e) {{
-                if (window.scrollY <= 5 && e.touches[0].clientY < 80 && !isRefreshing) {{
+                // Only if page is at the top and touch is within top 100px of the screen
+                if (window.scrollY <= 5 && e.touches[0].clientY < 100 && !isRefreshing) {{
                     touchStartY = e.touches[0].clientY;
                     isDragging = true;
                 }}
@@ -1008,9 +995,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                     const pullDistance = Math.min(diff, refreshThreshold);
                     const progress = pullDistance / refreshThreshold;
                     const marginTop = 15 * progress;
-                    if (parentSpinnerElement) {{
-                        parentSpinnerElement.indicator.style.marginTop = marginTop + 'px';
-                    }}
+                    setParentSpinnerMarginTop(marginTop + 'px');
                     if (pullDistance >= refreshThreshold && parentSpinnerElement && parentSpinnerElement.spinner) {{
                         parentSpinnerElement.spinner.style.borderTopColor = '#00ff9d';
                     }}
@@ -1027,16 +1012,12 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                 if (diff >= refreshThreshold && window.scrollY <= 5) {{
                     isRefreshing = true;
                     saveFlippedState();
-                    if (parentSpinnerElement) {{
-                        parentSpinnerElement.indicator.style.marginTop = '15px';
-                    }}
+                    setParentSpinnerMarginTop('15px');
                     const url = new URL(window.location.href);
                     url.searchParams.set('swipe_refresh', '1');
                     window.location.href = url.toString();
                 }} else {{
-                    if (parentSpinnerElement) {{
-                        parentSpinnerElement.indicator.style.marginTop = '-60px';
-                    }}
+                    setParentSpinnerMarginTop('-60px');
                 }}
                 isDragging = false;
             }});
@@ -1226,14 +1207,14 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
 </html>
 """
         components.html(full_html, height=680, scrolling=False)
-   
+
     # ====================== CRYPTO TRANSACTIONS ======================
     elif st.session_state.page == "Crypto Transactions":
         glossy_header("Crypto Transactions", CRYPTO_ICON)
-       
+
         delete_trigger = st.text_input("delete_trigger", value=st.session_state.delete_trigger, label_visibility="collapsed", key="delete_trigger_hidden")
         edit_trigger = st.text_input("edit_trigger", value=st.session_state.edit_trigger, label_visibility="collapsed", key="edit_trigger_hidden")
-       
+
         if delete_trigger and delete_trigger != st.session_state.delete_trigger:
             try:
                 idx = int(delete_trigger)
@@ -1247,7 +1228,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
             except:
                 pass
             st.session_state.delete_trigger = delete_trigger
-       
+
         if edit_trigger and edit_trigger != st.session_state.edit_trigger:
             try:
                 idx = int(edit_trigger)
@@ -1257,11 +1238,11 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
             except:
                 pass
             st.session_state.edit_trigger = edit_trigger
-       
+
         df_display = st.session_state.crypto_df.copy()
         df_display['Date'] = df_display['Datum'].apply(format_datum)
         df_display = df_display.dropna(how='all').reset_index(drop=True)
-       
+
         cards_html = ""
         for i, r in df_display.iterrows():
             logo_url = get_ticker_logo(r['Ticker'])
@@ -1269,7 +1250,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
             amount_val = format_holdings(r['Amount'], r['Ticker'])
             price = format_money(r['Price'])
             date_str = r['Date']
-           
+
             cards_html += f"""
 <div class="transaction-card">
     <div class="transaction-main-row">
@@ -1292,7 +1273,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
     </div>
 </div>
 """
-       
+
         full_html = f"""
 <html>
 <head>
@@ -1416,7 +1397,7 @@ function editTransaction(i) {{
 </html>
 """
         components.html(full_html, height=560, scrolling=True)
-       
+
         if 'editing_row_crypto' in st.session_state:
             edit_idx = st.session_state.editing_row_crypto
             row = st.session_state.crypto_df.loc[edit_idx]
@@ -1446,7 +1427,7 @@ function editTransaction(i) {{
                     if st.form_submit_button("❌ Cancel"):
                         del st.session_state.editing_row_crypto
                         st.rerun()
-       
+
         st.subheader("➕ Add New Transaction")
         with st.form("add_crypto"):
             col1, col2, col3 = st.columns([1.2, 1.2, 1.6])
@@ -1468,7 +1449,7 @@ function editTransaction(i) {{
                     st.session_state.ui_version += 1
                     st.success(f"✅ Added {amount} {ticker}")
                     st.rerun()
-   
+
     # ====================== FIAT TRANSACTIONS ======================
     elif st.session_state.page == "Fiat Transactions":
         total_czk = pd.to_numeric(st.session_state.fiat_df['CZK'], errors='coerce').fillna(0).sum()
@@ -1477,9 +1458,9 @@ function editTransaction(i) {{
         fees_eur = pd.to_numeric(st.session_state.fiat_df['Fee'], errors='coerce').fillna(0).sum()
         fees_czk = (pd.to_numeric(st.session_state.fiat_df['Fee'], errors='coerce').fillna(0) *
                     pd.to_numeric(st.session_state.fiat_df['CZK/EUR'], errors='coerce').fillna(0)).sum()
-        
+
         glossy_header("Fiat Transactions", FIAT_ICON)
-        
+
         summary_html = f"""
 <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:20px;margin-bottom:30px;">
     <div class="glossy-box"><div>Total CZK</div><div>{total_czk:,.2f}</div></div>
@@ -1488,7 +1469,7 @@ function editTransaction(i) {{
     <div class="glossy-box"><div>Fees</div><div class="fee-line">{fees_eur:,.2f} EUR</div><div class="fee-line" style="font-size:22px;">{fees_czk:,.2f} CZK</div></div>
 </div>"""
         st.markdown(summary_html, unsafe_allow_html=True)
-        
+
         df_clean = st.session_state.fiat_df.dropna(how='all').reset_index(drop=True)
         table_container = st.container(key=f"fiat_table_container_{st.session_state.ui_version}")
         with table_container:
@@ -1522,7 +1503,7 @@ function editTransaction(i) {{
                         if st.button("✏️", key=f"edit_{i}_{st.session_state.fiat_table_version}_{st.session_state.ui_version}"):
                             st.session_state.editing_row = i
                             st.rerun()
-        
+
         if 'editing_row' in st.session_state:
             edit_idx = st.session_state.editing_row
             row = st.session_state.fiat_df.loc[edit_idx]
@@ -1552,7 +1533,7 @@ function editTransaction(i) {{
                     if st.form_submit_button("❌ Cancel"):
                         del st.session_state.editing_row
                         st.rerun()
-        
+
         st.subheader("➕ Add New Fiat Entry")
         with st.form("add_fiat"):
             col1, col2 = st.columns(2)
