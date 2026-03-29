@@ -471,9 +471,11 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
             if ticker == 'USDC':
                 cards_html += f"""
 <div class="static-card usdc-card" data-border="{border_color}">
-    <div class="card-header">
-        <img src="{logo_url}" style="height:44px;width:44px;border-radius:50%;object-fit:contain;" onerror="this.src='https://via.placeholder.com/44/1e2a44/ffffff?text=U';">
-        <span style="font-weight:700;font-size:1.3rem;margin-left:12px;color:#ffffff;">{ticker}</span>
+    <div class="card-header-usdc">
+        <div class="header-left">
+            <img src="{logo_url}" style="height:44px;width:44px;border-radius:50%;object-fit:contain;" onerror="this.src='https://via.placeholder.com/44/1e2a44/ffffff?text=U';">
+            <span style="font-weight:700;font-size:1.3rem;margin-left:12px;color:#ffffff;">{ticker}</span>
+        </div>
     </div>
     <div class="card-content">
         <div class="label-value-row"><span class="label">Holdings</span><span class="value">{format_holdings(r['Holdings'], ticker)}</span></div>
@@ -491,8 +493,23 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
     <div class="flip-card-inner">
         <div class="flip-card-front">
             <div class="card-header">
-                <img src="{logo_url}" style="height:44px;width:44px;border-radius:50%;object-fit:contain;" onerror="this.src='https://via.placeholder.com/44/1e2a44/ffffff?text={ticker[0]}';">
-                <span style="font-weight:700;font-size:1.3rem;margin-left:12px;color:#ffffff;">{ticker}</span>
+                <div class="header-left">
+                    <img src="{logo_url}" style="height:44px;width:44px;border-radius:50%;object-fit:contain;" onerror="this.src='https://via.placeholder.com/44/1e2a44/ffffff?text={ticker[0]}';">
+                    <span style="font-weight:700;font-size:1.3rem;margin-left:12px;color:#ffffff;">{ticker}</span>
+                </div>
+                <div class="header-right">
+                    <div class="stat-group">
+                        <div class="stat-label">Current</div>
+                        <div class="value-change-row">
+                            <span class="current-value">${live_price_formatted}</span>
+                            <span class="change-value" id="change-{ticker}">...</span>
+                        </div>
+                    </div>
+                    <div class="stat-group">
+                        <div class="stat-label">Avg</div>
+                        <div class="stat-value">${avg_price_formatted}</div>
+                    </div>
+                </div>
             </div>
             <div class="card-content">
                 <div class="label-value-row"><span class="label">Holdings</span><span class="value">{format_holdings(r['Holdings'], ticker)}</span></div>
@@ -503,27 +520,8 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
             </div>
         </div>
         <div class="flip-card-back">
-            <div class="back-top-row">
-                <div class="back-left">
-                    <img src="{logo_url}" style="height:44px;width:44px;border-radius:50%;object-fit:contain;" onerror="this.src='https://via.placeholder.com/44/1e2a44/ffffff?text={ticker[0]}';">
-                    <span style="color:#ffffff; font-size:1.3rem; font-weight:700; margin-left:12px;">{ticker}</span>
-                </div>
-                <div class="back-right-stats">
-                    <div class="stat-group">
-                        <div class="stat-label">Current</div>
-                        <div class="value-change-row">
-                            <span class="current-value">${live_price_formatted}</span>
-                            <span class="change-value" id="change-{ticker}">loading...</span>
-                        </div>
-                    </div>
-                    <div class="stat-group avg-group">
-                        <div class="stat-label">Avg</div>
-                        <div class="stat-value">${avg_price_formatted}</div>
-                    </div>
-                </div>
-            </div>
             <div class="chart-container">
-                <canvas id="chart-{ticker}" width="400" height="165" style="width:100%; height:auto; max-height:165px;"></canvas>
+                <canvas id="chart-{ticker}"></canvas>
                 <div class="chart-loading" id="loading-{ticker}">Loading chart...</div>
             </div>
         </div>
@@ -560,10 +558,25 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
             overflow-x: auto;
             padding: 12px 0px 20px 0px;
             margin-bottom: 20px;
-            scrollbar-width: none; /* Firefox */
-            -ms-overflow-style: none;  /* IE and Edge */
         }}
-        .scroll-wrapper::-webkit-scrollbar {{ display: none; }} /* Chrome, Safari, Opera */
+        
+        /* Custom horizontal scrollbar for PC */
+        .scroll-wrapper::-webkit-scrollbar {{
+            height: 8px;
+            display: block;
+        }}
+        .scroll-wrapper::-webkit-scrollbar-track {{
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+        }}
+        .scroll-wrapper::-webkit-scrollbar-thumb {{
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+        }}
+        .scroll-wrapper::-webkit-scrollbar-thumb:hover {{
+            background: rgba(255, 255, 255, 0.3);
+        }}
+
         .coin-grid {{
             display: flex;
             flex-direction: row;
@@ -602,7 +615,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
             background: #0f172a;
             box-shadow: 0 8px 24px rgba(0,0,0,0.3);
             border: 2px solid transparent;
-            overflow-y: hidden;
+            overflow: hidden; /* Prevent internal scrolling */
         }}
         .flip-card-front {{
             display: flex;
@@ -613,7 +626,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
             transform: rotateY(180deg);
             display: flex;
             flex-direction: column;
-            justify-content: flex-start;
+            padding: 16px; /* slightly more padding for chart breathing room */
         }}
         .static-card {{
             flex: 0 0 340px;
@@ -627,6 +640,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
             box-shadow: 0 8px 24px rgba(0,0,0,0.3);
             border: 2px solid transparent;
             transition: all 0.25s ease;
+            overflow: hidden;
         }}
         .static-card.usdc-card:hover {{
             transform: none;
@@ -643,10 +657,60 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
             border-color: var(--border);
             box-shadow: 0 12px 28px rgba(0,0,0,0.5);
         }}
-        .card-header {{
+        .card-header-usdc {{
             display: flex;
             align-items: center;
             margin-bottom: 8px;
+        }}
+        .card-header {{
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 12px;
+        }}
+        .header-left {{
+            display: flex;
+            align-items: center;
+            flex-shrink: 0;
+        }}
+        .header-right {{
+            display: flex;
+            gap: 16px;
+            align-items: baseline;
+            text-align: right;
+        }}
+        .stat-group {{
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+        }}
+        .stat-label {{
+            font-size: 0.7rem;
+            color: #aaa;
+            margin-bottom: 2px;
+            font-weight: 500;
+        }}
+        .value-change-row {{
+            display: flex;
+            align-items: baseline;
+            gap: 6px;
+        }}
+        .current-value {{
+            font-size: 1.05rem;
+            font-weight: 700;
+            color: white;
+            white-space: nowrap;
+        }}
+        .change-value {{
+            font-size: 0.85rem;
+            font-weight: 600;
+            white-space: nowrap;
+        }}
+        .stat-value {{
+            font-size: 1.05rem;
+            font-weight: 600;
+            color: white;
+            white-space: nowrap;
         }}
         .card-content {{
             display: flex;
@@ -669,103 +733,42 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
             padding-top: 6px;
         }}
         .total-value {{ font-size: 1.15rem; font-weight: 700; }}
-        .back-top-row {{
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 18px;
-            flex-wrap: nowrap;
-            gap: 12px;
-        }}
-        .back-left {{
-            display: flex;
-            align-items: center;
-            flex-shrink: 0;
-        }}
-        .back-right-stats {{
-            display: flex;
-            gap: 24px;
-            align-items: baseline;
-            flex-shrink: 1;
-            justify-content: flex-end;
-        }}
-        .stat-group {{
-            text-align: left;
-        }}
-        .stat-group.avg-group {{
-            margin-left: 0;
-        }}
-        .stat-label {{
-            font-size: 0.7rem;
-            color: #aaa;
-            margin-bottom: 2px;
-            font-weight: 500;
-            white-space: nowrap;
-        }}
-        .value-change-row {{
-            display: flex;
-            align-items: baseline;
-            gap: 8px;
-            justify-content: flex-start;
-        }}
-        .current-value {{
-            font-size: 1.05rem;
-            font-weight: 700;
-            color: white;
-            white-space: nowrap;
-        }}
-        .change-value {{
-            font-size: 0.95rem;
-            font-weight: 600;
-            white-space: nowrap;
-        }}
-        .stat-value {{
-            font-size: 1.05rem;
-            font-weight: 600;
-            color: white;
-            white-space: nowrap;
-        }}
+        
         .chart-container {{
             position: relative;
-            margin: 16px 0 0 0;
-            flex: 1;
-            min-height: 175px;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }}
+        canvas {{
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100% !important;
+            height: 100% !important;
         }}
         .chart-loading {{
-            text-align: center;
+            position: absolute;
             color: #ccc;
-            padding: 10px;
             font-size: 0.85rem;
+            z-index: 10;
         }}
+        
         @media (max-width: 700px) {{
             .flip-card, .static-card {{ flex: 0 0 300px; height: 270px; }}
             .scroll-wrapper {{ padding: 12px 0px 16px 0px; }}
-            .back-top-row {{
-                gap: 8px;
-                margin-bottom: 14px;
-            }}
-            .back-right-stats {{ gap: 16px; }}
+            .header-right {{ gap: 12px; }}
             .current-value {{ font-size: 1.0rem; }}
-            .change-value {{ font-size: 0.9rem; }}
+            .change-value {{ font-size: 0.85rem; }}
             .stat-value {{ font-size: 1.0rem; }}
-            .stat-label {{ font-size: 0.65rem; }}
-            .chart-container {{
-                margin-top: 14px;
-                min-height: 165px;
-            }}
         }}
         @media (max-width: 550px) {{
             .current-value {{ font-size: 0.95rem; }}
-            .change-value {{ font-size: 0.85rem; }}
-            .stat-value {{ font-size: 0.95rem; }}
-            .back-right-stats {{ gap: 12px; }}
-        }}
-        @media (max-width: 480px) {{
-            .current-value {{ font-size: 0.9rem; }}
             .change-value {{ font-size: 0.8rem; }}
-            .stat-value {{ font-size: 0.9rem; }}
-            .stat-label {{ font-size: 0.6rem; }}
-            .back-right-stats {{ gap: 10px; }}
+            .stat-value {{ font-size: 0.95rem; }}
+            .header-right {{ gap: 10px; }}
         }}
     </style>
 </head>
@@ -914,7 +917,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                 }},
                 options: {{
                     responsive: true,
-                    maintainAspectRatio: true,
+                    maintainAspectRatio: false, /* allows stretching to fill container */
                     plugins: {{
                         legend: {{ display: false }},
                         tooltip: {{ mode: 'index', intersect: false }}
@@ -950,6 +953,9 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
             const border = card.getAttribute('data-border');
             card.style.setProperty('--border', border);
             
+            // Trigger load data immediately on script execution to populate the front
+            update24hChange(card, ticker);
+            
             const front = card.querySelector('.flip-card-front');
             front.addEventListener('click', (e) => {{
                 e.stopPropagation();
@@ -957,7 +963,6 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                     card.classList.add('flipped');
                     if (!chartCache[ticker] || !chartCache[ticker].chartObj) {{
                         renderChart(card, ticker, currentPrice, avgPrice, chartColor);
-                        update24hChange(card, ticker);
                     }}
                 }}
             }});
@@ -1065,9 +1070,23 @@ body {{ background: transparent; margin: 0; padding: 0; }}
     overflow-x: auto;
     overflow-y: hidden;
     padding-bottom: 20px;
-    scrollbar-width: none;
 }}
-.transaction-grid-wrapper::-webkit-scrollbar {{ display: none; }}
+/* Custom horizontal scrollbar for PC */
+.transaction-grid-wrapper::-webkit-scrollbar {{
+    height: 8px;
+    display: block;
+}}
+.transaction-grid-wrapper::-webkit-scrollbar-track {{
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 10px;
+}}
+.transaction-grid-wrapper::-webkit-scrollbar-thumb {{
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 10px;
+}}
+.transaction-grid-wrapper::-webkit-scrollbar-thumb:hover {{
+    background: rgba(255, 255, 255, 0.3);
+}}
 
 .transaction-grid {{
     display: flex;
@@ -1088,6 +1107,7 @@ body {{ background: transparent; margin: 0; padding: 0; }}
     display: flex;
     flex-direction: column;
     min-height: 138px;
+    overflow: hidden;
 }}
 .transaction-card:hover {{
     transform: translateY(-4px);
