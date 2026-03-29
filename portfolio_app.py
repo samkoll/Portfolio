@@ -55,137 +55,6 @@ div[data-testid="stMainBlockContainer"] {
     padding-top: 0px !important;
 }
 
-/* === PRICE CHARTS SECTION - Tighter spacing === */
-#price-charts-section {
-    margin-top: -25px !important;
-    margin-bottom: 18px !important;
-    padding: 18px 20px !important;
-}
-
-/* === TRANSACTION CARDS === */
-.transaction-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(380px, 1fr));
-    gap: 16px;
-    padding: 0 6px;
-}
-
-.transaction-card {
-    background: #0f172a;
-    border-radius: 18px;
-    padding: 18px 20px 14px;
-    box-shadow: 0 6px 20px rgba(0,0,0,0.3);
-    transition: all 0.25s ease;
-    position: relative;
-    display: flex;
-    flex-direction: column;
-    min-height: 138px;
-}
-
-.transaction-card:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 12px 30px rgba(0, 255, 157, 0.3);
-}
-
-/* Main header row */
-.transaction-main-row {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-bottom: 16px;
-}
-
-.transaction-left {
-    display: flex;
-    align-items: center;
-    gap: 14px;
-    flex: 1;
-}
-
-.transaction-header img {
-    width: 42px;
-    height: 42px;
-    border-radius: 50%;
-    object-fit: contain;
-}
-
-.transaction-ticker {
-    font-size: 1.28rem;
-    font-weight: 700;
-    color: #ffffff;
-    line-height: 1.05;
-}
-
-.transaction-date {
-    color: #aaa;
-    font-size: 0.92rem;
-    margin-top: 2px;
-}
-
-.transaction-values {
-    display: flex;
-    gap: 24px;
-    text-align: right;
-    font-size: 1.02rem;
-}
-
-.transaction-values div {
-    min-width: 88px;
-}
-
-.transaction-values small {
-    color: #aaa;
-    font-size: 0.82rem;
-    font-weight: 500;
-    display: block;
-}
-
-.transaction-values strong {
-    font-weight: 700;
-    color: #ffffff;
-}
-
-.transaction-amount {
-    font-size: 1.04rem;
-    font-weight: 700;
-    color: #ffffff;
-}
-
-.transaction-buttons {
-    display: flex;
-    gap: 12px;
-    margin-top: auto;
-}
-
-.transaction-buttons button {
-    flex: 1;
-    padding: 10px 14px;
-    border: none;
-    border-radius: 11px;
-    font-weight: 700;
-    font-size: 0.95rem;
-    cursor: pointer;
-    transition: all 0.2s ease;
-}
-
-.transaction-buttons .delete-btn {
-    background: #e63939;
-    color: white;
-}
-
-.transaction-buttons .delete-btn:hover {
-    background: #c1121f;
-}
-
-.transaction-buttons .edit-btn {
-    background: #00b894;
-    color: #0f1724;
-}
-
-.transaction-buttons .edit-btn:hover {
-    background: #00a17a;
-}
-
 /* Glossy Header - Closer to top */
 .glossy-header {
     position: relative;
@@ -252,41 +121,6 @@ div[data-testid="stMainBlockContainer"] {
     color: #ffffff;
 }
 
-/* Price pills */
-.price-pills-container {
-    display: flex !important;
-    gap: 6px !important;
-    flex-wrap: nowrap !important;
-    overflow-x: auto !important;
-    padding-bottom: 4px;
-    scrollbar-width: none;
-}
-
-.price-pills-container::-webkit-scrollbar { display: none; }
-
-.price-pill, .avg-pill, .daily-pill {
-    padding: 7px 14px !important;
-    border-radius: 9999px !important;
-    white-space: nowrap !important;
-    flex-shrink: 0;
-    background: #0f172a !important;
-    display: inline-flex;
-    align-items: center;
-    gap: 5px;
-    font-size: 1.05rem;
-    font-weight: 700;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.12);
-}
-
-.price-pill span:last-child, .avg-pill span:last-child { font-size: 1.26rem; }
-
-.daily-pill {
-    color: #ff4d4d;
-    font-weight: 700;
-    padding: 4px 8px !important;
-    font-size: 0.88rem !important;
-}
-
 /* Buttons */
 .stButton > button {
     background: #1e2a44 !important;
@@ -321,11 +155,6 @@ div[data-testid="stMainBlockContainer"] {
         padding: 24px 16px !important;
         font-size: 24px !important;
         min-height: 100px;
-    }
-    .transaction-grid {
-        grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
-        padding: 0 4px;
-        gap: 14px;
     }
 }
 
@@ -469,54 +298,6 @@ def get_all_cryptocompare_prices(tickers, refresh_key=0):
         except:
             continue
     return prices
-
-# ====================== DAILY OPEN PRICE FUNCTION ======================
-@st.cache_data(ttl=300, show_spinner=False)
-def get_daily_open(ticker: str, refresh_key=0):
-    sym = CRYPTOCOMPARE_SYMBOL_MAP.get(ticker.upper())
-    if not sym:
-        return 0.0
-    try:
-        url = f"https://min-api.cryptocompare.com/data/v2/histoday?fsym={sym}&tsym=USD&limit=1"
-        headers = {"User-Agent": "Mozilla/5.0 (compatible; StreamlitPortfolio/1.0)"}
-        data = get_with_retry(url, headers)
-        if data and "Data" in data and "Data" in data["Data"] and len(data["Data"]["Data"]) > 0:
-            return float(data["Data"]["Data"][-1]["open"])
-        return 0.0
-    except:
-        return 0.0
-
-# ====================== CHART FUNCTION ======================
-@st.cache_data(ttl=80, show_spinner=False)
-def get_cryptocompare_ohlc(ticker: str, candle: str, refresh_key=0):
-    sym = CRYPTOCOMPARE_SYMBOL_MAP.get(ticker.upper())
-    if not sym:
-        return None
-    try:
-        if candle in ["5m", "30m"]:
-            url = f"https://min-api.cryptocompare.com/data/v2/histominute?fsym={sym}&tsym=USD&limit=2000"
-        else:
-            url = f"https://min-api.cryptocompare.com/data/v2/histohour?fsym={sym}&tsym=USD&limit=2000" if candle != "1D" else \
-                  f"https://min-api.cryptocompare.com/data/v2/histoday?fsym={sym}&tsym=USD&limit=90"
-        headers = {"User-Agent": "Mozilla/5.0 (compatible; StreamlitPortfolio/1.0)"}
-        data = get_with_retry(url, headers)
-        if not data or "Data" not in data or "Data" not in data["Data"]:
-            return None
-        df_data = data["Data"]["Data"]
-        df = pd.DataFrame(df_data)
-        df = df[["time", "open", "high", "low", "close", "volumefrom"]]
-        df["timestamp"] = pd.to_datetime(df["time"], unit="s")
-        df.set_index("timestamp", inplace=True)
-        df = df.drop(columns=["time"])
-        if candle == "5m":
-            df = df.resample('5T').agg({'open': 'first', 'high': 'max', 'low': 'min', 'close': 'last', 'volumefrom': 'sum'}).dropna()
-        elif candle == "30m":
-            df = df.resample('30T').agg({'open': 'first', 'high': 'max', 'low': 'min', 'close': 'last', 'volumefrom': 'sum'}).dropna()
-        elif candle == "4h":
-            df = df.resample('4H').agg({'open': 'first', 'high': 'max', 'low': 'min', 'close': 'last', 'volumefrom': 'sum'}).dropna()
-        return df
-    except:
-        return None
 
 # ====================== LOGOS & COLORS ======================
 def get_ticker_logo(ticker: str) -> str:
@@ -680,209 +461,346 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
        
         coin_list = [t for t in df_port['Ticker'] if t != 'USDC']
        
+        # Build flip cards HTML
         cards_html = ""
-        for _, r in df_port.iterrows():
+        for idx, r in df_port.iterrows():
+            ticker = r['Ticker']
+            if ticker == 'USDC':
+                continue  # skip USDC from flip cards (optional)
             pnl = r['PnL']
             pnl_color = "#00ff9d" if pnl > 0 else "#ff4d4d" if pnl < 0 else "#aaaaaa"
             arrow = "▲" if pnl > 0 else "▼" if pnl < 0 else ""
-            base_color = get_ticker_color(r['Ticker'])
+            base_color = get_ticker_color(ticker)
             border_color = base_color if base_color != '#000000' else '#ffffff'
-            ticker = r['Ticker']
-            onclick = f"onclick=\"switchToTabAndScroll({coin_list.index(ticker)})\" " if ticker != 'USDC' else ""
-            row_class = "clickable-row" if ticker != 'USDC' else ""
             logo_url = get_ticker_logo(ticker)
-           
             pnl_pct_formatted = format_percent(abs(r['PnL %'])) if pd.notna(r['PnL %']) else ""
+            live_price = r['Live']
            
             cards_html += f"""
-<div class="coin-card {row_class}" data-border="{border_color}" {onclick}>
-    <div class="card-header">
-        <img src="{logo_url}" style="height:38px;width:38px;border-radius:50%;object-fit:contain;" onerror="this.src='https://via.placeholder.com/38/1e2a44/ffffff?text={ticker[0]}';">
-        <span style="font-weight:700;font-size:1.22rem;margin-left:10px;">{ticker}</span>
-    </div>
-    <div class="card-content">
-        <div class="label-value-row"><span class="label">Holdings</span><span class="value">{format_holdings(r['Holdings'], r['Ticker'])}</span></div>
-        <div class="label-value-row"><span class="label">Invested</span><span class="value">{format_money(r['USDC'])}</span></div>
-        <div class="label-value-row"><span class="label">PnL</span><span class="value" style="color:{pnl_color};">{arrow} {format_money(abs(pnl) if pd.notna(pnl) else "")}</span></div>
-        <div class="label-value-row"><span class="label">PnL %</span><span class="value" style="color:{pnl_color};">{arrow} {pnl_pct_formatted}</span></div>
-        <div class="label-value-row total"><span class="label">Value</span><span class="value total-value">{format_money(r['Value'])}</span></div>
-    </div>
-</div>"""
-       
-        # Fixed CSS to prevent clipping on hover
-        html = f"""<html><head><style>
-body{{background:transparent;color:white;font-family:sans-serif;margin:0;padding:0;}}
-.scroll-wrapper {{
-    overflow-y: auto;
-    overflow-x: visible;
-    height: 590px;
-    padding: 12px 12px 20px 12px;
-    margin-bottom: 20px;
-    scrollbar-width: none;
-    -ms-overflow-style: none;
-}}
-.scroll-wrapper::-webkit-scrollbar {{
-    display: none;
-}}
-.coin-grid {{
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-    gap: 16px;
-    box-sizing: border-box;
-    background: transparent !important;
-    overflow: visible !important;
-}}
-.coin-card {{
-    background:#0f172a;
-    padding:16px;
-    border-radius:20px;
-    box-shadow:0 6px 20px rgba(0,0,0,0.3);
-    transition:all 0.25s ease;
-    cursor:pointer;
-    position:relative;
-    z-index:1;
-    outline:none !important;
-    -webkit-tap-highlight-color:transparent;
-    user-select:none;
-    -webkit-user-select:none;
-    border: 2px solid transparent;
-    margin: 0;
-}}
-.coin-card:hover {{
-    transform:translateY(-4px) scale(1.02);
-    border: 2px solid var(--border);
-    box-shadow:0 16px 28px rgba(0,0,0,0.5);
-    z-index:10;
-}}
-.card-header {{display:flex;align-items:center;margin-bottom:14px;}}
-.card-content {{display:flex;flex-direction:column;gap:8px;}}
-.label-value-row {{display:flex;justify-content:space-between;align-items:center;font-size:0.95rem;}}
-.label {{color:#aaa;font-weight:500;}}
-.value {{font-weight:600;}}
-.total {{font-size:1.18rem;margin-top:8px;border-top:1px solid rgba(255,255,255,0.12);padding-top:8px;}}
-.total-value {{font-size:1.28rem;}}
-@media (max-width: 700px) {{
-    .coin-grid {{grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px;}}
-    .coin-card {{padding:14px;}}
-    .scroll-wrapper {{padding: 8px 8px 16px 8px;}}
-}}
-</style></head><body><div class="scroll-wrapper"><div class="coin-grid">{cards_html}</div></div><script>
-function switchToTabAndScroll(index){{
-    const tabs = window.parent.document.querySelectorAll('.stTabs button');
-    if (tabs && tabs[index]) tabs[index].click();
-    setTimeout(() => {{
-        const section = window.parent.document.getElementById('price-charts-section');
-        if (section) {{
-            section.scrollIntoView({{ behavior: 'smooth', block: 'start' }});
-        }}
-    }}, 180);
-}}
-document.querySelectorAll('.coin-card').forEach(div => {{
-    div.style.setProperty('--border', div.getAttribute('data-border'));
-}});
-</script><!-- VERSION:{st.session_state.ui_version} --></body></html>"""
-        components.html(html, height=640, scrolling=False)
-
-        st.markdown(f"""
-<div id="price-charts-section" class="glossy-box" style="background:#1e2a44;padding:18px 20px;border-radius:18px;">
-    <div class="charts-header">
-        {CHARTS_ICON}
-        <span>Charts</span>
+<div class="flip-card" data-ticker="{ticker}" data-current-price="{live_price}" data-refresh="{st.session_state.refresh_key}" data-border="{border_color}">
+    <div class="flip-card-inner">
+        <div class="flip-card-front">
+            <div class="card-header">
+                <img src="{logo_url}" style="height:38px;width:38px;border-radius:50%;object-fit:contain;" onerror="this.src='https://via.placeholder.com/38/1e2a44/ffffff?text={ticker[0]}';">
+                <span style="font-weight:700;font-size:1.22rem;margin-left:10px;">{ticker}</span>
+            </div>
+            <div class="card-content">
+                <div class="label-value-row"><span class="label">Holdings</span><span class="value">{format_holdings(r['Holdings'], ticker)}</span></div>
+                <div class="label-value-row"><span class="label">Invested</span><span class="value">{format_money(r['USDC'])}</span></div>
+                <div class="label-value-row"><span class="label">PnL</span><span class="value" style="color:{pnl_color};">{arrow} {format_money(abs(pnl) if pd.notna(pnl) else "")}</span></div>
+                <div class="label-value-row"><span class="label">PnL %</span><span class="value" style="color:{pnl_color};">{arrow} {pnl_pct_formatted}</span></div>
+                <div class="label-value-row total"><span class="label">Value</span><span class="value total-value">{format_money(r['Value'])}</span></div>
+            </div>
+        </div>
+        <div class="flip-card-back">
+            <div class="back-header">
+                <span>{ticker} - 30 Day Price</span>
+                <span class="back-close">↺</span>
+            </div>
+            <div class="chart-container">
+                <canvas id="chart-{ticker}" width="400" height="200" style="width:100%; height:auto; max-height:220px;"></canvas>
+                <div class="chart-loading" id="loading-{ticker}">Loading chart...</div>
+            </div>
+            <div class="current-price-label">Current: ${live_price:,.2f}</div>
+        </div>
     </div>
 </div>
-""", unsafe_allow_html=True)
-
-        if coin_list:
-            selected_tab = st.tabs(coin_list)
-            for i, coin in enumerate(coin_list):
-                with selected_tab[i]:
-                    avg_row = df_port.loc[df_port['Ticker'] == coin, 'AVG']
-                    avg_price = avg_row.iloc[0] if not avg_row.empty and pd.notna(avg_row.iloc[0]) else None
-                    live_price = df_port.loc[df_port['Ticker'] == coin, 'Live'].iloc[0] if not df_port.loc[df_port['Ticker'] == coin].empty else 0
-                    daily_open = get_daily_open(coin, st.session_state.refresh_key)
-                    daily_change_pct = ((live_price - daily_open) / daily_open * 100) if daily_open > 0 else 0
-                    daily_arrow = "▲" if daily_change_pct > 0 else "▼" if daily_change_pct < 0 else ""
-                    color = "#00ff9d" if live_price > 0 else "#ff4d4d"
-                    st.markdown(f"""
-                    <div class="price-pills-container">
-                        <div class="price-pill">
-                            <span>LIVE</span>
-                            <span style="color:{color};">{format_money(live_price)}</span>
-                        </div>
-                        <div class="daily-pill">{daily_arrow} {abs(daily_change_pct):.2f}%</div>
-                        {f'<div class="price-pill avg-pill"><span>AVG</span><span style="color:#ffaa00;">{format_money(avg_price)}</span></div>' if avg_price is not None else ''}
-                    </div>
-                    """, unsafe_allow_html=True)
-                    col1, col2 = st.columns([0.95, 4.05])
-                    with col1:
-                        candle = st.selectbox(
-                            "Timeframe",
-                            options=["5m", "30m", "1h", "4h", "1D"],
-                            index=3,
-                            key=f"candle_select_{coin}_{st.session_state.ui_version}",
-                            label_visibility="collapsed"
-                        )
-                    data = get_cryptocompare_ohlc(coin, candle, st.session_state.refresh_key)
-                    if data is not None and not data.empty:
-                        data_local = data.copy()
-                        fig = make_subplots(rows=2, cols=1, shared_xaxes=True, vertical_spacing=0.08,
-                                            row_heights=[0.75, 0.25], subplot_titles=("", ""))
-                        fig.add_trace(go.Candlestick(
-                            x=data_local.index,
-                            open=data_local['open'],
-                            high=data_local['high'],
-                            low=data_local['low'],
-                            close=data_local['close'],
-                            increasing_line_color='#00ff9d',
-                            decreasing_line_color='#ff4d4d',
-                            increasing_fillcolor='#00ff9d',
-                            decreasing_fillcolor='#ff4d4d',
-                            name='Price'
-                        ), row=1, col=1)
-                        if avg_price is not None:
-                            fig.add_trace(go.Scatter(
-                                x=[data_local.index.min(), data_local.index.max()],
-                                y=[avg_price, avg_price],
-                                mode='lines',
-                                line=dict(color='#ffaa00', width=2, dash='dash'),
-                                name=f'Your AVG: ${avg_price:,.2f}'
-                            ), row=1, col=1)
-                        colors_volume = ['#00ff9d' if o < c else '#ff4d4d' for o, c in zip(data_local['open'], data_local['close'])]
-                        fig.add_trace(go.Bar(
-                            x=data_local.index,
-                            y=data_local['volumefrom'],
-                            marker_color=colors_volume,
-                            name='Volume',
-                            opacity=0.85
-                        ), row=2, col=1)
-                        fig.update_layout(
-                            height=700,
-                            paper_bgcolor='rgba(0,0,0,0)',
-                            plot_bgcolor='rgba(0,0,0,0)',
-                            font_color='white',
-                            hovermode="x unified",
-                            xaxis_rangeslider_visible=False,
-                            showlegend=False,
-                            dragmode='pan',
-                            margin=dict(t=20, b=20, l=20, r=20),
-                            xaxis=dict(showspikes=True, spikecolor="rgba(255,255,255,0.95)", spikethickness=1.8, spikesnap="cursor", spikemode="across"),
-                            xaxis2=dict(showspikes=True, spikecolor="rgba(255,255,255,0.95)", spikethickness=1.8, spikesnap="cursor", spikemode="across")
-                        )
-                        fig.update_yaxes(showspikes=True, spikecolor="rgba(255,255,255,0.85)", spikethickness=1.5, spikesnap="cursor", spikemode="across", row=1, col=1)
-                        fig.update_yaxes(showspikes=False, row=2, col=1)
-                        fig.update_yaxes(title="Volume", rangemode='nonnegative', row=2, col=1, showgrid=True, gridwidth=1, gridcolor='rgba(255,255,255,0.08)')
-                        if len(data_local) > 0:
-                            min_time = data_local.index.min()
-                            max_time = data_local.index.max()
-                            fig.update_xaxes(range=[min_time, max_time], autorange=False, minallowed=min_time, maxallowed=max_time)
-                        st.plotly_chart(
-                            fig,
-                            use_container_width=True,
-                            config={'scrollZoom': True, 'responsive': True, 'displayModeBar': True, 'modeBarButtonsToRemove': ['zoom2d', 'select2d', 'lasso2d'], 'doubleClick': 'reset'},
-                            key=f"chart_{coin}_{candle}_{st.session_state.ui_version}"
-                        )
-                    else:
-                        st.error(f"📉 Could not load {coin} chart. Try the **Refresh** button in sidebar.")
+"""
+       
+        # Full HTML with flip styles and Chart.js logic
+        full_html = f"""
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <style>
+        * {{ box-sizing: border-box; }}
+        body {{
+            background: transparent;
+            margin: 0;
+            padding: 0;
+            font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+        }}
+        .scroll-wrapper {{
+            overflow-y: auto;
+            overflow-x: visible;
+            height: 590px;
+            padding: 12px 12px 20px 12px;
+            margin-bottom: 20px;
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+        }}
+        .scroll-wrapper::-webkit-scrollbar {{ display: none; }}
+        .coin-grid {{
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            box-sizing: border-box;
+            background: transparent !important;
+            overflow: visible !important;
+        }}
+        /* Flip card container */
+        .flip-card {{
+            background-color: transparent;
+            width: 100%;
+            min-height: 480px;
+            perspective: 1200px;
+            cursor: pointer;
+        }}
+        .flip-card-inner {{
+            position: relative;
+            width: 100%;
+            height: 100%;
+            min-height: 480px;
+            transition: transform 0.5s ease-in-out;
+            transform-style: preserve-3d;
+            border-radius: 20px;
+        }}
+        .flip-card.flipped .flip-card-inner {{
+            transform: rotateY(180deg);
+        }}
+        .flip-card-front, .flip-card-back {{
+            position: absolute;
+            width: 100%;
+            min-height: 480px;
+            backface-visibility: hidden;
+            border-radius: 20px;
+            padding: 16px;
+            background: #0f172a;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+            border: 2px solid transparent;
+        }}
+        .flip-card-front {{
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }}
+        .flip-card-back {{
+            transform: rotateY(180deg);
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
+            overflow-y: auto;
+        }}
+        .flip-card:hover .flip-card-front,
+        .flip-card:hover .flip-card-back {{
+            border-color: var(--border);
+            box-shadow: 0 12px 28px rgba(0,0,0,0.5);
+        }}
+        .card-header {{
+            display: flex;
+            align-items: center;
+            margin-bottom: 14px;
+        }}
+        .card-content {{
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }}
+        .label-value-row {{
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.95rem;
+        }}
+        .label {{ color: #aaa; font-weight: 500; }}
+        .value {{ font-weight: 600; color: white; }}
+        .total {{
+            font-size: 1.18rem;
+            margin-top: 8px;
+            border-top: 1px solid rgba(255,255,255,0.12);
+            padding-top: 8px;
+        }}
+        .total-value {{ font-size: 1.28rem; }}
+        .back-header {{
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-weight: bold;
+            font-size: 1.2rem;
+            margin-bottom: 12px;
+            color: #00ff9d;
+        }}
+        .back-close {{
+            font-size: 1.4rem;
+            cursor: pointer;
+            background: rgba(255,255,255,0.1);
+            width: 32px;
+            height: 32px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            transition: 0.2s;
+        }}
+        .back-close:hover {{
+            background: rgba(255,255,255,0.3);
+        }}
+        .chart-container {{
+            position: relative;
+            margin: 10px 0;
+        }}
+        .chart-loading {{
+            text-align: center;
+            color: #ccc;
+            padding: 20px;
+        }}
+        .current-price-label {{
+            text-align: center;
+            font-size: 1rem;
+            margin-top: 12px;
+            color: #00ff9d;
+            font-weight: 600;
+        }}
+        @media (max-width: 700px) {{
+            .coin-grid {{ grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px; }}
+            .flip-card, .flip-card-inner, .flip-card-front, .flip-card-back {{ min-height: 440px; }}
+        }}
+    </style>
+</head>
+<body>
+<div class="scroll-wrapper">
+    <div class="coin-grid">
+        {cards_html}
+    </div>
+</div>
+<script>
+    (function() {{
+        const cardElements = document.querySelectorAll('.flip-card');
+        const chartCache = {{}};
+        const refreshKey = '{st.session_state.refresh_key}';
+        
+        // Helper: fetch historical data from CryptoCompare
+        async function fetchHistoricalData(ticker) {{
+            const symbolMap = {{
+                'BTC':'BTC','ETH':'ETH','SOL':'SOL','HBAR':'HBAR',
+                'XRP':'XRP','BNB':'BNB','TRX':'TRX','LINK':'LINK','SUI':'SUI'
+            }};
+            const sym = symbolMap[ticker.toUpperCase()];
+            if (!sym) return null;
+            const url = `https://min-api.cryptocompare.com/data/v2/histoday?fsym=${{sym}}&tsym=USD&limit=30`;
+            try {{
+                const resp = await fetch(url, {{ headers: {{ 'User-Agent': 'Mozilla/5.0' }} }});
+                const data = await resp.json();
+                if (data && data.Data && data.Data.Data) {{
+                    const ohlc = data.Data.Data;
+                    const labels = ohlc.map(d => new Date(d.time * 1000).toLocaleDateString());
+                    const prices = ohlc.map(d => d.close);
+                    return {{ labels, prices }};
+                }}
+                return null;
+            }} catch(e) {{
+                console.error("Fetch error for", ticker, e);
+                return null;
+            }}
+        }}
+        
+        // Render chart using Chart.js
+        async function renderChart(card, ticker, currentPrice) {{
+            const canvas = card.querySelector(`canvas#chart-${{ticker}}`);
+            const loadingDiv = card.querySelector(`.chart-loading`);
+            if (!canvas) return;
+            if (chartCache[ticker] && chartCache[ticker].chart) {{
+                // Chart already exists, just update if needed? Skip for simplicity
+                if (loadingDiv) loadingDiv.style.display = 'none';
+                return;
+            }}
+            if (loadingDiv) loadingDiv.style.display = 'block';
+            const hist = await fetchHistoricalData(ticker);
+            if (!hist || hist.prices.length === 0) {{
+                if (loadingDiv) loadingDiv.innerText = 'Failed to load chart data';
+                return;
+            }}
+            const ctx = canvas.getContext('2d');
+            if (chartCache[ticker] && chartCache[ticker].chartObj) {{
+                chartCache[ticker].chartObj.destroy();
+            }}
+            const newChart = new Chart(ctx, {{
+                type: 'line',
+                data: {{
+                    labels: hist.labels,
+                    datasets: [{{
+                        label: 'Close Price (USD)',
+                        data: hist.prices,
+                        borderColor: '#00ff9d',
+                        backgroundColor: 'rgba(0,255,157,0.1)',
+                        borderWidth: 2,
+                        fill: true,
+                        tension: 0.2,
+                        pointRadius: 2,
+                        pointBackgroundColor: '#00ff9d'
+                    }}]
+                }},
+                options: {{
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    plugins: {{
+                        legend: {{ display: false }},
+                        tooltip: {{ mode: 'index', intersect: false }}
+                    }},
+                    scales: {{
+                        x: {{ ticks: {{ color: '#ccc', maxRotation: 45, autoSkip: true, maxTicksLimit: 6 }}, grid: {{ color: 'rgba(255,255,255,0.1)' }} }},
+                        y: {{ ticks: {{ color: '#ccc' }}, grid: {{ color: 'rgba(255,255,255,0.1)' }} }}
+                    }}
+                }}
+            }});
+            chartCache[ticker] = {{ chartObj: newChart, data: hist }};
+            if (loadingDiv) loadingDiv.style.display = 'none';
+        }}
+        
+        // Flip logic
+        cardElements.forEach(card => {{
+            const inner = card.querySelector('.flip-card-inner');
+            const backDiv = card.querySelector('.flip-card-back');
+            const ticker = card.getAttribute('data-ticker');
+            const currentPrice = card.getAttribute('data-current-price');
+            // Set border color variable
+            const border = card.getAttribute('data-border');
+            card.style.setProperty('--border', border);
+            
+            // Click on front -> flip
+            const front = card.querySelector('.flip-card-front');
+            front.addEventListener('click', (e) => {{
+                e.stopPropagation();
+                if (!card.classList.contains('flipped')) {{
+                    card.classList.add('flipped');
+                    // Render chart when flipped first time
+                    if (!chartCache[ticker] || !chartCache[ticker].chartObj) {{
+                        renderChart(card, ticker, currentPrice);
+                    }}
+                }}
+            }});
+            
+            // Click on back close button or back itself -> flip back
+            const closeBtn = backDiv.querySelector('.back-close');
+            if (closeBtn) {{
+                closeBtn.addEventListener('click', (e) => {{
+                    e.stopPropagation();
+                    card.classList.remove('flipped');
+                }});
+            }}
+            backDiv.addEventListener('click', (e) => {{
+                if (e.target === backDiv || e.target.classList.contains('back-close')) {{
+                    card.classList.remove('flipped');
+                }}
+            }});
+        }});
+        
+        // If refresh_key changes, clear cache so charts refetch on next flip
+        if (window.oldRefreshKey && window.oldRefreshKey !== refreshKey) {{
+            for (let key in chartCache) {{
+                if (chartCache[key].chartObj) chartCache[key].chartObj.destroy();
+            }}
+            window.chartCache = {{}};
+        }}
+        window.oldRefreshKey = refreshKey;
+    }})();
+</script>
+</body>
+</html>
+"""
+        components.html(full_html, height=640, scrolling=False)
    
     # ====================== CRYPTO TRANSACTIONS ======================
     elif st.session_state.page == "Crypto Transactions":
@@ -956,6 +874,97 @@ document.querySelectorAll('.coin-card').forEach(div => {{
 <style>
 body {{ background: transparent; margin: 0; padding: 0; }}
 .transaction-grid {{ display: grid; grid-template-columns: repeat(auto-fit, minmax(380px, 1fr)); gap: 16px; padding: 0 6px; }}
+.transaction-card {{
+    background: #0f172a;
+    border-radius: 18px;
+    padding: 18px 20px 14px;
+    box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+    transition: all 0.25s ease;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    min-height: 138px;
+}}
+.transaction-card:hover {{
+    transform: translateY(-4px);
+    box-shadow: 0 12px 30px rgba(0, 255, 157, 0.3);
+}}
+.transaction-main-row {{
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 16px;
+}}
+.transaction-left {{
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    flex: 1;
+}}
+.transaction-ticker {{
+    font-size: 1.28rem;
+    font-weight: 700;
+    color: #ffffff;
+    line-height: 1.05;
+}}
+.transaction-date {{
+    color: #aaa;
+    font-size: 0.92rem;
+    margin-top: 2px;
+}}
+.transaction-values {{
+    display: flex;
+    gap: 24px;
+    text-align: right;
+    font-size: 1.02rem;
+}}
+.transaction-values div {{
+    min-width: 88px;
+}}
+.transaction-values small {{
+    color: #aaa;
+    font-size: 0.82rem;
+    font-weight: 500;
+    display: block;
+}}
+.transaction-values strong {{
+    font-weight: 700;
+    color: #ffffff;
+}}
+.transaction-amount {{
+    font-size: 1.04rem;
+    font-weight: 700;
+    color: #ffffff;
+}}
+.transaction-buttons {{
+    display: flex;
+    gap: 12px;
+    margin-top: auto;
+}}
+.transaction-buttons button {{
+    flex: 1;
+    padding: 10px 14px;
+    border: none;
+    border-radius: 11px;
+    font-weight: 700;
+    font-size: 0.95rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}}
+.transaction-buttons .delete-btn {{
+    background: #e63939;
+    color: white;
+}}
+.transaction-buttons .delete-btn:hover {{
+    background: #c1121f;
+}}
+.transaction-buttons .edit-btn {{
+    background: #00b894;
+    color: #0f1724;
+}}
+.transaction-buttons .edit-btn:hover {{
+    background: #00a17a;
+}}
 </style>
 </head>
 <body>
