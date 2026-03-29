@@ -818,7 +818,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
             .back-right-stats {{ gap: 10px; }}
         }}
 
-        /* Swipe-to-refresh styles - fixed at very top of page */
+        /* Swipe-to-refresh styles - fixed at the very top of the iframe (top of page content) */
         #swipe-overlay {{
             position: fixed;
             top: 0;
@@ -924,7 +924,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
             localStorage.removeItem('flippedCards');
         }}
         
-        // --- Swipe-to-refresh: works anywhere when scrolled to top ---
+        // --- Swipe-to-refresh: only triggers when pulling from top 80px and scrolled to top ---
         let touchStartY = 0;
         let isDragging = false;
         let refreshThreshold = 80;
@@ -936,8 +936,8 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
         if ('ontouchstart' in window) {{
             // Listen on document to capture touches anywhere
             document.addEventListener('touchstart', function(e) {{
-                // Only trigger if page is at the very top (scrollY <= 5) and not already refreshing
-                if (window.scrollY <= 5 && !isRefreshing) {{
+                // Only trigger if page is at the very top (scrollY <= 5) AND touch started within top 80px
+                if (window.scrollY <= 5 && e.touches[0].clientY < 80 && !isRefreshing) {{
                     touchStartY = e.touches[0].clientY;
                     isDragging = true;
                 }}
@@ -1152,8 +1152,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
         // Restore flipped state after page load (if any)
         restoreFlippedState();
         
-        // Check if refresh just happened (refresh key changed)
-        // Also check URL for swipe_refresh param to show checkmark
+        // Check if refresh just happened (refresh key changed or URL param)
         const urlParams = new URLSearchParams(window.location.search);
         if (urlParams.has('swipe_refresh') || (window.oldRefreshKey && window.oldRefreshKey !== refreshKey)) {{
             // Clear chart cache
