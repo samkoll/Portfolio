@@ -280,11 +280,11 @@ div[data-testid="stMainBlockContainer"] {
         grid-template-columns: repeat(3, 1fr) !important; 
         gap: 8px; 
     }
-    .stats-layer { margin-top: -52px; } /* Perfect tuck for 74px box */
+    .stats-layer { margin-top: -75px; margin-bottom: 18px; } /* Perfect deep tuck */
     
-    .glossy-box.swapped { min-height: 74px; padding: 6px 6px 24px 6px; }
-    .glossy-box.swapped > div:first-child { font-size: 16px !important; top: 0px; margin-bottom: 0; }
-    .glossy-box.swapped > div:last-child { font-size: 11px !important; bottom: 6px; }
+    .glossy-box.swapped { min-height: 85px; padding: 6px 6px 24px 6px; }
+    .glossy-box.swapped > div:first-child { font-size: 16px !important; top: -12px; margin-bottom: 0; }
+    .glossy-box.swapped > div:last-child { font-size: 10.5px !important; bottom: 6px; }
     
     .usdc-banner { padding: 16px 18px; margin-bottom: 24px; }
     .usdc-banner-left img { width: 36px; height: 36px; }
@@ -609,13 +609,13 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
 </label>
 <div class="stats-layer">
 <div class="stats-layer-inner">
-<div class="glossy-box swapped"><div>{format_money(total_value)}</div><div>Total Value</div></div>
-<div class="glossy-box swapped"><div><span style="color:{'#00ff9d' if total_pnl>=0 else '#ff4d4d'}">{"▲" if total_pnl>0 else "▼" if total_pnl<0 else ""} {format_money(abs(total_pnl))}</span></div><div>PnL</div></div>
-<div class="glossy-box swapped"><div><span style="color:{'#00ff9d' if total_pnl_pct>=0 else '#ff4d4d'}">{"▲" if total_pnl_pct>0 else "▼" if total_pnl_pct<0 else ""} {abs(total_pnl_pct):.2f}%</span></div><div>PnL %</div></div>
+<div class="glossy-box swapped"><div><span id="dash-total-value">{format_money(total_value)}</span></div><div>Total Value</div></div>
+<div class="glossy-box swapped"><div id="dash-pnl"><span style="color:{'#00ff9d' if total_pnl>=0 else '#ff4d4d'}">{"▲" if total_pnl>0 else "▼" if total_pnl<0 else ""} {format_money(abs(total_pnl))}</span></div><div>PnL</div></div>
+<div class="glossy-box swapped"><div id="dash-pnl-pct"><span style="color:{'#00ff9d' if total_pnl_pct>=0 else '#ff4d4d'}">{"▲" if total_pnl_pct>0 else "▼" if total_pnl_pct<0 else ""} {abs(total_pnl_pct):.2f}%</span></div><div>PnL %</div></div>
 </div>
 </div>
 </div>
-<div class="usdc-banner">
+<div class="usdc-banner" style="--border: #2775ca; box-shadow: 0 6px 16px rgba(0,0,0,0.4), 0 0 6px var(--border);">
 <div class="usdc-banner-left">
 <img src="{get_ticker_logo('USDC')}" onerror="this.src='https://via.placeholder.com/42/1e2a44/ffffff?text=U';">
 <div class="usdc-banner-title">USDC <span class="usdc-banner-subtitle">(Available Cash)</span></div>
@@ -645,7 +645,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
             chart_color = border_color
             
             cards_html += f"""
-<div class="flip-card" data-ticker="{ticker}" data-current-price="{live_price}" data-avg-price="{avg_price}" data-refresh="{st.session_state.refresh_key}" data-border="{border_color}" data-chart-color="{chart_color}" data-logo="{logo_url}">
+<div class="flip-card" data-ticker="{ticker}" data-holdings="{r['Holdings']}" data-invested="{r['USDC']}" data-current-price="{live_price}" data-avg-price="{avg_price}" data-refresh="{st.session_state.refresh_key}" data-border="{border_color}" data-chart-color="{chart_color}" data-logo="{logo_url}">
     <div class="flip-card-inner">
         <div class="flip-card-front">
             <div class="card-header">
@@ -675,8 +675,8 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
             <div class="card-content">
                 <div class="label-value-row"><span class="label">Holdings</span><span class="value">{format_holdings(r['Holdings'], ticker)}</span></div>
                 <div class="label-value-row"><span class="label">Invested</span><span class="value">{format_money(r['USDC'])}</span></div>
-                <div class="label-value-row"><span class="label">PnL</span><span class="value" style="color:{pnl_color};">{arrow} {format_money(abs(pnl) if pd.notna(pnl) else "")}</span></div>
-                <div class="label-value-row"><span class="label">PnL %</span><span class="value" style="color:{pnl_color};">{arrow} {pnl_pct_formatted}</span></div>
+                <div class="label-value-row"><span class="label">PnL</span><span class="value card-pnl" style="color:{pnl_color};">{arrow} {format_money(abs(pnl) if pd.notna(pnl) else "")}</span></div>
+                <div class="label-value-row"><span class="label">PnL %</span><span class="value card-pnl-pct" style="color:{pnl_color};">{arrow} {pnl_pct_formatted}</span></div>
                 <div class="label-value-row total"><span class="label">Value</span><span class="value total-value">{format_money(r['Value'])}</span></div>
             </div>
         </div>
@@ -768,7 +768,8 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
             border-radius: 18px;
             padding: 14px 18px;
             background: #0f172a;
-            box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+            /* Added slight colored glow to the cards */
+            box-shadow: 0 6px 16px rgba(0,0,0,0.4), 0 0 6px var(--border);
             border: 2px solid transparent;
             overflow: hidden; /* Prevent internal scrolling */
         }}
@@ -787,7 +788,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
         .flip-card:hover .flip-card-front,
         .flip-card:hover .flip-card-back {{
             border-color: var(--border);
-            box-shadow: 0 12px 28px rgba(0,0,0,0.5);
+            box-shadow: 0 12px 28px rgba(0,0,0,0.5), 0 0 10px var(--border);
         }}
         
         .card-header {{
@@ -912,11 +913,99 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                 // Detect vertical scroll to convert to horizontal
                 if (Math.abs(evt.deltaY) > Math.abs(evt.deltaX)) {{
                     evt.preventDefault();
-                    // Using a smaller step (200) instead of 300 makes it slower/more controlled on PC
+                    // Using a smaller step (200) makes it slower/more controlled on PC
                     scrollContainer.scrollBy({{ left: evt.deltaY > 0 ? 200 : -200, behavior: 'smooth' }});
                 }}
             }}, {{ passive: false }});
         }}
+
+        // --- Live Price Auto Refresh Logic ---
+        const usdcHoldings = {usdc_holdings};
+        
+        async function updateLivePrices() {{
+            const cards = Array.from(document.querySelectorAll('.flip-card'));
+            if (cards.length === 0) return;
+            const tickers = cards.map(card => card.getAttribute('data-ticker'));
+            
+            const url = `https://min-api.cryptocompare.com/data/pricemulti?fsyms=${{tickers.join(',')}}&tsyms=USD`;
+            try {{
+                const resp = await fetch(url);
+                const data = await resp.json();
+                
+                let totalCoinValue = 0;
+                let totalCoinInvested = 0;
+
+                cards.forEach(card => {{
+                    const ticker = card.getAttribute('data-ticker');
+                    const holdings = parseFloat(card.getAttribute('data-holdings'));
+                    const invested = parseFloat(card.getAttribute('data-invested'));
+                    let price = parseFloat(card.getAttribute('data-current-price'));
+                    
+                    if (data[ticker] && data[ticker].USD) {{
+                        price = data[ticker].USD;
+                        card.setAttribute('data-current-price', price);
+                        
+                        // Update Current Price Display
+                        const priceFmt = price < 1 ? price.toFixed(4) : price.toLocaleString('en-US', {{minimumFractionDigits: 2, maximumFractionDigits: 2}});
+                        const currentEl = card.querySelector('.current-value');
+                        if (currentEl) currentEl.innerText = '$' + priceFmt;
+                        
+                        // Recalculate Card PnL & Value
+                        const value = holdings * price;
+                        const pnl = value - invested;
+                        const pnlPct = invested > 0 ? (pnl / invested) * 100 : 0;
+                        
+                        const valStr = '$' + value.toLocaleString('en-US', {{minimumFractionDigits: 2, maximumFractionDigits: 2}});
+                        const pnlStr = (pnl >= 0 ? '▲ $' : '▼ $') + Math.abs(pnl).toLocaleString('en-US', {{minimumFractionDigits: 2, maximumFractionDigits: 2}});
+                        const pnlPctStr = (pnl >= 0 ? '▲ ' : '▼ ') + Math.abs(pnlPct).toFixed(2) + '%';
+                        const color = pnl >= 0 ? '#00ff9d' : '#ff4d4d';
+                        
+                        const valEl = card.querySelector('.total-value');
+                        if (valEl) valEl.innerText = valStr;
+                        
+                        const pnlEl = card.querySelector('.card-pnl');
+                        if (pnlEl) {{
+                            pnlEl.innerText = pnlStr;
+                            pnlEl.style.color = color;
+                        }}
+                        
+                        const pnlPctEl = card.querySelector('.card-pnl-pct');
+                        if (pnlPctEl) {{
+                            pnlPctEl.innerText = pnlPctStr;
+                            pnlPctEl.style.color = color;
+                        }}
+                    }}
+                    
+                    totalCoinValue += (holdings * price);
+                    totalCoinInvested += invested;
+                }});
+                
+                // Update Parent Streamlit Dashboard seamlessly
+                const totalPortfolioValue = totalCoinValue + usdcHoldings;
+                const totalPnL = totalCoinValue - totalCoinInvested; 
+                const totalInvestedBase = totalPortfolioValue - totalPnL;
+                const totalPnLPct = totalInvestedBase !== 0 ? (totalPnL / totalInvestedBase) * 100 : 0;
+                
+                const dashValStr = '$' + totalPortfolioValue.toLocaleString('en-US', {{minimumFractionDigits: 2, maximumFractionDigits: 2}});
+                const dashPnlStr = (totalPnL >= 0 ? '▲ $' : '▼ $') + Math.abs(totalPnL).toLocaleString('en-US', {{minimumFractionDigits: 2, maximumFractionDigits: 2}});
+                const dashPnlPctStr = (totalPnL >= 0 ? '▲ ' : '▼ ') + Math.abs(totalPnLPct).toFixed(2) + '%';
+                const dashColor = totalPnL >= 0 ? '#00ff9d' : '#ff4d4d';
+                
+                const parentDoc = window.parent.document;
+                const dValue = parentDoc.getElementById('dash-total-value');
+                const dPnl = parentDoc.getElementById('dash-pnl');
+                const dPnlPct = parentDoc.getElementById('dash-pnl-pct');
+                
+                if (dValue) dValue.innerText = dashValStr;
+                if (dPnl) dPnl.innerHTML = `<span style="color:${{dashColor}}">${{dashPnlStr}}</span>`;
+                if (dPnlPct) dPnlPct.innerHTML = `<span style="color:${{dashColor}}">${{dashPnlPctStr}}</span>`;
+                
+            }} catch (e) {{
+                console.error('Auto-refresh error:', e);
+            }}
+        }}
+        // Poll every 10 seconds silently
+        setInterval(updateLivePrices, 10000);
 
         // --- State preservation ---
         function saveFlippedState() {{
@@ -943,7 +1032,6 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                     const chartColor = card.getAttribute('data-chart-color');
                     if (!chartCache[ticker] || !chartCache[ticker].chartObj) {{
                         renderChart(card, ticker, currentPrice, avgPrice, chartColor);
-                        update24hChange(card, ticker);
                     }}
                 }}
             }});
@@ -1108,6 +1196,11 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
             backDiv.addEventListener('click', (e) => {{
                 card.classList.remove('flipped');
             }});
+        }});
+        
+        document.querySelectorAll('.static-card').forEach(card => {{
+            const border = card.getAttribute('data-border');
+            if (border) card.style.setProperty('--border', border);
         }});
         
         restoreFlippedState();
