@@ -102,6 +102,55 @@ div[data-testid="stMainBlockContainer"] {
     line-height: 1.05;
     color: #ffffff;
 }
+
+/* USDC Banner Styles */
+.usdc-banner {
+    position: relative;
+    overflow: hidden;
+    background: #26334f;
+    border-radius: 18px;
+    box-shadow: 0 12px 35px rgba(0,0,0,0.35);
+    padding: 20px 26px;
+    margin-bottom: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.usdc-banner:hover {
+    transform: translateY(-4px) scale(1.01);
+    box-shadow: 0 15px 40px rgba(255,255,255,0.15);
+}
+.usdc-banner-left {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+.usdc-banner-left img {
+    width: 46px;
+    height: 46px;
+    border-radius: 50%;
+    object-fit: contain;
+}
+.usdc-banner-title {
+    font-size: 1.45rem;
+    font-weight: 700;
+    color: #ffffff;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.usdc-banner-subtitle {
+    font-size: 0.95rem;
+    font-weight: 500;
+    color: #aaa;
+}
+.usdc-banner-amount {
+    font-size: 1.7rem;
+    font-weight: 700;
+    color: #00ff9d;
+}
+
 .stButton > button {
     background: #1e2a44 !important;
     color: #e0e0e0 !important;
@@ -142,6 +191,12 @@ div[data-testid="stMainBlockContainer"] {
     }
     .glossy-box > div:first-child { font-size: 12px !important; }
     .glossy-box > div:last-child { font-size: 21px !important; }
+    
+    .usdc-banner { padding: 16px 18px; margin-bottom: 24px; }
+    .usdc-banner-left img { width: 36px; height: 36px; }
+    .usdc-banner-title { font-size: 1.2rem; }
+    .usdc-banner-subtitle { font-size: 0.85rem; }
+    .usdc-banner-amount { font-size: 1.4rem; }
 }
 </style>
 """, unsafe_allow_html=True)
@@ -444,18 +499,34 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
         glossy_header("Portfolio Dashboard", DASHBOARD_ICON)
 
         df_port, total_value, total_pnl, total_pnl_pct = calculate_portfolio(st.session_state.crypto_df)
+        
+        # Extract USDC row safely
+        usdc_row = df_port[df_port['Ticker'] == 'USDC'].iloc[0] if not df_port[df_port['Ticker'] == 'USDC'].empty else None
+        usdc_holdings = usdc_row['Holdings'] if usdc_row is not None else 0
 
         value_box_html = f"""
-<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(98px, 1fr)); gap: 14px; margin-bottom: 30px;">
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(98px, 1fr)); gap: 14px; margin-bottom: 20px;">
     <div class="glossy-box"><div>Total Value</div><div>{format_money(total_value)}</div></div>
     <div class="glossy-box"><div>PnL</div><div style="color:{'#00ff9d' if total_pnl>=0 else '#ff4d4d'}">{"▲" if total_pnl>0 else "▼" if total_pnl<0 else ""} {format_money(abs(total_pnl))}</div></div>
     <div class="glossy-box"><div>PnL %</div><div style="color:{'#00ff9d' if total_pnl_pct>=0 else '#ff4d4d'}">{"▲" if total_pnl_pct>0 else "▼" if total_pnl_pct<0 else ""} {abs(total_pnl_pct):.2f}%</div></div>
-</div>"""
+</div>
+
+<div class="usdc-banner">
+    <div class="usdc-banner-left">
+        <img src="{get_ticker_logo('USDC')}" onerror="this.src='https://via.placeholder.com/42/1e2a44/ffffff?text=U';">
+        <div class="usdc-banner-title">USDC <span class="usdc-banner-subtitle">(Available Cash)</span></div>
+    </div>
+    <div class="usdc-banner-amount">{format_holdings(usdc_holdings, 'USDC')}</div>
+</div>
+"""
         st.markdown(value_box_html, unsafe_allow_html=True)
 
         cards_html = ""
         for _, r in df_port.iterrows():
             ticker = r['Ticker']
+            if ticker == 'USDC':
+                continue
+                
             pnl = r['PnL']
             pnl_color = "#00ff9d" if pnl > 0 else "#ff4d4d" if pnl < 0 else "#aaaaaa"
             arrow = "▲" if pnl > 0 else "▼" if pnl < 0 else ""
@@ -467,28 +538,9 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
             avg_price = r['AVG']
             live_price_formatted = format_price(live_price)
             avg_price_formatted = format_price(avg_price)
-
-            if ticker == 'USDC':
-                cards_html += f"""
-<div class="static-card usdc-card" data-border="{border_color}">
-    <div class="card-header-usdc">
-        <div class="header-logo-row" style="display:flex; align-items:center;">
-            <img src="{logo_url}" style="height:44px;width:44px;border-radius:50%;object-fit:contain;" onerror="this.src='https://via.placeholder.com/44/1e2a44/ffffff?text=U';">
-            <span style="font-weight:700;font-size:1.3rem;margin-left:12px;color:#ffffff;">{ticker}</span>
-        </div>
-    </div>
-    <div class="card-content">
-        <div class="label-value-row"><span class="label">Holdings</span><span class="value">{format_holdings(r['Holdings'], ticker)}</span></div>
-        <div class="label-value-row"><span class="label">Invested</span><span class="value">{format_money(r['USDC'])}</span></div>
-        <div class="label-value-row"><span class="label">PnL</span><span class="value" style="color:{pnl_color};">{arrow} {format_money(abs(pnl) if pd.notna(pnl) else "")}</span></div>
-        <div class="label-value-row"><span class="label">PnL %</span><span class="value" style="color:{pnl_color};">{arrow} {pnl_pct_formatted}</span></div>
-        <div class="label-value-row total"><span class="label">Value</span><span class="value total-value">{format_money(r['Value'])}</span></div>
-    </div>
-</div>
-"""
-            else:
-                chart_color = border_color
-                cards_html += f"""
+            chart_color = border_color
+            
+            cards_html += f"""
 <div class="flip-card" data-ticker="{ticker}" data-current-price="{live_price}" data-avg-price="{avg_price}" data-refresh="{st.session_state.refresh_key}" data-border="{border_color}" data-chart-color="{chart_color}" data-logo="{logo_url}">
     <div class="flip-card-inner">
         <div class="flip-card-front">
@@ -627,41 +679,13 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
             flex-direction: column;
             padding: 16px; 
         }}
-        .static-card {{
-            flex: 0 0 420px; /* Made wider */
-            background: #0f172a;
-            border-radius: 18px;
-            padding: 14px 18px;
-            height: 290px;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-            box-shadow: 0 8px 24px rgba(0,0,0,0.3);
-            border: 2px solid transparent;
-            transition: all 0.25s ease;
-            overflow: hidden;
-            scroll-snap-align: center; /* Snap to center */
-        }}
-        .static-card.usdc-card:hover {{
-            transform: none;
-            box-shadow: 0 8px 24px rgba(0,0,0,0.3);
-            border-color: var(--border);
-        }}
-        .static-card:hover {{
-            border-color: var(--border);
-            transform: translateY(-4px);
-            box-shadow: 0 12px 28px rgba(0,0,0,0.5);
-        }}
+        
         .flip-card:hover .flip-card-front,
         .flip-card:hover .flip-card-back {{
             border-color: var(--border);
             box-shadow: 0 12px 28px rgba(0,0,0,0.5);
         }}
-        .card-header-usdc {{
-            display: flex;
-            align-items: center;
-            margin-bottom: 8px;
-        }}
+        
         .card-header {{
             display: flex;
             justify-content: space-between;
@@ -755,11 +779,11 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
         
         @media (max-width: 700px) {{
             /* Fit phone width perfectly with snapping */
-            .flip-card, .static-card {{ flex: 0 0 85vw; height: 280px; }}
+            .flip-card {{ flex: 0 0 85vw; height: 280px; }}
             .coin-grid {{ padding: 0 7.5vw; gap: 16px; }}
             
             /* Responsive fonts and padding to prevent overflow */
-            .flip-card-front, .flip-card-back, .static-card {{ padding: 12px 10px; }}
+            .flip-card-front, .flip-card-back {{ padding: 12px 10px; }}
             .header-price-row {{ gap: 10px; margin-top: 8px; }}
             .current-value, .stat-value, .change-value {{ font-size: min(3.8vw, 0.95rem); letter-spacing: -0.3px; }}
             .stat-label {{ font-size: min(2.5vw, 0.65rem); }}
@@ -980,11 +1004,6 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
             backDiv.addEventListener('click', (e) => {{
                 card.classList.remove('flipped');
             }});
-        }});
-        
-        document.querySelectorAll('.static-card').forEach(card => {{
-            const border = card.getAttribute('data-border');
-            if (border) card.style.setProperty('--border', border);
         }});
         
         restoreFlippedState();
@@ -1221,7 +1240,6 @@ if (txScrollContainer) {{
     txScrollContainer.addEventListener('wheel', (evt) => {{
         if (Math.abs(evt.deltaY) > Math.abs(evt.deltaX)) {{
             evt.preventDefault();
-            // Lower scroll jump step for slower PC scrolling
             txScrollContainer.scrollBy({{ left: evt.deltaY > 0 ? 200 : -200, behavior: 'smooth' }});
         }}
     }}, {{ passive: false }});
