@@ -564,7 +564,6 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
         usdc_row = df_port[df_port['Ticker'] == 'USDC'].iloc[0] if not df_port[df_port['Ticker'] == 'USDC'].empty else None
         usdc_holdings = usdc_row['Holdings'] if usdc_row is not None else 0
 
-        # Note: input#dash-toggle is moved so CSS can target sibling banner
         value_box_html = f"""
 <input type="checkbox" id="dash-toggle" class="dashboard-toggle" style="display:none;">
 <div class="dashboard-wrapper">
@@ -614,7 +613,6 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
             avg_price_formatted = format_price(avg_price)
             chart_color = border_color
             
-            # Added "privacy-val" class to sensitive spans
             cards_html += f"""
 <div class="flip-card" data-ticker="{ticker}" data-holdings="{r['Holdings']}" data-invested="{r['USDC']}" data-current-price="{live_price}" data-avg-price="{avg_price}" data-refresh="{st.session_state.refresh_key}" data-border="{border_color}" data-chart-color="{chart_color}" data-logo="{logo_url}">
     <div class="flip-card-inner">
@@ -685,7 +683,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
             color: white;
         }}
         
-        /* Privacy Mode CSS targeting card values inside the iframe */
+        /* Privacy Mode CSS */
         body.privacy-mode .privacy-val {{ color: transparent !important; position: relative; }}
         body.privacy-mode .privacy-val::after {{ content: '***'; position: absolute; right: 0; top: 0; color: #94a3b8; font-size: 1rem; font-weight: 700; }}
         body.privacy-mode .total-value::after {{ color: #ffffff; font-size: 1.15rem; }}
@@ -1128,18 +1126,6 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
             }});
             localStorage.removeItem('flippedCards');
         }}
-        
-        // --- Remember Dashboard Drawer State natively across sessions ---
-        const dashToggle = document.getElementById('dash-toggle');
-        if (dashToggle) {{
-            const savedDashState = localStorage.getItem('dashboardOpen');
-            if (savedDashState === 'true') {{
-                dashToggle.checked = true;
-            }}
-            dashToggle.addEventListener('change', () => {{
-                localStorage.setItem('dashboardOpen', dashToggle.checked);
-            }});
-        }}
 
         const flipCards = document.querySelectorAll('.flip-card');
         window.chartCache = window.chartCache || {{}};
@@ -1361,7 +1347,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
             margin-bottom: 0px !important;
         }
 
-        /* 2. BEAUTIFUL BUY/SELL SWITCH (Hiding native dots completely using pseudo selectors) */
+        /* 2. BEAUTIFUL BUY/SELL SWITCH */
         div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] {
             background: rgba(0,0,0,0.3) !important;
             padding: 6px !important;
@@ -1381,23 +1367,25 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
         }
         div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label:hover { background: rgba(255,255,255,0.05) !important; }
         
-        /* Instead of hiding the dot, shrink it to 0 so it doesn't break the layout but becomes invisible */
-        div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label > div:first-child { 
-            width: 0px !important; height: 0px !important; opacity: 0 !important; margin: 0 !important; padding: 0 !important;
-        } 
+        /* Using safe :has selectors to target active radio state */
+        div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label > div:first-child { display: none !important; } 
         div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label p {
             font-weight: bold !important; font-size: 1.05rem !important; color: #94a3b8 !important; margin: 0 !important; white-space: nowrap !important;
         }
         /* Active Buy */
+        div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label:has(input:checked):first-child,
         div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label[aria-checked="true"]:first-child {
             background: rgba(0, 255, 157, 0.15) !important; border-color: #00ff9d !important;
         }
+        div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label:has(input:checked):first-child p,
         div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label[aria-checked="true"]:first-child p { color: #00ff9d !important; }
         
         /* Active Sell */
+        div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label:has(input:checked):last-child,
         div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label[aria-checked="true"]:last-child {
             background: rgba(255, 77, 77, 0.15) !important; border-color: #ff4d4d !important;
         }
+        div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label:has(input:checked):last-child p,
         div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label[aria-checked="true"]:last-child p { color: #ff4d4d !important; }
 
         /* 3. SUBMIT BUTTON */
@@ -1413,11 +1401,11 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
 
         /* 4. TRANSACTION ROW STYLING & INLINE BUTTONS */
         div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row) {
-            background: rgba(15, 23, 42, 0.4) !important;
+            background: #0f172a !important;
             border: 1px solid rgba(255,255,255,0.05) !important;
             border-radius: 12px !important;
-            padding: 10px 12px !important;
-            margin-bottom: 8px !important;
+            padding: 12px 16px !important;
+            margin-bottom: 12px !important;
             position: relative;
             z-index: 2;
         }
@@ -1425,29 +1413,28 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
         
         div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row) div[data-testid="stButton"] button {
             background: rgba(255,255,255,0.05) !important; border-radius: 8px !important; border: none !important;
-            height: 38px !important; width: 38px !important; display: flex !important; align-items: center !important;
-            justify-content: center !important; padding: 0 !important; margin: 0 auto !important; font-size: 1.1rem !important;
-            transition: all 0.2s !important; box-shadow: none !important;
+            height: 40px !important; width: 40px !important; display: flex !important; align-items: center !important;
+            justify-content: center !important; padding: 0 !important; margin: 0 auto !important; font-size: 1.2rem !important;
+            transition: all 0.2s !important;
         }
         div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row) div[data-testid="stButton"] button:hover {
             background: rgba(255,255,255,0.15) !important; transform: scale(1.05) !important;
         }
 
         /* 5. SMOOTH EDIT ROLLOUT */
-        @keyframes rollDown { from { opacity: 0; max-height: 0px; margin-top: -30px; transform: scaleY(0.9); } to { opacity: 1; max-height: 500px; margin-top: -10px; transform: scaleY(1); } }
+        @keyframes rollDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
         div[data-testid="stForm"]:has(.edit-rollout) {
-            animation: rollDown 0.3s ease-out forwards !important; background: #0f172a !important;
+            animation: rollDown 0.3s ease forwards !important; background: rgba(0,0,0,0.2) !important;
             border-left: 3px solid #00ff9d !important; border-radius: 0 0 12px 12px !important;
             border-top: none !important; border-right: none !important; border-bottom: none !important;
-            padding: 16px !important; margin-bottom: 20px !important;
+            padding: 16px !important; margin-top: -24px !important; margin-bottom: 20px !important;
             position: relative; z-index: 1; box-shadow: inset 0 4px 10px rgba(0,0,0,0.15) !important;
-            overflow: hidden !important;
         }
 
         /* 6. REDESIGNED DELETE DIALOG */
         div[data-testid="stVerticalBlockBorderWrapper"]:has(.del-warn) {
-            border: 1px solid #ff4d4d !important; background: rgba(255, 77, 77, 0.05) !important;
-            border-radius: 12px !important; padding: 15px !important; text-align: center !important;
+            border-color: #ff4d4d !important; background: rgba(255, 77, 77, 0.05) !important;
+            border-radius: 12px !important; padding: 20px !important; text-align: center !important;
             margin-bottom: 12px !important;
         }
         div[data-testid="stVerticalBlockBorderWrapper"]:has(.del-warn) .stButton > button {
@@ -1468,51 +1455,63 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
             .glossy-header { margin-top: 48px !important; margin-bottom: 24px !important; padding: 20px 16px !important; font-size: 22px !important; min-height: 90px; }
             .home-header { margin-bottom: 0 !important; }
             
-            /* Fix Add Form Mobile 2x2 Grid via explicit CSS calc to avoid auto-stacking */
-            div[data-testid="stForm"]:has(.add-tx-card) div[data-testid="stHorizontalBlock"] {
-                display: flex !important; flex-direction: row !important; flex-wrap: wrap !important; width: 100% !important; gap: 0 !important;
+            /* Fix Add Form Mobile 2x2 Grid via direct CSS calc */
+            div[data-testid="stForm"]:has(.add-tx-card) div[data-testid="stHorizontalBlock"]:first-of-type {
+                display: flex !important; flex-wrap: wrap !important; gap: 10px !important; flex-direction: row !important;
             }
-            div[data-testid="stForm"]:has(.add-tx-card) div[data-testid="stHorizontalBlock"] > div[data-testid="column"] {
-                width: calc(50% - 5px) !important; flex: 1 1 calc(50% - 5px) !important; min-width: calc(50% - 5px) !important; margin: 0 2.5px !important;
+            div[data-testid="stForm"]:has(.add-tx-card) div[data-testid="stHorizontalBlock"]:first-of-type > div[data-testid="column"] {
+                min-width: calc(50% - 10px) !important; flex: 1 1 calc(50% - 10px) !important; width: calc(50% - 10px) !important;
             }
             div[data-testid="stForm"]:has(.add-tx-card) input { padding: 6px !important; font-size: 0.95rem !important; }
 
             /* Force Mobile Transaction Rows to stay perfectly horizontal */
             div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row) > div > div[data-testid="stVerticalBlock"] > div[data-testid="stHorizontalBlock"] {
-                display: flex !important; flex-direction: row !important; flex-wrap: nowrap !important; align-items: center !important; overflow: hidden !important; gap: 4px !important;
+                display: flex !important; flex-direction: row !important; flex-wrap: nowrap !important; align-items: center !important; overflow: hidden !important; gap: 2px !important;
             }
             div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row) div[data-testid="column"] {
                 min-width: 0 !important; padding: 0 !important; width: auto !important; flex-shrink: 1 !important;
             }
-            
-            /* Exact layout for the 4 strict columns to prevent ANY dropping/wrapping */
+            /* Exact layout for the 5 strict columns to prevent ANY dropping/wrapping */
             div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row) > div > div[data-testid="stVerticalBlock"] > div[data-testid="stHorizontalBlock"] > div[data-testid="column"]:nth-child(1) { flex: 0 0 35px !important; width: 35px !important; } /* Logo */
-            div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row) > div > div[data-testid="stVerticalBlock"] > div[data-testid="stHorizontalBlock"] > div[data-testid="column"]:nth-child(2) { flex: 1 1 auto !important; overflow: hidden !important; } /* Info */
-            div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row) > div > div[data-testid="stVerticalBlock"] > div[data-testid="stHorizontalBlock"] > div[data-testid="column"]:nth-child(3) { flex: 0 0 34px !important; width: 34px !important; } /* Edit */
-            div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row) > div > div[data-testid="stVerticalBlock"] > div[data-testid="stHorizontalBlock"] > div[data-testid="column"]:nth-child(4) { flex: 0 0 34px !important; width: 34px !important; } /* Delete */
+            div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row) > div > div[data-testid="stVerticalBlock"] > div[data-testid="stHorizontalBlock"] > div[data-testid="column"]:nth-child(2) { flex: 1 1 auto !important; overflow: hidden !important; text-align: left; } /* Ticker */
+            div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row) > div > div[data-testid="stVerticalBlock"] > div[data-testid="stHorizontalBlock"] > div[data-testid="column"]:nth-child(3) { flex: 1.5 1 auto !important; overflow: hidden !important; text-align: center; } /* Amounts */
+            div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row) > div > div[data-testid="stVerticalBlock"] > div[data-testid="stHorizontalBlock"] > div[data-testid="column"]:nth-child(4) { flex: 0 0 36px !important; width: 36px !important; } /* Edit */
+            div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row) > div > div[data-testid="stVerticalBlock"] > div[data-testid="stHorizontalBlock"] > div[data-testid="column"]:nth-child(5) { flex: 0 0 36px !important; width: 36px !important; } /* Delete */
             
             div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row) div[data-testid="stButton"] button {
                 width: 30px !important; height: 30px !important; font-size: 0.9rem !important; margin: 0 auto !important;
             }
             
-            .mobile-logo { width: 30px !important; height: 30px !important; margin-top: 0 !important; }
+            .mobile-logo { width: 32px !important; height: 32px !important; margin-top: 0 !important; }
+            .mobile-tx-ticker { font-size: 0.95rem !important; margin-left: 2px !important;}
+            .mobile-tx-amount { font-size: 0.95rem !important; white-space: nowrap !important; }
+            .mobile-tx-sub { font-size: 0.7rem !important; white-space: nowrap !important; margin-left: 2px !important;}
+            
+            /* Dashboard Mobile Stats Override Fix */
+            .stats-layer-inner { grid-template-columns: repeat(3, 1fr) !important; gap: 6px !important; }
+            .stats-layer { margin-top: -60px !important; margin-bottom: 18px; } 
+            .glossy-box.swapped { height: 80px !important; min-height: 80px !important; max-height: 80px !important; padding: 0 !important; min-width: 0 !important; }
+            .dash-value { font-size: 14px !important; top: 24px !important; white-space: nowrap !important; } 
+            .dash-label { font-size: 9px !important; bottom: 8px !important; white-space: nowrap !important; letter-spacing: 0.5px !important; }
+            .usdc-banner { padding: 16px 18px; margin-bottom: 24px; }
+            .usdc-banner-left img { width: 36px; height: 36px; }
+            .usdc-banner-title { font-size: 1.2rem; }
+            .usdc-banner-subtitle { font-size: 0.85rem; }
+            .usdc-banner-amount { font-size: 1.4rem; }
         }
         </style>
         """, unsafe_allow_html=True)
 
         # 1. ADD NEW TRANSACTION CARD
         with st.form("add_crypto", border=False):
-            st.markdown("<div class='add-tx-card'></div><h3 style='text-align: center; color: white; margin-top: 0px; margin-bottom: 25px;'>New Transaction</h3>", unsafe_allow_html=True)
+            st.markdown("<div class='add-tx-card'></div><h3 style='text-align: center; color: white; margin-top: 0px; margin-bottom: 10px;'>New Transaction</h3>", unsafe_allow_html=True)
             
-            # Row 1 (Date, Ticker) - Mobile 2x2 forcing via calc CSS
-            r1c1, r1c2 = st.columns(2)
+            # Row 1 (Date, Ticker, USDC, Amount) forced onto one line via CSS on PC, and 2x2 on Mobile
+            r1c1, r1c2, r1c3, r1c4 = st.columns(4)
             with r1c1: selected_date = st.date_input("Date", value=date(2026, 3, 25))
             with r1c2: ticker = st.text_input("Ticker", value="BTC").upper().strip()
-            
-            # Row 2 (USDC, Amount) - Mobile 2x2 forcing via calc CSS
-            r2c1, r2c2 = st.columns(2)
-            with r2c1: usdc = st.number_input("USDC Amount", value=15.0, step=0.01)
-            with r2c2: amount = st.number_input("Coin Amount", value=0.1, step=0.000001, format="%.8f")
+            with r1c3: usdc = st.number_input("USDC Amount", value=15.0, step=0.01)
+            with r1c4: amount = st.number_input("Coin Amount", value=0.1, step=0.000001, format="%.8f")
             
             # Switch Centered Below Inputs
             tx_type = st.radio("Type", ["Buy", "Sell"], horizontal=True, label_visibility="collapsed")
@@ -1557,6 +1556,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                 
                 sign = "+" if is_buy else "-"
                 color = "#00ff9d" if is_buy else "#ff4d4d"
+                action_text = "Spent" if is_buy else "Received"
                 
                 invested_formatted = format_money(abs_usdc)
                 amount_formatted = format_holdings(abs_amount, r['Ticker'])
@@ -1566,7 +1566,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                 # If user clicked delete, show confirmation dialog replacing the row
                 if st.session_state.get('confirm_delete_crypto') == orig_idx:
                     with st.container(border=True):
-                        st.markdown("<div class='del-warn'></div><h4 style='color: #ff4d4d; margin-top: 0; margin-bottom: 5px;'>⚠️ Permanently delete?</h4>", unsafe_allow_html=True)
+                        st.markdown("<div class='del-warn'></div><h4 style='color: #ff4d4d; margin-top: 0; margin-bottom: 5px;'>⚠️ Permanently delete this transaction?</h4>", unsafe_allow_html=True)
                         c_yes, c_no = st.columns(2)
                         with c_yes:
                             if st.button("✔️ Yes, Delete", key=f"yes_del_{orig_idx}", use_container_width=True):
@@ -1585,23 +1585,25 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                     with st.container(border=True):
                         st.markdown("<div class='tx-row'></div>", unsafe_allow_html=True)
                         
-                        # STRICT 4 COLUMNS: Logo, Details (Left/Right Flexbox), Edit, Delete
-                        col_logo, col_info, col_edit, col_del = st.columns([0.6, 5, 0.7, 0.7])
+                        # STRICT 5 COLUMNS: Logo, Ticker/Date, Values, Edit, Delete
+                        col_logo, col_ticker, col_vals, col_edit, col_del = st.columns([0.5, 2, 2.5, 0.5, 0.5])
                         
                         with col_logo:
-                            st.markdown(f"<img src='{logo_url}' class='mobile-logo' style='width:38px;height:38px;border-radius:50%;object-fit:contain;' onerror=\"this.src='https://via.placeholder.com/38/1e2a44/ffffff?text={r['Ticker'][0]}';\">", unsafe_allow_html=True)
+                            st.markdown(f"<img src='{logo_url}' class='mobile-logo' style='width:42px;height:42px;border-radius:50%;object-fit:contain;margin-top:6px;' onerror=\"this.src='https://via.placeholder.com/42/1e2a44/ffffff?text={r['Ticker'][0]}';\">", unsafe_allow_html=True)
                             
-                        with col_info:
+                        with col_ticker:
                             st.markdown(f"""
-                                <div style="display: flex; justify-content: space-between; align-items: center; line-height: 1.2; width: 100%;">
-                                    <div style="display: flex; flex-direction: column;">
-                                        <span style="font-weight: 700; font-size: 1.05rem; color: #ffffff; white-space: nowrap;">{r['Ticker']}</span>
-                                        <span style="font-size: 0.75rem; color: #94a3b8; white-space: nowrap;">{date_str}</span>
-                                    </div>
-                                    <div style="display: flex; flex-direction: column; text-align: right;">
-                                        <span style="font-weight: 700; font-size: 1.05rem; color: {color}; white-space: nowrap;">{sign}{amount_formatted}</span>
-                                        <span style="font-size: 0.75rem; color: #cbd5e1; white-space: nowrap;">${price_formatted}</span>
-                                    </div>
+                                <div style="line-height: 1.2; margin-top: 6px; overflow: hidden; text-overflow: ellipsis;">
+                                    <div class="mobile-tx-ticker" style="font-weight: 700; font-size: 1.15rem; color: #ffffff; white-space: nowrap;">{r['Ticker']}</div>
+                                    <div class="mobile-tx-sub" style="font-size: 0.85rem; color: #94a3b8; white-space: nowrap;">{date_str}</div>
+                                </div>
+                            """, unsafe_allow_html=True)
+                            
+                        with col_vals:
+                            st.markdown(f"""
+                                <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; margin-top: 6px;">
+                                    <div class="mobile-tx-amount" style="font-weight: 700; font-size: 1.15rem; color: {color}; white-space: nowrap;">{sign}{amount_formatted}</div>
+                                    <div class="mobile-tx-sub" style="font-size: 0.85rem; color: #cbd5e1; white-space: nowrap;">{action_text}: {invested_formatted} @ ${price_formatted}</div>
                                 </div>
                             """, unsafe_allow_html=True)
                             
@@ -1620,39 +1622,38 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
 
                     # 3. ROLL OUT EDIT FORM Directly Attached
                     if st.session_state.get('edit_crypto_row') == orig_idx:
-                        with st.container():
-                            with st.form(f"edit_crypto_form_{orig_idx}", border=False):
-                                st.markdown("<div class='edit-rollout form-compact-marker'></div><h4 style='color: #00ff9d; margin-top: 0px; margin-bottom: 15px;'>✏️ Edit Row Details</h4>", unsafe_allow_html=True)
-                                
-                                e_r1c1, e_r1c2 = st.columns(2)
-                                with e_r1c1: new_date = st.date_input("Date", value=datetime(1899, 12, 30) + timedelta(days=int(r['Datum'])))
-                                with e_r1c2: new_ticker = st.text_input("Ticker", value=r['Ticker']).upper().strip()
-                                
-                                e_r2c1, e_r2c2 = st.columns(2)
-                                with e_r2c1: new_usdc = st.number_input("USDC Amount", value=float(abs(r['USDC'])), step=0.01)
-                                with e_r2c2: new_amount = st.number_input("Coin Amount", value=float(abs(r['Amount'])), step=0.000001, format="%.8f")
-                                
-                                tx_type_edit = st.radio("Type", ["Buy", "Sell"], horizontal=True, index=0 if is_buy else 1, label_visibility="collapsed")
-                                
-                                e_save, e_cancel = st.columns(2)
-                                with e_save: 
-                                    if st.form_submit_button("💾 Save Changes"):
-                                        final_usdc = new_usdc if tx_type_edit == "Buy" else -new_usdc
-                                        final_amount = new_amount if tx_type_edit == "Buy" else -new_amount
-                                        new_price = round(new_usdc / new_amount, 8) if new_amount > 0 else 0.0
-                                        
-                                        st.session_state.crypto_df.loc[orig_idx] = {"Datum": date_to_excel_serial(new_date), "USDC": final_usdc, "Ticker": new_ticker, "Amount": final_amount, "Price": new_price}
-                                        save_crypto(st.session_state.crypto_df)
-                                        st.session_state['edit_crypto_row'] = None
-                                        st.session_state.crypto_table_version += 1
-                                        st.session_state.ui_version += 1
-                                        st.success("✅ Transaction updated!")
-                                        st.rerun()
-                                        
-                                with e_cancel:
-                                    if st.form_submit_button("❌ Cancel"):
-                                        st.session_state['edit_crypto_row'] = None
-                                        st.rerun()
+                        with st.form(f"edit_crypto_form_{orig_idx}", border=False):
+                            st.markdown("<div class='edit-rollout form-compact-marker'></div><h4 style='color: #00ff9d; margin-top: 0px; margin-bottom: 15px;'>✏️ Edit Row Details</h4>", unsafe_allow_html=True)
+                            
+                            e_r1c1, e_r1c2 = st.columns(2)
+                            with e_r1c1: new_date = st.date_input("Date", value=datetime(1899, 12, 30) + timedelta(days=int(r['Datum'])))
+                            with e_r1c2: new_ticker = st.text_input("Ticker", value=r['Ticker']).upper().strip()
+                            
+                            e_r2c1, e_r2c2 = st.columns(2)
+                            with e_r2c1: new_usdc = st.number_input("USDC Amount", value=float(abs(r['USDC'])), step=0.01)
+                            with e_r2c2: new_amount = st.number_input("Coin Amount", value=float(abs(r['Amount'])), step=0.000001, format="%.8f")
+                            
+                            tx_type_edit = st.radio("Type", ["Buy", "Sell"], horizontal=True, index=0 if is_buy else 1, label_visibility="collapsed")
+                            
+                            e_save, e_cancel = st.columns(2)
+                            with e_save: 
+                                if st.form_submit_button("💾 Save Changes"):
+                                    final_usdc = new_usdc if tx_type_edit == "Buy" else -new_usdc
+                                    final_amount = new_amount if tx_type_edit == "Buy" else -new_amount
+                                    new_price = round(new_usdc / new_amount, 8) if new_amount > 0 else 0.0
+                                    
+                                    st.session_state.crypto_df.loc[orig_idx] = {"Datum": date_to_excel_serial(new_date), "USDC": final_usdc, "Ticker": new_ticker, "Amount": final_amount, "Price": new_price}
+                                    save_crypto(st.session_state.crypto_df)
+                                    st.session_state['edit_crypto_row'] = None
+                                    st.session_state.crypto_table_version += 1
+                                    st.session_state.ui_version += 1
+                                    st.success("✅ Transaction updated!")
+                                    st.rerun()
+                                    
+                            with e_cancel:
+                                if st.form_submit_button("❌ Cancel"):
+                                    st.session_state['edit_crypto_row'] = None
+                                    st.rerun()
 
     # ====================== FIAT TRANSACTIONS ======================
     elif st.session_state.page == "Fiat Transactions":
