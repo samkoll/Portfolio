@@ -58,7 +58,7 @@ div[data-testid="stMainBlockContainer"] {
 }
 .home-header {
     margin-bottom: 0 !important;
-    padding-bottom: 34px !important; /* space for the eye icon */
+    padding-bottom: 30px !important; /* space for the eye icon */
 }
 .pull-indicator {
     position: absolute;
@@ -177,12 +177,12 @@ div[data-testid="stMainBlockContainer"] {
     display: block;
 }
 .glossy-box.swapped > div:first-child {
-    font-size: 24px !important;
+    font-size: 22px !important;
     font-weight: 700;
     line-height: 1.05;
     color: #ffffff;
     position: absolute;
-    top: 20px; 
+    top: 16px; 
     left: 0;
     width: 100%;
     text-align: center;
@@ -196,7 +196,7 @@ div[data-testid="stMainBlockContainer"] {
     color: #94a3b8;
     line-height: 1.2;
     position: absolute;
-    bottom: 8px;
+    bottom: 6px;
     left: 0;
     width: 100%;
     text-align: center;
@@ -297,8 +297,8 @@ div[data-testid="stMainBlockContainer"] {
         gap: 8px; 
     }
     
-    /* Math perfectly hides the centered 80px box, leaving only 20px for text */
-    .stats-layer { margin-top: -60px !important; margin-bottom: 18px; } 
+    .glossy-box.swapped > div:first-child { font-size: 16px !important; top: 20px; }
+    .glossy-box.swapped > div:last-child { font-size: 9px !important; bottom: 4px; }
     
     .usdc-banner { padding: 16px 18px; margin-bottom: 24px; }
     .usdc-banner-left img { width: 36px; height: 36px; }
@@ -897,7 +897,6 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
             display: flex;
             align-items: center;
             justify-content: center;
-            touch-action: pan-y; /* Prevent horizontal scroll, allow vertical scroll and scrubbing */
         }}
         canvas {{
             position: absolute;
@@ -905,7 +904,6 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
             left: 0;
             width: 100% !important;
             height: 100% !important;
-            touch-action: none; /* Let Chart.js handle tooltip touches without browser panning */
         }}
         .chart-loading {{
             position: absolute;
@@ -1250,17 +1248,6 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                 card.classList.remove('flipped');
                 card.classList.remove('touch-hover');
             }});
-            
-            // --- Prevent chart interactions from flipping the card back ---
-            const chartContainer = card.querySelector('.chart-container');
-            if (chartContainer) {{
-                // Stop click propagation so tapping the chart doesn't trigger backDiv click
-                chartContainer.addEventListener('click', (e) => e.stopPropagation());
-                
-                // Stop touch propagation so horizontal swiping on chart doesn't move the whole card row
-                chartContainer.addEventListener('touchstart', (e) => e.stopPropagation(), {{passive: true}});
-                chartContainer.addEventListener('touchmove', (e) => e.stopPropagation(), {{passive: true}});
-            }}
         }});
         
         restoreFlippedState();
@@ -1494,6 +1481,15 @@ body {{ background: transparent; margin: 0; padding: 0; }}
     </div>
 </div>
 <script>
+// --- Mobile Touch Hover Fix ---
+document.addEventListener('click', (e) => {{
+    const touchHoverTarget = e.target.closest('.transaction-card');
+    document.querySelectorAll('.touch-hover').forEach(el => {{
+        if (el !== touchHoverTarget) el.classList.remove('touch-hover');
+    }});
+    if (touchHoverTarget) touchHoverTarget.classList.toggle('touch-hover');
+}});
+
 // --- Wheel scrolling for PC ---
 const txScrollContainer = document.getElementById('txScrollContainer');
 if (txScrollContainer) {{
