@@ -270,7 +270,7 @@ div[data-testid="stForm"]:has(.form-compact-marker) {
     background: #0f172a !important;
     border: 1px solid rgba(255,255,255,0.05) !important;
     border-radius: 16px !important;
-    padding: 20px 24px !important;
+    padding: 20px !important;
     box-shadow: 0 4px 20px rgba(0,0,0,0.3) !important;
     margin-bottom: 24px !important;
 }
@@ -856,7 +856,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                 <div class="header-right">
                     <div class="stat-group">
                         <div class="stat-label">Avg</div>
-                        <div class="stat-value">${avg_price_formatted}</div>
+                        <div class="stat-value privacy-val">${avg_price_formatted}</div>
                     </div>
                 </div>
             </div>
@@ -1345,6 +1345,18 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
             }});
             localStorage.removeItem('flippedCards');
         }}
+        
+        // --- Remember Dashboard Drawer State natively across sessions ---
+        const dashToggle = document.getElementById('dash-toggle');
+        if (dashToggle) {{
+            const savedDashState = localStorage.getItem('dashboardOpen');
+            if (savedDashState === 'true') {{
+                dashToggle.checked = true;
+            }}
+            dashToggle.addEventListener('change', () => {{
+                localStorage.setItem('dashboardOpen', dashToggle.checked);
+            }});
+        }}
 
         const flipCards = document.querySelectorAll('.flip-card');
         window.chartCache = window.chartCache || {{}};
@@ -1567,12 +1579,13 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
             margin-bottom: 0px !important;
         }
 
-        /* 2. BEAUTIFUL BUY/SELL SWITCH */
+        /* 2. BEAUTIFUL BUY/SELL SWITCH (Hiding native dots completely using pseudo selectors) */
         div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] {
             background: rgba(0,0,0,0.3) !important;
             padding: 8px 16px !important;
             border-radius: 12px !important;
-            display: inline-flex !important;
+            display: flex !important;
+            flex-direction: row !important;
             gap: 20px !important;
             justify-content: center !important;
             width: 100% !important;
@@ -1580,11 +1593,23 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
             border: 1px solid rgba(255,255,255,0.05) !important;
         }
         div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label {
-            margin-right: 0 !important; cursor: pointer !important;
+            margin-right: 0 !important; cursor: pointer !important; padding: 6px 12px !important; border-radius: 8px !important;
+            border: 1px solid transparent !important; transition: all 0.3s ease !important;
         }
+        div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label:hover { background: rgba(255,255,255,0.05) !important; }
+        div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label > div:first-child { display: none !important; } /* Kill native dot */
         div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label p {
-            font-weight: bold !important; font-size: 1.1rem !important; margin-left: 6px !important; color: white !important;
+            font-weight: bold !important; font-size: 1.1rem !important; color: #94a3b8 !important; margin: 0 !important;
         }
+        /* Active Colors */
+        div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label[aria-checked="true"]:first-child {
+            background: rgba(0, 255, 157, 0.15) !important; border-color: #00ff9d !important; box-shadow: 0 2px 10px rgba(0,255,157,0.2) !important;
+        }
+        div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label[aria-checked="true"]:first-child p { color: #00ff9d !important; }
+        div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label[aria-checked="true"]:last-child {
+            background: rgba(255, 77, 77, 0.15) !important; border-color: #ff4d4d !important; box-shadow: 0 2px 10px rgba(255,77,77,0.2) !important;
+        }
+        div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label[aria-checked="true"]:last-child p { color: #ff4d4d !important; }
 
         /* 3. SUBMIT BUTTON */
         div[data-testid="stForm"]:has(.add-tx-card) .stButton > button {
