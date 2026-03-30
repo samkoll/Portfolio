@@ -288,13 +288,13 @@ div[data-testid="stMainBlockContainer"] {
         gap: 8px; 
     }
     
-    /* Math perfectly hides the centered 68px box, leaving only 18px for text */
-    .stats-layer { margin-top: -50px; margin-bottom: 18px; } 
+    /* Math perfectly hides the centered 86px box, leaving only 12px for the text */
+    .stats-layer { margin-top: -74px; margin-bottom: 18px; } 
     
-    .glossy-box.swapped { height: 68px; min-height: 68px; max-height: 68px; padding: 0 6px 18px 6px; }
-    .glossy-box.swapped > div:first-child { font-size: 16px !important; }
+    .glossy-box.swapped { height: 86px; min-height: 86px; max-height: 86px; padding: 0 6px 14px 6px; }
+    .glossy-box.swapped > div:first-child { font-size: 16px !important; top: 12px; }
     /* Perfectly flush bottom label to peek out */
-    .glossy-box.swapped > div:last-child { font-size: 9px !important; bottom: 4px; }
+    .glossy-box.swapped > div:last-child { font-size: 9px !important; bottom: 2px; }
     
     .usdc-banner { padding: 16px 18px; margin-bottom: 24px; }
     .usdc-banner-left img { width: 36px; height: 36px; }
@@ -609,7 +609,6 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
         usdc_row = df_port[df_port['Ticker'] == 'USDC'].iloc[0] if not df_port[df_port['Ticker'] == 'USDC'].empty else None
         usdc_holdings = usdc_row['Holdings'] if usdc_row is not None else 0
 
-        # Unindented string to prevent markdown rendering issues
         value_box_html = f"""
 <div class="dashboard-wrapper">
 <input type="checkbox" id="dash-toggle" class="dashboard-toggle" style="display:none;">
@@ -933,19 +932,6 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
     (function() {{
         // --- Handle Mobile Touch "Hover" and Drawer closing ---
         document.addEventListener('click', (e) => {{
-            const touchHoverTarget = e.target.closest('.usdc-banner, .transaction-card');
-            
-            // Remove touch-hover from elements that weren't just clicked
-            document.querySelectorAll('.touch-hover').forEach(el => {{
-                if (el !== touchHoverTarget && !el.classList.contains('flip-card')) {{
-                    el.classList.remove('touch-hover');
-                }}
-            }});
-
-            // Toggle touch-hover on the clicked element (except flip card which has custom logic below)
-            if (touchHoverTarget && !touchHoverTarget.classList.contains('flip-card')) {{
-                touchHoverTarget.classList.toggle('touch-hover');
-            }}
             
             // Smart Click-Away: Close dashboard drawer if clicking outside of it
             const dashToggle = window.parent.document.getElementById('dash-toggle');
@@ -1387,10 +1373,6 @@ body {{ background: transparent; margin: 0; padding: 0; }}
         box-shadow: 0 12px 30px rgba(0, 0, 0, 0.4);
     }}
 }}
-.transaction-card.touch-hover {{
-    transform: translateY(-4px);
-    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.4);
-}}
 
 .transaction-main-row {{
     display: flex;
@@ -1493,15 +1475,6 @@ body {{ background: transparent; margin: 0; padding: 0; }}
     </div>
 </div>
 <script>
-// --- Mobile Touch Hover Fix ---
-document.addEventListener('click', (e) => {{
-    const touchHoverTarget = e.target.closest('.transaction-card');
-    document.querySelectorAll('.touch-hover').forEach(el => {{
-        if (el !== touchHoverTarget) el.classList.remove('touch-hover');
-    }});
-    if (touchHoverTarget) touchHoverTarget.classList.toggle('touch-hover');
-}});
-
 // --- Wheel scrolling for PC ---
 const txScrollContainer = document.getElementById('txScrollContainer');
 if (txScrollContainer) {{
@@ -1599,11 +1572,11 @@ function editTransaction(i) {{
         # Unindented to prevent markdown code block rendering
         summary_html = f"""
 <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:20px;margin-bottom:30px;">
-<div class="glossy-box swapped"><div>{total_czk:,.2f}</div><div>Total CZK</div></div>
-<div class="glossy-box swapped"><div>{total_eur:,.2f}</div><div>Total EUR</div></div>
-<div class="glossy-box swapped"><div>{format_money(total_usdc)}</div><div>Total USDC</div></div>
-<div class="glossy-box swapped">
-<div style="font-size:22px; font-weight:700; color:#fff; margin-bottom:0; position:relative; top:0px;">{fees_eur:,.2f} EUR / {fees_czk:,.2f} CZK</div>
+<div class="glossy-box swapped" style="height:80px; min-height:80px;"><div>{total_czk:,.2f}</div><div>Total CZK</div></div>
+<div class="glossy-box swapped" style="height:80px; min-height:80px;"><div>{total_eur:,.2f}</div><div>Total EUR</div></div>
+<div class="glossy-box swapped" style="height:80px; min-height:80px;"><div>{format_money(total_usdc)}</div><div>Total USDC</div></div>
+<div class="glossy-box swapped" style="height:80px; min-height:80px;">
+<div style="font-size:22px; font-weight:700; color:#fff; margin-bottom:0; position:absolute; top:22px; width:100%; text-align:center;">{fees_eur:,.2f} EUR / {fees_czk:,.2f} CZK</div>
 <div>Fees</div>
 </div>
 </div>
