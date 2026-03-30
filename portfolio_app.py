@@ -82,7 +82,8 @@ div[data-testid="stMainBlockContainer"] {
 .stats-layer {
     position: relative;
     z-index: 1;
-    margin-top: -60px; /* Perfectly tucks the 80px box to expose exactly 20px */
+    /* Mathematically tucks the 80px box to hide the top 60px (the numbers) and expose exactly the bottom 20px (the label) */
+    margin-top: -60px; 
     transition: margin-top 0.4s cubic-bezier(0.4, 0, 0.2, 1);
     margin-bottom: 24px;
 }
@@ -166,25 +167,28 @@ div[data-testid="stMainBlockContainer"] {
     color: #ffffff;
 }
 
-/* Swapped PnL Cards: Rectangular, Number absolute center, Text absolute bottom */
+/* Swapped PnL Cards: Rectangular, Fixed Dimensions */
 .glossy-box.swapped {
-    height: 80px;
-    min-height: 80px;
-    max-height: 80px;
-    padding: 0px 10px 24px 10px; /* Room at bottom for label */
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    height: 80px !important;
+    min-height: 80px !important;
+    max-height: 80px !important;
+    padding: 0;
+    display: block;
 }
 .glossy-box.swapped > div:first-child {
-    font-size: 24px;
+    font-size: 24px !important;
     font-weight: 700;
     line-height: 1.05;
     color: #ffffff;
-    margin-bottom: 0;
+    position: absolute;
+    top: 20px; 
+    left: 0;
+    width: 100%;
+    text-align: center;
+    margin: 0;
 }
 .glossy-box.swapped > div:last-child {
-    font-size: 11px;
+    font-size: 11px !important;
     font-weight: 600;
     letter-spacing: 1.5px;
     text-transform: uppercase;
@@ -287,14 +291,7 @@ div[data-testid="stMainBlockContainer"] {
         grid-template-columns: repeat(3, 1fr) !important; 
         gap: 8px; 
     }
-    
-    /* Math perfectly hides the centered 86px box, leaving only 12px for the text */
-    .stats-layer { margin-top: -74px; margin-bottom: 18px; } 
-    
-    .glossy-box.swapped { height: 86px; min-height: 86px; max-height: 86px; padding: 0 6px 14px 6px; }
-    .glossy-box.swapped > div:first-child { font-size: 16px !important; top: 12px; }
-    /* Perfectly flush bottom label to peek out */
-    .glossy-box.swapped > div:last-child { font-size: 9px !important; bottom: 2px; }
+    .stats-layer { margin-bottom: 18px; }
     
     .usdc-banner { padding: 16px 18px; margin-bottom: 24px; }
     .usdc-banner-left img { width: 36px; height: 36px; }
@@ -309,8 +306,9 @@ div[data-testid="stMainBlockContainer"] {
 DASHBOARD_ICON = '''<svg xmlns="http://www.w3.org/2000/svg" width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="#00ff9d" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>'''
 CRYPTO_ICON = '''<svg xmlns="http://www.w3.org/2000/svg" width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="#00ff9d" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M14.5 8.5L9.5 13.5"/><path d="M9.5 8.5L14.5 13.5"/></svg>'''
 FIAT_ICON = '''<svg xmlns="http://www.w3.org/2000/svg" width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="#00ff9d" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M6 8h12"/><path d="M6 12h12"/><path d="M6 16h12"/></svg>'''
-EYE_CLOSED = '''<svg class="eye-closed" xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>'''
-EYE_OPEN = '''<svg class="eye-open" xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>'''
+# More delicate, smaller eye icons
+EYE_CLOSED = '''<svg class="eye-closed" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>'''
+EYE_OPEN = '''<svg class="eye-open" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>'''
 
 DATA_DIR = Path("data")
 DATA_DIR.mkdir(exist_ok=True)
@@ -609,6 +607,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
         usdc_row = df_port[df_port['Ticker'] == 'USDC'].iloc[0] if not df_port[df_port['Ticker'] == 'USDC'].empty else None
         usdc_holdings = usdc_row['Holdings'] if usdc_row is not None else 0
 
+        # Unindented string to prevent markdown rendering issues
         value_box_html = f"""
 <div class="dashboard-wrapper">
 <input type="checkbox" id="dash-toggle" class="dashboard-toggle" style="display:none;">
@@ -1475,6 +1474,15 @@ body {{ background: transparent; margin: 0; padding: 0; }}
     </div>
 </div>
 <script>
+// --- Mobile Touch Hover Fix ---
+document.addEventListener('click', (e) => {{
+    const touchHoverTarget = e.target.closest('.transaction-card');
+    document.querySelectorAll('.touch-hover').forEach(el => {{
+        if (el !== touchHoverTarget) el.classList.remove('touch-hover');
+    }});
+    if (touchHoverTarget) touchHoverTarget.classList.toggle('touch-hover');
+}});
+
 // --- Wheel scrolling for PC ---
 const txScrollContainer = document.getElementById('txScrollContainer');
 if (txScrollContainer) {{
@@ -1572,11 +1580,11 @@ function editTransaction(i) {{
         # Unindented to prevent markdown code block rendering
         summary_html = f"""
 <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:20px;margin-bottom:30px;">
-<div class="glossy-box swapped" style="height:80px; min-height:80px;"><div>{total_czk:,.2f}</div><div>Total CZK</div></div>
-<div class="glossy-box swapped" style="height:80px; min-height:80px;"><div>{total_eur:,.2f}</div><div>Total EUR</div></div>
-<div class="glossy-box swapped" style="height:80px; min-height:80px;"><div>{format_money(total_usdc)}</div><div>Total USDC</div></div>
-<div class="glossy-box swapped" style="height:80px; min-height:80px;">
-<div style="font-size:22px; font-weight:700; color:#fff; margin-bottom:0; position:absolute; top:22px; width:100%; text-align:center;">{fees_eur:,.2f} EUR / {fees_czk:,.2f} CZK</div>
+<div class="glossy-box swapped" style="height:80px; min-height:80px; max-height:80px;"><div>{total_czk:,.2f}</div><div>Total CZK</div></div>
+<div class="glossy-box swapped" style="height:80px; min-height:80px; max-height:80px;"><div>{total_eur:,.2f}</div><div>Total EUR</div></div>
+<div class="glossy-box swapped" style="height:80px; min-height:80px; max-height:80px;"><div>{format_money(total_usdc)}</div><div>Total USDC</div></div>
+<div class="glossy-box swapped" style="height:80px; min-height:80px; max-height:80px;">
+<div style="font-size:22px; font-weight:700; color:#fff; margin-bottom:0; position:absolute; top:20px; width:100%; text-align:center;">{fees_eur:,.2f} EUR / {fees_czk:,.2f} CZK</div>
 <div>Fees</div>
 </div>
 </div>
