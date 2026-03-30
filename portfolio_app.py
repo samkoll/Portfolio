@@ -842,7 +842,6 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                     border: 1px solid rgba(255,255,255,0.05);
                     border-radius: 16px;
                     box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-                    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
                 }}
                 .pie-box {{
                     width: 350px;
@@ -853,14 +852,21 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                     flex: 0 0 600px;
                 }}
                 
+                /* Smooth Fade Overlay */
                 #chart-overlay {{
-                    display: none;
+                    visibility: hidden;
+                    opacity: 0;
                     position: fixed;
                     top: 0; left: 0; width: 100%; height: 100%;
                     background: rgba(10, 15, 28, 0.85);
                     z-index: 1000;
                     backdrop-filter: blur(4px);
                     -webkit-backdrop-filter: blur(4px);
+                    transition: opacity 0.3s ease, visibility 0.3s ease;
+                }}
+                #chart-overlay.active {{
+                    visibility: visible;
+                    opacity: 1;
                 }}
                 
                 @media (max-width: 768px) {{
@@ -874,17 +880,23 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                         gap: 16px; 
                     }}
                     
-                    /* The expanded modal class applied dynamically on tap */
+                    /* Smooth CSS Keyframe Pop-in instead of morphing transitions */
+                    @keyframes smoothPop {{
+                        0% {{ transform: translate(-50%, -50%) scale(0.95); opacity: 0; }}
+                        100% {{ transform: translate(-50%, -50%) scale(1); opacity: 1; }}
+                    }}
+                    
                     .expanded-chart {{
                         position: fixed !important;
                         top: 50% !important;
                         left: 50% !important;
-                        transform: translate(-50%, -50%) !important;
                         width: 95vw !important;
                         height: 400px !important;
                         z-index: 1001 !important;
                         margin: 0 !important;
                         scroll-snap-align: none !important;
+                        opacity: 0;
+                        animation: smoothPop 0.3s cubic-bezier(0.2, 0.8, 0.2, 1) forwards !important;
                     }}
                 }}
             </style>
@@ -1040,14 +1052,12 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                     }}]
                 }});
 
-                // --- Mobile Expand Mechanics ---
+                // --- Mobile Double-Tap Expand Mechanics ---
                 function toggleExpandChart(chartId) {{
                     if (window.innerWidth > 768) return; // Feature only activates on phones
                     
                     const el = document.getElementById(chartId);
-                    if (el.classList.contains('expanded-chart')) {{
-                        return; // It's already expanded, don't interrupt Highcharts tooltips
-                    }}
+                    if (el.classList.contains('expanded-chart')) return;
                     
                     const overlay = document.getElementById('chart-overlay');
                     const wrapper = document.getElementById('chartsScrollContainer');
@@ -1056,35 +1066,48 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                     document.querySelectorAll('.expanded-chart').forEach(c => c.classList.remove('expanded-chart'));
                     
                     el.classList.add('expanded-chart');
-                    overlay.style.display = 'block';
+                    overlay.classList.add('active');
                     wrapper.style.overflowX = 'visible'; // Prevent clipping
                     
-                    // Give the CSS animation a moment to trigger, then command Highcharts to recalculate its new width
-                    setTimeout(() => {{
-                        const hc = Highcharts.charts.find(c => c && c.renderTo.id === chartId);
-                        if (hc) hc.reflow();
-                    }}, 50);
+                    // Force immediate reflow without animation so it instantly fills the new bounds
+                    const hc = Highcharts.charts.find(c => c && c.renderTo.id === chartId);
+                    if (hc) hc.reflow();
                 }}
 
-                // Attach click listeners cleanly to the containers
-                document.getElementById('pie-container').addEventListener('click', function(e) {{
-                    toggleExpandChart('pie-container');
-                }});
-                document.getElementById('history-container').addEventListener('click', function(e) {{
-                    toggleExpandChart('history-container');
-                }});
+                function setupDoubleTap(elementId) {{
+                    const el = document.getElementById(elementId);
+                    if (!el) return;
+                    let lastTap = 0;
 
-                // Close expanded chart when tapping the dark background
+                    // Handle standard double click (PC testing / some mobile browsers)
+                    el.addEventListener('dblclick', function(e) {{
+                        toggleExpandChart(elementId);
+                    }});
+
+                    // Handle true touch double tap explicitly for mobile
+                    el.addEventListener('touchend', function(e) {{
+                        const currentTime = new Date().getTime();
+                        const tapLength = currentTime - lastTap;
+                        if (tapLength < 400 && tapLength > 0) {{
+                            toggleExpandChart(elementId);
+                            e.preventDefault(); // Stop zoom
+                        }}
+                        lastTap = currentTime;
+                    }});
+                }}
+
+                setupDoubleTap('pie-container');
+                setupDoubleTap('history-container');
+
+                // Close expanded chart when tapping the dark background overlay
                 document.getElementById('chart-overlay').addEventListener('click', () => {{
                     document.querySelectorAll('.expanded-chart').forEach(el => {{
                         el.classList.remove('expanded-chart');
-                        // Shrink and reflow back to normal size
-                        setTimeout(() => {{
-                            const hc = Highcharts.charts.find(c => c && c.renderTo.id === el.id);
-                            if (hc) hc.reflow();
-                        }}, 50);
+                        // Instantly reflow back to normal size
+                        const hc = Highcharts.charts.find(c => c && c.renderTo.id === el.id);
+                        if (hc) hc.reflow();
                     }});
-                    document.getElementById('chart-overlay').style.display = 'none';
+                    document.getElementById('chart-overlay').classList.remove('active');
                     document.getElementById('chartsScrollContainer').style.overflowX = 'auto'; // Restore scroll snapping
                 }});
 
