@@ -84,7 +84,8 @@ div[data-testid="stMainBlockContainer"] {
 .stats-layer {
     position: relative;
     z-index: 1;
-    margin-top: -60px !important; /* Perfectly tucks the 80px box to expose exactly 20px */
+    /* Mathematically tucks the 80px box to expose exactly 20px */
+    margin-top: -60px !important; 
     transition: margin-top 0.4s cubic-bezier(0.4, 0, 0.2, 1);
     margin-bottom: 24px;
 }
@@ -707,7 +708,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
             </div>
         </div>
         <div class="flip-card-back">
-            <div class="fullscreen-btn" title="Full Screen">
+            <div class="fullscreen-btn" title="Advanced Chart">
                 {FULLSCREEN_ICON}
             </div>
             <div class="chart-container">
@@ -725,6 +726,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
 <head>
     <meta charset="UTF-8">
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <script type="text/javascript" src="https://s3.tradingview.com/tv.js"></script>
     <style>
         * {{ box-sizing: border-box; }}
         html, body {{
@@ -920,17 +922,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
             align-items: center;
             justify-content: center;
         }}
-        /* Fullscreen styles for the chart */
-        .chart-container:fullscreen {{
-            background-color: #0f172a;
-            padding: 20px;
-            border-radius: 0;
-        }}
-        .chart-container:-webkit-full-screen {{
-            background-color: #0f172a;
-            padding: 20px;
-            border-radius: 0;
-        }}
+
         canvas {{
             position: absolute;
             top: 0;
@@ -944,6 +936,29 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
             font-size: 0.85rem;
             z-index: 10;
         }}
+        
+        /* Fullscreen TV Overlay */
+        #tv-overlay {{
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background-color: #0f172a;
+            z-index: 99999;
+        }}
+        #tv-close-fs {{
+            position: absolute;
+            top: 15px;
+            right: 20px;
+            color: #94a3b8;
+            font-size: 32px;
+            cursor: pointer;
+            z-index: 100000;
+            transition: color 0.2s;
+        }}
+        #tv-close-fs:hover {{ color: white; }}
         
         @media (max-width: 700px) {{
             /* Fit phone width perfectly with snapping */
@@ -972,6 +987,11 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
     }} catch(e) {{}}
 </script>
 
+<div id="tv-overlay">
+    <div id="tv-close-fs">&times;</div>
+    <div id="tv_chart_container" style="width:100%; height:100%;"></div>
+</div>
+
 <div class="scroll-wrapper" id="scrollContainer">
     <div class="coin-grid">
         {cards_html}
@@ -985,6 +1005,14 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
             // Only run if the click is outside a flip-card inner and outside dashboard wrapper
             const isCardClick = e && e.target && e.target.closest && e.target.closest('.flip-card');
             const isDashClick = e && e.target && e.target.closest && e.target.closest('.dashboard-wrapper');
+            const isFullscreenBtn = e && e.target && e.target.closest && e.target.closest('.fullscreen-btn');
+            
+            if (!isCardClick && !isFullscreenBtn) {{
+                document.querySelectorAll('.flip-card.flipped').forEach(card => {{
+                    card.classList.remove('flipped');
+                    card.classList.remove('touch-hover');
+                }});
+            }}
             
             if (!isDashClick) {{
                 const dashToggle = document.getElementById('dash-toggle');
@@ -1030,6 +1058,29 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                 }}
             }}, {{ passive: false }});
         }}
+
+        // --- TradingView Fullscreen Handler ---
+        function exitFullscreen() {{
+            if (document.exitFullscreen) {{
+                document.exitFullscreen();
+            }} else if (document.webkitExitFullscreen) {{
+                document.webkitExitFullscreen();
+            }} else if (document.msExitFullscreen) {{
+                document.msExitFullscreen();
+            }}
+        }}
+
+        document.getElementById('tv-close-fs').addEventListener('click', exitFullscreen);
+
+        // Hide overlay automatically when leaving fullscreen
+        ['fullscreenchange', 'webkitfullscreenchange', 'mozfullscreenchange', 'MSFullscreenChange'].forEach(
+            eventType => document.addEventListener(eventType, () => {{
+                if (!document.fullscreenElement && !document.webkitIsFullScreen && !document.mozFullScreen && !document.msFullscreenElement) {{
+                    document.getElementById('tv-overlay').style.display = 'none';
+                    document.getElementById('tv_chart_container').innerHTML = ''; // clear chart widget to save resources
+                }}
+            }}, false)
+        );
 
         // --- Live Price Auto Refresh Logic ---
         const usdcHoldings = {usdc_holdings};
@@ -1326,32 +1377,48 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
             
             const backDiv = card.querySelector('.flip-card-back');
             backDiv.addEventListener('click', (e) => {{
-                // Tapping empty space on the back flips the card over
+                // Tapping anywhere on the back flips the card over
                 card.classList.remove('flipped');
                 card.classList.remove('touch-hover');
             }});
             
-            // Fullscreen functionality
+            // TradingView Fullscreen functionality
             const fsBtn = card.querySelector('.fullscreen-btn');
             if (fsBtn) {{
                 fsBtn.addEventListener('click', (e) => {{
                     e.stopPropagation(); // prevent flipping the card
-                    const chartCont = card.querySelector('.chart-container');
-                    if (!document.fullscreenElement) {{
-                        if (chartCont.requestFullscreen) {{
-                            chartCont.requestFullscreen().catch(err => console.log(err));
-                        }} else if (chartCont.webkitRequestFullscreen) {{ /* Safari */
-                            chartCont.webkitRequestFullscreen();
-                        }} else if (chartCont.msRequestFullscreen) {{ /* IE11 */
-                            chartCont.msRequestFullscreen();
-                        }}
-                    }} else {{
-                        if (document.exitFullscreen) {{
-                            document.exitFullscreen();
-                        }} else if (document.webkitExitFullscreen) {{ /* Safari */
-                            document.webkitExitFullscreen();
-                        }}
+                    
+                    const overlay = document.getElementById('tv-overlay');
+                    overlay.style.display = 'block';
+
+                    // Request fullscreen on the overlay
+                    if (overlay.requestFullscreen) {{
+                        overlay.requestFullscreen().catch(err => console.log(err));
+                    }} else if (overlay.webkitRequestFullscreen) {{
+                        overlay.webkitRequestFullscreen();
+                    }} else if (overlay.msRequestFullscreen) {{
+                        overlay.msRequestFullscreen();
                     }}
+
+                    // Initialize TradingView widget
+                    new TradingView.widget({{
+                      "autosize": true,
+                      "symbol": "BINANCE:" + ticker + "USDT",
+                      "interval": "D",
+                      "timezone": "Etc/UTC",
+                      "theme": "dark",
+                      "style": "1",
+                      "locale": "en",
+                      "enable_publishing": false,
+                      "backgroundColor": "#0f172a",
+                      "gridColor": "#1e293b",
+                      "hide_top_toolbar": false,
+                      "hide_legend": false,
+                      "save_image": false,
+                      "container_id": "tv_chart_container",
+                      "allow_symbol_change": true,
+                      "toolbar_bg": "#0f172a"
+                    }});
                 }});
             }}
         }});
@@ -1587,6 +1654,15 @@ body {{ background: transparent; margin: 0; padding: 0; }}
     </div>
 </div>
 <script>
+// --- Mobile Touch Hover Fix ---
+document.addEventListener('click', (e) => {{
+    const touchHoverTarget = e.target.closest('.transaction-card');
+    document.querySelectorAll('.touch-hover').forEach(el => {{
+        if (el !== touchHoverTarget) el.classList.remove('touch-hover');
+    }});
+    if (touchHoverTarget) touchHoverTarget.classList.toggle('touch-hover');
+}});
+
 // --- Wheel scrolling for PC ---
 const txScrollContainer = document.getElementById('txScrollContainer');
 if (txScrollContainer) {{
