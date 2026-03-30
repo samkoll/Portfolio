@@ -84,7 +84,8 @@ div[data-testid="stMainBlockContainer"] {
 .stats-layer {
     position: relative;
     z-index: 1;
-    margin-top: -60px !important; /* Perfectly tucks the 80px box to expose exactly 20px */
+    /* Mathematically tucks the 80px box to expose exactly 20px */
+    margin-top: -60px !important; 
     transition: margin-top 0.4s cubic-bezier(0.4, 0, 0.2, 1);
     margin-bottom: 24px;
 }
@@ -278,7 +279,6 @@ div[data-testid="stMainBlockContainer"] {
         font-size: 24px !important;
         min-height: 100px;
     }
-    /* Neutralize the buggy mobile margin that was exposing the cards */
     .home-header {
         margin-bottom: 0 !important;
     }
@@ -291,18 +291,16 @@ div[data-testid="stMainBlockContainer"] {
     .glossy-box > div:first-child { font-size: 10px !important; }
     .glossy-box > div:last-child { font-size: 21px !important; }
     
-    /* Forced single row for mobile */
     .stats-layer-inner { 
         grid-template-columns: repeat(3, 1fr) !important; 
         gap: 8px; 
     }
     
-    /* Math perfectly hides the centered 80px box, leaving only 20px for text */
+    /* Math perfectly hides the centered 80px box, leaving exactly 20px visible for the label */
     .stats-layer { margin-top: -60px !important; margin-bottom: 18px; } 
     
     .glossy-box.swapped { height: 80px !important; min-height: 80px !important; max-height: 80px !important; padding: 0; }
     .glossy-box.swapped > div:first-child { font-size: 16px !important; top: 16px; }
-    /* Perfectly flush bottom label to peek out */
     .glossy-box.swapped > div:last-child { font-size: 9px !important; bottom: 4px; }
     
     .usdc-banner { padding: 16px 18px; margin-bottom: 24px; }
@@ -318,9 +316,9 @@ div[data-testid="stMainBlockContainer"] {
 DASHBOARD_ICON = '''<svg xmlns="http://www.w3.org/2000/svg" width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="#00ff9d" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>'''
 CRYPTO_ICON = '''<svg xmlns="http://www.w3.org/2000/svg" width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="#00ff9d" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M14.5 8.5L9.5 13.5"/><path d="M9.5 8.5L14.5 13.5"/></svg>'''
 FIAT_ICON = '''<svg xmlns="http://www.w3.org/2000/svg" width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="#00ff9d" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M6 8h12"/><path d="M6 12h12"/><path d="M6 16h12"/></svg>'''
-# Minimalist 16px eye icon, neutral color
 EYE_CLOSED = '''<svg class="eye-closed" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>'''
 EYE_OPEN = '''<svg class="eye-open" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>'''
+FULLSCREEN_ICON = '''<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/></svg>'''
 
 DATA_DIR = Path("data")
 DATA_DIR.mkdir(exist_ok=True)
@@ -706,7 +704,9 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
             </div>
         </div>
         <div class="flip-card-back">
-            <div class="close-card-btn">&times;</div>
+            <div class="fullscreen-btn" title="Full Screen">
+                {FULLSCREEN_ICON}
+            </div>
             <div class="chart-container">
                 <canvas id="chart-{ticker}"></canvas>
                 <div class="chart-loading" id="loading-{ticker}">Loading chart...</div>
@@ -808,23 +808,21 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
             transform: rotateY(180deg);
             display: flex;
             flex-direction: column;
-            padding: 24px 16px 16px 16px; /* Extra top padding for the close button */
+            padding: 24px 16px 16px 16px; /* Extra top padding for the fullscreen button */
         }}
         
-        /* Elegant Close Button for the back of the card */
-        .close-card-btn {{
+        /* Elegant Fullscreen Button for the back of the card */
+        .fullscreen-btn {{
             position: absolute;
-            top: 8px;
+            top: 10px;
             right: 12px;
             color: #64748b;
-            font-size: 24px;
-            line-height: 1;
             cursor: pointer;
             z-index: 20;
             transition: color 0.2s ease;
             padding: 4px;
         }}
-        .close-card-btn:hover {{ color: #ffffff; }}
+        .fullscreen-btn:hover {{ color: #ffffff; }}
         
         /* Interactive dynamic colored border glow - ONLY applies on PC (fine pointers) */
         @media (hover: hover) and (pointer: fine) {{
@@ -919,6 +917,17 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
             align-items: center;
             justify-content: center;
         }}
+        /* Fullscreen styles for the chart */
+        .chart-container:fullscreen {{
+            background-color: #0f172a;
+            padding: 20px;
+            border-radius: 0;
+        }}
+        .chart-container:-webkit-full-screen {{
+            background-color: #0f172a;
+            padding: 20px;
+            border-radius: 0;
+        }}
         canvas {{
             position: absolute;
             top: 0;
@@ -949,6 +958,17 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
     </style>
 </head>
 <body>
+
+<script>
+    // Ensure the iframe has fullscreen permissions (Streamlit workaround)
+    try {{
+        if (window.frameElement) {{
+            window.frameElement.setAttribute("allowfullscreen", "");
+            window.frameElement.setAttribute("allow", "fullscreen");
+        }}
+    }} catch(e) {{}}
+</script>
+
 <div class="scroll-wrapper" id="scrollContainer">
     <div class="coin-grid">
         {cards_html}
@@ -960,20 +980,13 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
         // Define the close function for global click-away
         function closeAllOpenUI(e) {{
             // Only run if the click is outside a flip-card inner and outside dashboard wrapper
-            const isCardClick = e && e.target && e.target.closest && e.target.closest('.flip-card-inner');
+            const isCardClick = e && e.target && e.target.closest && e.target.closest('.flip-card');
             const isDashClick = e && e.target && e.target.closest && e.target.closest('.dashboard-wrapper');
-            
-            if (!isCardClick) {{
-                document.querySelectorAll('.flip-card.flipped').forEach(card => {{
-                    card.classList.remove('flipped');
-                    card.classList.remove('touch-hover');
-                }});
-            }}
             
             if (!isDashClick) {{
                 const dashToggle = document.getElementById('dash-toggle');
                 if (dashToggle && dashToggle.checked) {{
-                    dashToggle.checked = false;
+                    dashToggle.checked = false; // Close drawer and inherently remove hover
                 }}
             }}
         }}
@@ -990,6 +1003,12 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
             ['click', 'touchstart'].forEach(evt => {{
                 window.parent.document.addEventListener(evt, () => {{
                     closeAllOpenUI(null); // No event target needed, it's definitely outside
+                    
+                    // Unflip cards if user clicks totally outside the iframe
+                    document.querySelectorAll('.flip-card.flipped').forEach(card => {{
+                        card.classList.remove('flipped');
+                        card.classList.remove('touch-hover');
+                    }});
                 }}, {{ passive: true }});
             }});
         }} catch(err) {{
@@ -1064,6 +1083,16 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                             pnlPctEl.innerText = pnlPctStr;
                             pnlPctEl.style.color = color;
                         }}
+                        
+                        // Update Live Chart Last Dot
+                        if (window.chartCache && window.chartCache[ticker] && window.chartCache[ticker].chartObj) {{
+                            const chart = window.chartCache[ticker].chartObj;
+                            const dataLen = chart.data.datasets[0].data.length;
+                            if (dataLen > 0) {{
+                                chart.data.datasets[0].data[dataLen - 1] = price;
+                                chart.update('none'); // Update smoothly without animation restart
+                            }}
+                        }}
                     }}
                     
                     totalCoinValue += (holdings * price);
@@ -1131,7 +1160,8 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
         }}
         
         const flipCards = document.querySelectorAll('.flip-card');
-        const chartCache = {{}};
+        window.chartCache = window.chartCache || {{}};
+        const chartCache = window.chartCache;
         const refreshKey = '{st.session_state.refresh_key}';
         
         async function fetch24hChange(ticker) {{
@@ -1199,6 +1229,10 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                 if (loadingDiv) loadingDiv.innerText = 'Failed to load chart data';
                 return;
             }}
+            
+            // Replace the last item of the history array with the LIVE CURRENT PRICE
+            hist.prices[hist.prices.length - 1] = currentPrice;
+            
             const ctx = canvas.getContext('2d');
             if (chartCache[ticker] && chartCache[ticker].chartObj) {{
                 chartCache[ticker].chartObj.destroy();
@@ -1287,20 +1321,50 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                 }}
             }});
             
-            // Allow flipping back via the dedicated Close Button
-            const closeBtn = card.querySelector('.close-card-btn');
-            if (closeBtn) {{
-                closeBtn.addEventListener('click', (e) => {{
-                    e.stopPropagation();
-                    card.classList.remove('flipped');
-                    card.classList.remove('touch-hover');
+            const backDiv = card.querySelector('.flip-card-back');
+            backDiv.addEventListener('click', (e) => {{
+                e.stopPropagation();
+                // Tapping empty space on the back flips the card over
+                card.classList.remove('flipped');
+                card.classList.remove('touch-hover');
+            }});
+            
+            // Fullscreen functionality
+            const fsBtn = card.querySelector('.fullscreen-btn');
+            if (fsBtn) {{
+                fsBtn.addEventListener('click', (e) => {{
+                    e.stopPropagation(); // prevent flipping the card
+                    const chartCont = card.querySelector('.chart-container');
+                    if (!document.fullscreenElement) {{
+                        if (chartCont.requestFullscreen) {{
+                            chartCont.requestFullscreen().catch(err => console.log(err));
+                        }} else if (chartCont.webkitRequestFullscreen) {{ /* Safari */
+                            chartCont.webkitRequestFullscreen();
+                        }} else if (chartCont.msRequestFullscreen) {{ /* IE11 */
+                            chartCont.msRequestFullscreen();
+                        }}
+                    }} else {{
+                        if (document.exitFullscreen) {{
+                            document.exitFullscreen();
+                        }} else if (document.webkitExitFullscreen) {{ /* Safari */
+                            document.webkitExitFullscreen();
+                        }}
+                    }}
+                }});
+                
+                // Stop touch propagation on the fullscreen button
+                ['touchstart', 'touchend'].forEach(evt => {{
+                    fsBtn.addEventListener(evt, (e) => e.stopPropagation(), {{passive: true}});
                 }});
             }}
             
-            // Stop clicks on the canvas from bubbling up (so clicking a chart dot won't flip the card!)
-            const canvas = card.querySelector('canvas');
-            if (canvas) {{
-                canvas.addEventListener('click', (e) => e.stopPropagation());
+            // Protect chart area from flipping the card
+            const chartContainer = card.querySelector('.chart-container');
+            if (chartContainer) {{
+                // Isolate interactions so tapping the chart tooltips doesn't flip the card
+                ['click', 'touchstart', 'touchend', 'mousedown'].forEach(evt => {{
+                    chartContainer.addEventListener(evt, (e) => e.stopPropagation(), {{passive: true}});
+                }});
             }}
         }});
         
