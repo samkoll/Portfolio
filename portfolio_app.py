@@ -428,38 +428,63 @@ def get_all_cryptocompare_prices(tickers, refresh_key=0):
 
 # ====================== HISTORICAL PORTFOLIO BUILDER ======================
 @st.cache_data(ttl=3600, show_spinner=False)
-def build_portfolio_history(crypto_df, refresh_key):
-    if crypto_df.empty: return []
+def build_portfolio_history(crypto_df, fiat_df, refresh_key):
+    if crypto_df.empty and fiat_df.empty: return []
 
-    df = crypto_df.copy()
-    # Exclude pure USDC lines from asset value tracking
-    df = df[df['Ticker'].str.upper() != 'USDC']
-    if df.empty: return []
+    # Process Fiat to track total cumulative USDC deposits available
+    fiat = fiat_df.copy()
+    if not fiat.empty:
+        fiat['Date'] = fiat['Datum'].apply(lambda x: (datetime(1899, 12, 30) + timedelta(days=int(float(x)))).date())
+        daily_fiat_usdc = fiat.groupby('Date')['USDC'].sum()
+    else:
+        daily_fiat_usdc = pd.Series(dtype=float)
 
-    # Map serial back to dates
-    df['Date'] = df['Datum'].apply(lambda x: (datetime(1899, 12, 30) + timedelta(days=int(float(x)))).date())
-    min_date = df['Date'].min()
+    # Process Crypto to track total USDC spent over time
+    crypto = crypto_df.copy()
+    if not crypto.empty:
+        crypto['Date'] = crypto['Datum'].apply(lambda x: (datetime(1899, 12, 30) + timedelta(days=int(float(x)))).date())
+        daily_crypto_spent = crypto[crypto['Ticker'].str.upper() != 'USDC'].groupby('Date')['USDC'].sum()
+    else:
+        daily_crypto_spent = pd.Series(dtype=float)
+
+    all_dates = sorted(set(daily_fiat_usdc.index) | set(crypto['Date'].dropna() if not crypto.empty else []))
+    if not all_dates: return []
+    
+    min_date = min(all_dates)
     today = datetime.now().date()
-    
     if min_date > today: min_date = today
-
     date_range = pd.date_range(start=min_date, end=today).date
-    
-    # Cumulative holdings per coin per day
-    holdings = df.groupby(['Date', 'Ticker'])['Amount'].sum().unstack(fill_value=0)
-    holdings = holdings.reindex(date_range, fill_value=0).fillna(0)
-    cum_holdings = holdings.cumsum()
 
-    # Cumulative invested USDC per day
-    invested = df.groupby('Date')['USDC'].sum()
-    invested = invested.reindex(date_range, fill_value=0).fillna(0)
-    cum_invested = invested.cumsum()
+    # Reindex and cumulative sum for Fiat USDC and Crypto Spent USDC
+    daily_fiat_usdc = daily_fiat_usdc.reindex(date_range, fill_value=0)
+    cum_fiat_usdc = daily_fiat_usdc.cumsum()
 
-    coins = df['Ticker'].unique()
+    daily_crypto_spent = daily_crypto_spent.reindex(date_range, fill_value=0)
+    cum_crypto_spent = daily_crypto_spent.cumsum()
+
+    # Track unused USDC caching over time
+    cum_unused_usdc = cum_fiat_usdc - cum_crypto_spent
+
+    # Calculate Holdings
+    if not crypto.empty:
+        crypto_assets = crypto[crypto['Ticker'].str.upper() != 'USDC']
+        if not crypto_assets.empty:
+            holdings = crypto_assets.groupby(['Date', 'Ticker'])['Amount'].sum().unstack(fill_value=0)
+            holdings = holdings.reindex(date_range, fill_value=0).fillna(0)
+            cum_holdings = holdings.cumsum()
+            coins = crypto_assets['Ticker'].unique()
+        else:
+            cum_holdings = pd.DataFrame(index=date_range)
+            coins = []
+    else:
+        cum_holdings = pd.DataFrame(index=date_range)
+        coins = []
+
+    # Fetch daily close historical prices (Including BTC for the benchmark)
     prices_dict = {}
+    fetch_coins = set(coins) | {'BTC'}
     
-    # Fetch historical daily closes for all held assets
-    for coin in coins:
+    for coin in fetch_coins:
         sym = CRYPTOCOMPARE_SYMBOL_MAP.get(coin.upper(), coin.upper())
         days_diff = (today - min_date).days
         limit = min(2000, days_diff + 5)
@@ -475,19 +500,32 @@ def build_portfolio_history(crypto_df, refresh_key):
     prices_df = pd.DataFrame(prices_dict)
     prices_df = prices_df.reindex(date_range).ffill().bfill().fillna(0)
     
-    # Calculate portfolio values
+    # Calculate portfolio values (Crypto + Unused USDC)
+    daily_crypto_value = pd.Series(0.0, index=date_range)
     common_cols = cum_holdings.columns.intersection(prices_df.columns)
-    if common_cols.empty: return []
-    daily_crypto_value = (cum_holdings[common_cols] * prices_df[common_cols]).sum(axis=1)
+    if not common_cols.empty:
+        daily_crypto_value = (cum_holdings[common_cols] * prices_df[common_cols]).sum(axis=1)
+
+    total_portfolio_value = daily_crypto_value + cum_unused_usdc
+
+    # Calculate BTC Benchmark: What if ALL Fiat deposits went straight into BTC instead?
+    if 'BTC' in prices_df.columns:
+        btc_prices = prices_df['BTC']
+        btc_bought = daily_fiat_usdc / btc_prices.replace(0, 1) # Avoid division by zero
+        cum_btc_benchmark_holdings = btc_bought.cumsum()
+        btc_benchmark_value = cum_btc_benchmark_holdings * btc_prices
+    else:
+        btc_benchmark_value = pd.Series(0.0, index=date_range)
 
     # Output formatted array for JavaScript Highcharts
     history_data = []
     for d in date_range:
         dt = datetime.combine(d, datetime.min.time())
         ts = int(dt.timestamp()) * 1000
-        val = float(daily_crypto_value.loc[d])
-        inv = float(cum_invested.loc[d])
-        history_data.append({'time': ts, 'value': val, 'invested': inv})
+        val = float(total_portfolio_value.loc[d])
+        inv = float(cum_fiat_usdc.loc[d])
+        btc_val = float(btc_benchmark_value.loc[d])
+        history_data.append({'time': ts, 'value': val, 'invested': inv, 'btc': btc_val})
         
     return history_data
 
@@ -684,9 +722,10 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
         st.markdown(value_box_html, unsafe_allow_html=True)
 
         # ================== 2. HISTORICAL AND PIE CHARTS ==================
-        history_data = build_portfolio_history(st.session_state.crypto_df, st.session_state.refresh_key)
+        history_data = build_portfolio_history(st.session_state.crypto_df, st.session_state.fiat_df, st.session_state.refresh_key)
         hist_val_js = ",\n".join([f"[{d['time']}, {d['value']}]" for d in history_data])
         hist_inv_js = ",\n".join([f"[{d['time']}, {d['invested']}]" for d in history_data])
+        hist_btc_js = ",\n".join([f"[{d['time']}, {d['btc']}]" for d in history_data])
 
         pie_data_js_lines = []
         for _, r in df_port.iterrows():
@@ -710,51 +749,127 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
             <script src="https://code.highcharts.com/highcharts-3d.js"></script>
             <style>
                 body {{ margin: 0; padding: 0; background: transparent; overflow: hidden; font-family: system-ui, sans-serif; }}
-                .charts-wrapper {{
-                    display: flex;
-                    flex-wrap: wrap;
-                    gap: 16px;
+                
+                .charts-scroll-wrapper {{
                     width: 100%;
-                    padding: 0 4px;
-                    box-sizing: border-box;
+                    overflow-y: hidden;
+                    overflow-x: auto;
+                    padding: 12px 0px 20px 0px;
                     margin-bottom: 24px;
+                    scroll-snap-type: x mandatory;
+                    -webkit-overflow-scrolling: touch;
+                    scrollbar-width: none; /* Firefox */
+                    -ms-overflow-style: none; /* IE and Edge */
                 }}
-                .history-box {{
-                    flex: 2 1 450px;
-                    height: 320px;
+                .charts-scroll-wrapper::-webkit-scrollbar {{
+                    display: none; /* Chrome, Safari, Opera */
+                }}
+                .charts-flex {{
+                    display: flex;
+                    flex-direction: row;
+                    flex-wrap: nowrap;
+                    gap: 24px;
+                    width: max-content;
+                    padding: 0 24px;
+                }}
+                .pie-box, .history-box {{
+                    scroll-snap-align: center;
+                    height: 340px;
                     background: rgba(15, 23, 42, 0.4);
                     border: 1px solid rgba(255,255,255,0.05);
                     border-radius: 16px;
                     box-shadow: 0 4px 15px rgba(0,0,0,0.2);
                 }}
                 .pie-box {{
-                    flex: 1 1 300px;
-                    height: 320px;
-                    background: rgba(15, 23, 42, 0.4);
-                    border: 1px solid rgba(255,255,255,0.05);
-                    border-radius: 16px;
-                    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+                    width: 350px;
+                    flex: 0 0 350px;
                 }}
+                .history-box {{
+                    width: 600px;
+                    flex: 0 0 600px;
+                }}
+                
                 @media (max-width: 768px) {{
-                    .history-box {{ flex: 1 1 100%; height: 280px; }}
-                    .pie-box {{ flex: 1 1 100%; height: 280px; }}
+                    .pie-box, .history-box {{ 
+                        height: 300px; 
+                        width: 85vw; 
+                        flex: 0 0 85vw; 
+                    }}
+                    .charts-flex {{ 
+                        padding: 0 7.5vw; 
+                        gap: 16px; 
+                    }}
                 }}
             </style>
         </head>
         <body>
-            <div class="charts-wrapper">
-                <div id="history-container" class="history-box"></div>
-                <div id="pie-container" class="pie-box"></div>
+            <div class="charts-scroll-wrapper" id="chartsScrollContainer">
+                <div class="charts-flex">
+                    <div id="pie-container" class="pie-box"></div>
+                    <div id="history-container" class="history-box"></div>
+                </div>
             </div>
             
             <script>
                 // Format config for Time
                 Highcharts.setOptions({{ global: {{ useUTC: false }} }});
 
-                // Render Historical Performance Chart
-                Highcharts.chart('history-container', {{
-                    chart: {{ type: 'areaspline', backgroundColor: 'transparent', margin: [25, 15, 30, 45] }},
+                // Render 3D Pie Chart (FIRST)
+                Highcharts.chart('pie-container', {{
+                    chart: {{
+                        type: 'pie',
+                        options3d: {{ enabled: true, alpha: 55, beta: 0 }},
+                        backgroundColor: 'transparent',
+                        margin: [0, 0, 0, 0]
+                    }},
                     title: {{ text: null }},
+                    tooltip: {{
+                        formatter: function() {{
+                            const isPrivacy = document.body.classList.contains('privacy-mode');
+                            if (isPrivacy) {{
+                                return '<b>' + this.point.name + '</b><br/>' + this.point.percentage.toFixed(1) + '%';
+                            }}
+                            return '<b>' + this.point.name + '</b><br/>$' + Highcharts.numberFormat(this.point.y, 2) + '<br/>' + this.point.percentage.toFixed(1) + '%';
+                        }},
+                        backgroundColor: 'rgba(15, 23, 42, 0.95)',
+                        style: {{ color: '#fff' }},
+                        borderWidth: 1,
+                        borderColor: 'rgba(255,255,255,0.15)'
+                    }},
+                    plotOptions: {{
+                        pie: {{
+                            allowPointSelect: true,
+                            cursor: 'pointer',
+                            depth: 40,
+                            innerSize: '40%',
+                            dataLabels: {{
+                                enabled: true,
+                                format: '<b>{{point.name}}</b><br>{{point.percentage:.1f}}%',
+                                style: {{ color: '#e2e8f0', textOutline: 'none', fontSize: '10px', fontWeight: '600' }},
+                                connectorColor: 'rgba(255,255,255,0.2)'
+                            }},
+                            borderWidth: 0
+                        }}
+                    }},
+                    credits: {{ enabled: false }},
+                    series: [{{
+                        name: 'Holdings',
+                        data: [
+                            {pie_data_js}
+                        ]
+                    }}]
+                }});
+
+                // Render Historical Performance Chart (SECOND)
+                Highcharts.chart('history-container', {{
+                    chart: {{ type: 'areaspline', backgroundColor: 'transparent', margin: [25, 15, 45, 45] }},
+                    title: {{ text: null }},
+                    legend: {{
+                        enabled: true,
+                        itemStyle: {{ color: '#94a3b8', fontSize: '11px', fontWeight: 'normal' }},
+                        itemHoverStyle: {{ color: '#ffffff' }},
+                        verticalAlign: 'bottom'
+                    }},
                     xAxis: {{ 
                         type: 'datetime', 
                         labels: {{ style: {{ color: '#94a3b8', fontSize: '10px' }} }}, 
@@ -801,7 +916,15 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                         data: [{hist_val_js}],
                         color: '#00ff9d',
                         fillColor: {{ linearGradient: {{ x1: 0, y1: 0, x2: 0, y2: 1 }}, stops: [ [0, 'rgba(0, 255, 157, 0.5)'], [1, 'rgba(0, 255, 157, 0.0)'] ] }},
-                        zIndex: 2
+                        zIndex: 3
+                    }}, {{
+                        name: 'BTC Benchmark',
+                        type: 'line',
+                        data: [{hist_btc_js}],
+                        color: '#f7931a', // Bitcoin Orange
+                        lineWidth: 2,
+                        zIndex: 2,
+                        visible: true // Toggled on by default, can click legend to hide
                     }}, {{
                         name: 'Net Invested',
                         type: 'line',
@@ -813,51 +936,16 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                     }}]
                 }});
 
-                // Render 3D Pie Chart
-                Highcharts.chart('pie-container', {{
-                    chart: {{
-                        type: 'pie',
-                        options3d: {{ enabled: true, alpha: 55, beta: 0 }},
-                        backgroundColor: 'transparent',
-                        margin: [0, 0, 0, 0]
-                    }},
-                    title: {{ text: null }},
-                    tooltip: {{
-                        formatter: function() {{
-                            const isPrivacy = document.body.classList.contains('privacy-mode');
-                            if (isPrivacy) {{
-                                return '<b>' + this.point.name + '</b><br/>' + this.point.percentage.toFixed(1) + '%';
-                            }}
-                            return '<b>' + this.point.name + '</b><br/>$' + Highcharts.numberFormat(this.point.y, 2) + '<br/>' + this.point.percentage.toFixed(1) + '%';
-                        }},
-                        backgroundColor: 'rgba(15, 23, 42, 0.95)',
-                        style: {{ color: '#fff' }},
-                        borderWidth: 1,
-                        borderColor: 'rgba(255,255,255,0.15)'
-                    }},
-                    plotOptions: {{
-                        pie: {{
-                            allowPointSelect: true,
-                            cursor: 'pointer',
-                            depth: 40,
-                            innerSize: '40%',
-                            dataLabels: {{
-                                enabled: true,
-                                format: '<b>{{point.name}}</b><br>{{point.percentage:.1f}}%',
-                                style: {{ color: '#e2e8f0', textOutline: 'none', fontSize: '10px', fontWeight: '600' }},
-                                connectorColor: 'rgba(255,255,255,0.2)'
-                            }},
-                            borderWidth: 0
+                // --- Wheel scrolling for PC (Chart Area) ---
+                const chartScroll = document.getElementById('chartsScrollContainer');
+                if (chartScroll) {{
+                    chartScroll.addEventListener('wheel', (evt) => {{
+                        if (Math.abs(evt.deltaY) > Math.abs(evt.deltaX)) {{
+                            evt.preventDefault();
+                            chartScroll.scrollBy({{ left: evt.deltaY > 0 ? 200 : -200, behavior: 'smooth' }});
                         }}
-                    }},
-                    credits: {{ enabled: false }},
-                    series: [{{
-                        name: 'Holdings',
-                        data: [
-                            {pie_data_js}
-                        ]
-                    }}]
-                }});
+                    }}, {{ passive: false }});
+                }}
 
                 // Sync privacy mode with Streamlit parent document dynamically
                 setInterval(() => {{
@@ -874,7 +962,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                             }}
                             // Force redraw on the history Y-Axis labels
                             const hc = Highcharts.charts.find(c => c && c.renderTo.id === 'history-container');
-                            if (hc) hc.yAxis[0].isDirty = true; hc.redraw();
+                            if (hc) {{ hc.yAxis[0].isDirty = true; hc.redraw(); }}
                         }}
                     }} catch(e) {{}}
                 }}, 200);
@@ -882,8 +970,8 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
         </body>
         </html>
         """
-        # Height is 320 for charts + 24 margin
-        components.html(charts_html, height=360, scrolling=False)
+        # Adjusted height to accommodate scrollbars and padding
+        components.html(charts_html, height=380, scrolling=False)
 
         # ================== 3. SUBDUED USDC BANNER ==================
         usdc_banner_html = f"""
