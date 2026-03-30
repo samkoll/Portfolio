@@ -92,24 +92,32 @@ div[data-testid="stMainBlockContainer"] {
     margin-top: 14px !important; /* Drops down */
 }
 .stats-layer-inner {
-    display: grid; 
-    grid-template-columns: repeat(auto-fit, minmax(98px, 1fr)); 
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: center;
     gap: 14px;
+    width: 100%;
 }
 
 /* Tucked Text Fade Out */
 .dash-value {
-    font-size: 24px !important; /* Elegant size on PC */
+    font-size: clamp(16px, 2vw, 24px) !important; /* Fluid typography */
     font-weight: 700;
     line-height: 1.05;
     color: #ffffff;
     position: absolute;
-    top: 20px; 
+    top: 20px;
     left: 0;
     width: 100%;
     text-align: center;
     margin: 0;
     transition: opacity 0.3s ease;
+    padding: 0 8px;
+    box-sizing: border-box;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 .dashboard-toggle:not(:checked) ~ .dashboard-wrapper .stats-layer .dash-value {
     opacity: 0;
@@ -201,6 +209,8 @@ div[data-testid="stMainBlockContainer"] {
 }
 
 .glossy-box.swapped {
+    flex: 1 1 130px;
+    min-width: 100px !important;
     height: 80px !important;
     min-height: 80px !important;
     max-height: 80px !important;
@@ -260,6 +270,23 @@ div[data-testid="stMainBlockContainer"] {
     font-size: 1.7rem;
     color: #ffffff;
 }
+
+/* GLOBALLY HIDE NUMBER INPUT STEP BUTTONS (+ / -) */
+button[aria-label="Step Up"],
+button[aria-label="Step Down"],
+button[data-testid="stNumberInputStepUp"],
+button[data-testid="stNumberInputStepDown"] {
+    display: none !important;
+}
+input[type="number"]::-webkit-inner-spin-button, 
+input[type="number"]::-webkit-outer-spin-button { 
+    -webkit-appearance: none; 
+    margin: 0; 
+}
+input[type="number"] {
+    -moz-appearance: textfield;
+}
+
 </style>
 """, unsafe_allow_html=True)
 
@@ -700,10 +727,9 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
             margin-bottom: 20px;
             scroll-snap-type: x mandatory; /* Enable scroll snapping */
             -webkit-overflow-scrolling: touch;
-            
             /* Completely hide scrollbars */
             scrollbar-width: none; /* Firefox */
-            -ms-overflow-style: none;  /* IE and Edge */
+            -ms-overflow-style: none; /* IE and Edge */
         }}
         
         .scroll-wrapper::-webkit-scrollbar {{
@@ -748,7 +774,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
             padding: 14px 18px;
             background: #0f172a;
             /* Default slight border glow taking the dynamic color */
-            box-shadow: 0 8px 24px rgba(0,0,0,0.3); 
+            box-shadow: 0 8px 24px rgba(0,0,0,0.3);
             border: 2px solid transparent;
             overflow: hidden; /* Prevent internal scrolling */
         }}
@@ -954,7 +980,6 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                 }}
             }} catch(e) {{}}
         }}, 150);
-
         // Run once on cold load to enforce local storage memory immediately
         try {{
             const dt = window.parent.document.getElementById('dash-toggle');
@@ -990,6 +1015,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                 // Detect vertical scroll to convert to horizontal
                 if (Math.abs(evt.deltaY) > Math.abs(evt.deltaX)) {{
                     evt.preventDefault();
+                    
                     // Using a smaller step (200) makes it slower/more controlled on PC
                     scrollContainer.scrollBy({{ left: evt.deltaY > 0 ? 200 : -200, behavior: 'smooth' }});
                 }}
@@ -998,7 +1024,6 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
 
         // --- Live Price Auto Refresh Logic ---
         const usdcHoldings = {usdc_holdings};
-        
         async function updateLivePrices() {{
             const cards = Array.from(document.querySelectorAll('.flip-card'));
             if (cards.length === 0) return;
@@ -1011,7 +1036,6 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                 
                 let totalCoinValue = 0;
                 let totalCoinInvested = 0;
-
                 cards.forEach(card => {{
                     const ticker = card.getAttribute('data-ticker');
                     const holdings = parseFloat(card.getAttribute('data-holdings'));
@@ -1031,7 +1055,6 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                         const value = holdings * price;
                         const pnl = value - invested;
                         const pnlPct = invested > 0 ? (pnl / invested) * 100 : 0;
-                        
                         const valStr = '$' + value.toLocaleString('en-US', {{minimumFractionDigits: 2, maximumFractionDigits: 2}});
                         const pnlStr = (pnl >= 0 ? '▲ $' : '▼ $') + Math.abs(pnl).toLocaleString('en-US', {{minimumFractionDigits: 2, maximumFractionDigits: 2}});
                         const pnlPctStr = (pnl >= 0 ? '▲ ' : '▼ ') + Math.abs(pnlPct).toFixed(2) + '%';
@@ -1039,7 +1062,6 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                         
                         const valEl = card.querySelector('.total-value');
                         if (valEl) valEl.innerText = valStr;
-                        
                         const pnlEl = card.querySelector('.card-pnl');
                         if (pnlEl) {{
                             pnlEl.innerText = pnlStr;
@@ -1200,7 +1222,6 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
             
             // Replace the last item of the history array with the LIVE CURRENT PRICE
             hist.prices[hist.prices.length - 1] = currentPrice;
-            
             const ctx = canvas.getContext('2d');
             if (chartCache[ticker] && chartCache[ticker].chartObj) {{
                 chartCache[ticker].chartObj.destroy();
@@ -1287,14 +1308,12 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                     }}
                 }}
             }});
-            
             const backDiv = card.querySelector('.flip-card-back');
             backDiv.addEventListener('click', (e) => {{
                 // Tapping anywhere on the back flips the card over
                 card.classList.remove('flipped');
                 card.classList.remove('touch-hover');
             }});
-            
             // Prevent the external link from triggering a flip
             const extBtn = card.querySelector('.tv-external-btn');
             if (extBtn) {{
@@ -1305,7 +1324,6 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
         }});
         
         restoreFlippedState();
-        
         if (window.oldRefreshKey && window.oldRefreshKey !== refreshKey) {{
             for (let key in chartCache) {{
                 if (chartCache[key].chartObj) chartCache[key].chartObj.destroy();
@@ -1347,35 +1365,70 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
             margin-bottom: 0px !important;
         }
 
-        /* 2. BEAUTIFUL BUY/SELL SWITCH */
+        /* 1a. FIRST ROW (4 columns): Inputs */
+        div[data-testid="stForm"]:has(.add-tx-card) div[data-testid="stHorizontalBlock"]:has(> div[data-testid="column"]:nth-child(4)) {
+            display: flex !important;
+            gap: 12px !important;
+        }
+        
+        /* 1b. SECOND ROW (2 columns): Action (Switch + Button) */
+        div[data-testid="stForm"]:has(.add-tx-card) div[data-testid="stHorizontalBlock"]:has(> div[data-testid="column"]:nth-child(2):last-child) {
+            display: flex !important;
+            flex-direction: row !important;
+            justify-content: space-between !important;
+            align-items: center !important;
+            margin-top: 12px !important;
+            gap: 12px !important;
+        }
+        /* Make switch column hug content, make button column take rest */
+        div[data-testid="stForm"]:has(.add-tx-card) div[data-testid="stHorizontalBlock"]:has(> div[data-testid="column"]:nth-child(2):last-child) > div[data-testid="column"]:nth-child(1) {
+            flex: 0 0 auto !important;
+            width: auto !important;
+        }
+        div[data-testid="stForm"]:has(.add-tx-card) div[data-testid="stHorizontalBlock"]:has(> div[data-testid="column"]:nth-child(2):last-child) > div[data-testid="column"]:nth-child(2) {
+            flex: 1 1 auto !important;
+            width: auto !important;
+        }
+
+        /* BEAUTIFUL BUY/SELL SWITCH */
         div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] {
             background: rgba(0,0,0,0.3) !important;
             padding: 6px !important;
             border-radius: 12px !important;
             display: flex !important;
             flex-direction: row !important;
-            gap: 10px !important;
-            justify-content: center !important;
-            width: 100% !important;
-            max-width: 260px !important;
-            margin: 15px auto 20px auto !important;
+            gap: 8px !important;
+            align-items: center !important;
+            margin: 0 !important;
+            height: 48px !important;
             border: 1px solid rgba(255,255,255,0.05) !important;
+            min-width: 200px !important;
         }
         div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label {
-            margin-right: 0 !important; cursor: pointer !important; padding: 8px 24px !important; border-radius: 8px !important;
-            border: 1px solid transparent !important; transition: all 0.3s ease !important; background: transparent !important;
+            margin: 0 !important;
+            cursor: pointer !important; 
+            padding: 0 !important; 
+            border-radius: 8px !important;
+            border: 1px solid transparent !important; 
+            transition: all 0.3s ease !important;
+            background: transparent !important;
+            flex: 1 !important; 
+            display: flex !important;
+            justify-content: center !important;
+            align-items: center !important;
+            height: 100% !important;
         }
         div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label:hover { background: rgba(255,255,255,0.05) !important; }
-        
-        /* Using safe :has selectors to target active radio state */
         div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label > div:first-child { display: none !important; } 
         div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label p {
-            font-weight: bold !important; font-size: 1.05rem !important; color: #94a3b8 !important; margin: 0 !important; white-space: nowrap !important;
+            font-weight: bold !important;
+            font-size: 1.05rem !important; color: #94a3b8 !important; margin: 0 !important; padding: 0 !important; white-space: nowrap !important; line-height: 1 !important;
         }
         /* Active Buy */
         div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label:has(input:checked):first-child,
         div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label[aria-checked="true"]:first-child {
-            background: rgba(0, 255, 157, 0.15) !important; border-color: #00ff9d !important;
+            background: rgba(0, 255, 157, 0.15) !important;
+            border-color: #00ff9d !important;
         }
         div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label:has(input:checked):first-child p,
         div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label[aria-checked="true"]:first-child p { color: #00ff9d !important; }
@@ -1383,20 +1436,31 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
         /* Active Sell */
         div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label:has(input:checked):last-child,
         div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label[aria-checked="true"]:last-child {
-            background: rgba(255, 77, 77, 0.15) !important; border-color: #ff4d4d !important;
+            background: rgba(255, 77, 77, 0.15) !important;
+            border-color: #ff4d4d !important;
         }
         div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label:has(input:checked):last-child p,
         div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label[aria-checked="true"]:last-child p { color: #ff4d4d !important; }
 
-        /* 3. SUBMIT BUTTON */
+        /* 3. RIGHT ALIGNED SUBMIT BUTTON */
+        div[data-testid="stForm"]:has(.add-tx-card) .stButton {
+            display: flex !important;
+            justify-content: flex-end !important; /* Force to right side */
+            align-items: center !important;
+            margin: 0 !important; padding: 0 !important;
+            width: 100% !important;
+        }
         div[data-testid="stForm"]:has(.add-tx-card) .stButton > button {
-            background: #1e2a44 !important; color: #e0e0e0 !important; padding: 12px 20px !important;
-            border-radius: 10px !important; font-size: 1.1rem !important; font-weight: 800 !important;
+            background: #1e2a44 !important;
+            color: #e0e0e0 !important; padding: 0 24px !important;
+            border-radius: 10px !important; font-size: 1.05rem !important; font-weight: 700 !important;
             box-shadow: 0 4px 15px rgba(0,0,0,0.25) !important; transition: all 0.3s ease !important;
-            border: none !important; margin-top: 8px !important; width: 100% !important;
+            border: none !important; margin: 0 !important; width: auto !important;
+            height: 48px !important; min-height: 48px !important;
         }
         div[data-testid="stForm"]:has(.add-tx-card) .stButton > button:hover {
-            transform: translateY(-2px) !important; box-shadow: 0 8px 20px rgba(255, 255, 255, 0.2) !important; color: white !important;
+            transform: translateY(-2px) !important;
+            box-shadow: 0 8px 20px rgba(255, 255, 255, 0.2) !important; color: white !important;
         }
 
         /* 4. TRANSACTION ROW STYLING & INLINE BUTTONS */
@@ -1412,39 +1476,65 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
         div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row) > div { padding: 0 !important; } 
         
         div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row) div[data-testid="stButton"] button {
-            background: rgba(255,255,255,0.05) !important; border-radius: 8px !important; border: none !important;
+            background: rgba(255,255,255,0.05) !important;
+            border-radius: 8px !important; border: none !important;
             height: 40px !important; width: 40px !important; display: flex !important; align-items: center !important;
             justify-content: center !important; padding: 0 !important; margin: 0 auto !important; font-size: 1.2rem !important;
             transition: all 0.2s !important;
         }
         div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row) div[data-testid="stButton"] button:hover {
-            background: rgba(255,255,255,0.15) !important; transform: scale(1.05) !important;
+            background: rgba(255,255,255,0.15) !important;
+            transform: scale(1.05) !important;
         }
 
         /* 5. SMOOTH EDIT ROLLOUT */
         @keyframes rollDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
         div[data-testid="stForm"]:has(.edit-rollout) {
-            animation: rollDown 0.3s ease forwards !important; background: rgba(0,0,0,0.2) !important;
+            animation: rollDown 0.3s ease forwards !important;
+            background: rgba(0,0,0,0.2) !important;
             border-left: 3px solid #00ff9d !important; border-radius: 0 0 12px 12px !important;
-            border-top: none !important; border-right: none !important; border-bottom: none !important;
+            border-top: none !important; border-right: none !important;
+            border-bottom: none !important;
             padding: 16px !important; margin-top: -24px !important; margin-bottom: 20px !important;
-            position: relative; z-index: 1; box-shadow: inset 0 4px 10px rgba(0,0,0,0.15) !important;
+            position: relative; z-index: 1;
+            box-shadow: inset 0 4px 10px rgba(0,0,0,0.15) !important;
         }
 
         /* 6. REDESIGNED DELETE DIALOG */
         div[data-testid="stVerticalBlockBorderWrapper"]:has(.del-warn) {
-            border-color: #ff4d4d !important; background: rgba(255, 77, 77, 0.05) !important;
-            border-radius: 12px !important; padding: 20px !important; text-align: center !important;
+            border-color: rgba(255, 77, 77, 0.3) !important;
+            background: rgba(15, 23, 42, 0.95) !important;
+            border-radius: 12px !important; 
+            padding: 16px !important; 
+            text-align: center !important;
             margin-bottom: 12px !important;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.4) !important;
         }
         div[data-testid="stVerticalBlockBorderWrapper"]:has(.del-warn) .stButton > button {
-            border-radius: 8px !important; font-weight: bold !important; transition: all 0.2s !important; width: 100% !important; margin-top: 10px !important;
+            border-radius: 8px !important;
+            font-weight: 600 !important; 
+            transition: all 0.2s !important; 
+            width: 100% !important; 
+            margin-top: 8px !important;
+            padding: 6px 12px !important;
         }
         div[data-testid="stVerticalBlockBorderWrapper"]:has(.del-warn) div[data-testid="column"]:nth-child(1) .stButton > button {
-            background: rgba(255, 77, 77, 0.2) !important; color: #ff4d4d !important; border: 1px solid rgba(255, 77, 77, 0.5) !important;
+            background: rgba(255, 77, 77, 0.1) !important;
+            color: #ff4d4d !important; 
+            border: 1px solid rgba(255, 77, 77, 0.3) !important;
         }
         div[data-testid="stVerticalBlockBorderWrapper"]:has(.del-warn) div[data-testid="column"]:nth-child(1) .stButton > button:hover {
-            background: #ff4d4d !important; color: white !important;
+            background: #ff4d4d !important;
+            color: white !important;
+        }
+        div[data-testid="stVerticalBlockBorderWrapper"]:has(.del-warn) div[data-testid="column"]:nth-child(2) .stButton > button {
+            background: rgba(255, 255, 255, 0.05) !important;
+            color: #cbd5e1 !important; 
+            border: 1px solid rgba(255, 255, 255, 0.1) !important;
+        }
+        div[data-testid="stVerticalBlockBorderWrapper"]:has(.del-warn) div[data-testid="column"]:nth-child(2) .stButton > button:hover {
+            background: rgba(255, 255, 255, 0.15) !important;
+            color: white !important;
         }
 
         /* ==============================================================
@@ -1455,21 +1545,53 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
             .glossy-header { margin-top: 48px !important; margin-bottom: 24px !important; padding: 20px 16px !important; font-size: 22px !important; min-height: 90px; }
             .home-header { margin-bottom: 0 !important; }
             
-            /* Fix Add Form Mobile 2x2 Grid via direct CSS calc */
-            div[data-testid="stForm"]:has(.add-tx-card) div[data-testid="stHorizontalBlock"]:first-of-type {
-                display: flex !important; flex-wrap: wrap !important; gap: 10px !important; flex-direction: row !important;
+            /* Fix Add Form Mobile Grid */
+            /* Force all horizontal blocks inside the form to flex explicitly */
+            div[data-testid="stForm"]:has(.add-tx-card) div[data-testid="stHorizontalBlock"] {
+                display: flex !important;
+                flex-direction: row !important; 
+                flex-wrap: wrap !important; 
+                gap: 12px !important;
             }
-            div[data-testid="stForm"]:has(.add-tx-card) div[data-testid="stHorizontalBlock"]:first-of-type > div[data-testid="column"] {
-                min-width: calc(50% - 10px) !important; flex: 1 1 calc(50% - 10px) !important; width: calc(50% - 10px) !important;
+            
+            /* The 4-column inputs row -> map exactly to 2x2 grid */
+            div[data-testid="stForm"]:has(.add-tx-card) div[data-testid="stHorizontalBlock"]:has(> div[data-testid="column"]:nth-child(4)) > div[data-testid="column"] {
+                min-width: calc(50% - 12px) !important;
+                width: calc(50% - 12px) !important;
+                flex: 1 1 calc(50% - 12px) !important;
             }
             div[data-testid="stForm"]:has(.add-tx-card) input { padding: 6px !important; font-size: 0.95rem !important; }
+            
+            /* The 2-column action row -> map to the 50/50 split below inputs (Switch left, Button right) */
+            div[data-testid="stForm"]:has(.add-tx-card) div[data-testid="stHorizontalBlock"]:has(> div[data-testid="column"]:nth-child(2):last-child) > div[data-testid="column"] {
+                min-width: calc(50% - 12px) !important;
+                width: calc(50% - 12px) !important;
+                flex: 1 1 calc(50% - 12px) !important;
+            }
+            div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] {
+                min-width: 0 !important;
+                width: 100% !important; 
+            }
+            /* Push the submit button to the absolute right of its column */
+            div[data-testid="stForm"]:has(.add-tx-card) .stButton {
+                display: flex !important;
+                justify-content: flex-end !important;
+                width: 100% !important;
+            }
+            div[data-testid="stForm"]:has(.add-tx-card) .stButton > button {
+                width: 100% !important;
+                max-width: 120px !important; 
+                padding: 0 16px !important;
+            }
 
             /* Force Mobile Transaction Rows to stay perfectly horizontal */
             div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row) > div > div[data-testid="stVerticalBlock"] > div[data-testid="stHorizontalBlock"] {
-                display: flex !important; flex-direction: row !important; flex-wrap: nowrap !important; align-items: center !important; overflow: hidden !important; gap: 2px !important;
+                display: flex !important;
+                flex-direction: row !important; flex-wrap: nowrap !important; align-items: center !important; overflow: hidden !important; gap: 2px !important;
             }
             div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row) div[data-testid="column"] {
-                min-width: 0 !important; padding: 0 !important; width: auto !important; flex-shrink: 1 !important;
+                min-width: 0 !important;
+                padding: 0 !important; width: auto !important; flex-shrink: 1 !important;
             }
             /* Exact layout for the 5 strict columns to prevent ANY dropping/wrapping */
             div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row) > div > div[data-testid="stVerticalBlock"] > div[data-testid="stHorizontalBlock"] > div[data-testid="column"]:nth-child(1) { flex: 0 0 35px !important; width: 35px !important; } /* Logo */
@@ -1488,11 +1610,11 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
             .mobile-tx-sub { font-size: 0.7rem !important; white-space: nowrap !important; margin-left: 2px !important;}
             
             /* Dashboard Mobile Stats Override Fix */
-            .stats-layer-inner { grid-template-columns: repeat(3, 1fr) !important; gap: 6px !important; }
+            .stats-layer-inner { gap: 8px !important; }
             .stats-layer { margin-top: -60px !important; margin-bottom: 18px; } 
-            .glossy-box.swapped { height: 80px !important; min-height: 80px !important; max-height: 80px !important; padding: 0 !important; min-width: 0 !important; }
-            .dash-value { font-size: 14px !important; top: 24px !important; white-space: nowrap !important; } 
-            .dash-label { font-size: 9px !important; bottom: 8px !important; white-space: nowrap !important; letter-spacing: 0.5px !important; }
+            .glossy-box.swapped { flex: 1 1 calc(33.333% - 8px) !important; min-width: 90px !important; height: 80px !important; min-height: 80px !important; max-height: 80px !important; padding: 0 !important; }
+            .dash-value { font-size: clamp(11px, 3.5vw, 15px) !important; top: 24px !important; white-space: nowrap !important; overflow: hidden !important; text-overflow: ellipsis !important; } 
+            .dash-label { font-size: clamp(8px, 2.5vw, 10px) !important; bottom: 8px !important; white-space: nowrap !important; letter-spacing: 0.5px !important; }
             .usdc-banner { padding: 16px 18px; margin-bottom: 24px; }
             .usdc-banner-left img { width: 36px; height: 36px; }
             .usdc-banner-title { font-size: 1.2rem; }
@@ -1506,19 +1628,20 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
         with st.form("add_crypto", border=False):
             st.markdown("<div class='add-tx-card'></div><h3 style='text-align: center; color: white; margin-top: 0px; margin-bottom: 10px;'>New Transaction</h3>", unsafe_allow_html=True)
             
-            # Row 1 (Date, Ticker, USDC, Amount) forced onto one line via CSS on PC, and 2x2 on Mobile
+            # Row 1: Inputs (Rendered as 4 columns on PC, cleanly wrapped to 2x2 grid by CSS on mobile)
             r1c1, r1c2, r1c3, r1c4 = st.columns(4)
             with r1c1: selected_date = st.date_input("Date", value=date(2026, 3, 25))
             with r1c2: ticker = st.text_input("Ticker", value="BTC").upper().strip()
             with r1c3: usdc = st.number_input("USDC Amount", value=15.0, step=0.01)
             with r1c4: amount = st.number_input("Coin Amount", value=0.1, step=0.000001, format="%.8f")
             
-            # Switch Centered Below Inputs
-            tx_type = st.radio("Type", ["Buy", "Sell"], horizontal=True, label_visibility="collapsed")
+            # Row 2: Action Row (Always 2 columns mapping naturally under the 2x2 layout above on mobile)
+            action_col1, action_col2 = st.columns(2)
+            with action_col1:
+                tx_type = st.radio("Type", ["Buy", "Sell"], horizontal=True, label_visibility="collapsed")
+            with action_col2:
+                submitted = st.form_submit_button("+ Add")
             
-            st.write("")
-            submitted = st.form_submit_button("Submit Transaction", use_container_width=True)
-                
             if submitted:
                 if ticker:
                     final_usdc = usdc if tx_type == "Buy" else -usdc
@@ -1566,10 +1689,10 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                 # If user clicked delete, show confirmation dialog replacing the row
                 if st.session_state.get('confirm_delete_crypto') == orig_idx:
                     with st.container(border=True):
-                        st.markdown("<div class='del-warn'></div><h4 style='color: #ff4d4d; margin-top: 0; margin-bottom: 5px;'>⚠️ Permanently delete this transaction?</h4>", unsafe_allow_html=True)
+                        st.markdown("<div class='del-warn'></div><h4 style='color: #ff4d4d; margin-top: 0; margin-bottom: 5px; font-size: 1.1rem; font-weight: 600;'>Delete this transaction?</h4>", unsafe_allow_html=True)
                         c_yes, c_no = st.columns(2)
                         with c_yes:
-                            if st.button("✔️ Yes, Delete", key=f"yes_del_{orig_idx}", use_container_width=True):
+                            if st.button("Delete", key=f"yes_del_{orig_idx}", use_container_width=True):
                                 st.session_state.crypto_df = st.session_state.crypto_df.drop(orig_idx).reset_index(drop=True)
                                 save_crypto(st.session_state.crypto_df)
                                 st.session_state['confirm_delete_crypto'] = None
@@ -1577,7 +1700,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                                 st.session_state.ui_version += 1
                                 st.rerun()
                         with c_no:
-                            if st.button("✖️ Cancel", key=f"no_del_{orig_idx}", use_container_width=True):
+                            if st.button("Cancel", key=f"no_del_{orig_idx}", use_container_width=True):
                                 st.session_state['confirm_delete_crypto'] = None
                                 st.rerun()
                 else:
@@ -1667,7 +1790,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
         glossy_header("Fiat Transactions", FIAT_ICON)
 
         summary_html = f"""
-<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:12px;margin-bottom:30px;">
+<div style="display:flex;flex-wrap:wrap;justify-content:center;gap:12px;margin-bottom:30px;">
 <div class="glossy-box swapped"><div class="dash-value">{total_czk:,.2f}</div><div class="dash-label">Total CZK</div></div>
 <div class="glossy-box swapped"><div class="dash-value">{total_eur:,.2f}</div><div class="dash-label">Total EUR</div></div>
 <div class="glossy-box swapped"><div class="dash-value">{format_money(total_usdc)}</div><div class="dash-label">Total USDC</div></div>
