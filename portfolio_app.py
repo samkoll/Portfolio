@@ -25,6 +25,9 @@ div[data-testid="stMainBlockContainer"] {
     padding-right: 14px !important;
     padding-top: 0px !important;
     max-width: 100% !important;
+    min-height: 100vh;  /* ensure full height */
+    display: flex;
+    flex-direction: column;
 }
 @media (min-width: 1200px) {
     .main .block-container,
@@ -304,6 +307,37 @@ div[data-testid="stElementContainer"]:has(input[aria-label="edit_trigger_hidden"
     pointer-events: none !important;
     z-index: -9999 !important;
     overflow: hidden !important;
+}
+
+/* Crypto transactions page specific styling to fill remaining height */
+.crypto-transactions-container {
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1;
+    min-height: 0;  /* allow flex child to shrink */
+}
+.crypto-table-scroll {
+    flex-grow: 1;
+    overflow-y: auto;
+    scrollbar-width: none;  /* hide scrollbar in Firefox */
+    -ms-overflow-style: none; /* IE/Edge */
+}
+.crypto-table-scroll::-webkit-scrollbar {
+    display: none;  /* Chrome/Safari */
+}
+.fiat-transactions-container {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+}
+.fiat-table-scroll {
+    flex-grow: 1;
+    overflow-y: auto;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+}
+.fiat-table-scroll::-webkit-scrollbar {
+    display: none;
 }
 
 @media (max-width: 700px) {
@@ -1390,10 +1424,18 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
     elif st.session_state.page == "Crypto Transactions":
         glossy_header("Crypto Transactions", CRYPTO_ICON)
 
-        # We wrap the hidden triggers so our CSS can cleanly erase them without affecting the rest of the layout
+        # Hidden triggers for edit/delete (with aria-labels set via label text)
         with st.container():
-            delete_trigger = st.text_input("delete_trigger_hidden", value=st.session_state.delete_trigger, label_visibility="collapsed")
-            edit_trigger = st.text_input("edit_trigger_hidden", value=st.session_state.edit_trigger, label_visibility="collapsed")
+            delete_trigger = st.text_input(
+                "delete_trigger_hidden", 
+                value=st.session_state.delete_trigger, 
+                label_visibility="collapsed"
+            )
+            edit_trigger = st.text_input(
+                "edit_trigger_hidden", 
+                value=st.session_state.edit_trigger, 
+                label_visibility="collapsed"
+            )
 
         if delete_trigger and delete_trigger != st.session_state.delete_trigger:
             try:
@@ -1419,7 +1461,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                 pass
             st.session_state.edit_trigger = edit_trigger
 
-        # Preserve original index for accurate editing/deleting, then sort descending by Date
+        # Prepare display dataframe
         df_display = st.session_state.crypto_df.copy()
         df_display['orig_idx'] = df_display.index
         df_display = df_display.dropna(how='all')
@@ -1427,93 +1469,106 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
 
         edit_idx = st.session_state.get('editing_row_crypto', None)
 
-        # Reordered Form Placement: Add New Transaction right under the header
-        if edit_idx is None:
-            st.markdown("<h4 style='text-align: center; color: white; margin-top: 0px; margin-bottom: 10px;'>➕ Add New Transaction</h4>", unsafe_allow_html=True)
-            with st.form("add_crypto", border=False):
-                tx_type = st.radio("Type", ["Buy", "Sell"], horizontal=True, label_visibility="collapsed")
-                col1, col2, col3 = st.columns(3)
-                with col1: selected_date = st.date_input("Date", value=date(2026, 3, 25))
-                with col2: usdc = st.number_input("USDC Amount", value=15.0, step=0.01)
-                with col3: ticker = st.text_input("Ticker", value="BTC").upper().strip()
-                
-                col4, col5 = st.columns([2, 1])
-                with col4: amount = st.number_input("Coin Amount", value=0.1, step=0.000001, format="%.8f")
-                with col5: 
-                    st.write("") # Spacer to align submit button
-                    st.write("")
-                    submitted = st.form_submit_button("Submit")
-                    
-                if submitted:
-                    if ticker:
-                        final_usdc = usdc if tx_type == "Buy" else -usdc
-                        final_amount = amount if tx_type == "Buy" else -amount
-                        price = round(usdc / amount, 8) if amount > 0 else 0.0
-                        
-                        new_row = pd.DataFrame([{"Datum": date_to_excel_serial(selected_date), "USDC": final_usdc, "Ticker": ticker, "Amount": final_amount, "Price": price}])
-                        st.session_state.crypto_df = pd.concat([st.session_state.crypto_df, new_row], ignore_index=True)
-                        save_crypto(st.session_state.crypto_df)
-                        st.session_state.crypto_table_version += 1
-                        st.session_state.ui_version += 1
-                        st.success(f"✅ Executed {tx_type}: {amount} {ticker}")
-                        st.rerun()
+        # Use a container with class for flex layout
+        st.markdown('<div class="crypto-transactions-container">', unsafe_allow_html=True)
 
-        base_head = f"""
+        # Add new transaction row (styled like a table row)
+        st.markdown('<div class="add-transaction-row">', unsafe_allow_html=True)
+        st.markdown('<div style="display: flex; align-items: center; gap: 12px; margin-bottom: 16px;">', unsafe_allow_html=True)
+        # We'll use columns to simulate row cells
+        cols = st.columns([1.2, 1, 1, 1, 1.2])
+        with cols[0]:
+            new_date = st.date_input("Date", value=date(2026, 3, 25), label_visibility="collapsed")
+        with cols[1]:
+            new_usdc = st.number_input("USDC", value=15.0, step=0.01, label_visibility="collapsed")
+        with cols[2]:
+            new_ticker = st.text_input("Ticker", value="BTC", label_visibility="collapsed").upper().strip()
+        with cols[3]:
+            new_amount = st.number_input("Amount", value=0.1, step=0.000001, format="%.8f", label_visibility="collapsed")
+        with cols[4]:
+            # Modern buy/sell buttons placed above submit
+            buy_sell = st.radio("Type", ["Buy", "Sell"], horizontal=True, label_visibility="collapsed")
+        # Submit button in its own row
+        if st.button("➕ Add Transaction", use_container_width=True, key="add_crypto_btn"):
+            if new_ticker:
+                final_usdc = new_usdc if buy_sell == "Buy" else -new_usdc
+                final_amount = new_amount if buy_sell == "Buy" else -new_amount
+                price = round(new_usdc / new_amount, 8) if new_amount > 0 else 0.0
+                new_row = pd.DataFrame([{
+                    "Datum": date_to_excel_serial(new_date),
+                    "USDC": final_usdc,
+                    "Ticker": new_ticker,
+                    "Amount": final_amount,
+                    "Price": price
+                }])
+                st.session_state.crypto_df = pd.concat([st.session_state.crypto_df, new_row], ignore_index=True)
+                save_crypto(st.session_state.crypto_df)
+                st.session_state.crypto_table_version += 1
+                st.session_state.ui_version += 1
+                st.success(f"✅ Added {buy_sell}: {new_amount} {new_ticker}")
+                st.rerun()
+        st.markdown('</div></div>', unsafe_allow_html=True)
+
+        # Scrollable table wrapper
+        st.markdown('<div class="crypto-table-scroll">', unsafe_allow_html=True)
+
+        # Build table HTML with edit/delete triggers using the same method as before
+        base_head = """
         <html>
         <head>
         <style>
-        body {{ 
+        body { 
             background: transparent; 
             margin: 0; 
             padding: 0; 
             font-family: system-ui, -apple-system, sans-serif;
-            overflow-y: auto; /* Allow vertical scrolling */
+            overflow-y: auto;
             overflow-x: hidden;
             scrollbar-width: thin; 
             scrollbar-color: rgba(255,255,255,0.1) transparent;
-        }}
-        body::-webkit-scrollbar {{ width: 4px; }}
-        body::-webkit-scrollbar-thumb {{ background: rgba(255,255,255,0.1); border-radius: 4px; }}
+        }
+        body::-webkit-scrollbar { width: 4px; }
+        body::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 4px; }
         
-        .tx-list-container {{
+        .tx-list-container {
             background: #0f172a;
             border: 1px solid rgba(255,255,255,0.05);
             border-radius: 16px;
             box-shadow: 0 8px 24px rgba(0,0,0,0.3);
             margin-bottom: 24px;
             width: 100%;
-        }}
+        }
         
-        .tx-row {{
+        .tx-row {
             display: flex;
             justify-content: space-between;
             align-items: center;
             padding: 14px 20px;
             border-bottom: 1px solid rgba(255,255,255,0.05);
             transition: background 0.2s;
-        }}
-        .tx-row:first-child {{ border-top-left-radius: 16px; border-top-right-radius: 16px; }}
-        .tx-row:last-child {{ border-bottom: none; border-bottom-left-radius: 16px; border-bottom-right-radius: 16px; }}
+        }
+        .tx-row:first-child { border-top-left-radius: 16px; border-top-right-radius: 16px; }
+        .tx-row:last-child { border-bottom: none; border-bottom-left-radius: 16px; border-bottom-right-radius: 16px; }
         
-        @media (hover: hover) and (pointer: fine) {{
-            .tx-row:hover {{ background: rgba(255,255,255,0.03); }}
-            .tx-row:hover .tx-btn {{ opacity: 1; }}
-        }}
+        @media (hover: hover) and (pointer: fine) {
+            .tx-row:hover { background: rgba(255,255,255,0.03); }
+            .tx-row:hover .tx-btn { opacity: 1; }
+        }
         
-        .tx-left {{ display: flex; align-items: center; gap: 14px; flex: 1; }}
-        .tx-logo {{ width: 38px; height: 38px; border-radius: 50%; object-fit: contain; }}
-        .tx-info {{ display: flex; flex-direction: column; gap: 2px; }}
-        .tx-ticker {{ font-size: 1.1rem; font-weight: 700; color: #ffffff; line-height: 1.1; }}
-        .tx-date {{ font-size: 0.85rem; color: #94a3b8; }}
+        .tx-left { display: flex; align-items: center; gap: 14px; flex: 1; }
+        .tx-logo { width: 38px; height: 38px; border-radius: 50%; object-fit: contain; }
+        .tx-info { display: flex; flex-direction: column; gap: 2px; }
+        .tx-ticker { font-size: 1.1rem; font-weight: 700; color: #ffffff; line-height: 1.1; }
+        .tx-date { font-size: 0.85rem; color: #94a3b8; }
         
-        .tx-right {{ display: flex; align-items: center; gap: 24px; }}
-        .tx-financials {{ display: flex; flex-direction: column; align-items: flex-end; gap: 2px; }}
-        .tx-amount {{ font-size: 1.05rem; font-weight: 700; line-height: 1.1; }}
-        .tx-spent {{ font-size: 0.85rem; color: #cbd5e1; }}
-        .tx-price {{ font-size: 0.75rem; color: #64748b; }}
+        .tx-right { display: flex; align-items: center; gap: 24px; }
+        .tx-financials { display: flex; flex-direction: column; align-items: flex-end; gap: 2px; }
+        .tx-amount { font-size: 1.05rem; font-weight: 700; line-height: 1.1; }
+        .tx-spent { font-size: 0.85rem; color: #cbd5e1; }
+        .tx-price { font-size: 0.75rem; color: #64748b; }
         
-        .tx-actions {{ display: flex; gap: 8px; }}
-        .tx-btn {{ 
+        .tx-actions { display: flex; gap: 8px; }
+        .tx-btn { 
             background: rgba(255,255,255,0.05); 
             border: none; 
             border-radius: 8px; 
@@ -1525,22 +1580,22 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
             justify-content: center;
             transition: all 0.2s;
             opacity: 0.5; /* Subdued until hover */
-        }}
-        @media (hover: hover) and (pointer: fine) {{
-            .tx-btn:hover {{ background: rgba(255,255,255,0.15); transform: scale(1.05); }}
-        }}
+        }
+        @media (hover: hover) and (pointer: fine) {
+            .tx-btn:hover { background: rgba(255,255,255,0.15); transform: scale(1.05); }
+        }
         
-        @media (max-width: 600px) {{
-            .tx-row {{ padding: 12px 14px; }}
-            .tx-logo {{ width: 32px; height: 32px; }}
-            .tx-ticker {{ font-size: 1rem; }}
-            .tx-date {{ font-size: 0.75rem; }}
-            .tx-amount {{ font-size: 0.95rem; }}
-            .tx-spent {{ font-size: 0.8rem; }}
-            .tx-price {{ font-size: 0.7rem; }}
-            .tx-right {{ gap: 14px; }}
-            .tx-btn {{ padding: 6px; font-size: 1rem; opacity: 0.8; /* More visible on mobile */ }}
-        }}
+        @media (max-width: 600px) {
+            .tx-row { padding: 12px 14px; }
+            .tx-logo { width: 32px; height: 32px; }
+            .tx-ticker { font-size: 1rem; }
+            .tx-date { font-size: 0.75rem; }
+            .tx-amount { font-size: 0.95rem; }
+            .tx-spent { font-size: 0.8rem; }
+            .tx-price { font-size: 0.7rem; }
+            .tx-right { gap: 14px; }
+            .tx-btn { padding: 6px; font-size: 1rem; opacity: 0.8; /* More visible on mobile */ }
+        }
         </style>
         </head>
         <body>
@@ -1572,7 +1627,6 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
             logo_url = get_ticker_logo(r['Ticker'])
             orig_idx = r['orig_idx']
             
-            # Logic for Buy/Sell visual differentiation
             amount = r['Amount']
             usdc = r['USDC']
             is_buy = amount >= 0
@@ -1616,7 +1670,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
             current_html += row_html
             rows_in_block += 1
             
-            # Split the list visually exactly where the edit form needs to slide in
+            # If we encounter the row being edited, close current block and open a new one after edit form
             if orig_idx == edit_idx:
                 current_html += "</div>"
                 blocks.append((current_html, rows_in_block, True))
@@ -1630,8 +1684,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
         for index, (html_chunk, row_count, render_form) in enumerate(blocks):
             if row_count > 0:
                 full_html = base_head + html_chunk + base_foot
-                # Set a strict height constraint to allow internal scrolling if it grows massive
-                exact_height = min(max(row_count * 72, 80), 550) 
+                exact_height = min(max(row_count * 72, 80), 550)
                 components.html(full_html, height=exact_height, scrolling=True)
                 
             if render_form and edit_idx is not None:
@@ -1673,6 +1726,8 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                         del st.session_state.editing_row_crypto
                         st.rerun()
 
+        st.markdown('</div>', unsafe_allow_html=True)  # close crypto-table-scroll
+        st.markdown('</div>', unsafe_allow_html=True)  # close crypto-transactions-container
 
     # ====================== FIAT TRANSACTIONS ======================
     elif st.session_state.page == "Fiat Transactions":
@@ -1698,6 +1753,10 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
 </div>
 """
         st.markdown(summary_html, unsafe_allow_html=True)
+
+        # Fiat transactions scrollable table
+        st.markdown('<div class="fiat-transactions-container">', unsafe_allow_html=True)
+        st.markdown('<div class="fiat-table-scroll">', unsafe_allow_html=True)
 
         df_clean = st.session_state.fiat_df.dropna(how='all').reset_index(drop=True)
         table_container = st.container(key=f"fiat_table_container_{st.session_state.ui_version}")
@@ -1782,3 +1841,6 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                 st.session_state.fiat_table_version += 1
                 st.session_state.ui_version += 1
                 st.rerun()
+
+        st.markdown('</div>', unsafe_allow_html=True)  # close fiat-table-scroll
+        st.markdown('</div>', unsafe_allow_html=True)  # close fiat-transactions-container
