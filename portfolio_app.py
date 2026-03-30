@@ -58,8 +58,7 @@ div[data-testid="stMainBlockContainer"] {
 }
 .home-header {
     margin-bottom: 0 !important;
-    padding-bottom: 30px !important;
-    /* space for the eye icon */
+    padding-bottom: 30px !important; /* space for the eye icon */
 }
 .pull-indicator {
     position: absolute;
@@ -90,8 +89,7 @@ div[data-testid="stMainBlockContainer"] {
     margin-bottom: 24px;
 }
 .dashboard-toggle:checked ~ .dashboard-wrapper .stats-layer {
-    margin-top: 14px !important;
-    /* Drops down */
+    margin-top: 14px !important; /* Drops down */
 }
 .stats-layer-inner {
     display: grid; 
@@ -101,13 +99,12 @@ div[data-testid="stMainBlockContainer"] {
 
 /* Tucked Text Fade Out */
 .dash-value {
-    font-size: 24px !important;
-    /* Elegant size on PC */
+    font-size: 24px !important; /* Elegant size on PC */
     font-weight: 700;
     line-height: 1.05;
     color: #ffffff;
     position: absolute;
-    top: 20px;
+    top: 20px; 
     left: 0;
     width: 100%;
     text-align: center;
@@ -256,31 +253,13 @@ div[data-testid="stMainBlockContainer"] {
 
 /* Native CSS Privacy Mode for USDC Banner */
 .dashboard-toggle:not(:checked) ~ .usdc-banner .usdc-banner-amount {
-    font-size: 0 !important;
-    /* Hides text perfectly without shifting layout */
+    font-size: 0 !important; /* Hides text perfectly without shifting layout */
 }
 .dashboard-toggle:not(:checked) ~ .usdc-banner .usdc-banner-amount::after {
     content: '***';
     font-size: 1.7rem;
     color: #ffffff;
 }
-
-/* GLOBALLY HIDE NUMBER INPUT STEP BUTTONS (+ / -) */
-button[aria-label="Step Up"],
-button[aria-label="Step Down"],
-button[data-testid="stNumberInputStepUp"],
-button[data-testid="stNumberInputStepDown"] {
-    display: none !important;
-}
-input[type="number"]::-webkit-inner-spin-button, 
-input[type="number"]::-webkit-outer-spin-button { 
-    -webkit-appearance: none; 
-    margin: 0; 
-}
-input[type="number"] {
-    -moz-appearance: textfield;
-}
-
 </style>
 """, unsafe_allow_html=True)
 
@@ -719,19 +698,16 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
             overflow-x: auto;
             padding: 12px 0px 20px 0px;
             margin-bottom: 20px;
-            scroll-snap-type: x mandatory;
-            /* Enable scroll snapping */
+            scroll-snap-type: x mandatory; /* Enable scroll snapping */
             -webkit-overflow-scrolling: touch;
+            
             /* Completely hide scrollbars */
-            scrollbar-width: none;
-            /* Firefox */
-            -ms-overflow-style: none;
-            /* IE and Edge */
+            scrollbar-width: none; /* Firefox */
+            -ms-overflow-style: none;  /* IE and Edge */
         }}
         
         .scroll-wrapper::-webkit-scrollbar {{
-            display: none;
-            /* Chrome, Safari, Opera */
+            display: none; /* Chrome, Safari, Opera */
         }}
 
         .coin-grid {{
@@ -740,14 +716,12 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
             flex-wrap: nowrap;
             gap: 24px;
             width: max-content;
-            padding: 0 24px;
-            /* Default desktop padding */
+            padding: 0 24px; /* Default desktop padding */
             background: transparent !important;
             overflow: visible !important;
         }}
         .flip-card {{
-            flex: 0 0 420px;
-            /* Made wider */
+            flex: 0 0 420px; /* Made wider */
             background-color: transparent;
             height: 290px;
             perspective: 1200px;
@@ -774,7 +748,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
             padding: 14px 18px;
             background: #0f172a;
             /* Default slight border glow taking the dynamic color */
-            box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+            box-shadow: 0 8px 24px rgba(0,0,0,0.3); 
             border: 2px solid transparent;
             overflow: hidden; /* Prevent internal scrolling */
         }}
@@ -980,6 +954,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                 }}
             }} catch(e) {{}}
         }}, 150);
+
         // Run once on cold load to enforce local storage memory immediately
         try {{
             const dt = window.parent.document.getElementById('dash-toggle');
@@ -1015,7 +990,6 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                 // Detect vertical scroll to convert to horizontal
                 if (Math.abs(evt.deltaY) > Math.abs(evt.deltaX)) {{
                     evt.preventDefault();
-                    
                     // Using a smaller step (200) makes it slower/more controlled on PC
                     scrollContainer.scrollBy({{ left: evt.deltaY > 0 ? 200 : -200, behavior: 'smooth' }});
                 }}
@@ -1024,6 +998,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
 
         // --- Live Price Auto Refresh Logic ---
         const usdcHoldings = {usdc_holdings};
+        
         async function updateLivePrices() {{
             const cards = Array.from(document.querySelectorAll('.flip-card'));
             if (cards.length === 0) return;
@@ -1036,6 +1011,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                 
                 let totalCoinValue = 0;
                 let totalCoinInvested = 0;
+
                 cards.forEach(card => {{
                     const ticker = card.getAttribute('data-ticker');
                     const holdings = parseFloat(card.getAttribute('data-holdings'));
@@ -1055,6 +1031,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                         const value = holdings * price;
                         const pnl = value - invested;
                         const pnlPct = invested > 0 ? (pnl / invested) * 100 : 0;
+                        
                         const valStr = '$' + value.toLocaleString('en-US', {{minimumFractionDigits: 2, maximumFractionDigits: 2}});
                         const pnlStr = (pnl >= 0 ? '▲ $' : '▼ $') + Math.abs(pnl).toLocaleString('en-US', {{minimumFractionDigits: 2, maximumFractionDigits: 2}});
                         const pnlPctStr = (pnl >= 0 ? '▲ ' : '▼ ') + Math.abs(pnlPct).toFixed(2) + '%';
@@ -1062,6 +1039,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                         
                         const valEl = card.querySelector('.total-value');
                         if (valEl) valEl.innerText = valStr;
+                        
                         const pnlEl = card.querySelector('.card-pnl');
                         if (pnlEl) {{
                             pnlEl.innerText = pnlStr;
@@ -1222,6 +1200,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
             
             // Replace the last item of the history array with the LIVE CURRENT PRICE
             hist.prices[hist.prices.length - 1] = currentPrice;
+            
             const ctx = canvas.getContext('2d');
             if (chartCache[ticker] && chartCache[ticker].chartObj) {{
                 chartCache[ticker].chartObj.destroy();
@@ -1308,12 +1287,14 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                     }}
                 }}
             }});
+            
             const backDiv = card.querySelector('.flip-card-back');
             backDiv.addEventListener('click', (e) => {{
                 // Tapping anywhere on the back flips the card over
                 card.classList.remove('flipped');
                 card.classList.remove('touch-hover');
             }});
+            
             // Prevent the external link from triggering a flip
             const extBtn = card.querySelector('.tv-external-btn');
             if (extBtn) {{
@@ -1324,6 +1305,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
         }});
         
         restoreFlippedState();
+        
         if (window.oldRefreshKey && window.oldRefreshKey !== refreshKey) {{
             for (let key in chartCache) {{
                 if (chartCache[key].chartObj) chartCache[key].chartObj.destroy();
@@ -1365,62 +1347,30 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
             margin-bottom: 0px !important;
         }
 
-        /* 1a. FIRST ROW (4 columns): Inputs */
-        div[data-testid="stForm"]:has(.add-tx-card) div[data-testid="stHorizontalBlock"]:has(> div[data-testid="column"]:nth-child(4)) {
-            display: flex !important;
-            gap: 12px !important;
-        }
-        
-        /* 1b. SECOND ROW (2 columns): Action (Switch + Button) */
-        div[data-testid="stForm"]:has(.add-tx-card) div[data-testid="stHorizontalBlock"]:has(> div[data-testid="column"]:nth-child(2):last-child) {
-            display: flex !important;
-            flex-direction: row !important;
-            justify-content: space-between !important;
-            align-items: center !important;
-            margin-top: 12px !important;
-            gap: 12px !important;
-        }
-        /* Make switch column hug content, make button column take rest */
-        div[data-testid="stForm"]:has(.add-tx-card) div[data-testid="stHorizontalBlock"]:has(> div[data-testid="column"]:nth-child(2):last-child) > div[data-testid="column"]:nth-child(1) {
-            flex: 0 0 auto !important; width: auto !important;
-        }
-        div[data-testid="stForm"]:has(.add-tx-card) div[data-testid="stHorizontalBlock"]:has(> div[data-testid="column"]:nth-child(2):last-child) > div[data-testid="column"]:nth-child(2) {
-            flex: 1 1 auto !important; width: auto !important;
-        }
-
-        /* BEAUTIFUL BUY/SELL SWITCH */
+        /* 2. BEAUTIFUL BUY/SELL SWITCH */
         div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] {
             background: rgba(0,0,0,0.3) !important;
             padding: 6px !important;
             border-radius: 12px !important;
             display: flex !important;
             flex-direction: row !important;
-            gap: 8px !important;
-            align-items: center !important;
-            margin: 0 !important;
-            height: 48px !important;
+            gap: 10px !important;
+            justify-content: center !important;
+            width: 100% !important;
+            max-width: 260px !important;
+            margin: 15px auto 20px auto !important;
             border: 1px solid rgba(255,255,255,0.05) !important;
-            min-width: 200px !important;
         }
         div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label {
-            margin: 0 !important;
-            cursor: pointer !important; 
-            padding: 0 !important; 
-            border-radius: 8px !important;
-            border: 1px solid transparent !important; 
-            transition: all 0.3s ease !important;
-            background: transparent !important;
-            flex: 1 !important; 
-            display: flex !important;
-            justify-content: center !important;
-            align-items: center !important;
-            height: 100% !important;
+            margin-right: 0 !important; cursor: pointer !important; padding: 8px 24px !important; border-radius: 8px !important;
+            border: 1px solid transparent !important; transition: all 0.3s ease !important; background: transparent !important;
         }
         div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label:hover { background: rgba(255,255,255,0.05) !important; }
+        
+        /* Using safe :has selectors to target active radio state */
         div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label > div:first-child { display: none !important; } 
         div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label p {
-            font-weight: bold !important;
-            font-size: 1.05rem !important; color: #94a3b8 !important; margin: 0 !important; padding: 0 !important; white-space: nowrap !important; line-height: 1 !important;
+            font-weight: bold !important; font-size: 1.05rem !important; color: #94a3b8 !important; margin: 0 !important; white-space: nowrap !important;
         }
         /* Active Buy */
         div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label:has(input:checked):first-child,
@@ -1438,25 +1388,15 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
         div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label:has(input:checked):last-child p,
         div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label[aria-checked="true"]:last-child p { color: #ff4d4d !important; }
 
-        /* 3. RIGHT ALIGNED SUBMIT BUTTON */
-        div[data-testid="stForm"]:has(.add-tx-card) .stButton {
-            display: flex !important;
-            justify-content: flex-end !important; /* Force to right side */
-            align-items: center !important;
-            margin: 0 !important; padding: 0 !important;
-            width: 100% !important;
-        }
+        /* 3. SUBMIT BUTTON */
         div[data-testid="stForm"]:has(.add-tx-card) .stButton > button {
-            background: #1e2a44 !important;
-            color: #e0e0e0 !important; padding: 0 24px !important;
-            border-radius: 10px !important; font-size: 1.05rem !important; font-weight: 700 !important;
+            background: #1e2a44 !important; color: #e0e0e0 !important; padding: 12px 20px !important;
+            border-radius: 10px !important; font-size: 1.1rem !important; font-weight: 800 !important;
             box-shadow: 0 4px 15px rgba(0,0,0,0.25) !important; transition: all 0.3s ease !important;
-            border: none !important; margin: 0 !important; width: auto !important;
-            height: 48px !important; min-height: 48px !important;
+            border: none !important; margin-top: 8px !important; width: 100% !important;
         }
         div[data-testid="stForm"]:has(.add-tx-card) .stButton > button:hover {
-            transform: translateY(-2px) !important;
-            box-shadow: 0 8px 20px rgba(255, 255, 255, 0.2) !important; color: white !important;
+            transform: translateY(-2px) !important; box-shadow: 0 8px 20px rgba(255, 255, 255, 0.2) !important; color: white !important;
         }
 
         /* 4. TRANSACTION ROW STYLING & INLINE BUTTONS */
@@ -1472,64 +1412,39 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
         div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row) > div { padding: 0 !important; } 
         
         div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row) div[data-testid="stButton"] button {
-            background: rgba(255,255,255,0.05) !important;
-            border-radius: 8px !important; border: none !important;
+            background: rgba(255,255,255,0.05) !important; border-radius: 8px !important; border: none !important;
             height: 40px !important; width: 40px !important; display: flex !important; align-items: center !important;
             justify-content: center !important; padding: 0 !important; margin: 0 auto !important; font-size: 1.2rem !important;
             transition: all 0.2s !important;
         }
         div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row) div[data-testid="stButton"] button:hover {
-            background: rgba(255,255,255,0.15) !important;
-            transform: scale(1.05) !important;
+            background: rgba(255,255,255,0.15) !important; transform: scale(1.05) !important;
         }
 
         /* 5. SMOOTH EDIT ROLLOUT */
         @keyframes rollDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
         div[data-testid="stForm"]:has(.edit-rollout) {
-            animation: rollDown 0.3s ease forwards !important;
-            background: rgba(0,0,0,0.2) !important;
+            animation: rollDown 0.3s ease forwards !important; background: rgba(0,0,0,0.2) !important;
             border-left: 3px solid #00ff9d !important; border-radius: 0 0 12px 12px !important;
             border-top: none !important; border-right: none !important; border-bottom: none !important;
             padding: 16px !important; margin-top: -24px !important; margin-bottom: 20px !important;
-            position: relative; z-index: 1;
-            box-shadow: inset 0 4px 10px rgba(0,0,0,0.15) !important;
+            position: relative; z-index: 1; box-shadow: inset 0 4px 10px rgba(0,0,0,0.15) !important;
         }
 
         /* 6. REDESIGNED DELETE DIALOG */
         div[data-testid="stVerticalBlockBorderWrapper"]:has(.del-warn) {
-            border-color: rgba(255, 77, 77, 0.3) !important;
-            background: rgba(15, 23, 42, 0.95) !important;
-            border-radius: 12px !important; 
-            padding: 16px !important; 
-            text-align: center !important;
+            border-color: #ff4d4d !important; background: rgba(255, 77, 77, 0.05) !important;
+            border-radius: 12px !important; padding: 20px !important; text-align: center !important;
             margin-bottom: 12px !important;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.4) !important;
         }
         div[data-testid="stVerticalBlockBorderWrapper"]:has(.del-warn) .stButton > button {
-            border-radius: 8px !important;
-            font-weight: 600 !important; 
-            transition: all 0.2s !important; 
-            width: 100% !important; 
-            margin-top: 8px !important;
-            padding: 6px 12px !important;
+            border-radius: 8px !important; font-weight: bold !important; transition: all 0.2s !important; width: 100% !important; margin-top: 10px !important;
         }
         div[data-testid="stVerticalBlockBorderWrapper"]:has(.del-warn) div[data-testid="column"]:nth-child(1) .stButton > button {
-            background: rgba(255, 77, 77, 0.1) !important;
-            color: #ff4d4d !important; 
-            border: 1px solid rgba(255, 77, 77, 0.3) !important;
+            background: rgba(255, 77, 77, 0.2) !important; color: #ff4d4d !important; border: 1px solid rgba(255, 77, 77, 0.5) !important;
         }
         div[data-testid="stVerticalBlockBorderWrapper"]:has(.del-warn) div[data-testid="column"]:nth-child(1) .stButton > button:hover {
-            background: #ff4d4d !important;
-            color: white !important;
-        }
-        div[data-testid="stVerticalBlockBorderWrapper"]:has(.del-warn) div[data-testid="column"]:nth-child(2) .stButton > button {
-            background: rgba(255, 255, 255, 0.05) !important;
-            color: #cbd5e1 !important; 
-            border: 1px solid rgba(255, 255, 255, 0.1) !important;
-        }
-        div[data-testid="stVerticalBlockBorderWrapper"]:has(.del-warn) div[data-testid="column"]:nth-child(2) .stButton > button:hover {
-            background: rgba(255, 255, 255, 0.15) !important;
-            color: white !important;
+            background: #ff4d4d !important; color: white !important;
         }
 
         /* ==============================================================
@@ -1540,43 +1455,14 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
             .glossy-header { margin-top: 48px !important; margin-bottom: 24px !important; padding: 20px 16px !important; font-size: 22px !important; min-height: 90px; }
             .home-header { margin-bottom: 0 !important; }
             
-            /* Fix Add Form Mobile Grid */
-            /* Force all horizontal blocks inside the form to flex explicitly */
-            div[data-testid="stForm"]:has(.add-tx-card) div[data-testid="stHorizontalBlock"] {
-                display: flex !important; 
-                flex-direction: row !important; 
-                flex-wrap: wrap !important; 
-                gap: 12px !important;
+            /* Fix Add Form Mobile 2x2 Grid via direct CSS calc */
+            div[data-testid="stForm"]:has(.add-tx-card) div[data-testid="stHorizontalBlock"]:first-of-type {
+                display: flex !important; flex-wrap: wrap !important; gap: 10px !important; flex-direction: row !important;
             }
-            
-            /* The 4-column inputs row -> map exactly to 2x2 grid */
-            div[data-testid="stForm"]:has(.add-tx-card) div[data-testid="stHorizontalBlock"]:has(> div[data-testid="column"]:nth-child(4)) > div[data-testid="column"] {
-                min-width: calc(50% - 12px) !important;
-                width: calc(50% - 12px) !important;
-                flex: 1 1 calc(50% - 12px) !important;
+            div[data-testid="stForm"]:has(.add-tx-card) div[data-testid="stHorizontalBlock"]:first-of-type > div[data-testid="column"] {
+                min-width: calc(50% - 10px) !important; flex: 1 1 calc(50% - 10px) !important; width: calc(50% - 10px) !important;
             }
             div[data-testid="stForm"]:has(.add-tx-card) input { padding: 6px !important; font-size: 0.95rem !important; }
-            
-            /* The 2-column action row -> map to the 50/50 split below inputs (Switch left, Button right) */
-            div[data-testid="stForm"]:has(.add-tx-card) div[data-testid="stHorizontalBlock"]:has(> div[data-testid="column"]:nth-child(2):last-child) > div[data-testid="column"] {
-                min-width: calc(50% - 12px) !important;
-                width: calc(50% - 12px) !important;
-                flex: 1 1 calc(50% - 12px) !important;
-            }
-            div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] {
-                min-width: 0 !important; width: 100% !important; 
-            }
-            /* Push the submit button to the absolute right of its column */
-            div[data-testid="stForm"]:has(.add-tx-card) .stButton {
-                display: flex !important;
-                justify-content: flex-end !important;
-                width: 100% !important;
-            }
-            div[data-testid="stForm"]:has(.add-tx-card) .stButton > button {
-                width: 100% !important;
-                max-width: 120px !important; 
-                padding: 0 16px !important;
-            }
 
             /* Force Mobile Transaction Rows to stay perfectly horizontal */
             div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row) > div > div[data-testid="stVerticalBlock"] > div[data-testid="stHorizontalBlock"] {
@@ -1620,20 +1506,19 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
         with st.form("add_crypto", border=False):
             st.markdown("<div class='add-tx-card'></div><h3 style='text-align: center; color: white; margin-top: 0px; margin-bottom: 10px;'>New Transaction</h3>", unsafe_allow_html=True)
             
-            # Row 1: Inputs (Rendered as 4 columns on PC, cleanly wrapped to 2x2 grid by CSS on mobile)
+            # Row 1 (Date, Ticker, USDC, Amount) forced onto one line via CSS on PC, and 2x2 on Mobile
             r1c1, r1c2, r1c3, r1c4 = st.columns(4)
             with r1c1: selected_date = st.date_input("Date", value=date(2026, 3, 25))
             with r1c2: ticker = st.text_input("Ticker", value="BTC").upper().strip()
             with r1c3: usdc = st.number_input("USDC Amount", value=15.0, step=0.01)
             with r1c4: amount = st.number_input("Coin Amount", value=0.1, step=0.000001, format="%.8f")
             
-            # Row 2: Action Row (Always 2 columns mapping naturally under the 2x2 layout above on mobile)
-            action_col1, action_col2 = st.columns(2)
-            with action_col1:
-                tx_type = st.radio("Type", ["Buy", "Sell"], horizontal=True, label_visibility="collapsed")
-            with action_col2:
-                submitted = st.form_submit_button("+ Add")
+            # Switch Centered Below Inputs
+            tx_type = st.radio("Type", ["Buy", "Sell"], horizontal=True, label_visibility="collapsed")
             
+            st.write("")
+            submitted = st.form_submit_button("Submit Transaction", use_container_width=True)
+                
             if submitted:
                 if ticker:
                     final_usdc = usdc if tx_type == "Buy" else -usdc
@@ -1681,10 +1566,10 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                 # If user clicked delete, show confirmation dialog replacing the row
                 if st.session_state.get('confirm_delete_crypto') == orig_idx:
                     with st.container(border=True):
-                        st.markdown("<div class='del-warn'></div><h4 style='color: #ff4d4d; margin-top: 0; margin-bottom: 5px; font-size: 1.1rem; font-weight: 600;'>Delete this transaction?</h4>", unsafe_allow_html=True)
+                        st.markdown("<div class='del-warn'></div><h4 style='color: #ff4d4d; margin-top: 0; margin-bottom: 5px;'>⚠️ Permanently delete this transaction?</h4>", unsafe_allow_html=True)
                         c_yes, c_no = st.columns(2)
                         with c_yes:
-                            if st.button("Delete", key=f"yes_del_{orig_idx}", use_container_width=True):
+                            if st.button("✔️ Yes, Delete", key=f"yes_del_{orig_idx}", use_container_width=True):
                                 st.session_state.crypto_df = st.session_state.crypto_df.drop(orig_idx).reset_index(drop=True)
                                 save_crypto(st.session_state.crypto_df)
                                 st.session_state['confirm_delete_crypto'] = None
@@ -1692,7 +1577,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                                 st.session_state.ui_version += 1
                                 st.rerun()
                         with c_no:
-                            if st.button("Cancel", key=f"no_del_{orig_idx}", use_container_width=True):
+                            if st.button("✖️ Cancel", key=f"no_del_{orig_idx}", use_container_width=True):
                                 st.session_state['confirm_delete_crypto'] = None
                                 st.rerun()
                 else:
