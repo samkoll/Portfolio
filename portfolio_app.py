@@ -99,7 +99,7 @@ div[data-testid="stMainBlockContainer"] {
 
 /* Tucked Text Fade Out */
 .dash-value {
-    font-size: 24px !important; /* Elegant size on PC */
+    font-size: 20px !important; /* Elegant size on PC */
     font-weight: 700;
     line-height: 1.05;
     color: #ffffff;
@@ -185,15 +185,6 @@ div[data-testid="stMainBlockContainer"] {
     justify-content: center;
 }
 
-/* Swapped PnL Cards: Rectangular, Fixed Dimensions */
-.glossy-box.swapped {
-    height: 80px !important;
-    min-height: 80px !important;
-    max-height: 80px !important;
-    padding: 0;
-    display: block;
-}
-
 /* Base styles for standard (non-swapped) glossy boxes */
 .glossy-box:not(.swapped) > div:first-child {
     font-size: 12px;
@@ -209,6 +200,15 @@ div[data-testid="stMainBlockContainer"] {
     font-weight: 700;
     line-height: 1.05;
     color: #ffffff;
+}
+
+/* Swapped PnL Cards: Rectangular, Fixed Dimensions */
+.glossy-box.swapped {
+    height: 80px !important;
+    min-height: 80px !important;
+    max-height: 80px !important;
+    padding: 0;
+    display: block;
 }
 
 /* USDC Banner Styles (Static) */
@@ -293,25 +293,24 @@ div[data-testid="stMainBlockContainer"] {
     }
 }
 @media (max-width: 600px) {
-    /* Safe overrides that don't affect .swapped cards */
-    .glossy-box:not(.swapped) {
-        min-width: 98px !important;
-        padding: 18px 14px !important;
+    .glossy-box {
+        min-width: 0px !important; /* Force allow shrinking */
+        padding: 14px 10px !important;
     }
     .glossy-box:not(.swapped) > div:first-child { font-size: 10px !important; }
     .glossy-box:not(.swapped) > div:last-child { font-size: 21px !important; }
     
+    /* Forced single row for mobile, ensuring 3 equal columns */
     .stats-layer-inner { 
         grid-template-columns: repeat(3, 1fr) !important; 
-        gap: 8px; 
+        gap: 6px !important; 
     }
     
     .stats-layer { margin-top: -60px !important; margin-bottom: 18px; } 
     
-    /* Perfect sizes for swapped cards */
-    .glossy-box.swapped { height: 80px !important; min-height: 80px !important; max-height: 80px !important; padding: 0; }
-    .dash-value { font-size: 20px !important; top: 16px; } 
-    .dash-label { font-size: 10px !important; bottom: 6px; }
+    .glossy-box.swapped { height: 80px !important; min-height: 80px !important; max-height: 80px !important; padding: 0 !important; min-width: 0 !important; }
+    .dash-value { font-size: 15px !important; top: 22px; white-space: nowrap; } 
+    .dash-label { font-size: 9px !important; bottom: 6px; white-space: nowrap; }
     
     .usdc-banner { padding: 16px 18px; margin-bottom: 24px; }
     .usdc-banner-left img { width: 36px; height: 36px; }
@@ -328,7 +327,7 @@ CRYPTO_ICON = '''<svg xmlns="http://www.w3.org/2000/svg" width="38" height="38" 
 FIAT_ICON = '''<svg xmlns="http://www.w3.org/2000/svg" width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="#00ff9d" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M6 8h12"/><path d="M6 12h12"/><path d="M6 16h12"/></svg>'''
 EYE_CLOSED = '''<svg class="eye-closed" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>'''
 EYE_OPEN = '''<svg class="eye-open" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>'''
-EXTERNAL_LINK_ICON = '''<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>'''
+EXTERNAL_LINK_ICON = '''<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>'''
 
 DATA_DIR = Path("data")
 DATA_DIR.mkdir(exist_ok=True)
@@ -714,7 +713,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
             </div>
         </div>
         <div class="flip-card-back">
-            <a href="https://www.tradingview.com/chart/?symbol=BINANCE:{ticker}USDT" target="_blank" class="tv-external-btn" title="Open in TradingView App/Web">
+            <a href="https://www.tradingview.com/chart/?symbol=BINANCE:{ticker}USDT" target="_blank" class="tv-external-btn" title="Open in TradingView App/Web to save drawings">
                 {EXTERNAL_LINK_ICON}
             </a>
             <div class="chart-container">
@@ -1109,8 +1108,8 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                 const dPnlPct = parentDoc.getElementById('dash-pnl-pct');
                 
                 if (dValue) dValue.innerText = dashValStr;
-                if (dPnl) dPnl.innerHTML = `<span style="color:${{dashColor}}">${{dashPnlStr}}</span>`;
-                if (dPnlPct) dPnlPct.innerHTML = `<span style="color:${{dashColor}}">${{dashPnlPctStr}}</span>`;
+                if (dPnl) {{ dPnl.innerText = dashPnlStr; dPnl.style.color = dashColor; }}
+                if (dPnlPct) {{ dPnlPct.innerText = dashPnlPctStr; dPnlPct.style.color = dashColor; }}
                 
             }} catch (e) {{
                 console.error('Auto-refresh error:', e);
@@ -1315,6 +1314,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
             const front = card.querySelector('.flip-card-front');
             front.addEventListener('click', (e) => {{
                 e.stopPropagation();
+                
                 // Toggle flipped state and touch-hover properly for mobile
                 if (!card.classList.contains('flipped')) {{
                     card.classList.add('flipped');
@@ -1677,12 +1677,12 @@ function editTransaction(i) {{
 
         # Unindented to prevent markdown code block rendering
         summary_html = f"""
-<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:20px;margin-bottom:30px;">
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:12px;margin-bottom:30px;">
 <div class="glossy-box swapped"><div class="dash-value">{total_czk:,.2f}</div><div class="dash-label">Total CZK</div></div>
 <div class="glossy-box swapped"><div class="dash-value">{total_eur:,.2f}</div><div class="dash-label">Total EUR</div></div>
 <div class="glossy-box swapped"><div class="dash-value">{format_money(total_usdc)}</div><div class="dash-label">Total USDC</div></div>
 <div class="glossy-box swapped">
-<div class="dash-value" style="font-size:16px !important;">{fees_eur:,.2f} EUR / {fees_czk:,.2f} CZK</div>
+<div class="dash-value" style="font-size:13px !important; white-space:normal;">{fees_eur:,.2f} EUR / {fees_czk:,.2f} CZK</div>
 <div class="dash-label">Fees</div>
 </div>
 </div>
