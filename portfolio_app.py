@@ -102,6 +102,7 @@ div[data-testid="stMainBlockContainer"] {
     border: 1px solid rgba(255,255,255,0.05);
     border-radius: 18px;
     box-shadow: 0 10px 30px rgba(0,0,0,0.4);
+    transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.4s ease, border-color 0.4s ease;
     padding: 32px 24px;
     min-height: 130px;
     font-size: 29px;
@@ -115,10 +116,17 @@ div[data-testid="stMainBlockContainer"] {
     width: 100% !important;
     margin-top: 68px;
     margin-bottom: 38px;
-    transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.4s ease, border-color 0.4s ease;
 }
 
-/* Keep header elevated/hovered while the drawer is open */
+/* PC Hover and Sync with Dashboard Toggle */
+@media (hover: hover) and (pointer: fine) {
+    .glossy-header-label:hover .glossy-header {
+        transform: translateY(-4px) scale(1.01);
+        box-shadow: 0 15px 40px rgba(0, 0, 0, 0.5);
+        border-color: rgba(255, 255, 255, 0.15);
+    }
+}
+/* Keep header elevated/hovered while the drawer is open on BOTH mobile and PC */
 .dashboard-toggle:checked + .glossy-header-label .glossy-header {
     transform: translateY(-4px) scale(1.01);
     box-shadow: 0 15px 40px rgba(0, 0, 0, 0.5);
@@ -132,6 +140,7 @@ div[data-testid="stMainBlockContainer"] {
     border: 1px solid rgba(255,255,255,0.05);
     border-radius: 18px;
     box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
     padding: 28px 30px;
     text-align: center;
     flex: 1;
@@ -157,9 +166,11 @@ div[data-testid="stMainBlockContainer"] {
     color: #ffffff;
 }
 
-/* Swapped PnL Cards: Absolute Top Number, Absolute Bottom Text */
+/* Swapped PnL Cards: Rigid dimensions, Number absolute center, Text absolute bottom */
 .glossy-box.swapped {
+    height: 94px;
     min-height: 94px;
+    max-height: 94px;
     padding: 0;
     display: block;
 }
@@ -188,7 +199,7 @@ div[data-testid="stMainBlockContainer"] {
     text-align: center;
 }
 
-/* USDC Banner Styles */
+/* USDC Banner Styles (Static) */
 .usdc-banner {
     position: relative;
     overflow: hidden;
@@ -273,19 +284,17 @@ div[data-testid="stMainBlockContainer"] {
     .glossy-box > div:first-child { font-size: 10px !important; }
     .glossy-box > div:last-child { font-size: 21px !important; }
     
-    /* Stronger tuck and forced single row for mobile */
+    /* Forced single row for mobile */
     .stats-layer-inner { 
         grid-template-columns: repeat(3, 1fr) !important; 
         gap: 8px; 
     }
     
-    /* Perfect deep tuck to completely hide the pinned top numbers (leaves exactly 20px for text) */
-    .stats-layer { margin-top: -75px; margin-bottom: 18px; } 
-    
-    .glossy-box.swapped { min-height: 95px; }
-    .glossy-box.swapped > div:first-child { font-size: 16px !important; top: 12px; }
-    /* Perfectly flush bottom label to peek out */
-    .glossy-box.swapped > div:last-child { font-size: 10px !important; bottom: 6px; }
+    /* Math perfectly leaves only 20px visible to frame the text precisely */
+    .stats-layer { margin-top: -66px; margin-bottom: 18px; } 
+    .glossy-box.swapped { height: 86px; min-height: 86px; max-height: 86px; }
+    .glossy-box.swapped > div:first-child { font-size: 16px !important; top: 16px; }
+    .glossy-box.swapped > div:last-child { font-size: 9px !important; bottom: 6px; }
     
     .usdc-banner { padding: 16px 18px; margin-bottom: 24px; }
     .usdc-banner-left img { width: 36px; height: 36px; }
@@ -616,7 +625,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
 </div>
 </div>
 </div>
-<div class="usdc-banner" style="--border: #2775ca;">
+<div class="usdc-banner">
 <div class="usdc-banner-left">
 <img src="{get_ticker_logo('USDC')}" onerror="this.src='https://via.placeholder.com/42/1e2a44/ffffff?text=U';">
 <div class="usdc-banner-title">USDC <span class="usdc-banner-subtitle">(Available Cash)</span></div>
@@ -786,8 +795,8 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
             padding: 16px; 
         }}
         
-        /* Interactive dynamic colored border glow */
-        @media (hover: hover) {{
+        /* Interactive dynamic colored border glow - ONLY applies on PC (fine pointers) */
+        @media (hover: hover) and (pointer: fine) {{
             .flip-card:hover .flip-card-front,
             .flip-card:hover .flip-card-back {{
                 border-color: var(--border);
@@ -795,6 +804,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
             }}
         }}
         
+        /* Touch Hover explicitly triggered by JS on mobile */
         .flip-card.touch-hover .flip-card-front,
         .flip-card.touch-hover .flip-card-back {{
             border-color: var(--border);
@@ -918,19 +928,6 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
     (function() {{
         // --- Handle Mobile Touch "Hover" and Drawer closing ---
         document.addEventListener('click', (e) => {{
-            const touchHoverTarget = e.target.closest('.transaction-card');
-            
-            // Remove touch-hover from elements that weren't just clicked
-            document.querySelectorAll('.touch-hover').forEach(el => {{
-                if (el !== touchHoverTarget && !el.classList.contains('flip-card')) {{
-                    el.classList.remove('touch-hover');
-                }}
-            }});
-
-            // Toggle touch-hover on the clicked element (except flip card which has custom logic below)
-            if (touchHoverTarget && !touchHoverTarget.classList.contains('flip-card')) {{
-                touchHoverTarget.classList.toggle('touch-hover');
-            }}
             
             // Smart Click-Away: Close dashboard drawer if clicking outside of it
             const dashToggle = window.parent.document.getElementById('dash-toggle');
@@ -938,7 +935,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                 // Check if the click happened inside the dashboard drawer
                 const isClickInsideDash = e.target.closest('.dashboard-wrapper');
                 if (!isClickInsideDash) {{
-                    dashToggle.checked = false; // Close drawer
+                    dashToggle.checked = false; // Close drawer and inherently remove hover
                 }}
             }}
         }});
@@ -1366,16 +1363,6 @@ body {{ background: transparent; margin: 0; padding: 0; }}
     overflow: hidden;
     scroll-snap-align: center; /* Snap to center */
 }}
-@media (hover: hover) {{
-    .transaction-card:hover {{
-        transform: translateY(-4px);
-        box-shadow: 0 12px 30px rgba(0, 0, 0, 0.4);
-    }}
-}}
-.transaction-card.touch-hover {{
-    transform: translateY(-4px);
-    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.4);
-}}
 
 .transaction-main-row {{
     display: flex;
@@ -1478,15 +1465,6 @@ body {{ background: transparent; margin: 0; padding: 0; }}
     </div>
 </div>
 <script>
-// --- Mobile Touch Hover Fix ---
-document.addEventListener('click', (e) => {{
-    const touchHoverTarget = e.target.closest('.transaction-card');
-    document.querySelectorAll('.touch-hover').forEach(el => {{
-        if (el !== touchHoverTarget) el.classList.remove('touch-hover');
-    }});
-    if (touchHoverTarget) touchHoverTarget.classList.toggle('touch-hover');
-}});
-
 // --- Wheel scrolling for PC ---
 const txScrollContainer = document.getElementById('txScrollContainer');
 if (txScrollContainer) {{
@@ -1592,15 +1570,6 @@ function editTransaction(i) {{
 <div>Fees</div>
 </div>
 </div>
-<script>
-document.addEventListener('click', (e) => {{
-    const target = e.target.closest('.glossy-box');
-    document.querySelectorAll('.glossy-box.touch-hover').forEach(el => {{
-        if (el !== target) el.classList.remove('touch-hover');
-    }});
-    if (target) target.classList.toggle('touch-hover');
-}});
-</script>
 """
         st.markdown(summary_html, unsafe_allow_html=True)
 
