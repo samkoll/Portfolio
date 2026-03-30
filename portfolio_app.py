@@ -99,7 +99,7 @@ div[data-testid="stMainBlockContainer"] {
 
 /* Tucked Text Fade Out */
 .dash-value {
-    font-size: 20px !important; /* Elegant size on PC */
+    font-size: 24px !important; /* Elegant size on PC */
     font-weight: 700;
     line-height: 1.05;
     color: #ffffff;
@@ -328,6 +328,7 @@ FIAT_ICON = '''<svg xmlns="http://www.w3.org/2000/svg" width="38" height="38" vi
 EYE_CLOSED = '''<svg class="eye-closed" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>'''
 EYE_OPEN = '''<svg class="eye-open" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>'''
 EXTERNAL_LINK_ICON = '''<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>'''
+TV_ICON = '''<svg xmlns="http://www.w3.org/2000/svg" width="18" height="14" viewBox="0 0 28 21" fill="currentColor"><path d="M12 21H8V3h4v18zm1.5-6h3.5l3.5-4.5V21h-7v-6zM28 21h-4l-6.5-9L21 6l7 10v5z"/></svg>'''
 
 DATA_DIR = Path("data")
 DATA_DIR.mkdir(exist_ok=True)
@@ -714,7 +715,8 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
         </div>
         <div class="flip-card-back">
             <a href="https://www.tradingview.com/chart/?symbol=BINANCE:{ticker}USDT" target="_blank" class="tv-external-btn" title="Open in TradingView App/Web to save drawings">
-                {EXTERNAL_LINK_ICON}
+                {TV_ICON}
+                <div style="margin-left: 6px; display:flex;">{EXTERNAL_LINK_ICON}</div>
             </a>
             <div class="chart-container">
                 <canvas id="chart-{ticker}"></canvas>
@@ -974,12 +976,21 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
         function closeAllOpenUI(e) {{
             // Only run if the click is outside a flip-card inner and outside dashboard wrapper
             const isDashClick = e && e.target && e.target.closest && e.target.closest('.dashboard-wrapper');
+            const isCardClick = e && e.target && e.target.closest && e.target.closest('.flip-card');
             
             if (!isDashClick) {{
                 const dashToggle = document.getElementById('dash-toggle');
                 if (dashToggle && dashToggle.checked) {{
                     dashToggle.checked = false; // Close drawer and inherently remove hover
                 }}
+            }}
+            
+            // Unflip cards if clicking completely outside
+            if (!isCardClick) {{
+                document.querySelectorAll('.flip-card.flipped').forEach(card => {{
+                    card.classList.remove('flipped');
+                    card.classList.remove('touch-hover');
+                }});
             }}
         }}
 
@@ -994,13 +1005,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
         try {{
             ['click', 'touchstart'].forEach(evt => {{
                 window.parent.document.addEventListener(evt, () => {{
-                    closeAllOpenUI(null); // No event target needed, it's definitely outside
-                    
-                    // Unflip cards if user clicks totally outside the iframe
-                    document.querySelectorAll('.flip-card.flipped').forEach(card => {{
-                        card.classList.remove('flipped');
-                        card.classList.remove('touch-hover');
-                    }});
+                    closeAllOpenUI(null); 
                 }}, {{ passive: true }});
             }});
         }} catch(err) {{
@@ -1388,229 +1393,149 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                 pass
             st.session_state.edit_trigger = edit_trigger
 
+        # Preserve original index for accurate editing/deleting, then sort descending by Date
         df_display = st.session_state.crypto_df.copy()
-        df_display['Date'] = df_display['Datum'].apply(format_datum)
-        df_display = df_display.dropna(how='all').reset_index(drop=True)
+        df_display['orig_idx'] = df_display.index
+        df_display = df_display.dropna(how='all')
+        df_display = df_display.sort_values(by='Datum', ascending=False)
 
-        cards_html = ""
-        for i, r in df_display.iterrows():
+        list_html = f"""
+        <html>
+        <head>
+        <style>
+        body {{ background: transparent; margin: 0; padding: 0; font-family: system-ui, -apple-system, sans-serif; }}
+        
+        .tx-list-container {{
+            background: #0f172a;
+            border: 1px solid rgba(255,255,255,0.05);
+            border-radius: 16px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+            margin-bottom: 24px;
+            width: 100%;
+        }}
+        
+        .tx-row {{
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 14px 20px;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+            transition: background 0.2s;
+        }}
+        .tx-row:first-child {{ border-top-left-radius: 16px; border-top-right-radius: 16px; }}
+        .tx-row:last-child {{ border-bottom: none; border-bottom-left-radius: 16px; border-bottom-right-radius: 16px; }}
+        
+        @media (hover: hover) and (pointer: fine) {{
+            .tx-row:hover {{ background: rgba(255,255,255,0.03); }}
+            .tx-row:hover .tx-btn {{ opacity: 1; }}
+        }}
+        
+        .tx-left {{ display: flex; align-items: center; gap: 14px; flex: 1; }}
+        .tx-logo {{ width: 38px; height: 38px; border-radius: 50%; object-fit: contain; }}
+        .tx-info {{ display: flex; flex-direction: column; gap: 2px; }}
+        .tx-ticker {{ font-size: 1.1rem; font-weight: 700; color: #ffffff; line-height: 1.1; }}
+        .tx-date {{ font-size: 0.85rem; color: #94a3b8; }}
+        
+        .tx-right {{ display: flex; align-items: center; gap: 24px; }}
+        .tx-financials {{ display: flex; flex-direction: column; align-items: flex-end; gap: 2px; }}
+        .tx-amount {{ font-size: 1.05rem; font-weight: 700; color: #00ff9d; line-height: 1.1; }}
+        .tx-spent {{ font-size: 0.85rem; color: #cbd5e1; }}
+        .tx-price {{ font-size: 0.75rem; color: #64748b; }}
+        
+        .tx-actions {{ display: flex; gap: 8px; }}
+        .tx-btn {{ 
+            background: rgba(255,255,255,0.05); 
+            border: none; 
+            border-radius: 8px; 
+            cursor: pointer; 
+            font-size: 1.1rem; 
+            padding: 8px; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center;
+            transition: all 0.2s;
+            opacity: 0.5; /* Subdued until hover */
+        }}
+        @media (hover: hover) and (pointer: fine) {{
+            .tx-btn:hover {{ background: rgba(255,255,255,0.15); transform: scale(1.05); }}
+        }}
+        
+        @media (max-width: 600px) {{
+            .tx-row {{ padding: 12px 14px; }}
+            .tx-logo {{ width: 32px; height: 32px; }}
+            .tx-ticker {{ font-size: 1rem; }}
+            .tx-date {{ font-size: 0.75rem; }}
+            .tx-amount {{ font-size: 0.95rem; }}
+            .tx-spent {{ font-size: 0.8rem; }}
+            .tx-price {{ font-size: 0.7rem; }}
+            .tx-right {{ gap: 14px; }}
+            .tx-btn {{ padding: 6px; font-size: 1rem; opacity: 0.8; /* More visible on mobile */ }}
+        }}
+        </style>
+        </head>
+        <body>
+        <div class="tx-list-container">
+        """
+
+        for _, r in df_display.iterrows():
             logo_url = get_ticker_logo(r['Ticker'])
             invested = format_money(r['USDC'])
             amount_val = format_holdings(r['Amount'], r['Ticker'])
-            price = format_money(r['Price'])
-            date_str = r['Date']
+            price = format_price(r['Price'])
+            date_str = format_datum(r['Datum'])
+            orig_idx = r['orig_idx']
 
-            cards_html += f"""
-<div class="transaction-card">
-    <div class="transaction-main-row">
-        <div class="transaction-left">
-            <img src="{logo_url}" onerror="this.src='https://via.placeholder.com/42/1e2a44/ffffff?text={r['Ticker'][0]}';">
-            <div>
-                <div class="transaction-ticker">{r['Ticker']}</div>
-                <div class="transaction-date">{date_str}</div>
+            list_html += f"""
+            <div class="tx-row">
+                <div class="tx-left">
+                    <img src="{logo_url}" class="tx-logo" onerror="this.src='https://via.placeholder.com/38/1e2a44/ffffff?text={r['Ticker'][0]}';">
+                    <div class="tx-info">
+                        <span class="tx-ticker">{r['Ticker']}</span>
+                        <span class="tx-date">{date_str}</span>
+                    </div>
+                </div>
+                <div class="tx-right">
+                    <div class="tx-financials">
+                        <span class="tx-amount">+{amount_val} {r['Ticker']}</span>
+                        <span class="tx-spent">Spent: {invested}</span>
+                        <span class="tx-price">@ ${price}</span>
+                    </div>
+                    <div class="tx-actions">
+                        <button class="tx-btn" onclick="editTransaction({orig_idx})" title="Edit">✏️</button>
+                        <button class="tx-btn" onclick="deleteTransaction({orig_idx})" title="Delete">🗑️</button>
+                    </div>
+                </div>
             </div>
+            """
+
+        list_html += """
         </div>
-        <div class="transaction-values">
-            <div><small>Invested</small><br><strong>{invested}</strong></div>
-            <div><small>Amount</small><br><strong class="transaction-amount">{amount_val}</strong></div>
-            <div><small>Price</small><br><strong>{price}</strong></div>
-        </div>
-    </div>
-    <div class="transaction-buttons">
-        <button class="delete-btn" onclick="deleteTransaction({i})">🗑️ Delete</button>
-        <button class="edit-btn" onclick="editTransaction({i})">✏️ Edit</button>
-    </div>
-</div>
-"""
-
-        full_html = f"""
-<html>
-<head>
-<style>
-body {{ background: transparent; margin: 0; padding: 0; }}
-.transaction-grid-wrapper {{
-    width: 100%;
-    overflow-x: auto;
-    overflow-y: hidden;
-    padding-bottom: 20px;
-    scroll-snap-type: x mandatory; /* Enable scroll snapping */
-    -webkit-overflow-scrolling: touch;
-    
-    /* Hide scrollbar completely */
-    scrollbar-width: none;
-    -ms-overflow-style: none;
-}}
-.transaction-grid-wrapper::-webkit-scrollbar {{ display: none; }}
-
-.transaction-grid {{
-    display: flex;
-    flex-direction: row;
-    flex-wrap: nowrap;
-    gap: 16px;
-    padding: 10px 24px;
-    width: max-content;
-}}
-.transaction-card {{
-    flex: 0 0 420px; /* Wider PC format */
-    background: #0f172a;
-    border-radius: 18px;
-    padding: 18px 20px 14px;
-    box-shadow: 0 6px 20px rgba(0,0,0,0.3);
-    transition: all 0.25s ease;
-    position: relative;
-    display: flex;
-    flex-direction: column;
-    min-height: 138px;
-    overflow: hidden;
-    scroll-snap-align: center; /* Snap to center */
-}}
-@media (hover: hover) and (pointer: fine) {{
-    .transaction-card:hover {{
-        transform: translateY(-4px);
-        box-shadow: 0 12px 30px rgba(0, 0, 0, 0.4);
-    }}
-}}
-
-.transaction-main-row {{
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-bottom: 16px;
-}}
-.transaction-left {{
-    display: flex;
-    align-items: center;
-    gap: 14px;
-    flex: 1;
-}}
-.transaction-left img {{
-    height: 42px;
-    width: 42px;
-    border-radius: 50%;
-    object-fit: contain;
-}}
-.transaction-ticker {{
-    font-size: 1.28rem;
-    font-weight: 700;
-    color: #ffffff;
-    line-height: 1.05;
-}}
-.transaction-date {{
-    color: #aaa;
-    font-size: 0.92rem;
-    margin-top: 2px;
-}}
-.transaction-values {{
-    display: flex;
-    gap: 24px;
-    text-align: right;
-    font-size: 1.02rem;
-}}
-.transaction-values div {{
-    min-width: 88px;
-}}
-.transaction-values small {{
-    color: #aaa;
-    font-size: 0.82rem;
-    font-weight: 500;
-    display: block;
-}}
-.transaction-values strong {{
-    font-weight: 700;
-    color: #ffffff;
-}}
-.transaction-amount {{
-    font-size: 1.04rem;
-    font-weight: 700;
-    color: #ffffff;
-}}
-.transaction-buttons {{
-    display: flex;
-    gap: 12px;
-    margin-top: auto;
-}}
-.transaction-buttons button {{
-    flex: 1;
-    padding: 10px 14px;
-    border: none;
-    border-radius: 11px;
-    font-weight: 700;
-    font-size: 0.95rem;
-    cursor: pointer;
-    transition: all 0.2s ease;
-}}
-.transaction-buttons .delete-btn {{
-    background: #e63939;
-    color: white;
-}}
-.transaction-buttons .delete-btn:hover {{
-    background: #c1121f;
-}}
-.transaction-buttons .edit-btn {{
-    background: #00b894;
-    color: #0f1724;
-}}
-.transaction-buttons .edit-btn:hover {{
-    background: #00a17a;
-}}
-
-@media (max-width: 700px) {{
-    .transaction-card {{
-        flex: 0 0 85vw; /* Fits phone correctly with snapping */
-    }}
-    .transaction-grid {{
-        padding: 10px 7.5vw;
-        gap: 16px;
-    }}
-}}
-</style>
-</head>
-<body>
-<div class="transaction-grid-wrapper" id="txScrollContainer">
-    <div class="transaction-grid">
-    {cards_html}
-    </div>
-</div>
-<script>
-// --- Mobile Touch Hover Fix ---
-document.addEventListener('click', (e) => {{
-    const touchHoverTarget = e.target.closest('.transaction-card');
-    document.querySelectorAll('.touch-hover').forEach(el => {{
-        if (el !== touchHoverTarget) el.classList.remove('touch-hover');
-    }});
-    if (touchHoverTarget) touchHoverTarget.classList.toggle('touch-hover');
-}});
-
-// --- Wheel scrolling for PC ---
-const txScrollContainer = document.getElementById('txScrollContainer');
-if (txScrollContainer) {{
-    txScrollContainer.addEventListener('wheel', (evt) => {{
-        if (Math.abs(evt.deltaY) > Math.abs(evt.deltaX)) {{
-            evt.preventDefault();
-            txScrollContainer.scrollBy({{ left: evt.deltaY > 0 ? 200 : -200, behavior: 'smooth' }});
-        }}
-    }}, {{ passive: false }});
-}}
-
-function deleteTransaction(i) {{
-    const input = window.parent.document.querySelector('input[aria-label="delete_trigger"]');
-    if (input) {{
-        input.value = i;
-        input.dispatchEvent(new Event('change'));
-    }}
-}}
-function editTransaction(i) {{
-    const input = window.parent.document.querySelector('input[aria-label="edit_trigger"]');
-    if (input) {{
-        input.value = i;
-        input.dispatchEvent(new Event('change'));
-    }}
-}}
-</script>
-</body>
-</html>
-"""
-        components.html(full_html, height=210, scrolling=False)
+        <script>
+        function deleteTransaction(i) {
+            const input = window.parent.document.querySelector('input[aria-label="delete_trigger"]');
+            if (input) {
+                input.value = i;
+                input.dispatchEvent(new Event('change'));
+            }
+        }
+        function editTransaction(i) {
+            const input = window.parent.document.querySelector('input[aria-label="edit_trigger"]');
+            if (input) {
+                input.value = i;
+                input.dispatchEvent(new Event('change'));
+            }
+        }
+        </script>
+        </body>
+        </html>
+        """
+        
+        # Calculate dynamic height based on row count (approx 75px per row) so it fits perfectly
+        dynamic_height = min(max(len(df_display) * 75 + 10, 100), 550) 
+        
+        # We let Streamlit's native page scrolling handle the list if it gets too long, 
+        # but the iframe itself is tall enough to show ~7 rows before internal scrolling kicks in.
+        components.html(list_html, height=dynamic_height, scrolling=True)
 
         if 'editing_row_crypto' in st.session_state:
             edit_idx = st.session_state.editing_row_crypto
