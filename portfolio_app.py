@@ -1397,13 +1397,19 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
         div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label[aria-checked="true"]:last-child p { color: #ff4d4d !important; }
 
         /* 3. SUBMIT BUTTON */
+        div[data-testid="stForm"]:has(.add-tx-card) .stButton {
+            display: flex !important;
+            justify-content: center !important;
+            align-items: center !important;
+            height: 100% !important;
+        }
         div[data-testid="stForm"]:has(.add-tx-card) .stButton > button {
             background: #1e2a44 !important;
-            color: #e0e0e0 !important; padding: 8px 16px !important;
+            color: #e0e0e0 !important; padding: 0 24px !important;
             border-radius: 10px !important; font-size: 1rem !important; font-weight: 700 !important;
             box-shadow: 0 4px 15px rgba(0,0,0,0.25) !important; transition: all 0.3s ease !important;
-            border: none !important; margin-top: 0px !important; width: 100% !important;
-            height: 100% !important; min-height: 42px !important;
+            border: none !important; margin-top: 0px !important; width: auto !important;
+            height: 44px !important; min-height: 44px !important;
         }
         div[data-testid="stForm"]:has(.add-tx-card) .stButton > button:hover {
             transform: translateY(-2px) !important;
@@ -1569,7 +1575,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
             with action_col1:
                 tx_type = st.radio("Type", ["Buy", "Sell"], horizontal=True, label_visibility="collapsed")
             with action_col2:
-                submitted = st.form_submit_button("Add Transaction", use_container_width=True)
+                submitted = st.form_submit_button("+ Add", use_container_width=False) [cite: 1]
             
             if submitted:
                 if ticker:
