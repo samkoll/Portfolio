@@ -77,7 +77,6 @@ div[data-testid="stMainBlockContainer"] {
 .pull-indicator .eye-open { display: none; }
 .pull-indicator .eye-closed { display: block; }
 
-/* Checkbox Toggle Logic - Modified to target dashboard wrapper globally */
 .dashboard-toggle:checked ~ .dashboard-wrapper .glossy-header-label .pull-indicator .eye-open { display: block; }
 .dashboard-toggle:checked ~ .dashboard-wrapper .glossy-header-label .pull-indicator .eye-closed { display: none; }
 .dashboard-toggle:checked ~ .dashboard-wrapper .glossy-header-label .pull-indicator { color: #ffffff; }
@@ -252,17 +251,14 @@ div[data-testid="stMainBlockContainer"] {
     color: #ffffff;
 }
 
-/* Privacy Mode for USDC Banner */
+/* Native CSS Privacy Mode for USDC Banner */
 .dashboard-toggle:not(:checked) ~ .usdc-banner .usdc-banner-amount {
-    color: transparent !important;
-    position: relative;
+    font-size: 0 !important; /* Hides text perfectly without shifting layout */
 }
 .dashboard-toggle:not(:checked) ~ .usdc-banner .usdc-banner-amount::after {
     content: '***';
+    font-size: 1.7rem;
     color: #ffffff;
-    position: absolute;
-    right: 0;
-    top: 0;
 }
 
 /* =========================================================================
@@ -274,7 +270,7 @@ div[data-testid="stForm"]:has(.form-compact-marker) {
     background: #0f172a !important;
     border: 1px solid rgba(255,255,255,0.05) !important;
     border-radius: 16px !important;
-    padding: 20px !important;
+    padding: 20px 24px !important;
     box-shadow: 0 4px 20px rgba(0,0,0,0.3) !important;
     margin-bottom: 24px !important;
 }
@@ -420,7 +416,7 @@ div[data-testid="stVerticalBlockBorderWrapper"]:has(.delete-dialog-marker) {
     div[data-testid="stForm"]:has(.form-compact-marker) div[data-testid="stHorizontalBlock"] {
         display: flex !important;
         flex-direction: row !important;
-        flex-wrap: nowrap !important;
+        flex-wrap: wrap !important;
         gap: 10px !important;
     }
     div[data-testid="stForm"]:has(.form-compact-marker) div[data-testid="stHorizontalBlock"] > div[data-testid="column"] {
@@ -779,7 +775,6 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
         usdc_row = df_port[df_port['Ticker'] == 'USDC'].iloc[0] if not df_port[df_port['Ticker'] == 'USDC'].empty else None
         usdc_holdings = usdc_row['Holdings'] if usdc_row is not None else 0
 
-        # Note: input#dash-toggle is moved to be adjacent to .usdc-banner so CSS can target it
         value_box_html = f"""
 <input type="checkbox" id="dash-toggle" class="dashboard-toggle" style="display:none;">
 <div class="dashboard-wrapper">
@@ -829,7 +824,6 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
             avg_price_formatted = format_price(avg_price)
             chart_color = border_color
             
-            # Note the addition of the "privacy-val" class to all sensitive span tags
             cards_html += f"""
 <div class="flip-card" data-ticker="{ticker}" data-holdings="{r['Holdings']}" data-invested="{r['USDC']}" data-current-price="{live_price}" data-avg-price="{avg_price}" data-refresh="{st.session_state.refresh_key}" data-border="{border_color}" data-chart-color="{chart_color}" data-logo="{logo_url}">
     <div class="flip-card-inner">
@@ -901,21 +895,9 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
         }}
         
         /* Privacy Mode CSS targeting card values inside the iframe */
-        body.privacy-mode .privacy-val {{
-            color: transparent !important;
-            position: relative;
-        }}
-        body.privacy-mode .privacy-val::after {{
-            content: '***';
-            color: #94a3b8; /* Match .label text color */
-            position: absolute;
-            right: 0;
-            top: 0;
-            font-weight: 700;
-        }}
-        body.privacy-mode .total-value::after {{
-            color: #ffffff; /* Total value stars remain white */
-        }}
+        body.privacy-mode .privacy-val {{ font-size: 0 !important; }}
+        body.privacy-mode .privacy-val::after {{ content: '***'; font-size: 1rem; color: #94a3b8; }}
+        body.privacy-mode .total-value::after {{ font-size: 1.15rem; color: #ffffff; }}
 
         .flip-card-front, .flip-card-back, .flip-card {{
             outline: none;
@@ -1154,7 +1136,6 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                     const dashToggle = window.parent.document.getElementById('dash-toggle');
                     if (dashToggle && dashToggle.checked) {{
                         dashToggle.checked = false; // Close drawer
-                        dashToggle.dispatchEvent(new Event('change')); // Trigger save event
                     }}
                 }} catch(err) {{}}
             }}
@@ -1175,48 +1156,54 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
             }}, {{ passive: true }});
         }});
 
-        // --- Privacy Mode Logic ---
-        try {{
-            const parentDoc = window.parent.document;
-            const dashToggle = parentDoc.getElementById('dash-toggle');
-            
-            function syncPrivacy() {{
-                if (dashToggle && !dashToggle.checked) {{
-                    document.body.classList.add('privacy-mode');
-                }} else {{
-                    document.body.classList.remove('privacy-mode');
-                }}
-            }}
-
-            if (dashToggle) {{
-                const savedDashState = localStorage.getItem('dashboardOpen');
-                if (savedDashState === 'true') {{
-                    dashToggle.checked = true;
-                }} else if (savedDashState === 'false') {{
-                    dashToggle.checked = false;
-                }}
-                
-                // Set initial state
-                syncPrivacy();
-                
-                // Listen for changes when user clicks the dashboard tab header
-                dashToggle.addEventListener('change', () => {{
-                    localStorage.setItem('dashboardOpen', dashToggle.checked);
-                    syncPrivacy();
-                }});
-            }}
-        }} catch(err) {{
-            console.log("Cannot bind privacy toggle to parent document");
-        }}
-
         // Listen outside the iframe (Parent Streamlit Document)
         try {{
             ['click', 'touchstart'].forEach(evt => {{
-                window.parent.document.addEventListener(evt, () => {{
-                    closeAllOpenUI(null); 
+                window.parent.document.addEventListener(evt, (e) => {{
+                    closeAllOpenUI(e); 
                 }}, {{ passive: true }});
             }});
-        }} catch(err) {{}}
+        }} catch(err) {{
+            console.log("Cannot bind to parent document");
+        }}
+
+        // --- Privacy Mode Syncing Logic ---
+        let lastDashState = null;
+        setInterval(() => {{
+            try {{
+                const dt = window.parent.document.getElementById('dash-toggle');
+                if (dt) {{
+                    const isChecked = dt.checked;
+                    if (isChecked !== lastDashState) {{
+                        lastDashState = isChecked;
+                        if (isChecked) {{
+                            document.body.classList.remove('privacy-mode');
+                            localStorage.setItem('dashboardOpen', 'true');
+                        }} else {{
+                            document.body.classList.add('privacy-mode');
+                            localStorage.setItem('dashboardOpen', 'false');
+                        }}
+                    }}
+                }}
+            }} catch(e) {{}}
+        }}, 150);
+
+        // Run once on cold load to enforce local storage memory immediately
+        try {{
+            const dt = window.parent.document.getElementById('dash-toggle');
+            if (dt) {{
+                const saved = localStorage.getItem('dashboardOpen');
+                if (saved === 'true') {{
+                    dt.checked = true;
+                    document.body.classList.remove('privacy-mode');
+                    lastDashState = true;
+                }} else {{
+                    dt.checked = false;
+                    document.body.classList.add('privacy-mode');
+                    lastDashState = false;
+                }}
+            }}
+        }} catch(e) {{}}
 
         // --- Wheel scrolling for PC ---
         const scrollContainer = document.getElementById('scrollContainer');
