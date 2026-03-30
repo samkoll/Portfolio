@@ -97,13 +97,37 @@ div[data-testid="stMainBlockContainer"] {
     gap: 14px;
 }
 
-/* BULLETPROOF FIX: Fade out the numbers when drawer is closed so they never overlap */
+/* Tucked Text Fade Out */
 .dash-value {
+    font-size: 20px !important; /* Elegant size on PC */
+    font-weight: 700;
+    line-height: 1.05;
+    color: #ffffff;
+    position: absolute;
+    top: 20px; 
+    left: 0;
+    width: 100%;
+    text-align: center;
+    margin: 0;
     transition: opacity 0.3s ease;
 }
 .dashboard-toggle:not(:checked) ~ .stats-layer .dash-value {
     opacity: 0;
     pointer-events: none;
+}
+
+.dash-label {
+    font-size: 11px !important;
+    font-weight: 600;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: #94a3b8;
+    line-height: 1.2;
+    position: absolute;
+    bottom: 8px;
+    left: 0;
+    width: 100%;
+    text-align: center;
 }
 
 .glossy-header {
@@ -129,6 +153,7 @@ div[data-testid="stMainBlockContainer"] {
     margin-bottom: 38px;
 }
 
+/* PC Hover and Sync with Dashboard Toggle */
 @media (hover: hover) and (pointer: fine) {
     .glossy-header-label:hover .glossy-header {
         transform: translateY(-4px) scale(1.01);
@@ -136,6 +161,7 @@ div[data-testid="stMainBlockContainer"] {
         border-color: rgba(255, 255, 255, 0.15);
     }
 }
+/* Keep header elevated/hovered while the drawer is open on BOTH mobile and PC */
 .dashboard-toggle:checked + .glossy-header-label .glossy-header {
     transform: translateY(-4px) scale(1.01);
     box-shadow: 0 15px 40px rgba(0, 0, 0, 0.5);
@@ -175,7 +201,7 @@ div[data-testid="stMainBlockContainer"] {
     color: #ffffff;
 }
 
-/* Swapped PnL Cards */
+/* Swapped PnL Cards: Rectangular, Fixed Dimensions */
 .glossy-box.swapped {
     height: 80px !important;
     min-height: 80px !important;
@@ -183,33 +209,8 @@ div[data-testid="stMainBlockContainer"] {
     padding: 0;
     display: block;
 }
-.dash-value {
-    font-size: 24px !important;
-    font-weight: 700;
-    line-height: 1.05;
-    color: #ffffff;
-    position: absolute;
-    top: 20px; 
-    left: 0;
-    width: 100%;
-    text-align: center;
-    margin: 0;
-}
-.dash-label {
-    font-size: 11px !important;
-    font-weight: 600;
-    letter-spacing: 1.5px;
-    text-transform: uppercase;
-    color: #94a3b8;
-    line-height: 1.2;
-    position: absolute;
-    bottom: 8px;
-    left: 0;
-    width: 100%;
-    text-align: center;
-}
 
-/* USDC Banner Styles */
+/* USDC Banner Styles (Static) */
 .usdc-banner {
     position: relative;
     overflow: hidden;
@@ -305,7 +306,7 @@ div[data-testid="stMainBlockContainer"] {
     .stats-layer { margin-top: -60px !important; margin-bottom: 18px; } 
     
     .glossy-box.swapped { height: 80px !important; min-height: 80px !important; max-height: 80px !important; padding: 0; }
-    .dash-value { font-size: 16px !important; top: 16px; }
+    .dash-value { font-size: 14px !important; top: 16px; } /* Slimmed down for mobile */
     .dash-label { font-size: 9px !important; bottom: 4px; }
     
     .usdc-banner { padding: 16px 18px; margin-bottom: 24px; }
@@ -321,11 +322,11 @@ div[data-testid="stMainBlockContainer"] {
 DASHBOARD_ICON = '''<svg xmlns="http://www.w3.org/2000/svg" width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="#00ff9d" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>'''
 CRYPTO_ICON = '''<svg xmlns="http://www.w3.org/2000/svg" width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="#00ff9d" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M14.5 8.5L9.5 13.5"/><path d="M9.5 8.5L14.5 13.5"/></svg>'''
 FIAT_ICON = '''<svg xmlns="http://www.w3.org/2000/svg" width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="#00ff9d" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M6 8h12"/><path d="M6 12h12"/><path d="M6 16h12"/></svg>'''
+# Minimalist 16px eye icon, neutral color
 EYE_CLOSED = '''<svg class="eye-closed" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>'''
 EYE_OPEN = '''<svg class="eye-open" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>'''
+# TradingView SVG Logo
 TV_ICON = '''<svg xmlns="http://www.w3.org/2000/svg" width="18" height="14" viewBox="0 0 28 21" fill="currentColor"><path d="M12 21H8V3h4v18zm1.5-6h3.5l3.5-4.5V21h-7v-6zM28 21h-4l-6.5-9L21 6l7 10v5z"/></svg>'''
-# External link icon
-EXTERNAL_LINK_ICON = '''<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>'''
 
 DATA_DIR = Path("data")
 DATA_DIR.mkdir(exist_ok=True)
@@ -624,7 +625,6 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
         usdc_row = df_port[df_port['Ticker'] == 'USDC'].iloc[0] if not df_port[df_port['Ticker'] == 'USDC'].empty else None
         usdc_holdings = usdc_row['Holdings'] if usdc_row is not None else 0
 
-        # Unindented string to prevent markdown rendering issues
         value_box_html = f"""
 <div class="dashboard-wrapper">
 <input type="checkbox" id="dash-toggle" class="dashboard-toggle" style="display:none;">
@@ -640,8 +640,8 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
 <div class="stats-layer">
 <div class="stats-layer-inner">
 <div class="glossy-box swapped"><div class="dash-value"><span id="dash-total-value">{format_money(total_value)}</span></div><div class="dash-label">Total Value</div></div>
-<div class="glossy-box swapped"><div class="dash-value" id="dash-pnl"><span style="color:{'#00ff9d' if total_pnl>=0 else '#ff4d4d'}">{"▲" if total_pnl>0 else "▼" if total_pnl<0 else ""} {format_money(abs(total_pnl))}</span></div><div class="dash-label">PnL</div></div>
-<div class="glossy-box swapped"><div class="dash-value" id="dash-pnl-pct"><span style="color:{'#00ff9d' if total_pnl_pct>=0 else '#ff4d4d'}">{"▲" if total_pnl_pct>0 else "▼" if total_pnl_pct<0 else ""} {abs(total_pnl_pct):.2f}%</span></div><div class="dash-label">PnL %</div></div>
+<div class="glossy-box swapped"><div class="dash-value"><span id="dash-pnl" style="color:{'#00ff9d' if total_pnl>=0 else '#ff4d4d'}">{"▲" if total_pnl>0 else "▼" if total_pnl<0 else ""} {format_money(abs(total_pnl))}</span></div><div class="dash-label">PnL</div></div>
+<div class="glossy-box swapped"><div class="dash-value"><span id="dash-pnl-pct" style="color:{'#00ff9d' if total_pnl_pct>=0 else '#ff4d4d'}">{"▲" if total_pnl_pct>0 else "▼" if total_pnl_pct<0 else ""} {abs(total_pnl_pct):.2f}%</span></div><div class="dash-label">PnL %</div></div>
 </div>
 </div>
 </div>
@@ -711,11 +711,8 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
             </div>
         </div>
         <div class="flip-card-back">
-            <div class="tv-btn" title="Advanced TradingView Chart">
+            <a href="https://www.tradingview.com/chart/?symbol=BINANCE:{ticker}USDT" target="_blank" class="tv-btn" title="Open in TradingView to save drawings">
                 {TV_ICON}
-            </div>
-            <a href="https://www.tradingview.com/chart/?symbol=BINANCE:{ticker}USDT" target="_blank" class="tv-external-btn" title="Open in TradingView App/Web">
-                {EXTERNAL_LINK_ICON}
             </a>
             <div class="chart-container">
                 <canvas id="chart-{ticker}"></canvas>
@@ -732,7 +729,6 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
 <head>
     <meta charset="UTF-8">
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-    <script type="text/javascript" src="https://s3.tradingview.com/tv.js"></script>
     <style>
         * {{ box-sizing: border-box; }}
         html, body {{
@@ -822,23 +818,11 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
             padding: 24px 16px 16px 16px; /* Extra top padding for the TV button */
         }}
         
-        /* TradingView Buttons */
+        /* TradingView External Link Button */
         .tv-btn {{
             position: absolute;
             top: 10px;
-            right: 12px;
-            color: #64748b;
-            cursor: pointer;
-            z-index: 20;
-            transition: color 0.2s ease;
-            padding: 4px;
-        }}
-        .tv-btn:hover {{ color: #ffffff; }}
-        
-        .tv-external-btn {{
-            position: absolute;
-            top: 10px;
-            right: 42px;
+            right: 14px;
             color: #64748b;
             cursor: pointer;
             z-index: 20;
@@ -847,8 +831,9 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
             display: flex;
             align-items: center;
             justify-content: center;
+            text-decoration: none;
         }}
-        .tv-external-btn:hover {{ color: #ffffff; }}
+        .tv-btn:hover {{ color: #ffffff; }}
         
         /* Interactive dynamic colored border glow - ONLY applies on PC (fine pointers) */
         @media (hover: hover) and (pointer: fine) {{
@@ -958,39 +943,6 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
             z-index: 10;
         }}
         
-        /* Fullscreen TV Overlay with Blur */
-        #tv-overlay {{
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100vw;
-            height: 100vh;
-            background-color: rgba(15, 23, 42, 0.95);
-            backdrop-filter: blur(8px);
-            -webkit-backdrop-filter: blur(8px);
-            z-index: 99999;
-        }}
-        .tv-widget-container {{
-            width: 100%;
-            height: 100%;
-            position: absolute;
-            top: 0;
-            left: 0;
-        }}
-        #tv-close-fs {{
-            position: absolute;
-            top: 15px;
-            right: 20px;
-            color: #94a3b8;
-            font-size: 32px;
-            cursor: pointer;
-            z-index: 100000;
-            transition: color 0.2s;
-            text-shadow: 0 2px 4px rgba(0,0,0,0.8);
-        }}
-        #tv-close-fs:hover {{ color: white; }}
-        
         @media (max-width: 700px) {{
             /* Fit phone width perfectly with snapping */
             .flip-card {{ flex: 0 0 85vw; height: 280px; }}
@@ -1008,20 +960,6 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
 </head>
 <body>
 
-<script>
-    // Ensure the iframe has fullscreen permissions (Streamlit workaround)
-    try {{
-        if (window.frameElement) {{
-            window.frameElement.setAttribute("allowfullscreen", "");
-            window.frameElement.setAttribute("allow", "fullscreen");
-        }}
-    }} catch(e) {{}}
-</script>
-
-<div id="tv-overlay">
-    <div id="tv-close-fs">&times;</div>
-    </div>
-
 <div class="scroll-wrapper" id="scrollContainer">
     <div class="coin-grid">
         {cards_html}
@@ -1035,10 +973,9 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
             // Only run if the click is outside a flip-card inner and outside dashboard wrapper
             const isCardClick = e && e.target && e.target.closest && e.target.closest('.flip-card');
             const isDashClick = e && e.target && e.target.closest && e.target.closest('.dashboard-wrapper');
-            const isFullscreenBtn = e && e.target && e.target.closest && (e.target.closest('.tv-btn') || e.target.closest('.tv-external-btn'));
-            const isTVOverlay = e && e.target && e.target.closest && e.target.closest('#tv-overlay');
+            const isFullscreenBtn = e && e.target && e.target.closest && e.target.closest('.tv-btn');
             
-            if (!isCardClick && !isFullscreenBtn && !isTVOverlay) {{
+            if (!isCardClick && !isFullscreenBtn) {{
                 document.querySelectorAll('.flip-card.flipped').forEach(card => {{
                     card.classList.remove('flipped');
                     card.classList.remove('touch-hover');
@@ -1090,28 +1027,6 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
             }}, {{ passive: false }});
         }}
 
-        // --- TradingView Fullscreen Handler ---
-        function exitFullscreen() {{
-            if (document.exitFullscreen) {{
-                document.exitFullscreen();
-            }} else if (document.webkitExitFullscreen) {{
-                document.webkitExitFullscreen();
-            }} else if (document.msExitFullscreen) {{
-                document.msExitFullscreen();
-            }}
-        }}
-
-        document.getElementById('tv-close-fs').addEventListener('click', exitFullscreen);
-
-        // Hide overlay automatically when leaving fullscreen (DOES NOT DESTROY STATE)
-        ['fullscreenchange', 'webkitfullscreenchange', 'mozfullscreenchange', 'MSFullscreenChange'].forEach(
-            eventType => document.addEventListener(eventType, () => {{
-                if (!document.fullscreenElement && !document.webkitIsFullScreen && !document.mozFullScreen && !document.msFullscreenElement) {{
-                    document.getElementById('tv-overlay').style.display = 'none';
-                }}
-            }}, false)
-        );
-
         // --- Live Price Auto Refresh Logic ---
         const usdcHoldings = {usdc_holdings};
         
@@ -1156,13 +1071,13 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                         const valEl = card.querySelector('.total-value');
                         if (valEl) valEl.innerText = valStr;
                         
-                        const pnlEl = card.querySelector('.card-pnl');
+                        const pnlEl = card.querySelector('#dash-pnl');
                         if (pnlEl) {{
                             pnlEl.innerText = pnlStr;
                             pnlEl.style.color = color;
                         }}
                         
-                        const pnlPctEl = card.querySelector('.card-pnl-pct');
+                        const pnlPctEl = card.querySelector('#dash-pnl-pct');
                         if (pnlPctEl) {{
                             pnlPctEl.innerText = pnlPctStr;
                             pnlPctEl.style.color = color;
@@ -1200,8 +1115,8 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                 const dPnlPct = parentDoc.getElementById('dash-pnl-pct');
                 
                 if (dValue) dValue.innerText = dashValStr;
-                if (dPnl) dPnl.innerHTML = `<span style="color:${{dashColor}}">${{dashPnlStr}}</span>`;
-                if (dPnlPct) dPnlPct.innerHTML = `<span style="color:${{dashColor}}">${{dashPnlPctStr}}</span>`;
+                if (dPnl) {{ dPnl.innerText = dashPnlStr; dPnl.style.color = dashColor; }}
+                if (dPnlPct) {{ dPnlPct.innerText = dashPnlPctStr; dPnlPct.style.color = dashColor; }}
                 
             }} catch (e) {{
                 console.error('Auto-refresh error:', e);
@@ -1407,6 +1322,14 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
             front.addEventListener('click', (e) => {{
                 e.stopPropagation();
                 
+                // Unflip all other cards first for clean UX
+                document.querySelectorAll('.flip-card.flipped').forEach(c => {{
+                    if (c !== card) {{
+                        c.classList.remove('flipped');
+                        c.classList.remove('touch-hover');
+                    }}
+                }});
+
                 // Toggle flipped state and touch-hover properly for mobile
                 if (!card.classList.contains('flipped')) {{
                     card.classList.add('flipped');
@@ -1424,69 +1347,11 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                 card.classList.remove('touch-hover');
             }});
             
-            // TradingView Fullscreen functionality (PERSISTENT STATE)
-            const fsBtn = card.querySelector('.tv-btn');
-            if (fsBtn) {{
-                fsBtn.addEventListener('click', (e) => {{
-                    e.stopPropagation(); // prevent flipping the card
-                    
-                    const overlay = document.getElementById('tv-overlay');
-                    overlay.style.display = 'block';
-                    
-                    // Hide any other active widgets
-                    document.querySelectorAll('.tv-widget-container').forEach(el => {{
-                        el.style.display = 'none';
-                    }});
-
-                    const containerId = 'tv_chart_' + ticker;
-                    let tvContainer = document.getElementById(containerId);
-
-                    // Only initialize the TradingView chart ONCE per ticker to preserve drawings
-                    if (!tvContainer) {{
-                        tvContainer = document.createElement('div');
-                        tvContainer.id = containerId;
-                        tvContainer.className = 'tv-widget-container';
-                        overlay.appendChild(tvContainer);
-
-                        new TradingView.widget({{
-                          "autosize": true,
-                          "symbol": "BINANCE:" + ticker + "USDT",
-                          "interval": "D",
-                          "timezone": "Etc/UTC",
-                          "theme": "dark",
-                          "style": "1",
-                          "locale": "en",
-                          "enable_publishing": false,
-                          "backgroundColor": "transparent",
-                          "gridColor": "rgba(30, 41, 59, 0.5)",
-                          "hide_top_toolbar": false,
-                          "hide_side_toolbar": false,
-                          "save_image": false,
-                          "container_id": containerId,
-                          "allow_symbol_change": false, // Lock it to this specific coin
-                          "toolbar_bg": "transparent"
-                        }});
-                    }} else {{
-                        // Bring the existing widget back to the front (drawings intact!)
-                        tvContainer.style.display = 'block';
-                    }}
-
-                    // Request fullscreen on the overlay
-                    if (overlay.requestFullscreen) {{
-                        overlay.requestFullscreen().catch(err => console.log(err));
-                    }} else if (overlay.webkitRequestFullscreen) {{
-                        overlay.webkitRequestFullscreen();
-                    }} else if (overlay.msRequestFullscreen) {{
-                        overlay.msRequestFullscreen();
-                    }}
-                }});
-            }}
-            
-            // External TV Link Functionality
-            const extBtn = card.querySelector('.tv-external-btn');
+            // Prevent the external link from triggering a flip
+            const extBtn = card.querySelector('.tv-btn');
             if (extBtn) {{
                 extBtn.addEventListener('click', (e) => {{
-                    e.stopPropagation(); // prevent flipping the card
+                    e.stopPropagation();
                 }});
             }}
         }});
