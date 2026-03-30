@@ -387,11 +387,19 @@ def get_with_retry(url: str, headers: dict, timeout: int = 12, retries: int = 4)
         try:
             resp = requests.get(url, headers=headers, timeout=timeout)
             resp.raise_for_status()
-            return resp.json()
+            data = resp.json()
+            # If the API hits a rate limit, it still returns HTTP 200 but sets 'Response' to 'Error'. 
+            # We catch this and apply an exponential backoff so the chart loads perfectly the first time.
+            if isinstance(data, dict) and data.get('Response') == 'Error':
+                if attempt == retries - 1:
+                    return None
+                time.sleep(1.5 ** attempt)
+                continue
+            return data
         except Exception:
             if attempt == retries - 1:
                 return None
-            time.sleep(1.3 ** attempt)
+            time.sleep(1.5 ** attempt)
     return None
 
 # ====================== LIVE PRICE FUNCTION ======================
@@ -490,18 +498,16 @@ def build_portfolio_history(crypto_df, fiat_df, last_prices, refresh_key):
     prices_dict = {}
     fetch_coins = set(coins) | {'BTC'}
     
+    headers = {"User-Agent": "Mozilla/5.0 (compatible; StreamlitPortfolio/1.0)"}
     for coin in fetch_coins:
         sym = CRYPTOCOMPARE_SYMBOL_MAP.get(coin.upper(), coin.upper())
         days_diff = (today - min_date).days
         limit = min(2000, days_diff + 5)
         url = f"https://min-api.cryptocompare.com/data/v2/histoday?fsym={sym}&tsym=USD&limit={limit}"
-        try:
-            resp = requests.get(url, timeout=10).json()
-            if resp.get('Response') == 'Success':
-                data = resp['Data']['Data']
-                prices_dict[coin] = {datetime.fromtimestamp(d['time']).date(): d['close'] for d in data}
-        except:
-            pass
+        
+        data = get_with_retry(url, headers)
+        if data and 'Data' in data and 'Data' in data['Data']:
+            prices_dict[coin] = {datetime.fromtimestamp(d['time']).date(): d['close'] for d in data['Data']['Data']}
             
     prices_df = pd.DataFrame(prices_dict)
     if not prices_df.empty:
@@ -510,9 +516,13 @@ def build_portfolio_history(crypto_df, fiat_df, last_prices, refresh_key):
         prices_df = pd.DataFrame(index=date_range)
         
     # FORCE INJECT LIVE PRICES IF HISTORICAL API FAILED/MISSED
-    # This prevents the chart from dropping massively if an altcoin history fetch fails.
-    for coin in coins:
+    # This prevents the chart from dropping massively to zero if a coin history fetch fails
+    for coin in fetch_coins:
         live_p = last_prices.get(coin, 0.0)
+        # Avoid zero price for BTC fallback so it doesn't divide by 1 and mirror the investment line
+        if live_p == 0.0 and coin == 'BTC':
+            live_p = 65000.0 
+            
         if coin not in prices_df.columns:
             prices_df[coin] = live_p
         else:
@@ -637,10 +647,15 @@ def calculate_portfolio(crypto_df):
     crypto_spent = pd.to_numeric(crypto_df['USDC'], errors='coerce').fillna(0).sum()
     usdc_holdings = fiat_usdc - crypto_spent
     coin_tickers = [t for t in crypto_df['Ticker'].unique() if t != 'USDC']
-    live_prices = get_all_cryptocompare_prices(coin_tickers, st.session_state.refresh_key)
+    
+    # Pre-fetch BTC live price so the historical fallback benchmark never fails
+    fetch_tickers = list(set(coin_tickers) | {'BTC'})
+    
+    live_prices = get_all_cryptocompare_prices(fetch_tickers, st.session_state.refresh_key)
     for t, p in live_prices.items():
         if p > 0:
             st.session_state.last_known_prices[t] = p
+            
     portfolio = []
     for ticker in coin_tickers:
         sub = crypto_df[crypto_df['Ticker'] == ticker]
