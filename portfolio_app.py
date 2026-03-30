@@ -835,22 +835,31 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                     width: max-content;
                     padding: 0 24px;
                 }}
-                .pie-box, .history-box {{
+                
+                /* Invisible placeholders keep the layout from shifting when a chart pops out */
+                .chart-placeholder {{
                     scroll-snap-align: center;
+                }}
+                .pie-placeholder {{
+                    width: 350px;
+                    flex: 0 0 350px;
                     height: 340px;
+                }}
+                .history-placeholder {{
+                    width: 600px;
+                    flex: 0 0 600px;
+                    height: 340px;
+                }}
+                
+                .pie-box, .history-box {{
+                    width: 100%;
+                    height: 100%;
                     background: rgba(15, 23, 42, 0.4);
                     border: 1px solid rgba(255,255,255,0.05);
                     border-radius: 16px;
                     box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-                    /* Explicitly blocking any global transitions that could warp dimensions during js recalculation */
-                }}
-                .pie-box {{
-                    width: 350px;
-                    flex: 0 0 350px;
-                }}
-                .history-box {{
-                    width: 600px;
-                    flex: 0 0 600px;
+                    touch-action: pan-x pan-y; /* Disables native mobile double-tap zoom to prevent interference */
+                    transition: none; /* Block CSS layout transitions so it doesn't fight Highcharts */
                 }}
                 
                 /* Smooth Fade Overlay */
@@ -871,7 +880,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                 }}
                 
                 @media (max-width: 768px) {{
-                    .pie-box, .history-box {{ 
+                    .pie-placeholder, .history-placeholder {{ 
                         height: 300px; 
                         width: 85vw; 
                         flex: 0 0 85vw; 
@@ -881,7 +890,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                         gap: 16px; 
                     }}
                     
-                    /* Smooth CSS Keyframe Pop-in instead of morphing layout transitions */
+                    /* Pure Hardware Accelerated Keyframe Pop-in. No layout morphing. */
                     @keyframes smoothPop {{
                         0% {{ transform: translate(-50%, -48%) scale(0.96); opacity: 0; }}
                         100% {{ transform: translate(-50%, -50%) scale(1); opacity: 1; }}
@@ -895,8 +904,6 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                         height: 400px !important;
                         z-index: 1001 !important;
                         margin: 0 !important;
-                        scroll-snap-align: none !important;
-                        transition: none !important; /* Stop conflicting layout transitions */
                         animation: smoothPop 0.3s cubic-bezier(0.2, 0.8, 0.2, 1) forwards !important;
                     }}
                 }}
@@ -907,8 +914,12 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
             
             <div class="charts-scroll-wrapper" id="chartsScrollContainer">
                 <div class="charts-flex">
-                    <div id="pie-container" class="pie-box"></div>
-                    <div id="history-container" class="history-box"></div>
+                    <div class="chart-placeholder pie-placeholder">
+                        <div id="pie-container" class="pie-box"></div>
+                    </div>
+                    <div class="chart-placeholder history-placeholder">
+                        <div id="history-container" class="history-box"></div>
+                    </div>
                 </div>
             </div>
             
@@ -944,14 +955,14 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                             cursor: 'pointer',
                             depth: 40,
                             innerSize: '40%',
-                            size: '65%', /* Shrank to guarantee labels don't get pushed out of bounds */
+                            size: '65%',
                             dataLabels: {{
                                 enabled: true,
                                 format: '<b>{{point.name}}</b><br>{{point.percentage:.1f}}%',
                                 style: {{ color: '#e2e8f0', textOutline: 'none', fontSize: '10px', fontWeight: '600' }},
                                 connectorColor: 'rgba(255,255,255,0.2)',
                                 distance: 10,
-                                crop: false, /* Force rendering of all labels even if cramped */
+                                crop: false, 
                                 overflow: 'allow',
                                 padding: 0
                             }},
@@ -972,9 +983,9 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                     chart: {{ 
                         type: 'areaspline', 
                         backgroundColor: 'transparent', 
-                        marginLeft: 60, /* Forced Explicit Space for Y-Axis Dollar values */
+                        marginLeft: 60, 
                         marginRight: 20,
-                        marginTop: 55,  /* Pushed down to clear the top legend */
+                        marginTop: 55, 
                         marginBottom: 35 
                     }}, 
                     title: {{ text: null }},
@@ -982,7 +993,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                         enabled: true,
                         itemStyle: {{ color: '#94a3b8', fontSize: '11px', fontWeight: 'normal' }},
                         itemHoverStyle: {{ color: '#ffffff' }},
-                        verticalAlign: 'top', /* Legend fixed directly at the top */
+                        verticalAlign: 'top',
                         align: 'center',
                         y: -10
                     }},
@@ -1038,10 +1049,10 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                         name: 'BTC Benchmark',
                         type: 'line',
                         data: [{hist_btc_js}],
-                        color: '#f7931a', // Bitcoin Orange
+                        color: '#f7931a', 
                         lineWidth: 2,
                         zIndex: 2,
-                        visible: true // Toggled on by default, can click legend to hide
+                        visible: true
                     }}, {{
                         name: 'Net Invested',
                         type: 'line',
@@ -1055,7 +1066,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
 
                 // --- Mobile Double-Tap Expand Mechanics ---
                 function toggleExpandChart(chartId) {{
-                    if (window.innerWidth > 768) return; // Feature only activates on phones
+                    if (window.innerWidth > 768) return; 
                     
                     const el = document.getElementById(chartId);
                     const overlay = document.getElementById('chart-overlay');
@@ -1066,15 +1077,12 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                     if (el.classList.contains('expanded-chart')) {{
                         el.classList.remove('expanded-chart');
                         overlay.classList.remove('active');
-                        wrapper.style.overflowX = 'auto'; // Restore scroll snapping
-                        
-                        // Reflow instantly so it fits back in the carousel
+                        // Reflow instantly so it fits back in the placeholder
                         if (hc) setTimeout(() => hc.reflow(), 10);
                         return;
                     }}
                     
                     // Otherwise, Open It
-                    // Collapse any other open charts first
                     document.querySelectorAll('.expanded-chart').forEach(c => {{
                         c.classList.remove('expanded-chart');
                         const otherHc = Highcharts.charts.find(ohc => ohc && ohc.renderTo.id === c.id);
@@ -1083,9 +1091,8 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                     
                     el.classList.add('expanded-chart');
                     overlay.classList.add('active');
-                    wrapper.style.overflowX = 'visible'; // Prevent clipping while expanded
                     
-                    // Delay reflow by just a tiny fraction so CSS animation takes over instantly without lag
+                    // Delay reflow by a tiny fraction so CSS animation pops instantly
                     if (hc) setTimeout(() => hc.reflow(), 50);
                 }}
 
@@ -1094,19 +1101,19 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                     if (!el) return;
                     let lastTap = 0;
 
-                    // Handle standard double click
+                    // Handle standard double click (PC fallback / some touchpads)
                     el.addEventListener('dblclick', function(e) {{
                         toggleExpandChart(elementId);
                         e.stopPropagation();
                     }});
 
-                    // Handle true touch double tap safely for mobile
+                    // Handle true touch double tap strictly for mobile
                     el.addEventListener('touchend', function(e) {{
                         const currentTime = new Date().getTime();
                         const tapLength = currentTime - lastTap;
                         if (tapLength < 400 && tapLength > 0) {{
                             toggleExpandChart(elementId);
-                            e.preventDefault(); // Stop zoom
+                            e.preventDefault(); 
                             e.stopPropagation();
                         }}
                         lastTap = currentTime;
@@ -1120,12 +1127,10 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                 document.getElementById('chart-overlay').addEventListener('click', () => {{
                     document.querySelectorAll('.expanded-chart').forEach(el => {{
                         el.classList.remove('expanded-chart');
-                        // Instantly reflow back to normal size
                         const hc = Highcharts.charts.find(c => c && c.renderTo.id === el.id);
                         if (hc) hc.reflow();
                     }});
                     document.getElementById('chart-overlay').classList.remove('active');
-                    document.getElementById('chartsScrollContainer').style.overflowX = 'auto'; // Restore scroll snapping
                 }});
 
 
