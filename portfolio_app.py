@@ -842,6 +842,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                     border: 1px solid rgba(255,255,255,0.05);
                     border-radius: 16px;
                     box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+                    /* Explicitly blocking any global transitions that could warp dimensions during js recalculation */
                 }}
                 .pie-box {{
                     width: 350px;
@@ -880,9 +881,9 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                         gap: 16px; 
                     }}
                     
-                    /* Smooth CSS Keyframe Pop-in instead of morphing transitions */
+                    /* Smooth CSS Keyframe Pop-in instead of morphing layout transitions */
                     @keyframes smoothPop {{
-                        0% {{ transform: translate(-50%, -50%) scale(0.95); opacity: 0; }}
+                        0% {{ transform: translate(-50%, -48%) scale(0.96); opacity: 0; }}
                         100% {{ transform: translate(-50%, -50%) scale(1); opacity: 1; }}
                     }}
                     
@@ -895,7 +896,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                         z-index: 1001 !important;
                         margin: 0 !important;
                         scroll-snap-align: none !important;
-                        opacity: 0;
+                        transition: none !important; /* Stop conflicting layout transitions */
                         animation: smoothPop 0.3s cubic-bezier(0.2, 0.8, 0.2, 1) forwards !important;
                     }}
                 }}
@@ -1057,21 +1058,35 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                     if (window.innerWidth > 768) return; // Feature only activates on phones
                     
                     const el = document.getElementById(chartId);
-                    if (el.classList.contains('expanded-chart')) return;
-                    
                     const overlay = document.getElementById('chart-overlay');
                     const wrapper = document.getElementById('chartsScrollContainer');
+                    const hc = Highcharts.charts.find(c => c && c.renderTo.id === chartId);
                     
+                    // If Already Expanded, Close It
+                    if (el.classList.contains('expanded-chart')) {{
+                        el.classList.remove('expanded-chart');
+                        overlay.classList.remove('active');
+                        wrapper.style.overflowX = 'auto'; // Restore scroll snapping
+                        
+                        // Reflow instantly so it fits back in the carousel
+                        if (hc) setTimeout(() => hc.reflow(), 10);
+                        return;
+                    }}
+                    
+                    // Otherwise, Open It
                     // Collapse any other open charts first
-                    document.querySelectorAll('.expanded-chart').forEach(c => c.classList.remove('expanded-chart'));
+                    document.querySelectorAll('.expanded-chart').forEach(c => {{
+                        c.classList.remove('expanded-chart');
+                        const otherHc = Highcharts.charts.find(ohc => ohc && ohc.renderTo.id === c.id);
+                        if (otherHc) setTimeout(() => otherHc.reflow(), 10);
+                    }});
                     
                     el.classList.add('expanded-chart');
                     overlay.classList.add('active');
-                    wrapper.style.overflowX = 'visible'; // Prevent clipping
+                    wrapper.style.overflowX = 'visible'; // Prevent clipping while expanded
                     
-                    // Force immediate reflow without animation so it instantly fills the new bounds
-                    const hc = Highcharts.charts.find(c => c && c.renderTo.id === chartId);
-                    if (hc) hc.reflow();
+                    // Delay reflow by just a tiny fraction so CSS animation takes over instantly without lag
+                    if (hc) setTimeout(() => hc.reflow(), 50);
                 }}
 
                 function setupDoubleTap(elementId) {{
@@ -1079,18 +1094,20 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                     if (!el) return;
                     let lastTap = 0;
 
-                    // Handle standard double click (PC testing / some mobile browsers)
+                    // Handle standard double click
                     el.addEventListener('dblclick', function(e) {{
                         toggleExpandChart(elementId);
+                        e.stopPropagation();
                     }});
 
-                    // Handle true touch double tap explicitly for mobile
+                    // Handle true touch double tap safely for mobile
                     el.addEventListener('touchend', function(e) {{
                         const currentTime = new Date().getTime();
                         const tapLength = currentTime - lastTap;
                         if (tapLength < 400 && tapLength > 0) {{
                             toggleExpandChart(elementId);
                             e.preventDefault(); // Stop zoom
+                            e.stopPropagation();
                         }}
                         lastTap = currentTime;
                     }});
