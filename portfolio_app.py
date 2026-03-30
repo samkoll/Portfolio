@@ -265,7 +265,7 @@ div[data-testid="stMainBlockContainer"] {
     color: #ffffff;
 }
 
-/* GLOBALLY HIDE NUMBER INPUT STEP BUTTONS */
+/* GLOBALLY HIDE NUMBER INPUT STEP BUTTONS (+ / -) */
 button[aria-label="Step Up"],
 button[aria-label="Step Down"],
 button[data-testid="stNumberInputStepUp"],
@@ -1352,7 +1352,6 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
             padding: 24px !important;
             box-shadow: 0 4px 15px rgba(0,0,0,0.3) !important;
             margin-bottom: 24px !important;
-            position: relative !important; /* Enable absolute positioning inside */
         }
         div[data-testid="stForm"]:has(.add-tx-card) label { font-size: 0.85rem !important; color: #94a3b8 !important; padding-bottom: 2px !important; }
         
@@ -1366,53 +1365,77 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
             margin-bottom: 0px !important;
         }
 
-        /* 2. BEAUTIFUL BUY/SELL SWITCH */
-        div[data-testid="stForm"]:has(.add-tx-card) div[data-testid="stHorizontalBlock"]:nth-of-type(2) > div[data-testid="column"]:nth-child(1) {
-            max-width: 220px !important; /* Restrict width of the radio switch column so it doesn't overlap the absolute button */
+        /* FIRST ROW: Inputs (4 cols on PC, 2x2 on Mobile) */
+        div[data-testid="stForm"]:has(.add-tx-card) div[data-testid="stHorizontalBlock"]:nth-of-type(1) {
+            display: flex !important;
+            flex-wrap: wrap !important;
+            gap: 12px !important;
         }
+        div[data-testid="stForm"]:has(.add-tx-card) div[data-testid="stHorizontalBlock"]:nth-of-type(1) > div[data-testid="column"] {
+            flex: 1 1 calc(25% - 12px) !important;
+            min-width: 120px !important;
+            width: auto !important;
+        }
+
+        /* SECOND ROW: Action (Switch + Button) */
+        div[data-testid="stForm"]:has(.add-tx-card) div[data-testid="stHorizontalBlock"]:nth-of-type(2) {
+            display: flex !important;
+            flex-direction: row !important;
+            flex-wrap: nowrap !important;
+            justify-content: space-between !important;
+            align-items: center !important;
+            margin-top: 12px !important;
+            gap: 12px !important;
+        }
+        div[data-testid="stForm"]:has(.add-tx-card) div[data-testid="stHorizontalBlock"]:nth-of-type(2) > div[data-testid="column"]:nth-child(1) {
+            flex: 0 0 auto !important; /* Switch container size to content */
+            width: auto !important;
+        }
+        div[data-testid="stForm"]:has(.add-tx-card) div[data-testid="stHorizontalBlock"]:nth-of-type(2) > div[data-testid="column"]:nth-child(2) {
+            flex: 1 1 auto !important; /* Button container takes remaining space */
+            display: flex !important;
+            justify-content: flex-end !important; /* Pushes button to far right */
+            width: auto !important;
+        }
+
+        /* BEAUTIFUL BUY/SELL SWITCH */
         div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] {
             background: rgba(0,0,0,0.3) !important;
-            padding: 4px !important;
+            padding: 6px !important;
             border-radius: 12px !important;
             display: flex !important;
             flex-direction: row !important;
             gap: 8px !important;
-            justify-content: center !important;
             align-items: center !important;
-            width: 100% !important;
             margin: 0 !important;
-            height: 46px !important; /* Perfect height matching */
+            height: 48px !important;
             border: 1px solid rgba(255,255,255,0.05) !important;
+            min-width: 200px !important; /* ensures it doesn't shrink */
         }
         div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label {
-            margin-right: 0 !important;
+            margin: 0 !important;
             cursor: pointer !important; 
-            padding: 0 !important; /* Removed side padding so flex rules perfectly center the text */
+            padding: 0 !important; 
             border-radius: 8px !important;
             border: 1px solid transparent !important; 
             transition: all 0.3s ease !important;
             background: transparent !important;
-            flex: 1; 
+            flex: 1 !important; 
             display: flex !important;
             justify-content: center !important;
-            align-items: center !important; /* Vertically center */
-            height: 100% !important; /* Stretch fully inside pill */
+            align-items: center !important;
+            height: 100% !important;
         }
         div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label:hover { background: rgba(255,255,255,0.05) !important; }
-        
-        /* Using safe :has selectors to target active radio state */
         div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label > div:first-child { display: none !important; } 
         div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label p {
             font-weight: bold !important;
-            font-size: 1.05rem !important; color: #94a3b8 !important; 
-            margin: 0 !important; padding: 0 !important; line-height: 1 !important; 
-            white-space: nowrap !important;
+            font-size: 1.05rem !important; color: #94a3b8 !important; margin: 0 !important; padding: 0 !important; white-space: nowrap !important; line-height: 1 !important;
         }
         /* Active Buy */
         div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label:has(input:checked):first-child,
         div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label[aria-checked="true"]:first-child {
-            background: rgba(0, 255, 157, 0.15) !important;
-            border-color: #00ff9d !important;
+            background: rgba(0, 255, 157, 0.15) !important; border-color: #00ff9d !important;
         }
         div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label:has(input:checked):first-child p,
         div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label[aria-checked="true"]:first-child p { color: #00ff9d !important; }
@@ -1420,31 +1443,26 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
         /* Active Sell */
         div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label:has(input:checked):last-child,
         div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label[aria-checked="true"]:last-child {
-            background: rgba(255, 77, 77, 0.15) !important;
-            border-color: #ff4d4d !important;
+            background: rgba(255, 77, 77, 0.15) !important; border-color: #ff4d4d !important;
         }
         div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label:has(input:checked):last-child p,
         div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label[aria-checked="true"]:last-child p { color: #ff4d4d !important; }
 
-        /* 3. ABSOLUTELY POSITIONED SUBMIT BUTTON */
+        /* 3. RIGHT ALIGNED SUBMIT BUTTON */
         div[data-testid="stForm"]:has(.add-tx-card) .stButton {
-            position: absolute !important;
-            bottom: 24px !important;
-            right: 24px !important;
             display: flex !important;
-            justify-content: center !important;
+            justify-content: flex-end !important; /* Force to right side */
             align-items: center !important;
             margin: 0 !important; padding: 0 !important;
-            width: auto !important;
-            z-index: 10 !important;
+            width: 100% !important;
         }
         div[data-testid="stForm"]:has(.add-tx-card) .stButton > button {
             background: #1e2a44 !important;
-            color: #e0e0e0 !important; padding: 0 20px !important;
+            color: #e0e0e0 !important; padding: 0 24px !important;
             border-radius: 10px !important; font-size: 1.05rem !important; font-weight: 700 !important;
             box-shadow: 0 4px 15px rgba(0,0,0,0.25) !important; transition: all 0.3s ease !important;
             border: none !important; margin: 0 !important; width: auto !important;
-            height: 46px !important; min-height: 46px !important;
+            height: 48px !important; min-height: 48px !important;
         }
         div[data-testid="stForm"]:has(.add-tx-card) .stButton > button:hover {
             transform: translateY(-2px) !important;
@@ -1532,24 +1550,22 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
             .glossy-header { margin-top: 48px !important; margin-bottom: 24px !important; padding: 20px 16px !important; font-size: 22px !important; min-height: 90px; }
             .home-header { margin-bottom: 0 !important; }
             
-            /* Fix Add Form Mobile 2x2 Grid via direct CSS calc */
-            div[data-testid="stForm"]:has(.add-tx-card) div[data-testid="stHorizontalBlock"]:first-of-type {
-                display: flex !important; flex-wrap: wrap !important; gap: 10px !important; flex-direction: row !important;
-            }
-            div[data-testid="stForm"]:has(.add-tx-card) div[data-testid="stHorizontalBlock"]:first-of-type > div[data-testid="column"] {
-                min-width: calc(50% - 10px) !important; flex: 1 1 calc(50% - 10px) !important; width: calc(50% - 10px) !important;
+            /* Mobile Input Grid Fix (2x2) */
+            div[data-testid="stForm"]:has(.add-tx-card) div[data-testid="stHorizontalBlock"]:nth-of-type(1) > div[data-testid="column"] {
+                flex: 1 1 calc(50% - 12px) !important;
             }
             div[data-testid="stForm"]:has(.add-tx-card) input { padding: 6px !important; font-size: 0.95rem !important; }
             
-            /* Allow the Action row (switch & button) to wrap or stay flexed properly */
+            /* Action row mobile fix */
             div[data-testid="stForm"]:has(.add-tx-card) div[data-testid="stHorizontalBlock"]:nth-of-type(2) {
-                display: flex !important;
                 flex-direction: row !important;
-                gap: 10px !important;
-                align-items: stretch !important;
+                flex-wrap: nowrap !important;
             }
-            div[data-testid="stForm"]:has(.add-tx-card) div[data-testid="stHorizontalBlock"]:nth-of-type(2) > div[data-testid="column"]:nth-child(1) {
-                width: 100% !important; flex: 1 !important; max-width: 220px !important;
+            div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] {
+                min-width: 160px !important; /* Slight shrink on mobile */
+            }
+            div[data-testid="stForm"]:has(.add-tx-card) .stButton > button {
+                padding: 0 16px !important; /* Less padding on mobile */
             }
 
             /* Force Mobile Transaction Rows to stay perfectly horizontal */
@@ -1594,22 +1610,18 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
         with st.form("add_crypto", border=False):
             st.markdown("<div class='add-tx-card'></div><h3 style='text-align: center; color: white; margin-top: 0px; margin-bottom: 10px;'>New Transaction</h3>", unsafe_allow_html=True)
             
-            # Row 1 (Date, Ticker, USDC, Amount) forced onto one line via CSS on PC, and 2x2 on Mobile
+            # Row 1: Inputs
             r1c1, r1c2, r1c3, r1c4 = st.columns(4)
             with r1c1: selected_date = st.date_input("Date", value=date(2026, 3, 25))
             with r1c2: ticker = st.text_input("Ticker", value="BTC").upper().strip()
             with r1c3: usdc = st.number_input("USDC Amount", value=15.0, step=0.01)
             with r1c4: amount = st.number_input("Coin Amount", value=0.1, step=0.000001, format="%.8f")
             
-            # Adding some spacing before the action row
-            st.markdown("<div style='margin-top: 15px;'></div>", unsafe_allow_html=True)
-            
-            # Action row containing only the Buy/Sell Switch and the formally anchored Add Button
-            action_col1, action_col2 = st.columns([1, 1])
+            # Row 2: Action Row (Switch & Button handled cleanly via flexbox css)
+            action_col1, action_col2 = st.columns(2)
             with action_col1:
                 tx_type = st.radio("Type", ["Buy", "Sell"], horizontal=True, label_visibility="collapsed")
             with action_col2:
-                # Button breaks out via position: absolute; bottom: 24px; right: 24px
                 submitted = st.form_submit_button("+ Add")
             
             if submitted:
