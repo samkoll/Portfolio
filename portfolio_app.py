@@ -84,7 +84,6 @@ div[data-testid="stMainBlockContainer"] {
 .stats-layer {
     position: relative;
     z-index: 1;
-    /* Mathematically tucks the 80px box to expose exactly 20px */
     margin-top: -60px !important; 
     transition: margin-top 0.4s cubic-bezier(0.4, 0, 0.2, 1);
     margin-bottom: 24px;
@@ -96,6 +95,15 @@ div[data-testid="stMainBlockContainer"] {
     display: grid; 
     grid-template-columns: repeat(auto-fit, minmax(98px, 1fr)); 
     gap: 14px;
+}
+
+/* BULLETPROOF FIX: Fade out the numbers when drawer is closed so they never overlap */
+.dash-value {
+    transition: opacity 0.3s ease;
+}
+.dashboard-toggle:not(:checked) ~ .stats-layer .dash-value {
+    opacity: 0;
+    pointer-events: none;
 }
 
 .glossy-header {
@@ -121,7 +129,6 @@ div[data-testid="stMainBlockContainer"] {
     margin-bottom: 38px;
 }
 
-/* PC Hover and Sync with Dashboard Toggle */
 @media (hover: hover) and (pointer: fine) {
     .glossy-header-label:hover .glossy-header {
         transform: translateY(-4px) scale(1.01);
@@ -129,7 +136,6 @@ div[data-testid="stMainBlockContainer"] {
         border-color: rgba(255, 255, 255, 0.15);
     }
 }
-/* Keep header elevated/hovered while the drawer is open on BOTH mobile and PC */
 .dashboard-toggle:checked + .glossy-header-label .glossy-header {
     transform: translateY(-4px) scale(1.01);
     box-shadow: 0 15px 40px rgba(0, 0, 0, 0.5);
@@ -169,7 +175,7 @@ div[data-testid="stMainBlockContainer"] {
     color: #ffffff;
 }
 
-/* Swapped PnL Cards: Rectangular, Fixed Dimensions */
+/* Swapped PnL Cards */
 .glossy-box.swapped {
     height: 80px !important;
     min-height: 80px !important;
@@ -177,7 +183,7 @@ div[data-testid="stMainBlockContainer"] {
     padding: 0;
     display: block;
 }
-.glossy-box.swapped > div:first-child {
+.dash-value {
     font-size: 24px !important;
     font-weight: 700;
     line-height: 1.05;
@@ -189,7 +195,7 @@ div[data-testid="stMainBlockContainer"] {
     text-align: center;
     margin: 0;
 }
-.glossy-box.swapped > div:last-child {
+.dash-label {
     font-size: 11px !important;
     font-weight: 600;
     letter-spacing: 1.5px;
@@ -203,7 +209,7 @@ div[data-testid="stMainBlockContainer"] {
     text-align: center;
 }
 
-/* USDC Banner Styles (Static) */
+/* USDC Banner Styles */
 .usdc-banner {
     position: relative;
     overflow: hidden;
@@ -279,7 +285,6 @@ div[data-testid="stMainBlockContainer"] {
         font-size: 24px !important;
         min-height: 100px;
     }
-    /* Neutralize the buggy mobile margin that was exposing the cards */
     .home-header {
         margin-bottom: 0 !important;
     }
@@ -292,19 +297,16 @@ div[data-testid="stMainBlockContainer"] {
     .glossy-box > div:first-child { font-size: 10px !important; }
     .glossy-box > div:last-child { font-size: 21px !important; }
     
-    /* Forced single row for mobile */
     .stats-layer-inner { 
         grid-template-columns: repeat(3, 1fr) !important; 
         gap: 8px; 
     }
     
-    /* Math perfectly hides the centered 80px box, leaving only 20px for text */
     .stats-layer { margin-top: -60px !important; margin-bottom: 18px; } 
     
     .glossy-box.swapped { height: 80px !important; min-height: 80px !important; max-height: 80px !important; padding: 0; }
-    .glossy-box.swapped > div:first-child { font-size: 16px !important; top: 16px; }
-    /* Perfectly flush bottom label to peek out */
-    .glossy-box.swapped > div:last-child { font-size: 9px !important; bottom: 4px; }
+    .dash-value { font-size: 16px !important; top: 16px; }
+    .dash-label { font-size: 9px !important; bottom: 4px; }
     
     .usdc-banner { padding: 16px 18px; margin-bottom: 24px; }
     .usdc-banner-left img { width: 36px; height: 36px; }
@@ -319,11 +321,11 @@ div[data-testid="stMainBlockContainer"] {
 DASHBOARD_ICON = '''<svg xmlns="http://www.w3.org/2000/svg" width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="#00ff9d" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>'''
 CRYPTO_ICON = '''<svg xmlns="http://www.w3.org/2000/svg" width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="#00ff9d" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M14.5 8.5L9.5 13.5"/><path d="M9.5 8.5L14.5 13.5"/></svg>'''
 FIAT_ICON = '''<svg xmlns="http://www.w3.org/2000/svg" width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="#00ff9d" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M6 8h12"/><path d="M6 12h12"/><path d="M6 16h12"/></svg>'''
-# Minimalist 16px eye icon, neutral color
 EYE_CLOSED = '''<svg class="eye-closed" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>'''
 EYE_OPEN = '''<svg class="eye-open" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>'''
-# TradingView SVG Logo
 TV_ICON = '''<svg xmlns="http://www.w3.org/2000/svg" width="18" height="14" viewBox="0 0 28 21" fill="currentColor"><path d="M12 21H8V3h4v18zm1.5-6h3.5l3.5-4.5V21h-7v-6zM28 21h-4l-6.5-9L21 6l7 10v5z"/></svg>'''
+# External link icon
+EXTERNAL_LINK_ICON = '''<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>'''
 
 DATA_DIR = Path("data")
 DATA_DIR.mkdir(exist_ok=True)
@@ -637,9 +639,9 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
 </label>
 <div class="stats-layer">
 <div class="stats-layer-inner">
-<div class="glossy-box swapped"><div><span id="dash-total-value">{format_money(total_value)}</span></div><div>Total Value</div></div>
-<div class="glossy-box swapped"><div id="dash-pnl"><span style="color:{'#00ff9d' if total_pnl>=0 else '#ff4d4d'}">{"▲" if total_pnl>0 else "▼" if total_pnl<0 else ""} {format_money(abs(total_pnl))}</span></div><div>PnL</div></div>
-<div class="glossy-box swapped"><div id="dash-pnl-pct"><span style="color:{'#00ff9d' if total_pnl_pct>=0 else '#ff4d4d'}">{"▲" if total_pnl_pct>0 else "▼" if total_pnl_pct<0 else ""} {abs(total_pnl_pct):.2f}%</span></div><div>PnL %</div></div>
+<div class="glossy-box swapped"><div class="dash-value"><span id="dash-total-value">{format_money(total_value)}</span></div><div class="dash-label">Total Value</div></div>
+<div class="glossy-box swapped"><div class="dash-value" id="dash-pnl"><span style="color:{'#00ff9d' if total_pnl>=0 else '#ff4d4d'}">{"▲" if total_pnl>0 else "▼" if total_pnl<0 else ""} {format_money(abs(total_pnl))}</span></div><div class="dash-label">PnL</div></div>
+<div class="glossy-box swapped"><div class="dash-value" id="dash-pnl-pct"><span style="color:{'#00ff9d' if total_pnl_pct>=0 else '#ff4d4d'}">{"▲" if total_pnl_pct>0 else "▼" if total_pnl_pct<0 else ""} {abs(total_pnl_pct):.2f}%</span></div><div class="dash-label">PnL %</div></div>
 </div>
 </div>
 </div>
@@ -712,6 +714,9 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
             <div class="tv-btn" title="Advanced TradingView Chart">
                 {TV_ICON}
             </div>
+            <a href="https://www.tradingview.com/chart/?symbol=BINANCE:{ticker}USDT" target="_blank" class="tv-external-btn" title="Open in TradingView App/Web">
+                {EXTERNAL_LINK_ICON}
+            </a>
             <div class="chart-container">
                 <canvas id="chart-{ticker}"></canvas>
                 <div class="chart-loading" id="loading-{ticker}">Loading chart...</div>
@@ -817,7 +822,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
             padding: 24px 16px 16px 16px; /* Extra top padding for the TV button */
         }}
         
-        /* TradingView Logo Button for the back of the card */
+        /* TradingView Buttons */
         .tv-btn {{
             position: absolute;
             top: 10px;
@@ -829,6 +834,21 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
             padding: 4px;
         }}
         .tv-btn:hover {{ color: #ffffff; }}
+        
+        .tv-external-btn {{
+            position: absolute;
+            top: 10px;
+            right: 42px;
+            color: #64748b;
+            cursor: pointer;
+            z-index: 20;
+            transition: color 0.2s ease;
+            padding: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }}
+        .tv-external-btn:hover {{ color: #ffffff; }}
         
         /* Interactive dynamic colored border glow - ONLY applies on PC (fine pointers) */
         @media (hover: hover) and (pointer: fine) {{
@@ -1015,7 +1035,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
             // Only run if the click is outside a flip-card inner and outside dashboard wrapper
             const isCardClick = e && e.target && e.target.closest && e.target.closest('.flip-card');
             const isDashClick = e && e.target && e.target.closest && e.target.closest('.dashboard-wrapper');
-            const isFullscreenBtn = e && e.target && e.target.closest && e.target.closest('.tv-btn');
+            const isFullscreenBtn = e && e.target && e.target.closest && (e.target.closest('.tv-btn') || e.target.closest('.tv-external-btn'));
             const isTVOverlay = e && e.target && e.target.closest && e.target.closest('#tv-overlay');
             
             if (!isCardClick && !isFullscreenBtn && !isTVOverlay) {{
@@ -1437,14 +1457,14 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                           "style": "1",
                           "locale": "en",
                           "enable_publishing": false,
-                          "backgroundColor": "#0f172a",
-                          "gridColor": "#1e293b",
+                          "backgroundColor": "transparent",
+                          "gridColor": "rgba(30, 41, 59, 0.5)",
                           "hide_top_toolbar": false,
                           "hide_side_toolbar": false,
                           "save_image": false,
                           "container_id": containerId,
                           "allow_symbol_change": false, // Lock it to this specific coin
-                          "toolbar_bg": "#0f172a"
+                          "toolbar_bg": "transparent"
                         }});
                     }} else {{
                         // Bring the existing widget back to the front (drawings intact!)
@@ -1459,6 +1479,14 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                     }} else if (overlay.msRequestFullscreen) {{
                         overlay.msRequestFullscreen();
                     }}
+                }});
+            }}
+            
+            // External TV Link Functionality
+            const extBtn = card.querySelector('.tv-external-btn');
+            if (extBtn) {{
+                extBtn.addEventListener('click', (e) => {{
+                    e.stopPropagation(); // prevent flipping the card
                 }});
             }}
         }});
