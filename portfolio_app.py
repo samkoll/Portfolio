@@ -949,6 +949,13 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
             background-color: #0f172a;
             z-index: 99999;
         }}
+        .tv-widget-container {{
+            width: 100%;
+            height: 100%;
+            position: absolute;
+            top: 0;
+            left: 0;
+        }}
         #tv-close-fs {{
             position: absolute;
             top: 15px;
@@ -958,6 +965,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
             cursor: pointer;
             z-index: 100000;
             transition: color 0.2s;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.8);
         }}
         #tv-close-fs:hover {{ color: white; }}
         
@@ -990,8 +998,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
 
 <div id="tv-overlay">
     <div id="tv-close-fs">&times;</div>
-    <div id="tv_chart_container" style="width:100%; height:100%;"></div>
-</div>
+    </div>
 
 <div class="scroll-wrapper" id="scrollContainer">
     <div class="coin-grid">
@@ -1007,8 +1014,9 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
             const isCardClick = e && e.target && e.target.closest && e.target.closest('.flip-card');
             const isDashClick = e && e.target && e.target.closest && e.target.closest('.dashboard-wrapper');
             const isFullscreenBtn = e && e.target && e.target.closest && e.target.closest('.tv-btn');
+            const isTVOverlay = e && e.target && e.target.closest && e.target.closest('#tv-overlay');
             
-            if (!isCardClick && !isFullscreenBtn) {{
+            if (!isCardClick && !isFullscreenBtn && !isTVOverlay) {{
                 document.querySelectorAll('.flip-card.flipped').forEach(card => {{
                     card.classList.remove('flipped');
                     card.classList.remove('touch-hover');
@@ -1073,12 +1081,11 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
 
         document.getElementById('tv-close-fs').addEventListener('click', exitFullscreen);
 
-        // Hide overlay automatically when leaving fullscreen
+        // Hide overlay automatically when leaving fullscreen (DOES NOT DESTROY STATE)
         ['fullscreenchange', 'webkitfullscreenchange', 'mozfullscreenchange', 'MSFullscreenChange'].forEach(
             eventType => document.addEventListener(eventType, () => {{
                 if (!document.fullscreenElement && !document.webkitIsFullScreen && !document.mozFullScreen && !document.msFullscreenElement) {{
                     document.getElementById('tv-overlay').style.display = 'none';
-                    document.getElementById('tv_chart_container').innerHTML = ''; // clear chart widget to save resources
                 }}
             }}, false)
         );
@@ -1366,6 +1373,14 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
             front.addEventListener('click', (e) => {{
                 e.stopPropagation();
                 
+                // Unflip all other cards first for clean UX
+                document.querySelectorAll('.flip-card.flipped').forEach(c => {{
+                    if (c !== card) {{
+                        c.classList.remove('flipped');
+                        c.classList.remove('touch-hover');
+                    }}
+                }});
+
                 // Toggle flipped state and touch-hover properly for mobile
                 if (!card.classList.contains('flipped')) {{
                     card.classList.add('flipped');
@@ -1376,14 +1391,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                 }}
             }});
             
-            const backDiv = card.querySelector('.flip-card-back');
-            backDiv.addEventListener('click', (e) => {{
-                // Tapping anywhere on the back flips the card over
-                card.classList.remove('flipped');
-                card.classList.remove('touch-hover');
-            }});
-            
-            // TradingView Fullscreen functionality
+            // TradingView Fullscreen functionality (PERSISTENT STATE)
             const fsBtn = card.querySelector('.tv-btn');
             if (fsBtn) {{
                 fsBtn.addEventListener('click', (e) => {{
@@ -1391,6 +1399,44 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                     
                     const overlay = document.getElementById('tv-overlay');
                     overlay.style.display = 'block';
+                    
+                    // Hide any other active widgets
+                    document.querySelectorAll('.tv-widget-container').forEach(el => {{
+                        el.style.display = 'none';
+                    }});
+
+                    const containerId = 'tv_chart_' + ticker;
+                    let tvContainer = document.getElementById(containerId);
+
+                    // Only initialize the TradingView chart ONCE per ticker to preserve drawings
+                    if (!tvContainer) {{
+                        tvContainer = document.createElement('div');
+                        tvContainer.id = containerId;
+                        tvContainer.className = 'tv-widget-container';
+                        overlay.appendChild(tvContainer);
+
+                        new TradingView.widget({{
+                          "autosize": true,
+                          "symbol": "BINANCE:" + ticker + "USDT",
+                          "interval": "D",
+                          "timezone": "Etc/UTC",
+                          "theme": "dark",
+                          "style": "1",
+                          "locale": "en",
+                          "enable_publishing": false,
+                          "backgroundColor": "#0f172a",
+                          "gridColor": "#1e293b",
+                          "hide_top_toolbar": false,
+                          "hide_side_toolbar": false,
+                          "save_image": false,
+                          "container_id": containerId,
+                          "allow_symbol_change": false, // Lock it to this specific coin
+                          "toolbar_bg": "#0f172a"
+                        }});
+                    }} else {{
+                        // Bring the existing widget back to the front (drawings intact!)
+                        tvContainer.style.display = 'block';
+                    }}
 
                     // Request fullscreen on the overlay
                     if (overlay.requestFullscreen) {{
@@ -1400,26 +1446,6 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                     }} else if (overlay.msRequestFullscreen) {{
                         overlay.msRequestFullscreen();
                     }}
-
-                    // Initialize TradingView widget
-                    new TradingView.widget({{
-                      "autosize": true,
-                      "symbol": "BINANCE:" + ticker + "USDT",
-                      "interval": "D",
-                      "timezone": "Etc/UTC",
-                      "theme": "dark",
-                      "style": "1",
-                      "locale": "en",
-                      "enable_publishing": false,
-                      "backgroundColor": "#0f172a",
-                      "gridColor": "#1e293b",
-                      "hide_top_toolbar": false,
-                      "hide_side_toolbar": false,
-                      "save_image": false,
-                      "container_id": "tv_chart_container",
-                      "allow_symbol_change": true,
-                      "toolbar_bg": "#0f172a"
-                    }});
                 }});
             }}
         }});
@@ -1655,15 +1681,6 @@ body {{ background: transparent; margin: 0; padding: 0; }}
     </div>
 </div>
 <script>
-// --- Mobile Touch Hover Fix ---
-document.addEventListener('click', (e) => {{
-    const touchHoverTarget = e.target.closest('.transaction-card');
-    document.querySelectorAll('.touch-hover').forEach(el => {{
-        if (el !== touchHoverTarget) el.classList.remove('touch-hover');
-    }});
-    if (touchHoverTarget) touchHoverTarget.classList.toggle('touch-hover');
-}});
-
 // --- Wheel scrolling for PC ---
 const txScrollContainer = document.getElementById('txScrollContainer');
 if (txScrollContainer) {{
