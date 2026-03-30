@@ -58,31 +58,31 @@ div[data-testid="stMainBlockContainer"] {
 }
 .home-header {
     margin-bottom: 0 !important;
-    padding-bottom: 34px !important; /* space for the pull indicator */
+    padding-bottom: 34px !important; /* space for the eye icon */
 }
 .pull-indicator {
     position: absolute;
     bottom: 8px;
     left: 50%;
     transform: translateX(-50%);
-    font-size: 16px;
     color: #64748b;
     opacity: 0.8;
-    transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-    animation: bounce-down 2s infinite;
+    transition: color 0.3s ease;
 }
-@keyframes bounce-down {
-    0%, 100% { transform: translateX(-50%) translateY(0); }
-    50% { transform: translateX(-50%) translateY(4px); }
+.glossy-header-label:hover .pull-indicator {
+    color: #00ff9d;
 }
-.dashboard-toggle:checked + .glossy-header-label .pull-indicator {
-    transform: translateX(-50%) rotate(180deg);
-    animation: none;
-}
+.pull-indicator .eye-open { display: none; }
+.pull-indicator .eye-closed { display: block; }
+
+.dashboard-toggle:checked + .glossy-header-label .pull-indicator .eye-open { display: block; }
+.dashboard-toggle:checked + .glossy-header-label .pull-indicator .eye-closed { display: none; }
+.dashboard-toggle:checked + .glossy-header-label .pull-indicator { color: #00ff9d; }
+
 .stats-layer {
     position: relative;
     z-index: 1;
-    margin-top: -68px; /* Tucks the top of the boxes behind the header */
+    margin-top: -60px; /* Perfectly tucks the 80px box to expose exactly 20px */
     transition: margin-top 0.4s cubic-bezier(0.4, 0, 0.2, 1);
     margin-bottom: 24px;
 }
@@ -166,24 +166,22 @@ div[data-testid="stMainBlockContainer"] {
     color: #ffffff;
 }
 
-/* Swapped PnL Cards: Rigid dimensions, Number absolute center, Text absolute bottom */
+/* Swapped PnL Cards: Rectangular, Number absolute center, Text absolute bottom */
 .glossy-box.swapped {
-    height: 94px;
-    min-height: 94px;
-    max-height: 94px;
-    padding: 0;
-    display: block;
+    height: 80px;
+    min-height: 80px;
+    max-height: 80px;
+    padding: 0px 10px 24px 10px; /* Room at bottom for label */
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 .glossy-box.swapped > div:first-child {
-    font-size: 26px;
+    font-size: 24px;
     font-weight: 700;
     line-height: 1.05;
     color: #ffffff;
-    position: absolute;
-    top: 22px; 
-    left: 0;
-    width: 100%;
-    text-align: center;
+    margin-bottom: 0;
 }
 .glossy-box.swapped > div:last-child {
     font-size: 11px;
@@ -193,7 +191,7 @@ div[data-testid="stMainBlockContainer"] {
     color: #94a3b8;
     line-height: 1.2;
     position: absolute;
-    bottom: 12px;
+    bottom: 8px;
     left: 0;
     width: 100%;
     text-align: center;
@@ -290,11 +288,13 @@ div[data-testid="stMainBlockContainer"] {
         gap: 8px; 
     }
     
-    /* Math perfectly leaves only 20px visible to frame the text precisely */
-    .stats-layer { margin-top: -66px; margin-bottom: 18px; } 
-    .glossy-box.swapped { height: 86px; min-height: 86px; max-height: 86px; }
-    .glossy-box.swapped > div:first-child { font-size: 16px !important; top: 16px; }
-    .glossy-box.swapped > div:last-child { font-size: 9px !important; bottom: 6px; }
+    /* Math perfectly hides the centered 68px box, leaving only 18px for text */
+    .stats-layer { margin-top: -50px; margin-bottom: 18px; } 
+    
+    .glossy-box.swapped { height: 68px; min-height: 68px; max-height: 68px; padding: 0 6px 18px 6px; }
+    .glossy-box.swapped > div:first-child { font-size: 16px !important; }
+    /* Perfectly flush bottom label to peek out */
+    .glossy-box.swapped > div:last-child { font-size: 9px !important; bottom: 4px; }
     
     .usdc-banner { padding: 16px 18px; margin-bottom: 24px; }
     .usdc-banner-left img { width: 36px; height: 36px; }
@@ -309,6 +309,8 @@ div[data-testid="stMainBlockContainer"] {
 DASHBOARD_ICON = '''<svg xmlns="http://www.w3.org/2000/svg" width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="#00ff9d" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>'''
 CRYPTO_ICON = '''<svg xmlns="http://www.w3.org/2000/svg" width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="#00ff9d" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M14.5 8.5L9.5 13.5"/><path d="M9.5 8.5L14.5 13.5"/></svg>'''
 FIAT_ICON = '''<svg xmlns="http://www.w3.org/2000/svg" width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="#00ff9d" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M6 8h12"/><path d="M6 12h12"/><path d="M6 16h12"/></svg>'''
+EYE_CLOSED = '''<svg class="eye-closed" xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>'''
+EYE_OPEN = '''<svg class="eye-open" xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>'''
 
 DATA_DIR = Path("data")
 DATA_DIR.mkdir(exist_ok=True)
@@ -614,7 +616,10 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
 <label for="dash-toggle" class="glossy-header-label">
 <div class="glossy-header home-header">
 {DASHBOARD_ICON}<span style="margin-left:12px;">Portfolio Dashboard</span>
-<div class="pull-indicator">▼</div>
+<div class="pull-indicator">
+{EYE_CLOSED}
+{EYE_OPEN}
+</div>
 </div>
 </label>
 <div class="stats-layer">
@@ -625,7 +630,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
 </div>
 </div>
 </div>
-<div class="usdc-banner">
+<div class="usdc-banner" style="--border: #2775ca;">
 <div class="usdc-banner-left">
 <img src="{get_ticker_logo('USDC')}" onerror="this.src='https://via.placeholder.com/42/1e2a44/ffffff?text=U';">
 <div class="usdc-banner-title">USDC <span class="usdc-banner-subtitle">(Available Cash)</span></div>
@@ -928,6 +933,19 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
     (function() {{
         // --- Handle Mobile Touch "Hover" and Drawer closing ---
         document.addEventListener('click', (e) => {{
+            const touchHoverTarget = e.target.closest('.usdc-banner, .transaction-card');
+            
+            // Remove touch-hover from elements that weren't just clicked
+            document.querySelectorAll('.touch-hover').forEach(el => {{
+                if (el !== touchHoverTarget && !el.classList.contains('flip-card')) {{
+                    el.classList.remove('touch-hover');
+                }}
+            }});
+
+            // Toggle touch-hover on the clicked element (except flip card which has custom logic below)
+            if (touchHoverTarget && !touchHoverTarget.classList.contains('flip-card')) {{
+                touchHoverTarget.classList.toggle('touch-hover');
+            }}
             
             // Smart Click-Away: Close dashboard drawer if clicking outside of it
             const dashToggle = window.parent.document.getElementById('dash-toggle');
@@ -1363,6 +1381,16 @@ body {{ background: transparent; margin: 0; padding: 0; }}
     overflow: hidden;
     scroll-snap-align: center; /* Snap to center */
 }}
+@media (hover: hover) and (pointer: fine) {{
+    .transaction-card:hover {{
+        transform: translateY(-4px);
+        box-shadow: 0 12px 30px rgba(0, 0, 0, 0.4);
+    }}
+}}
+.transaction-card.touch-hover {{
+    transform: translateY(-4px);
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.4);
+}}
 
 .transaction-main-row {{
     display: flex;
@@ -1465,6 +1493,15 @@ body {{ background: transparent; margin: 0; padding: 0; }}
     </div>
 </div>
 <script>
+// --- Mobile Touch Hover Fix ---
+document.addEventListener('click', (e) => {{
+    const touchHoverTarget = e.target.closest('.transaction-card');
+    document.querySelectorAll('.touch-hover').forEach(el => {{
+        if (el !== touchHoverTarget) el.classList.remove('touch-hover');
+    }});
+    if (touchHoverTarget) touchHoverTarget.classList.toggle('touch-hover');
+}});
+
 // --- Wheel scrolling for PC ---
 const txScrollContainer = document.getElementById('txScrollContainer');
 if (txScrollContainer) {{
@@ -1566,7 +1603,7 @@ function editTransaction(i) {{
 <div class="glossy-box swapped"><div>{total_eur:,.2f}</div><div>Total EUR</div></div>
 <div class="glossy-box swapped"><div>{format_money(total_usdc)}</div><div>Total USDC</div></div>
 <div class="glossy-box swapped">
-<div style="font-size:22px; font-weight:700; color:#fff; margin-bottom:0; position:relative; top:-2px;">{fees_eur:,.2f} EUR / {fees_czk:,.2f} CZK</div>
+<div style="font-size:22px; font-weight:700; color:#fff; margin-bottom:0; position:relative; top:0px;">{fees_eur:,.2f} EUR / {fees_czk:,.2f} CZK</div>
 <div>Fees</div>
 </div>
 </div>
