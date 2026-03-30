@@ -58,7 +58,7 @@ div[data-testid="stMainBlockContainer"] {
 }
 .home-header {
     margin-bottom: 0 !important;
-    padding-bottom: 34px !important; /* space for the eye icon */
+    padding-bottom: 30px !important; /* space for the eye icon */
 }
 .pull-indicator {
     position: absolute;
@@ -84,13 +84,12 @@ div[data-testid="stMainBlockContainer"] {
 .stats-layer {
     position: relative;
     z-index: 1;
-    /* Mathematically tucks the 80px box to hide the top 60px (the numbers) and expose exactly the bottom 20px (the label) */
-    margin-top: -60px; 
+    margin-top: -60px !important; /* Perfectly tucks the 80px box to expose exactly 20px */
     transition: margin-top 0.4s cubic-bezier(0.4, 0, 0.2, 1);
     margin-bottom: 24px;
 }
 .dashboard-toggle:checked ~ .stats-layer {
-    margin-top: 14px; /* Drops down */
+    margin-top: 14px !important; /* Drops down */
 }
 .stats-layer-inner {
     display: grid; 
@@ -963,7 +962,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
         // Define the close function for global click-away
         function closeAllOpenUI(e) {{
             // Only run if the click is outside a flip-card inner and outside dashboard wrapper
-            const isCardClick = e && e.target && e.target.closest && e.target.closest('.flip-card-inner');
+            const isCardClick = e && e.target && e.target.closest && e.target.closest('.flip-card');
             const isDashClick = e && e.target && e.target.closest && e.target.closest('.dashboard-wrapper');
             
             if (!isCardClick) {{
@@ -974,7 +973,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
             }}
             
             if (!isDashClick) {{
-                const dashToggle = document.getElementById('dash-toggle');
+                const dashToggle = window.parent.document.getElementById('dash-toggle');
                 if (dashToggle && dashToggle.checked) {{
                     dashToggle.checked = false;
                 }}
@@ -1280,14 +1279,6 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
             front.addEventListener('click', (e) => {{
                 e.stopPropagation();
                 
-                // Unflip all other cards first for clean UX
-                document.querySelectorAll('.flip-card.flipped').forEach(c => {{
-                    if (c !== card) {{
-                        c.classList.remove('flipped');
-                        c.classList.remove('touch-hover');
-                    }}
-                }});
-
                 // Toggle flipped state and touch-hover properly for mobile
                 if (!card.classList.contains('flipped')) {{
                     card.classList.add('flipped');
@@ -1546,7 +1537,6 @@ body {{ background: transparent; margin: 0; padding: 0; }}
     </div>
 </div>
 <script>
-
 // --- Wheel scrolling for PC ---
 const txScrollContainer = document.getElementById('txScrollContainer');
 if (txScrollContainer) {{
