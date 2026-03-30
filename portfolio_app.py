@@ -226,7 +226,9 @@ div[data-testid="stMainBlockContainer"] {
     border-radius: 12px;
     box-shadow: 0 4px 12px rgba(0,0,0,0.15);
     padding: 10px 20px;
-    margin-bottom: 24px;
+    width: 90%; 
+    max-width: 400px; 
+    margin: 0 auto 24px auto; 
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -1618,7 +1620,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
             .dash-label { font-size: clamp(8px, 2.5vw, 10px) !important; bottom: 8px !important; white-space: nowrap !important; letter-spacing: 0.5px !important; }
             
             /* Restyled Subdued USDC Banner Mobile */
-            .usdc-banner { padding: 8px 14px; margin-bottom: 20px; }
+            .usdc-banner { padding: 8px 14px; width: 92%; margin: 0 auto 20px auto; }
             .usdc-banner-left img { width: 24px; height: 24px; }
             .usdc-banner-title { font-size: 0.95rem; }
             .usdc-banner-subtitle { font-size: 0.7rem; }
