@@ -84,8 +84,7 @@ div[data-testid="stMainBlockContainer"] {
 .stats-layer {
     position: relative;
     z-index: 1;
-    /* Mathematically tucks the 80px box to expose exactly 20px */
-    margin-top: -60px !important; 
+    margin-top: -60px !important; /* Perfectly tucks the 80px box to expose exactly 20px */
     transition: margin-top 0.4s cubic-bezier(0.4, 0, 0.2, 1);
     margin-bottom: 24px;
 }
@@ -279,6 +278,7 @@ div[data-testid="stMainBlockContainer"] {
         font-size: 24px !important;
         min-height: 100px;
     }
+    /* Neutralize the buggy mobile margin that was exposing the cards */
     .home-header {
         margin-bottom: 0 !important;
     }
@@ -291,16 +291,18 @@ div[data-testid="stMainBlockContainer"] {
     .glossy-box > div:first-child { font-size: 10px !important; }
     .glossy-box > div:last-child { font-size: 21px !important; }
     
+    /* Forced single row for mobile */
     .stats-layer-inner { 
         grid-template-columns: repeat(3, 1fr) !important; 
         gap: 8px; 
     }
     
-    /* Math perfectly hides the centered 80px box, leaving exactly 20px visible for the label */
+    /* Math perfectly hides the centered 80px box, leaving only 20px for text */
     .stats-layer { margin-top: -60px !important; margin-bottom: 18px; } 
     
     .glossy-box.swapped { height: 80px !important; min-height: 80px !important; max-height: 80px !important; padding: 0; }
     .glossy-box.swapped > div:first-child { font-size: 16px !important; top: 16px; }
+    /* Perfectly flush bottom label to peek out */
     .glossy-box.swapped > div:last-child { font-size: 9px !important; bottom: 4px; }
     
     .usdc-banner { padding: 16px 18px; margin-bottom: 24px; }
@@ -316,6 +318,7 @@ div[data-testid="stMainBlockContainer"] {
 DASHBOARD_ICON = '''<svg xmlns="http://www.w3.org/2000/svg" width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="#00ff9d" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>'''
 CRYPTO_ICON = '''<svg xmlns="http://www.w3.org/2000/svg" width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="#00ff9d" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M14.5 8.5L9.5 13.5"/><path d="M9.5 8.5L14.5 13.5"/></svg>'''
 FIAT_ICON = '''<svg xmlns="http://www.w3.org/2000/svg" width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="#00ff9d" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M6 8h12"/><path d="M6 12h12"/><path d="M6 16h12"/></svg>'''
+# Minimalist 16px eye icon, neutral color
 EYE_CLOSED = '''<svg class="eye-closed" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>'''
 EYE_OPEN = '''<svg class="eye-open" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>'''
 FULLSCREEN_ICON = '''<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/></svg>'''
@@ -1323,7 +1326,6 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
             
             const backDiv = card.querySelector('.flip-card-back');
             backDiv.addEventListener('click', (e) => {{
-                e.stopPropagation();
                 // Tapping empty space on the back flips the card over
                 card.classList.remove('flipped');
                 card.classList.remove('touch-hover');
@@ -1350,20 +1352,6 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                             document.webkitExitFullscreen();
                         }}
                     }}
-                }});
-                
-                // Stop touch propagation on the fullscreen button
-                ['touchstart', 'touchend'].forEach(evt => {{
-                    fsBtn.addEventListener(evt, (e) => e.stopPropagation(), {{passive: true}});
-                }});
-            }}
-            
-            // Protect chart area from flipping the card
-            const chartContainer = card.querySelector('.chart-container');
-            if (chartContainer) {{
-                // Isolate interactions so tapping the chart tooltips doesn't flip the card
-                ['click', 'touchstart', 'touchend', 'mousedown'].forEach(evt => {{
-                    chartContainer.addEventListener(evt, (e) => e.stopPropagation(), {{passive: true}});
                 }});
             }}
         }});
@@ -1599,15 +1587,6 @@ body {{ background: transparent; margin: 0; padding: 0; }}
     </div>
 </div>
 <script>
-// --- Mobile Touch Hover Fix ---
-document.addEventListener('click', (e) => {{
-    const touchHoverTarget = e.target.closest('.transaction-card');
-    document.querySelectorAll('.touch-hover').forEach(el => {{
-        if (el !== touchHoverTarget) el.classList.remove('touch-hover');
-    }});
-    if (touchHoverTarget) touchHoverTarget.classList.toggle('touch-hover');
-}});
-
 // --- Wheel scrolling for PC ---
 const txScrollContainer = document.getElementById('txScrollContainer');
 if (txScrollContainer) {{
