@@ -58,7 +58,7 @@ div[data-testid="stMainBlockContainer"] {
 }
 .home-header {
     margin-bottom: 0 !important;
-    padding-bottom: 30px !important; /* space for the eye icon */
+    padding-bottom: 34px !important; /* space for the eye icon */
 }
 .pull-indicator {
     position: absolute;
@@ -84,12 +84,13 @@ div[data-testid="stMainBlockContainer"] {
 .stats-layer {
     position: relative;
     z-index: 1;
-    margin-top: -60px !important; /* Perfectly tucks the 80px box to expose exactly 20px */
+    /* Mathematically tucks the 80px box to hide the top 60px (the numbers) and expose exactly the bottom 20px (the label) */
+    margin-top: -60px; 
     transition: margin-top 0.4s cubic-bezier(0.4, 0, 0.2, 1);
     margin-bottom: 24px;
 }
 .dashboard-toggle:checked ~ .stats-layer {
-    margin-top: 14px !important; /* Drops down */
+    margin-top: 14px; /* Drops down */
 }
 .stats-layer-inner {
     display: grid; 
@@ -918,6 +919,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
             display: flex;
             align-items: center;
             justify-content: center;
+            touch-action: pan-y; /* Prevent horizontal scroll, allow vertical scroll and scrubbing */
         }}
         canvas {{
             position: absolute;
@@ -925,6 +927,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
             left: 0;
             width: 100% !important;
             height: 100% !important;
+            touch-action: none; /* Let Chart.js handle tooltip touches without browser panning */
         }}
         .chart-loading {{
             position: absolute;
@@ -957,27 +960,44 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
 
 <script>
     (function() {{
-        // --- Handle Mobile Touch "Hover" and Drawer closing ---
-        document.addEventListener('click', (e) => {{
+        // Define the close function for global click-away
+        function closeAllOpenUI(e) {{
+            // Only run if the click is outside a flip-card inner and outside dashboard wrapper
+            const isCardClick = e && e.target && e.target.closest && e.target.closest('.flip-card-inner');
+            const isDashClick = e && e.target && e.target.closest && e.target.closest('.dashboard-wrapper');
             
-            // Smart Click-Away: Close dashboard drawer if clicking outside of it
-            const dashToggle = window.parent.document.getElementById('dash-toggle');
-            if (dashToggle && dashToggle.checked) {{
-                // Check if the click happened inside the dashboard drawer
-                const isClickInsideDash = e.target.closest('.dashboard-wrapper');
-                if (!isClickInsideDash) {{
-                    dashToggle.checked = false; // Close drawer and inherently remove hover
-                }}
-            }}
-
-            // Smart Click-Away: Unflip cards if clicked outside
-            if (!e.target.closest('.flip-card-inner')) {{
+            if (!isCardClick) {{
                 document.querySelectorAll('.flip-card.flipped').forEach(card => {{
                     card.classList.remove('flipped');
                     card.classList.remove('touch-hover');
                 }});
             }}
+            
+            if (!isDashClick) {{
+                const dashToggle = document.getElementById('dash-toggle');
+                if (dashToggle && dashToggle.checked) {{
+                    dashToggle.checked = false;
+                }}
+            }}
+        }}
+
+        // Listen inside the iframe
+        ['click', 'touchstart'].forEach(evt => {{
+            document.addEventListener(evt, (e) => {{
+                closeAllOpenUI(e);
+            }}, {{ passive: true }});
         }});
+
+        // Listen outside the iframe (Parent Streamlit Document)
+        try {{
+            ['click', 'touchstart'].forEach(evt => {{
+                window.parent.document.addEventListener(evt, () => {{
+                    closeAllOpenUI(null); // No event target needed, it's definitely outside
+                }}, {{ passive: true }});
+            }});
+        }} catch(err) {{
+            console.log("Cannot bind to parent document");
+        }}
 
         // --- Wheel scrolling for PC ---
         const scrollContainer = document.getElementById('scrollContainer');
@@ -1526,6 +1546,7 @@ body {{ background: transparent; margin: 0; padding: 0; }}
     </div>
 </div>
 <script>
+
 // --- Wheel scrolling for PC ---
 const txScrollContainer = document.getElementById('txScrollContainer');
 if (txScrollContainer) {{
