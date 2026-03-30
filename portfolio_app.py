@@ -323,6 +323,12 @@ def date_to_excel_serial(selected_date: date) -> int:
     delta = selected_date - base
     return delta.days
 
+def parse_excel_date(x):
+    try:
+        return (datetime(1899, 12, 30) + timedelta(days=int(float(x)))).date()
+    except:
+        return datetime.now().date()
+
 # ====================== INITIAL DATA ======================
 def get_initial_crypto_df():
     return pd.DataFrame([
@@ -428,13 +434,13 @@ def get_all_cryptocompare_prices(tickers, refresh_key=0):
 
 # ====================== HISTORICAL PORTFOLIO BUILDER ======================
 @st.cache_data(ttl=3600, show_spinner=False)
-def build_portfolio_history(crypto_df, fiat_df, refresh_key):
+def build_portfolio_history(crypto_df, fiat_df, last_prices, refresh_key):
     if crypto_df.empty and fiat_df.empty: return []
 
     # Process Fiat to track total cumulative USDC deposits available
     fiat = fiat_df.copy()
     if not fiat.empty:
-        fiat['Date'] = fiat['Datum'].apply(lambda x: (datetime(1899, 12, 30) + timedelta(days=int(float(x)))).date())
+        fiat['Date'] = fiat['Datum'].apply(parse_excel_date)
         daily_fiat_usdc = fiat.groupby('Date')['USDC'].sum()
     else:
         daily_fiat_usdc = pd.Series(dtype=float)
@@ -442,7 +448,7 @@ def build_portfolio_history(crypto_df, fiat_df, refresh_key):
     # Process Crypto to track total USDC spent over time
     crypto = crypto_df.copy()
     if not crypto.empty:
-        crypto['Date'] = crypto['Datum'].apply(lambda x: (datetime(1899, 12, 30) + timedelta(days=int(float(x)))).date())
+        crypto['Date'] = crypto['Datum'].apply(parse_excel_date)
         daily_crypto_spent = crypto[crypto['Ticker'].str.upper() != 'USDC'].groupby('Date')['USDC'].sum()
     else:
         daily_crypto_spent = pd.Series(dtype=float)
@@ -498,7 +504,20 @@ def build_portfolio_history(crypto_df, fiat_df, refresh_key):
             pass
             
     prices_df = pd.DataFrame(prices_dict)
-    prices_df = prices_df.reindex(date_range).ffill().bfill().fillna(0)
+    if not prices_df.empty:
+        prices_df = prices_df.reindex(date_range).ffill().bfill().fillna(0)
+    else:
+        prices_df = pd.DataFrame(index=date_range)
+        
+    # FORCE INJECT LIVE PRICES IF HISTORICAL API FAILED/MISSED
+    # This prevents the chart from dropping massively if an altcoin history fetch fails.
+    for coin in coins:
+        live_p = last_prices.get(coin, 0.0)
+        if coin not in prices_df.columns:
+            prices_df[coin] = live_p
+        else:
+            prices_df[coin] = prices_df[coin].replace(0.0, live_p)
+            prices_df[coin] = prices_df[coin].fillna(live_p)
     
     # Calculate portfolio values (Crypto + Unused USDC)
     daily_crypto_value = pd.Series(0.0, index=date_range)
@@ -722,7 +741,8 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
         st.markdown(value_box_html, unsafe_allow_html=True)
 
         # ================== 2. HISTORICAL AND PIE CHARTS ==================
-        history_data_raw = build_portfolio_history(st.session_state.crypto_df, st.session_state.fiat_df, st.session_state.refresh_key)
+        last_prices_dict = st.session_state.last_known_prices.copy()
+        history_data_raw = build_portfolio_history(st.session_state.crypto_df, st.session_state.fiat_df, last_prices_dict, st.session_state.refresh_key)
         
         # Override the final point (today) to guarantee exact match with live dashboard metrics
         hist_val_js_list = []
@@ -739,6 +759,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                 inv = d['invested']
                 btc = d['btc']
                 
+                # Math lock to force perfect synchronicity with live cards
                 if idx == len(history_data_raw) - 1 and ts == today_ts:
                     val = float(total_value)
                     inv = float(fiat_usdc_total)
@@ -869,15 +890,16 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                             cursor: 'pointer',
                             depth: 40,
                             innerSize: '40%',
-                            size: '75%', /* Shrank to guarantee labels don't get pushed out of bounds */
+                            size: '65%', /* Shrank to guarantee labels don't get pushed out of bounds */
                             dataLabels: {{
                                 enabled: true,
                                 format: '<b>{{point.name}}</b><br>{{point.percentage:.1f}}%',
                                 style: {{ color: '#e2e8f0', textOutline: 'none', fontSize: '10px', fontWeight: '600' }},
                                 connectorColor: 'rgba(255,255,255,0.2)',
-                                distance: 15,
+                                distance: 10,
                                 crop: false, /* Force rendering of all labels even if cramped */
-                                overflow: 'allow'
+                                overflow: 'allow',
+                                padding: 0
                             }},
                             borderWidth: 0
                         }}
@@ -893,15 +915,22 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
 
                 // Render Historical Performance Chart (SECOND)
                 Highcharts.chart('history-container', {{
-                    chart: {{ type: 'areaspline', backgroundColor: 'transparent', margin: [45, 15, 30, 45] }}, /* Top margin expanded for legend */
+                    chart: {{ 
+                        type: 'areaspline', 
+                        backgroundColor: 'transparent', 
+                        marginLeft: 60, /* Forced Explicit Space for Y-Axis Dollar values */
+                        marginRight: 20,
+                        marginTop: 55,  /* Pushed down to clear the top legend */
+                        marginBottom: 35 
+                    }}, 
                     title: {{ text: null }},
                     legend: {{
                         enabled: true,
                         itemStyle: {{ color: '#94a3b8', fontSize: '11px', fontWeight: 'normal' }},
                         itemHoverStyle: {{ color: '#ffffff' }},
-                        verticalAlign: 'top', /* Moved Legend to Top */
+                        verticalAlign: 'top', /* Legend fixed directly at the top */
                         align: 'center',
-                        y: 0
+                        y: -10
                     }},
                     xAxis: {{ 
                         type: 'datetime', 
@@ -914,6 +943,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                         title: {{ text: null }}, 
                         labels: {{ 
                             style: {{ color: '#94a3b8', fontSize: '10px' }}, 
+                            align: 'right',
                             formatter: function() {{ 
                                 return document.body.classList.contains('privacy-mode') ? '***' : '$' + this.axis.defaultLabelFormatter.call(this); 
                             }} 
