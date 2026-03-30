@@ -260,217 +260,6 @@ div[data-testid="stMainBlockContainer"] {
     font-size: 1.7rem;
     color: #ffffff;
 }
-
-/* =========================================================================
-   UI FIXES: ADD TRANSACTION FORM
-========================================================================= */
-
-/* Main Add Form Styling */
-div[data-testid="stForm"]:has(.form-compact-marker) {
-    background: #0f172a !important;
-    border: 1px solid rgba(255,255,255,0.05) !important;
-    border-radius: 16px !important;
-    padding: 20px 24px !important;
-    box-shadow: 0 4px 20px rgba(0,0,0,0.3) !important;
-    margin-bottom: 24px !important;
-}
-div[data-testid="stForm"]:has(.form-compact-marker) label {
-    font-size: 0.85rem !important;
-    min-height: 0 !important;
-    padding-bottom: 2px !important;
-}
-
-/* Buy/Sell Switch (Pill Styling) */
-div[data-testid="stForm"] div[role="radiogroup"] {
-    display: flex !important;
-    flex-direction: row !important;
-    justify-content: center !important;
-    background: #1e293b !important;
-    border-radius: 40px !important;
-    padding: 6px !important;
-    width: 100% !important;
-    max-width: 260px !important;
-    margin: 15px auto 20px auto !important;
-    gap: 6px !important;
-}
-div[data-testid="stForm"] label[data-baseweb="radio"] {
-    flex: 1 !important;
-    background: transparent !important;
-    padding: 8px 0 !important;
-    margin: 0 !important;
-    border-radius: 36px !important;
-    cursor: pointer !important;
-    transition: all 0.3s ease !important;
-}
-/* Hide Native Radio Circle */
-div[data-testid="stForm"] label[data-baseweb="radio"] > div:first-child {
-    display: none !important;
-}
-div[data-testid="stForm"] label[data-baseweb="radio"] div {
-    display: flex;
-    justify-content: center;
-    width: 100%;
-}
-div[data-testid="stForm"] label[data-baseweb="radio"] p {
-    font-weight: 700 !important;
-    color: #64748b !important;
-    margin: 0 !important;
-    font-size: 1.05rem !important;
-    transition: color 0.3s ease !important;
-}
-/* Active states */
-div[data-testid="stForm"] label[data-baseweb="radio"][aria-checked="true"]:first-of-type {
-    background: #00ff9d !important;
-    box-shadow: 0 2px 10px rgba(0, 255, 157, 0.3) !important;
-}
-div[data-testid="stForm"] label[data-baseweb="radio"][aria-checked="true"]:first-of-type p {
-    color: #0f172a !important;
-}
-div[data-testid="stForm"] label[data-baseweb="radio"][aria-checked="true"]:last-of-type {
-    background: #ff4d4d !important;
-    box-shadow: 0 2px 10px rgba(255, 77, 77, 0.3) !important;
-}
-div[data-testid="stForm"] label[data-baseweb="radio"][aria-checked="true"]:last-of-type p {
-    color: #ffffff !important;
-}
-
-/* Submit Button */
-div[data-testid="stForm"] .stButton > button {
-    background: #1e2a44 !important;
-    color: #e0e0e0 !important;
-    padding: 10px 20px !important;
-    border-radius: 12px !important;
-    font-size: 1.1rem !important;
-    font-weight: 700 !important;
-    width: 100% !important;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.25) !important;
-    transition: all 0.3s ease !important;
-}
-div[data-testid="stForm"] .stButton > button:hover {
-    transform: translateY(-2px) !important;
-    background: #263b5e !important;
-    color: white !important;
-}
-
-
-/* =========================================================================
-   UI FIXES: TRANSACTION LIST & ROWS
-========================================================================= */
-/* Action Buttons (Edit/Delete) */
-.stButton.tx-btn > button {
-    background: rgba(255,255,255,0.05) !important;
-    border-radius: 8px !important;
-    height: 42px !important;
-    width: 42px !important;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 0 !important;
-    margin: 0 auto !important;
-    font-size: 1.1rem !important;
-    box-shadow: none !important;
-    transition: all 0.2s;
-    border: none !important;
-}
-.stButton.tx-btn > button:hover {
-    background: rgba(255,255,255,0.15) !important;
-    transform: scale(1.08) !important;
-}
-
-/* Smooth Edit Form Dropdown */
-@keyframes slideDownFade {
-    0% { opacity: 0; transform: translateY(-20px) scaleY(0.9); }
-    100% { opacity: 1; transform: translateY(0) scaleY(1); }
-}
-div[data-testid="stForm"]:has(.edit-form-marker) {
-    animation: slideDownFade 0.3s ease-out forwards !important;
-    transform-origin: top;
-    border-top: 1px solid rgba(255,255,255,0.1) !important;
-    border-left: 3px solid #00ff9d !important;
-    border-right: none !important;
-    border-bottom: none !important;
-    background: rgba(0,0,0,0.2) !important;
-    border-radius: 0 0 12px 12px !important;
-    padding: 15px 20px !important;
-    margin-top: 0px !important;
-    box-shadow: inset 0 4px 10px rgba(0,0,0,0.15) !important;
-}
-
-/* Delete Dialog Warning Wrapper */
-div[data-testid="stVerticalBlockBorderWrapper"]:has(.delete-dialog-marker) {
-    border: 1px solid #ff4d4d !important;
-    background: rgba(255, 77, 77, 0.05) !important;
-    border-radius: 12px !important;
-    padding-top: 10px !important;
-}
-
-/* =========================================================================
-   MOBILE RESPONSIVE OVERRIDES
-========================================================================= */
-@media (max-width: 768px) {
-    .stApp { padding-top: 72px !important; }
-    .glossy-header { margin-top: 48px !important; margin-bottom: 24px !important; padding: 20px 16px !important; font-size: 22px !important; min-height: 90px; }
-    .home-header { margin-bottom: 0 !important; }
-    
-    /* 1. Force the Add Transaction form inputs to wrap into a strict 2x2 grid */
-    div[data-testid="stForm"]:has(.form-compact-marker) div[data-testid="stHorizontalBlock"] {
-        display: flex !important;
-        flex-direction: row !important;
-        flex-wrap: wrap !important;
-        gap: 10px !important;
-    }
-    div[data-testid="stForm"]:has(.form-compact-marker) div[data-testid="stHorizontalBlock"] > div[data-testid="column"] {
-        width: 50% !important;
-        flex: 1 1 50% !important;
-        min-width: 0 !important; /* Critical for mobile fitting */
-    }
-    div[data-testid="stForm"]:has(.form-compact-marker) input {
-        font-size: 0.95rem !important;
-        padding: 8px !important;
-    }
-    
-    /* 2. Force Transaction History rows to stay completely horizontal (inline) */
-    div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row-mobile-marker) > div > div[data-testid="stVerticalBlock"] > div[data-testid="stHorizontalBlock"] {
-        display: flex !important;
-        flex-direction: row !important;
-        flex-wrap: nowrap !important;
-        align-items: center !important;
-        gap: 4px !important;
-    }
-    div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row-mobile-marker) > div > div[data-testid="stVerticalBlock"] > div[data-testid="stHorizontalBlock"] > div[data-testid="column"] {
-        min-width: 0 !important; padding: 0 !important;
-    }
-    
-    /* Force specific column widths for the 5-column transaction row layout */
-    div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row-mobile-marker) > div > div[data-testid="stVerticalBlock"] > div[data-testid="stHorizontalBlock"] > div[data-testid="column"]:nth-child(1) { flex: 0 0 35px !important; width: 35px !important; } /* Logo */
-    div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row-mobile-marker) > div > div[data-testid="stVerticalBlock"] > div[data-testid="stHorizontalBlock"] > div[data-testid="column"]:nth-child(2) { flex: 1.2 1 auto !important; width: auto !important; } /* Ticker/Date */
-    div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row-mobile-marker) > div > div[data-testid="stVerticalBlock"] > div[data-testid="stHorizontalBlock"] > div[data-testid="column"]:nth-child(3) { flex: 1.5 1 auto !important; width: auto !important; text-align: right; } /* Amounts */
-    div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row-mobile-marker) > div > div[data-testid="stVerticalBlock"] > div[data-testid="stHorizontalBlock"] > div[data-testid="column"]:nth-child(4) { flex: 0 0 38px !important; width: 38px !important; } /* Edit */
-    div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row-mobile-marker) > div > div[data-testid="stVerticalBlock"] > div[data-testid="stHorizontalBlock"] > div[data-testid="column"]:nth-child(5) { flex: 0 0 38px !important; width: 38px !important; } /* Delete */
-    
-    /* Shrink the buttons to fit mobile */
-    .stButton.tx-btn > button {
-        width: 34px !important;
-        height: 34px !important;
-        font-size: 0.95rem !important;
-    }
-    
-    /* Shrink text inside the row to fit nicely inline */
-    .mobile-tx-ticker { font-size: 0.95rem !important; margin-left: 4px !important;}
-    .mobile-tx-amount { font-size: 0.95rem !important; white-space: nowrap !important; }
-    .mobile-tx-sub { font-size: 0.7rem !important; white-space: nowrap !important; margin-left: 4px !important;}
-    .mobile-logo { width: 30px !important; height: 30px !important; }
-    
-    .stats-layer { margin-top: -60px !important; margin-bottom: 18px; } 
-    .glossy-box.swapped { height: 80px !important; min-height: 80px !important; max-height: 80px !important; padding: 0 !important; min-width: 0 !important; }
-    .dash-value { font-size: 15px !important; top: 22px; white-space: nowrap; } 
-    .dash-label { font-size: 9px !important; bottom: 6px; white-space: nowrap; }
-    .usdc-banner { padding: 16px 18px; margin-bottom: 24px; }
-    .usdc-banner-left img { width: 36px; height: 36px; }
-    .usdc-banner-title { font-size: 1.2rem; }
-    .usdc-banner-subtitle { font-size: 0.85rem; }
-    .usdc-banner-amount { font-size: 1.4rem; }
-}
 </style>
 """, unsafe_allow_html=True)
 
@@ -775,6 +564,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
         usdc_row = df_port[df_port['Ticker'] == 'USDC'].iloc[0] if not df_port[df_port['Ticker'] == 'USDC'].empty else None
         usdc_holdings = usdc_row['Holdings'] if usdc_row is not None else 0
 
+        # Note: input#dash-toggle is moved so CSS can target sibling banner
         value_box_html = f"""
 <input type="checkbox" id="dash-toggle" class="dashboard-toggle" style="display:none;">
 <div class="dashboard-wrapper">
@@ -824,6 +614,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
             avg_price_formatted = format_price(avg_price)
             chart_color = border_color
             
+            # Added "privacy-val" class to sensitive spans
             cards_html += f"""
 <div class="flip-card" data-ticker="{ticker}" data-holdings="{r['Holdings']}" data-invested="{r['USDC']}" data-current-price="{live_price}" data-avg-price="{avg_price}" data-refresh="{st.session_state.refresh_key}" data-border="{border_color}" data-chart-color="{chart_color}" data-logo="{logo_url}">
     <div class="flip-card-inner">
@@ -1127,15 +918,23 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
     (function() {{
         // Define the close function for global click-away
         function closeAllOpenUI(e) {{
-            // Only run if the click is outside a flip-card inner and outside dashboard wrapper
-            const isDashClick = e && e.target && e.target.closest && e.target.closest('.dashboard-wrapper');
-            const isCardClick = e && e.target && e.target.closest && e.target.closest('.flip-card');
+            let isDashClick = false;
+            let isCardClick = false;
+            
+            // Check if user clicked the dashboard toggle, header, or a flip card
+            if (e && e.target && typeof e.target.closest === 'function') {{
+                isDashClick = !!(e.target.closest('.dashboard-wrapper') || e.target.closest('.glossy-header-label') || e.target.id === 'dash-toggle');
+                isCardClick = !!e.target.closest('.flip-card');
+            }} else if (e && e.target && e.target.id === 'dash-toggle') {{
+                isDashClick = true;
+            }}
             
             if (!isDashClick) {{
                 try {{
                     const dashToggle = window.parent.document.getElementById('dash-toggle');
                     if (dashToggle && dashToggle.checked) {{
                         dashToggle.checked = false; // Close drawer
+                        dashToggle.dispatchEvent(new Event('change')); // Trigger save event
                     }}
                 }} catch(err) {{}}
             }}
@@ -1155,17 +954,6 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                 closeAllOpenUI(e);
             }}, {{ passive: true }});
         }});
-
-        // Listen outside the iframe (Parent Streamlit Document)
-        try {{
-            ['click', 'touchstart'].forEach(evt => {{
-                window.parent.document.addEventListener(evt, (e) => {{
-                    closeAllOpenUI(e); 
-                }}, {{ passive: true }});
-            }});
-        }} catch(err) {{
-            console.log("Cannot bind to parent document");
-        }}
 
         // --- Privacy Mode Syncing Logic ---
         let lastDashState = null;
@@ -1204,6 +992,17 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                 }}
             }}
         }} catch(e) {{}}
+
+        // Listen outside the iframe (Parent Streamlit Document)
+        try {{
+            ['click', 'touchstart'].forEach(evt => {{
+                window.parent.document.addEventListener(evt, (e) => {{
+                    closeAllOpenUI(e); 
+                }}, {{ passive: true }});
+            }});
+        }} catch(err) {{
+            console.log("Cannot bind to parent document");
+        }}
 
         // --- Wheel scrolling for PC ---
         const scrollContainer = document.getElementById('scrollContainer');
@@ -1570,12 +1369,13 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
             margin-bottom: 0px !important;
         }
 
-        /* 2. BEAUTIFUL BUY/SELL SWITCH */
+        /* 2. BEAUTIFUL BUY/SELL SWITCH (Hiding native dots completely using pseudo selectors) */
         div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] {
             background: rgba(0,0,0,0.3) !important;
             padding: 8px 16px !important;
             border-radius: 12px !important;
-            display: inline-flex !important;
+            display: flex !important;
+            flex-direction: row !important;
             gap: 20px !important;
             justify-content: center !important;
             width: 100% !important;
@@ -1583,11 +1383,23 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
             border: 1px solid rgba(255,255,255,0.05) !important;
         }
         div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label {
-            margin-right: 0 !important; cursor: pointer !important;
+            margin-right: 0 !important; cursor: pointer !important; padding: 6px 12px !important; border-radius: 8px !important;
+            border: 1px solid transparent !important; transition: all 0.3s ease !important;
         }
+        div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label:hover { background: rgba(255,255,255,0.05) !important; }
+        div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label > div:first-child { display: none !important; } /* Kill native dot */
         div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label p {
-            font-weight: bold !important; font-size: 1.1rem !important; margin-left: 6px !important; color: white !important;
+            font-weight: bold !important; font-size: 1.1rem !important; color: #94a3b8 !important; margin: 0 !important;
         }
+        /* Active Colors */
+        div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label[aria-checked="true"]:first-child {
+            background: rgba(0, 255, 157, 0.15) !important; border-color: #00ff9d !important; box-shadow: 0 2px 10px rgba(0,255,157,0.2) !important;
+        }
+        div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label[aria-checked="true"]:first-child p { color: #00ff9d !important; }
+        div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label[aria-checked="true"]:last-child {
+            background: rgba(255, 77, 77, 0.15) !important; border-color: #ff4d4d !important; box-shadow: 0 2px 10px rgba(255,77,77,0.2) !important;
+        }
+        div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label[aria-checked="true"]:last-child p { color: #ff4d4d !important; }
 
         /* 3. SUBMIT BUTTON */
         div[data-testid="stForm"]:has(.add-tx-card) .stButton > button {
@@ -1621,17 +1433,23 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
 
         /* 6. REDESIGNED DELETE DIALOG */
         div[data-testid="stVerticalBlockBorderWrapper"]:has(.del-warn) {
-            border-color: #ff4d4d !important; background: rgba(255, 77, 77, 0.05) !important;
+            border: 1px solid rgba(255, 77, 77, 0.4) !important; background: rgba(255, 77, 77, 0.05) !important;
             border-radius: 12px !important; padding: 20px !important; text-align: center !important;
+        }
+        div[data-testid="stVerticalBlockBorderWrapper"]:has(.del-warn) div[data-testid="column"]:nth-child(1) .stButton > button {
+            background: rgba(255, 77, 77, 0.2) !important; color: #ff4d4d !important; border: 1px solid rgba(255, 77, 77, 0.5) !important;
+        }
+        div[data-testid="stVerticalBlockBorderWrapper"]:has(.del-warn) div[data-testid="column"]:nth-child(1) .stButton > button:hover {
+            background: #ff4d4d !important; color: white !important;
         }
 
         /* ==============================================================
            7. MOBILE OVERRIDES (IRONCLAD)
            ============================================================== */
         @media (max-width: 768px) {
-            /* Fix Add Form Mobile 2x2 Grid */
+            /* Fix Add Form Mobile 2x2 Grid by explicitly un-wrapping and setting widths */
             div[data-testid="stForm"]:has(.add-tx-card) div[data-testid="stHorizontalBlock"] {
-                flex-wrap: nowrap !important;
+                display: flex !important; flex-wrap: wrap !important; flex-direction: row !important;
             }
             div[data-testid="stForm"]:has(.add-tx-card) div[data-testid="stHorizontalBlock"] > div[data-testid="column"] {
                 min-width: 48% !important; flex: 1 1 48% !important;
@@ -1643,16 +1461,16 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                 display: flex !important; flex-direction: row !important; flex-wrap: nowrap !important; align-items: center !important; overflow: hidden !important;
             }
             div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row) div[data-testid="column"] {
-                min-width: 0 !important; padding: 0 !important;
+                min-width: 0 !important; padding: 0 !important; width: auto !important; flex-shrink: 1 !important;
             }
             /* Exact layout for the 4 strict columns */
-            div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row) div[data-testid="column"]:nth-child(1) { flex: 0 0 45px !important; } /* Logo */
+            div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row) div[data-testid="column"]:nth-child(1) { flex: 0 0 45px !important; width: 45px !important;} /* Logo */
             div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row) div[data-testid="column"]:nth-child(2) { flex: 1 1 auto !important; overflow: hidden !important; } /* Info */
-            div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row) div[data-testid="column"]:nth-child(3) { flex: 0 0 40px !important; } /* Edit */
-            div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row) div[data-testid="column"]:nth-child(4) { flex: 0 0 40px !important; } /* Delete */
+            div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row) div[data-testid="column"]:nth-child(3) { flex: 0 0 40px !important; width: 40px !important;} /* Edit */
+            div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row) div[data-testid="column"]:nth-child(4) { flex: 0 0 40px !important; width: 40px !important;} /* Delete */
             
             div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row) div[data-testid="stButton"] button {
-                width: 32px !important; height: 32px !important; font-size: 0.9rem !important;
+                width: 32px !important; height: 32px !important; font-size: 0.9rem !important; margin: 0 auto !important;
             }
             
             .mobile-logo { width: 34px !important; height: 34px !important; }
