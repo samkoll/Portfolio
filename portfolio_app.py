@@ -842,6 +842,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                     border: 1px solid rgba(255,255,255,0.05);
                     border-radius: 16px;
                     box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+                    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
                 }}
                 .pie-box {{
                     width: 350px;
@@ -850,6 +851,16 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                 .history-box {{
                     width: 600px;
                     flex: 0 0 600px;
+                }}
+                
+                #chart-overlay {{
+                    display: none;
+                    position: fixed;
+                    top: 0; left: 0; width: 100%; height: 100%;
+                    background: rgba(10, 15, 28, 0.85);
+                    z-index: 1000;
+                    backdrop-filter: blur(4px);
+                    -webkit-backdrop-filter: blur(4px);
                 }}
                 
                 @media (max-width: 768px) {{
@@ -862,10 +873,25 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                         padding: 0 7.5vw; 
                         gap: 16px; 
                     }}
+                    
+                    /* The expanded modal class applied dynamically on tap */
+                    .expanded-chart {{
+                        position: fixed !important;
+                        top: 50% !important;
+                        left: 50% !important;
+                        transform: translate(-50%, -50%) !important;
+                        width: 95vw !important;
+                        height: 400px !important;
+                        z-index: 1001 !important;
+                        margin: 0 !important;
+                        scroll-snap-align: none !important;
+                    }}
                 }}
             </style>
         </head>
         <body>
+            <div id="chart-overlay"></div>
+            
             <div class="charts-scroll-wrapper" id="chartsScrollContainer">
                 <div class="charts-flex">
                     <div id="pie-container" class="pie-box"></div>
@@ -1014,6 +1040,55 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                     }}]
                 }});
 
+                // --- Mobile Expand Mechanics ---
+                function toggleExpandChart(chartId) {{
+                    if (window.innerWidth > 768) return; // Feature only activates on phones
+                    
+                    const el = document.getElementById(chartId);
+                    if (el.classList.contains('expanded-chart')) {{
+                        return; // It's already expanded, don't interrupt Highcharts tooltips
+                    }}
+                    
+                    const overlay = document.getElementById('chart-overlay');
+                    const wrapper = document.getElementById('chartsScrollContainer');
+                    
+                    // Collapse any other open charts first
+                    document.querySelectorAll('.expanded-chart').forEach(c => c.classList.remove('expanded-chart'));
+                    
+                    el.classList.add('expanded-chart');
+                    overlay.style.display = 'block';
+                    wrapper.style.overflowX = 'visible'; // Prevent clipping
+                    
+                    // Give the CSS animation a moment to trigger, then command Highcharts to recalculate its new width
+                    setTimeout(() => {{
+                        const hc = Highcharts.charts.find(c => c && c.renderTo.id === chartId);
+                        if (hc) hc.reflow();
+                    }}, 50);
+                }}
+
+                // Attach click listeners cleanly to the containers
+                document.getElementById('pie-container').addEventListener('click', function(e) {{
+                    toggleExpandChart('pie-container');
+                }});
+                document.getElementById('history-container').addEventListener('click', function(e) {{
+                    toggleExpandChart('history-container');
+                }});
+
+                // Close expanded chart when tapping the dark background
+                document.getElementById('chart-overlay').addEventListener('click', () => {{
+                    document.querySelectorAll('.expanded-chart').forEach(el => {{
+                        el.classList.remove('expanded-chart');
+                        // Shrink and reflow back to normal size
+                        setTimeout(() => {{
+                            const hc = Highcharts.charts.find(c => c && c.renderTo.id === el.id);
+                            if (hc) hc.reflow();
+                        }}, 50);
+                    }});
+                    document.getElementById('chart-overlay').style.display = 'none';
+                    document.getElementById('chartsScrollContainer').style.overflowX = 'auto'; // Restore scroll snapping
+                }});
+
+
                 // --- Wheel scrolling for PC (Chart Area) ---
                 const chartScroll = document.getElementById('chartsScrollContainer');
                 if (chartScroll) {{
@@ -1048,8 +1123,8 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
         </body>
         </html>
         """
-        # Adjusted height to accommodate scrollbars and padding
-        components.html(charts_html, height=380, scrolling=False)
+        # Height raised to 420 to provide plenty of vertical room for the pop-out modal without clipping the frame
+        components.html(charts_html, height=420, scrolling=False)
 
         # ================== 3. SUBDUED USDC BANNER ==================
         usdc_banner_html = f"""
