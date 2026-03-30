@@ -177,12 +177,12 @@ div[data-testid="stMainBlockContainer"] {
     display: block;
 }
 .glossy-box.swapped > div:first-child {
-    font-size: 22px !important;
+    font-size: 24px !important;
     font-weight: 700;
     line-height: 1.05;
     color: #ffffff;
     position: absolute;
-    top: 16px; 
+    top: 20px; 
     left: 0;
     width: 100%;
     text-align: center;
@@ -196,7 +196,7 @@ div[data-testid="stMainBlockContainer"] {
     color: #94a3b8;
     line-height: 1.2;
     position: absolute;
-    bottom: 6px;
+    bottom: 8px;
     left: 0;
     width: 100%;
     text-align: center;
@@ -297,7 +297,12 @@ div[data-testid="stMainBlockContainer"] {
         gap: 8px; 
     }
     
-    .glossy-box.swapped > div:first-child { font-size: 16px !important; top: 20px; }
+    /* Math perfectly hides the centered 80px box, leaving only 20px for text */
+    .stats-layer { margin-top: -60px !important; margin-bottom: 18px; } 
+    
+    .glossy-box.swapped { height: 80px !important; min-height: 80px !important; max-height: 80px !important; padding: 0; }
+    .glossy-box.swapped > div:first-child { font-size: 16px !important; top: 16px; }
+    /* Perfectly flush bottom label to peek out */
     .glossy-box.swapped > div:last-child { font-size: 9px !important; bottom: 4px; }
     
     .usdc-banner { padding: 16px 18px; margin-bottom: 24px; }
@@ -701,6 +706,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
             </div>
         </div>
         <div class="flip-card-back">
+            <div class="close-card-btn">&times;</div>
             <div class="chart-container">
                 <canvas id="chart-{ticker}"></canvas>
                 <div class="chart-loading" id="loading-{ticker}">Loading chart...</div>
@@ -802,8 +808,23 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
             transform: rotateY(180deg);
             display: flex;
             flex-direction: column;
-            padding: 16px; 
+            padding: 24px 16px 16px 16px; /* Extra top padding for the close button */
         }}
+        
+        /* Elegant Close Button for the back of the card */
+        .close-card-btn {{
+            position: absolute;
+            top: 8px;
+            right: 12px;
+            color: #64748b;
+            font-size: 24px;
+            line-height: 1;
+            cursor: pointer;
+            z-index: 20;
+            transition: color 0.2s ease;
+            padding: 4px;
+        }}
+        .close-card-btn:hover {{ color: #ffffff; }}
         
         /* Interactive dynamic colored border glow - ONLY applies on PC (fine pointers) */
         @media (hover: hover) and (pointer: fine) {{
@@ -947,6 +968,14 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                 if (!isClickInsideDash) {{
                     dashToggle.checked = false; // Close drawer and inherently remove hover
                 }}
+            }}
+
+            // Smart Click-Away: Unflip cards if clicked outside
+            if (!e.target.closest('.flip-card-inner')) {{
+                document.querySelectorAll('.flip-card.flipped').forEach(card => {{
+                    card.classList.remove('flipped');
+                    card.classList.remove('touch-hover');
+                }});
             }}
         }});
 
@@ -1231,6 +1260,14 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
             front.addEventListener('click', (e) => {{
                 e.stopPropagation();
                 
+                // Unflip all other cards first for clean UX
+                document.querySelectorAll('.flip-card.flipped').forEach(c => {{
+                    if (c !== card) {{
+                        c.classList.remove('flipped');
+                        c.classList.remove('touch-hover');
+                    }}
+                }});
+
                 // Toggle flipped state and touch-hover properly for mobile
                 if (!card.classList.contains('flipped')) {{
                     card.classList.add('flipped');
@@ -1241,13 +1278,21 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                 }}
             }});
             
-            const backDiv = card.querySelector('.flip-card-back');
-            backDiv.addEventListener('click', (e) => {{
-                e.stopPropagation();
-                // 2nd tap safely unflips and completely removes hover states on mobile
-                card.classList.remove('flipped');
-                card.classList.remove('touch-hover');
-            }});
+            // Allow flipping back via the dedicated Close Button
+            const closeBtn = card.querySelector('.close-card-btn');
+            if (closeBtn) {{
+                closeBtn.addEventListener('click', (e) => {{
+                    e.stopPropagation();
+                    card.classList.remove('flipped');
+                    card.classList.remove('touch-hover');
+                }});
+            }}
+            
+            // Stop clicks on the canvas from bubbling up (so clicking a chart dot won't flip the card!)
+            const canvas = card.querySelector('canvas');
+            if (canvas) {{
+                canvas.addEventListener('click', (e) => e.stopPropagation());
+            }}
         }});
         
         restoreFlippedState();
@@ -1481,15 +1526,6 @@ body {{ background: transparent; margin: 0; padding: 0; }}
     </div>
 </div>
 <script>
-// --- Mobile Touch Hover Fix ---
-document.addEventListener('click', (e) => {{
-    const touchHoverTarget = e.target.closest('.transaction-card');
-    document.querySelectorAll('.touch-hover').forEach(el => {{
-        if (el !== touchHoverTarget) el.classList.remove('touch-hover');
-    }});
-    if (touchHoverTarget) touchHoverTarget.classList.toggle('touch-hover');
-}});
-
 // --- Wheel scrolling for PC ---
 const txScrollContainer = document.getElementById('txScrollContainer');
 if (txScrollContainer) {{
