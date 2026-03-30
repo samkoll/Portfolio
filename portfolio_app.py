@@ -722,11 +722,38 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
         st.markdown(value_box_html, unsafe_allow_html=True)
 
         # ================== 2. HISTORICAL AND PIE CHARTS ==================
-        history_data = build_portfolio_history(st.session_state.crypto_df, st.session_state.fiat_df, st.session_state.refresh_key)
-        hist_val_js = ",\n".join([f"[{d['time']}, {d['value']}]" for d in history_data])
-        hist_inv_js = ",\n".join([f"[{d['time']}, {d['invested']}]" for d in history_data])
-        hist_btc_js = ",\n".join([f"[{d['time']}, {d['btc']}]" for d in history_data])
+        history_data_raw = build_portfolio_history(st.session_state.crypto_df, st.session_state.fiat_df, st.session_state.refresh_key)
+        
+        # Override the final point (today) to guarantee exact match with live dashboard metrics
+        hist_val_js_list = []
+        hist_inv_js_list = []
+        hist_btc_js_list = []
+        
+        if history_data_raw:
+            today_ts = int(datetime.combine(datetime.now().date(), datetime.min.time()).timestamp()) * 1000
+            fiat_usdc_total = pd.to_numeric(st.session_state.fiat_df['USDC'], errors='coerce').fillna(0).sum()
+            
+            for idx, d in enumerate(history_data_raw):
+                ts = d['time']
+                val = d['value']
+                inv = d['invested']
+                btc = d['btc']
+                
+                if idx == len(history_data_raw) - 1 and ts == today_ts:
+                    val = float(total_value)
+                    inv = float(fiat_usdc_total)
+                
+                hist_val_js_list.append(f"[{ts}, {val}]")
+                hist_inv_js_list.append(f"[{ts}, {inv}]")
+                hist_btc_js_list.append(f"[{ts}, {btc}]")
+                
+            hist_val_js = ",\n".join(hist_val_js_list)
+            hist_inv_js = ",\n".join(hist_inv_js_list)
+            hist_btc_js = ",\n".join(hist_btc_js_list)
+        else:
+            hist_val_js, hist_inv_js, hist_btc_js = "", "", ""
 
+        # Pie Chart Data Construction
         pie_data_js_lines = []
         for _, r in df_port.iterrows():
             ticker = r['Ticker']
@@ -842,11 +869,15 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                             cursor: 'pointer',
                             depth: 40,
                             innerSize: '40%',
+                            size: '75%', /* Shrank to guarantee labels don't get pushed out of bounds */
                             dataLabels: {{
                                 enabled: true,
                                 format: '<b>{{point.name}}</b><br>{{point.percentage:.1f}}%',
                                 style: {{ color: '#e2e8f0', textOutline: 'none', fontSize: '10px', fontWeight: '600' }},
-                                connectorColor: 'rgba(255,255,255,0.2)'
+                                connectorColor: 'rgba(255,255,255,0.2)',
+                                distance: 15,
+                                crop: false, /* Force rendering of all labels even if cramped */
+                                overflow: 'allow'
                             }},
                             borderWidth: 0
                         }}
@@ -862,13 +893,15 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
 
                 // Render Historical Performance Chart (SECOND)
                 Highcharts.chart('history-container', {{
-                    chart: {{ type: 'areaspline', backgroundColor: 'transparent', margin: [25, 15, 45, 45] }},
+                    chart: {{ type: 'areaspline', backgroundColor: 'transparent', margin: [45, 15, 30, 45] }}, /* Top margin expanded for legend */
                     title: {{ text: null }},
                     legend: {{
                         enabled: true,
                         itemStyle: {{ color: '#94a3b8', fontSize: '11px', fontWeight: 'normal' }},
                         itemHoverStyle: {{ color: '#ffffff' }},
-                        verticalAlign: 'bottom'
+                        verticalAlign: 'top', /* Moved Legend to Top */
+                        align: 'center',
+                        y: 0
                     }},
                     xAxis: {{ 
                         type: 'datetime', 
