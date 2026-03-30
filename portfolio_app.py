@@ -294,9 +294,9 @@ div[data-testid="stForm"] .stDateInput {
     color: white !important;
 }
 
-/* Hidden triggers - using IDs to be hidden but still reachable by JavaScript */
-div[data-testid="stElementContainer"]:has(input#delete_trigger_input),
-div[data-testid="stElementContainer"]:has(input#edit_trigger_input) {
+/* Mathematically Cloak Hidden Triggers - Must not use display:none so JS can trigger them */
+div[data-testid="stElementContainer"]:has(input[aria-label="delete_trigger_hidden"]),
+div[data-testid="stElementContainer"]:has(input[aria-label="edit_trigger_hidden"]) {
     position: absolute !important;
     opacity: 0 !important;
     height: 0px !important;
@@ -324,19 +324,6 @@ div[data-testid="stElementContainer"]:has(input#edit_trigger_input) {
 }
 .crypto-table-scroll::-webkit-scrollbar {
     display: none;  /* Chrome/Safari */
-}
-/* Add transaction card – matches table style */
-.add-transaction-card {
-    background: #0f172a;
-    border: 1px solid rgba(255,255,255,0.05);
-    border-radius: 16px;
-    padding: 16px 20px;
-    margin-bottom: 20px;
-    box-shadow: 0 8px 24px rgba(0,0,0,0.3);
-}
-/* Remove extra space between card and table */
-.add-transaction-card + .crypto-table-scroll {
-    margin-top: 0;
 }
 .fiat-transactions-container {
     flex-grow: 1;
@@ -389,7 +376,6 @@ div[data-testid="stElementContainer"]:has(input#edit_trigger_input) {
     .usdc-banner-amount { font-size: 1.4rem; }
     
     div[data-testid="stForm"] { padding: 12px !important; margin-bottom: 16px !important; }
-    .add-transaction-card { padding: 12px 16px; }
 }
 </style>
 """, unsafe_allow_html=True)
@@ -1438,22 +1424,19 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
     elif st.session_state.page == "Crypto Transactions":
         glossy_header("Crypto Transactions", CRYPTO_ICON)
 
-        # Hidden triggers – using IDs for reliable targeting
+        # Hidden triggers for edit/delete (with aria-labels set via label text)
         with st.container():
             delete_trigger = st.text_input(
-                "delete_trigger_hidden",
-                value=st.session_state.delete_trigger,
-                label_visibility="collapsed",
-                key="delete_trigger_input"
+                "delete_trigger_hidden", 
+                value=st.session_state.delete_trigger, 
+                label_visibility="collapsed"
             )
             edit_trigger = st.text_input(
-                "edit_trigger_hidden",
-                value=st.session_state.edit_trigger,
-                label_visibility="collapsed",
-                key="edit_trigger_input"
+                "edit_trigger_hidden", 
+                value=st.session_state.edit_trigger, 
+                label_visibility="collapsed"
             )
 
-        # Process delete trigger
         if delete_trigger and delete_trigger != st.session_state.delete_trigger:
             try:
                 idx = int(delete_trigger)
@@ -1468,7 +1451,6 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                 pass
             st.session_state.delete_trigger = delete_trigger
 
-        # Process edit trigger
         if edit_trigger and edit_trigger != st.session_state.edit_trigger:
             try:
                 idx = int(edit_trigger)
@@ -1487,12 +1469,13 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
 
         edit_idx = st.session_state.get('editing_row_crypto', None)
 
-        # Wrap everything in a flex container
+        # Use a container with class for flex layout
         st.markdown('<div class="crypto-transactions-container">', unsafe_allow_html=True)
 
-        # --- Add Transaction Card (integrated with table style) ---
-        st.markdown('<div class="add-transaction-card">', unsafe_allow_html=True)
-        # Use columns to layout the input fields and radio
+        # Add new transaction row (styled like a table row)
+        st.markdown('<div class="add-transaction-row">', unsafe_allow_html=True)
+        st.markdown('<div style="display: flex; align-items: center; gap: 12px; margin-bottom: 16px;">', unsafe_allow_html=True)
+        # We'll use columns to simulate row cells
         cols = st.columns([1.2, 1, 1, 1, 1.2])
         with cols[0]:
             new_date = st.date_input("Date", value=date(2026, 3, 25), label_visibility="collapsed")
@@ -1503,9 +1486,9 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
         with cols[3]:
             new_amount = st.number_input("Amount", value=0.1, step=0.000001, format="%.8f", label_visibility="collapsed")
         with cols[4]:
+            # Modern buy/sell buttons placed above submit
             buy_sell = st.radio("Type", ["Buy", "Sell"], horizontal=True, label_visibility="collapsed")
-
-        # Add button below the row, full width, matching form style
+        # Submit button in its own row
         if st.button("➕ Add Transaction", use_container_width=True, key="add_crypto_btn"):
             if new_ticker:
                 final_usdc = new_usdc if buy_sell == "Buy" else -new_usdc
@@ -1524,36 +1507,38 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                 st.session_state.ui_version += 1
                 st.success(f"✅ Added {buy_sell}: {new_amount} {new_ticker}")
                 st.rerun()
-        st.markdown('</div>', unsafe_allow_html=True)  # close add-transaction-card
+        st.markdown('</div></div>', unsafe_allow_html=True)
 
-        # --- Scrollable Table Container ---
+        # Scrollable table wrapper
         st.markdown('<div class="crypto-table-scroll">', unsafe_allow_html=True)
 
-        # HTML and JavaScript for the transaction list
+        # Build table HTML with edit/delete triggers using the same method as before
         base_head = """
         <html>
         <head>
         <style>
-        body {
-            background: transparent;
-            margin: 0;
-            padding: 0;
+        body { 
+            background: transparent; 
+            margin: 0; 
+            padding: 0; 
             font-family: system-ui, -apple-system, sans-serif;
             overflow-y: auto;
             overflow-x: hidden;
-            scrollbar-width: none;      /* hide scrollbar Firefox */
-            -ms-overflow-style: none;   /* IE/Edge */
+            scrollbar-width: thin; 
+            scrollbar-color: rgba(255,255,255,0.1) transparent;
         }
-        body::-webkit-scrollbar {
-            display: none;              /* Chrome/Safari */
-        }
+        body::-webkit-scrollbar { width: 4px; }
+        body::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 4px; }
+        
         .tx-list-container {
             background: #0f172a;
             border: 1px solid rgba(255,255,255,0.05);
             border-radius: 16px;
             box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+            margin-bottom: 24px;
             width: 100%;
         }
+        
         .tx-row {
             display: flex;
             justify-content: space-between;
@@ -1564,37 +1549,42 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
         }
         .tx-row:first-child { border-top-left-radius: 16px; border-top-right-radius: 16px; }
         .tx-row:last-child { border-bottom: none; border-bottom-left-radius: 16px; border-bottom-right-radius: 16px; }
+        
         @media (hover: hover) and (pointer: fine) {
             .tx-row:hover { background: rgba(255,255,255,0.03); }
             .tx-row:hover .tx-btn { opacity: 1; }
         }
+        
         .tx-left { display: flex; align-items: center; gap: 14px; flex: 1; }
         .tx-logo { width: 38px; height: 38px; border-radius: 50%; object-fit: contain; }
         .tx-info { display: flex; flex-direction: column; gap: 2px; }
         .tx-ticker { font-size: 1.1rem; font-weight: 700; color: #ffffff; line-height: 1.1; }
         .tx-date { font-size: 0.85rem; color: #94a3b8; }
+        
         .tx-right { display: flex; align-items: center; gap: 24px; }
         .tx-financials { display: flex; flex-direction: column; align-items: flex-end; gap: 2px; }
         .tx-amount { font-size: 1.05rem; font-weight: 700; line-height: 1.1; }
         .tx-spent { font-size: 0.85rem; color: #cbd5e1; }
         .tx-price { font-size: 0.75rem; color: #64748b; }
+        
         .tx-actions { display: flex; gap: 8px; }
-        .tx-btn {
-            background: rgba(255,255,255,0.05);
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            font-size: 1.1rem;
-            padding: 8px;
-            display: flex;
-            align-items: center;
+        .tx-btn { 
+            background: rgba(255,255,255,0.05); 
+            border: none; 
+            border-radius: 8px; 
+            cursor: pointer; 
+            font-size: 1.1rem; 
+            padding: 8px; 
+            display: flex; 
+            align-items: center; 
             justify-content: center;
             transition: all 0.2s;
-            opacity: 0.5;
+            opacity: 0.5; /* Subdued until hover */
         }
         @media (hover: hover) and (pointer: fine) {
             .tx-btn:hover { background: rgba(255,255,255,0.15); transform: scale(1.05); }
         }
+        
         @media (max-width: 600px) {
             .tx-row { padding: 12px 14px; }
             .tx-logo { width: 32px; height: 32px; }
@@ -1604,7 +1594,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
             .tx-spent { font-size: 0.8rem; }
             .tx-price { font-size: 0.7rem; }
             .tx-right { gap: 14px; }
-            .tx-btn { padding: 6px; font-size: 1rem; opacity: 0.8; }
+            .tx-btn { padding: 6px; font-size: 1rem; opacity: 0.8; /* More visible on mobile */ }
         }
         </style>
         </head>
@@ -1613,19 +1603,17 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
 
         base_foot = """
         <script>
-        function triggerStreamlit(id, value) {
-            const input = window.parent.document.getElementById(id);
+        function triggerStreamlit(ariaLabel, value) {
+            const input = window.parent.document.querySelector(`input[aria-label="${ariaLabel}"]`);
             if (input) {
                 let nativeInputValueSetter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, "value").set;
                 nativeInputValueSetter.call(input, value);
                 input.dispatchEvent(new Event('input', { bubbles: true }));
                 input.dispatchEvent(new Event('change', { bubbles: true }));
-            } else {
-                console.warn('Input with id ' + id + ' not found');
             }
         }
-        function deleteTransaction(i) { triggerStreamlit("delete_trigger_input", i); }
-        function editTransaction(i) { triggerStreamlit("edit_trigger_input", i); }
+        function deleteTransaction(i) { triggerStreamlit("delete_trigger_hidden", i); }
+        function editTransaction(i) { triggerStreamlit("edit_trigger_hidden", i); }
         </script>
         </body>
         </html>
@@ -1638,19 +1626,19 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
         for i, r in df_display.iterrows():
             logo_url = get_ticker_logo(r['Ticker'])
             orig_idx = r['orig_idx']
-
+            
             amount = r['Amount']
             usdc = r['USDC']
             is_buy = amount >= 0
-
+            
             abs_amount = abs(amount)
             abs_usdc = abs(usdc)
             price = abs_usdc / abs_amount if abs_amount > 0 else 0
-
+            
             sign = "+" if is_buy else "-"
             color = "#00ff9d" if is_buy else "#ff4d4d"
             action_text = "Spent" if is_buy else "Received"
-
+            
             invested_formatted = format_money(abs_usdc)
             amount_formatted = format_holdings(abs_amount, r['Ticker'])
             price_formatted = format_price(price)
@@ -1678,30 +1666,31 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                 </div>
             </div>
             """
-
+            
             current_html += row_html
             rows_in_block += 1
-
+            
+            # If we encounter the row being edited, close current block and open a new one after edit form
             if orig_idx == edit_idx:
                 current_html += "</div>"
                 blocks.append((current_html, rows_in_block, True))
                 current_html = '<div class="tx-list-container">'
                 rows_in_block = 0
-
+                
         if rows_in_block > 0:
             current_html += "</div>"
             blocks.append((current_html, rows_in_block, False))
 
-        for html_chunk, row_count, render_form in blocks:
+        for index, (html_chunk, row_count, render_form) in enumerate(blocks):
             if row_count > 0:
                 full_html = base_head + html_chunk + base_foot
                 exact_height = min(max(row_count * 72, 80), 550)
-                components.html(full_html, height=exact_height, scrolling=False)
-
+                components.html(full_html, height=exact_height, scrolling=True)
+                
             if render_form and edit_idx is not None:
                 row = st.session_state.crypto_df.loc[edit_idx]
                 is_sell = row['Amount'] < 0
-
+                
                 st.markdown("<h4 style='text-align: center; color: #00ff9d; margin-top: 0px; margin-bottom: 10px;'>✏️ Editing Transaction</h4>", unsafe_allow_html=True)
                 with st.form("edit_crypto_row", border=False):
                     tx_type = st.radio("Type", ["Buy", "Sell"], horizontal=True, index=1 if is_sell else 0, label_visibility="collapsed")
@@ -1709,20 +1698,23 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                     with col1: selected_date = st.date_input("Date", value=datetime(1899, 12, 30) + timedelta(days=int(row['Datum'])))
                     with col2: new_usdc = st.number_input("USDC Amount", value=float(abs(row['USDC'])), step=0.01)
                     with col3: new_ticker = st.text_input("Ticker", value=row['Ticker']).upper().strip()
+                    
                     col4, col5, col6 = st.columns([2, 1, 1])
                     with col4: new_amount = st.number_input("Coin Amount", value=float(abs(row['Amount'])), step=0.000001, format="%.8f")
-                    with col5:
-                        st.write("")
+                    with col5: 
+                        st.write("") # spacer
                         st.write("")
                         save_clicked = st.form_submit_button("💾 Save")
                     with col6:
-                        st.write("")
+                        st.write("") # spacer
                         st.write("")
                         cancel_clicked = st.form_submit_button("❌ Cancel")
+                        
                     if save_clicked:
                         final_usdc = new_usdc if tx_type == "Buy" else -new_usdc
                         final_amount = new_amount if tx_type == "Buy" else -new_amount
                         new_price = round(new_usdc / new_amount, 8) if new_amount > 0 else 0.0
+                        
                         st.session_state.crypto_df.loc[edit_idx] = {"Datum": date_to_excel_serial(selected_date), "USDC": final_usdc, "Ticker": new_ticker, "Amount": final_amount, "Price": new_price}
                         save_crypto(st.session_state.crypto_df)
                         del st.session_state.editing_row_crypto
