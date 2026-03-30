@@ -1365,37 +1365,27 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
             margin-bottom: 0px !important;
         }
 
-        /* FIRST ROW: Inputs (4 cols on PC, 2x2 on Mobile) */
-        div[data-testid="stForm"]:has(.add-tx-card) div[data-testid="stHorizontalBlock"]:nth-of-type(1) {
+        /* 1a. FIRST ROW (4 columns): Inputs */
+        div[data-testid="stForm"]:has(.add-tx-card) div[data-testid="stHorizontalBlock"]:has(> div[data-testid="column"]:nth-child(4)) {
             display: flex !important;
-            flex-wrap: wrap !important;
             gap: 12px !important;
         }
-        div[data-testid="stForm"]:has(.add-tx-card) div[data-testid="stHorizontalBlock"]:nth-of-type(1) > div[data-testid="column"] {
-            flex: 1 1 calc(25% - 12px) !important;
-            min-width: 120px !important;
-            width: auto !important;
-        }
-
-        /* SECOND ROW: Action (Switch + Button) */
-        div[data-testid="stForm"]:has(.add-tx-card) div[data-testid="stHorizontalBlock"]:nth-of-type(2) {
+        
+        /* 1b. SECOND ROW (2 columns): Action (Switch + Button) */
+        div[data-testid="stForm"]:has(.add-tx-card) div[data-testid="stHorizontalBlock"]:has(> div[data-testid="column"]:nth-child(2):last-child) {
             display: flex !important;
             flex-direction: row !important;
-            flex-wrap: nowrap !important;
             justify-content: space-between !important;
             align-items: center !important;
             margin-top: 12px !important;
             gap: 12px !important;
         }
-        div[data-testid="stForm"]:has(.add-tx-card) div[data-testid="stHorizontalBlock"]:nth-of-type(2) > div[data-testid="column"]:nth-child(1) {
-            flex: 0 0 auto !important; /* Switch container size to content */
-            width: auto !important;
+        /* Make switch column hug content, make button column take rest */
+        div[data-testid="stForm"]:has(.add-tx-card) div[data-testid="stHorizontalBlock"]:has(> div[data-testid="column"]:nth-child(2):last-child) > div[data-testid="column"]:nth-child(1) {
+            flex: 0 0 auto !important; width: auto !important;
         }
-        div[data-testid="stForm"]:has(.add-tx-card) div[data-testid="stHorizontalBlock"]:nth-of-type(2) > div[data-testid="column"]:nth-child(2) {
-            flex: 1 1 auto !important; /* Button container takes remaining space */
-            display: flex !important;
-            justify-content: flex-end !important; /* Pushes button to far right */
-            width: auto !important;
+        div[data-testid="stForm"]:has(.add-tx-card) div[data-testid="stHorizontalBlock"]:has(> div[data-testid="column"]:nth-child(2):last-child) > div[data-testid="column"]:nth-child(2) {
+            flex: 1 1 auto !important; width: auto !important;
         }
 
         /* BEAUTIFUL BUY/SELL SWITCH */
@@ -1410,7 +1400,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
             margin: 0 !important;
             height: 48px !important;
             border: 1px solid rgba(255,255,255,0.05) !important;
-            min-width: 200px !important; /* ensures it doesn't shrink */
+            min-width: 200px !important;
         }
         div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label {
             margin: 0 !important;
@@ -1550,22 +1540,42 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
             .glossy-header { margin-top: 48px !important; margin-bottom: 24px !important; padding: 20px 16px !important; font-size: 22px !important; min-height: 90px; }
             .home-header { margin-bottom: 0 !important; }
             
-            /* Mobile Input Grid Fix (2x2) */
-            div[data-testid="stForm"]:has(.add-tx-card) div[data-testid="stHorizontalBlock"]:nth-of-type(1) > div[data-testid="column"] {
+            /* Fix Add Form Mobile Grid */
+            /* Force all horizontal blocks inside the form to flex explicitly */
+            div[data-testid="stForm"]:has(.add-tx-card) div[data-testid="stHorizontalBlock"] {
+                display: flex !important; 
+                flex-direction: row !important; 
+                flex-wrap: wrap !important; 
+                gap: 12px !important;
+            }
+            
+            /* The 4-column inputs row -> map exactly to 2x2 grid */
+            div[data-testid="stForm"]:has(.add-tx-card) div[data-testid="stHorizontalBlock"]:has(> div[data-testid="column"]:nth-child(4)) > div[data-testid="column"] {
+                min-width: calc(50% - 12px) !important;
+                width: calc(50% - 12px) !important;
                 flex: 1 1 calc(50% - 12px) !important;
             }
             div[data-testid="stForm"]:has(.add-tx-card) input { padding: 6px !important; font-size: 0.95rem !important; }
             
-            /* Action row mobile fix */
-            div[data-testid="stForm"]:has(.add-tx-card) div[data-testid="stHorizontalBlock"]:nth-of-type(2) {
-                flex-direction: row !important;
-                flex-wrap: nowrap !important;
+            /* The 2-column action row -> map to the 50/50 split below inputs (Switch left, Button right) */
+            div[data-testid="stForm"]:has(.add-tx-card) div[data-testid="stHorizontalBlock"]:has(> div[data-testid="column"]:nth-child(2):last-child) > div[data-testid="column"] {
+                min-width: calc(50% - 12px) !important;
+                width: calc(50% - 12px) !important;
+                flex: 1 1 calc(50% - 12px) !important;
             }
             div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] {
-                min-width: 160px !important; /* Slight shrink on mobile */
+                min-width: 0 !important; width: 100% !important; 
+            }
+            /* Push the submit button to the absolute right of its column */
+            div[data-testid="stForm"]:has(.add-tx-card) .stButton {
+                display: flex !important;
+                justify-content: flex-end !important;
+                width: 100% !important;
             }
             div[data-testid="stForm"]:has(.add-tx-card) .stButton > button {
-                padding: 0 16px !important; /* Less padding on mobile */
+                width: 100% !important;
+                max-width: 120px !important; 
+                padding: 0 16px !important;
             }
 
             /* Force Mobile Transaction Rows to stay perfectly horizontal */
@@ -1610,14 +1620,14 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
         with st.form("add_crypto", border=False):
             st.markdown("<div class='add-tx-card'></div><h3 style='text-align: center; color: white; margin-top: 0px; margin-bottom: 10px;'>New Transaction</h3>", unsafe_allow_html=True)
             
-            # Row 1: Inputs
+            # Row 1: Inputs (Rendered as 4 columns on PC, cleanly wrapped to 2x2 grid by CSS on mobile)
             r1c1, r1c2, r1c3, r1c4 = st.columns(4)
             with r1c1: selected_date = st.date_input("Date", value=date(2026, 3, 25))
             with r1c2: ticker = st.text_input("Ticker", value="BTC").upper().strip()
             with r1c3: usdc = st.number_input("USDC Amount", value=15.0, step=0.01)
             with r1c4: amount = st.number_input("Coin Amount", value=0.1, step=0.000001, format="%.8f")
             
-            # Row 2: Action Row (Switch & Button handled cleanly via flexbox css)
+            # Row 2: Action Row (Always 2 columns mapping naturally under the 2x2 layout above on mobile)
             action_col1, action_col2 = st.columns(2)
             with action_col1:
                 tx_type = st.radio("Type", ["Buy", "Sell"], horizontal=True, label_visibility="collapsed")
