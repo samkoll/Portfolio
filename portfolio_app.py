@@ -938,7 +938,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
             z-index: 10;
         }}
         
-        /* Fullscreen TV Overlay */
+        /* Fullscreen TV Overlay with Blur */
         #tv-overlay {{
             display: none;
             position: fixed;
@@ -946,7 +946,9 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
             left: 0;
             width: 100vw;
             height: 100vh;
-            background-color: #0f172a;
+            background-color: rgba(15, 23, 42, 0.95);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
             z-index: 99999;
         }}
         .tv-widget-container {{
@@ -1221,6 +1223,18 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
             localStorage.removeItem('flippedCards');
         }}
         
+        // --- Remember Dashboard Drawer State natively across sessions ---
+        const dashToggle = document.getElementById('dash-toggle');
+        if (dashToggle) {{
+            const savedDashState = localStorage.getItem('dashboardOpen');
+            if (savedDashState === 'true') {{
+                dashToggle.checked = true;
+            }}
+            dashToggle.addEventListener('change', () => {{
+                localStorage.setItem('dashboardOpen', dashToggle.checked);
+            }});
+        }}
+
         const flipCards = document.querySelectorAll('.flip-card');
         window.chartCache = window.chartCache || {{}};
         const chartCache = window.chartCache;
@@ -1373,14 +1387,6 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
             front.addEventListener('click', (e) => {{
                 e.stopPropagation();
                 
-                // Unflip all other cards first for clean UX
-                document.querySelectorAll('.flip-card.flipped').forEach(c => {{
-                    if (c !== card) {{
-                        c.classList.remove('flipped');
-                        c.classList.remove('touch-hover');
-                    }}
-                }});
-
                 // Toggle flipped state and touch-hover properly for mobile
                 if (!card.classList.contains('flipped')) {{
                     card.classList.add('flipped');
