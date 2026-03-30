@@ -263,6 +263,7 @@ div[data-testid="stForm"] {
     border-radius: 18px !important;
     padding: 24px !important;
     box-shadow: 0 8px 24px rgba(0,0,0,0.3) !important;
+    margin-bottom: 24px !important;
 }
 
 .stButton > button {
@@ -287,6 +288,16 @@ div[data-testid="stForm"] {
     box-shadow: 0 12px 30px rgba(255, 255, 255, 0.25) !important;
     background: #263b5e !important;
     color: white !important;
+}
+
+/* Mathematically Erase Hidden Triggers */
+div[data-testid="stElementContainer"]:has(input[aria-label="delete_trigger_hidden"]),
+div[data-testid="stElementContainer"]:has(input[aria-label="edit_trigger_hidden"]) {
+    display: none !important;
+    height: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow: hidden !important;
 }
 
 @media (max-width: 700px) {
@@ -333,9 +344,9 @@ div[data-testid="stForm"] {
 </style>
 
 <script>
-// JS Hack to strictly hide the invisible trigger elements above the table
+// Deep JS Fallback to obliterate hidden inputs
 document.addEventListener("DOMContentLoaded", function() {
-    setTimeout(() => {
+    setInterval(() => {
         const triggers = document.querySelectorAll('input[aria-label="delete_trigger_hidden"], input[aria-label="edit_trigger_hidden"]');
         triggers.forEach(input => {
             const container = input.closest('div[data-testid="stElementContainer"]');
@@ -344,9 +355,11 @@ document.addEventListener("DOMContentLoaded", function() {
                 container.style.height = '0px';
                 container.style.margin = '0px';
                 container.style.padding = '0px';
+                container.style.opacity = '0';
+                container.style.position = 'absolute';
             }
         });
-    }, 500); // Slight delay ensures Streamlit has rendered them
+    }, 100); // Continuous check handles Streamlit's dynamic DOM updates
 });
 </script>
 """, unsafe_allow_html=True)
@@ -1096,13 +1109,13 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                         const valEl = card.querySelector('.total-value');
                         if (valEl) valEl.innerText = valStr;
                         
-                        const pnlEl = card.querySelector('.card-pnl');
+                        const pnlEl = card.querySelector('#dash-pnl');
                         if (pnlEl) {{
                             pnlEl.innerText = pnlStr;
                             pnlEl.style.color = color;
                         }}
                         
-                        const pnlPctEl = card.querySelector('.card-pnl-pct');
+                        const pnlPctEl = card.querySelector('#dash-pnl-pct');
                         if (pnlPctEl) {{
                             pnlPctEl.innerText = pnlPctStr;
                             pnlPctEl.style.color = color;
@@ -1346,7 +1359,6 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
             const front = card.querySelector('.flip-card-front');
             front.addEventListener('click', (e) => {{
                 e.stopPropagation();
-                
                 // Toggle flipped state and touch-hover properly for mobile
                 if (!card.classList.contains('flipped')) {{
                     card.classList.add('flipped');
@@ -1428,7 +1440,9 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
         df_display = df_display.dropna(how='all')
         df_display = df_display.sort_values(by='Datum', ascending=False)
 
-        list_html = f"""
+        edit_idx = st.session_state.get('editing_row_crypto', None)
+
+        base_head = f"""
         <html>
         <head>
         <style>
@@ -1437,7 +1451,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
             margin: 0; 
             padding: 0; 
             font-family: system-ui, -apple-system, sans-serif;
-            overflow-x: hidden;
+            overflow: hidden;
             scrollbar-width: none; /* Firefox */
             -ms-overflow-style: none; /* IE/Edge */
         }}
@@ -1448,8 +1462,8 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
             border: 1px solid rgba(255,255,255,0.05);
             border-radius: 16px;
             box-shadow: 0 8px 24px rgba(0,0,0,0.3);
-            margin-bottom: 24px;
             width: 100%;
+            overflow: hidden;
         }}
         
         .tx-row {{
@@ -1512,11 +1526,33 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
         </style>
         </head>
         <body>
-        <div class="tx-list-container">
         """
 
-        for _, r in df_display.iterrows():
+        base_foot = """
+        <script>
+        function triggerStreamlit(ariaLabel, value) {
+            const input = window.parent.document.querySelector(`input[aria-label="${ariaLabel}"]`);
+            if (input) {
+                let nativeInputValueSetter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, "value").set;
+                nativeInputValueSetter.call(input, value);
+                input.dispatchEvent(new Event('input', { bubbles: true }));
+                input.dispatchEvent(new Event('change', { bubbles: true }));
+            }
+        }
+        function deleteTransaction(i) { triggerStreamlit("delete_trigger_hidden", i); }
+        function editTransaction(i) { triggerStreamlit("edit_trigger_hidden", i); }
+        </script>
+        </body>
+        </html>
+        """
+
+        blocks = []
+        current_html = '<div class="tx-list-container">'
+        rows_in_block = 0
+
+        for i, r in df_display.iterrows():
             logo_url = get_ticker_logo(r['Ticker'])
+            orig_idx = r['orig_idx']
             
             # Logic for Buy/Sell visual differentiation
             amount = r['Amount']
@@ -1535,9 +1571,8 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
             amount_formatted = format_holdings(abs_amount, r['Ticker'])
             price_formatted = format_price(price)
             date_str = format_datum(r['Datum'])
-            orig_idx = r['orig_idx']
 
-            list_html += f"""
+            row_html = f"""
             <div class="tx-row">
                 <div class="tx-left">
                     <img src="{logo_url}" class="tx-logo" onerror="this.src='https://via.placeholder.com/38/1e2a44/ffffff?text={r['Ticker'][0]}';">
@@ -1559,98 +1594,91 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                 </div>
             </div>
             """
-
-        list_html += """
-        </div>
-        <script>
-        function deleteTransaction(i) {
-            const input = window.parent.document.querySelector('input[aria-label="delete_trigger_hidden"]');
-            if (input) {
-                input.value = i;
-                input.dispatchEvent(new Event('change'));
-            }
-        }
-        function editTransaction(i) {
-            const input = window.parent.document.querySelector('input[aria-label="edit_trigger_hidden"]');
-            if (input) {
-                input.value = i;
-                input.dispatchEvent(new Event('change'));
-            }
-        }
-        </script>
-        </body>
-        </html>
-        """
-        
-        # Calculate dynamic height based on row count (approx 75px per row) so it fits perfectly without internal scroll
-        dynamic_height = min(max(len(df_display) * 75 + 10, 100), 550) 
-        components.html(list_html, height=dynamic_height, scrolling=True)
-
-        if 'editing_row_crypto' in st.session_state:
-            edit_idx = st.session_state.editing_row_crypto
-            row = st.session_state.crypto_df.loc[edit_idx]
             
-            is_sell = row['Amount'] < 0
+            current_html += row_html
+            rows_in_block += 1
             
-            st.markdown("<h3 style='text-align: center; color: white; margin-top: 10px;'>✏️ Edit Transaction</h3>", unsafe_allow_html=True)
-            with st.form("edit_crypto_row", border=False):
-                tx_type = st.radio("Type", ["Buy", "Sell"], horizontal=True, index=1 if is_sell else 0, label_visibility="collapsed")
-                col_a, col_b, col_c = st.columns([1.2, 1.2, 1.6])
-                with col_a:
-                    new_date = st.date_input("Date", value=datetime(1899, 12, 30) + timedelta(days=int(row['Datum'])))
-                    new_datum = date_to_excel_serial(new_date)
-                with col_b:
-                    new_usdc = st.number_input("USDC Amount", value=float(abs(row['USDC'])), step=0.01)
-                with col_c:
-                    new_ticker = st.text_input("Ticker", value=row['Ticker']).upper().strip()
-                new_amount = st.number_input("Coin Amount", value=float(abs(row['Amount'])), step=0.000001, format="%.8f")
+            if orig_idx == edit_idx:
+                current_html += "</div>"
+                blocks.append((current_html, rows_in_block, True))
+                current_html = '<div class="tx-list-container">'
+                rows_in_block = 0
                 
-                col_save, col_cancel = st.columns(2)
-                with col_save:
-                    if st.form_submit_button("💾 Save Changes"):
-                        # Apply math based on Buy/Sell
-                        final_usdc = new_usdc if tx_type == "Buy" else -new_usdc
-                        final_amount = new_amount if tx_type == "Buy" else -new_amount
-                        new_price = round(new_usdc / new_amount, 8) if new_amount > 0 else 0.0
+        if rows_in_block > 0:
+            current_html += "</div>"
+            blocks.append((current_html, rows_in_block, False))
+
+        for index, (html_chunk, row_count, render_form) in enumerate(blocks):
+            if row_count > 0:
+                full_html = base_head + html_chunk + base_foot
+                # Exact pixel math to completely kill internal iframe scrollbars
+                exact_height = (row_count * 70) + 4 
+                components.html(full_html, height=exact_height, scrolling=False)
+                
+            if render_form and edit_idx is not None:
+                row = st.session_state.crypto_df.loc[edit_idx]
+                is_sell = row['Amount'] < 0
+                
+                st.markdown("<h3 style='text-align: center; color: white; margin-top: 10px;'>✏️ Edit Transaction</h3>", unsafe_allow_html=True)
+                with st.form("edit_crypto_row", border=False):
+                    tx_type = st.radio("Type", ["Buy", "Sell"], horizontal=True, index=1 if is_sell else 0, label_visibility="collapsed")
+                    col_a, col_b, col_c = st.columns([1.2, 1.2, 1.6])
+                    with col_a:
+                        new_date = st.date_input("Date", value=datetime(1899, 12, 30) + timedelta(days=int(row['Datum'])))
+                        new_datum = date_to_excel_serial(new_date)
+                    with col_b:
+                        new_usdc = st.number_input("USDC Amount", value=float(abs(row['USDC'])), step=0.01)
+                    with col_c:
+                        new_ticker = st.text_input("Ticker", value=row['Ticker']).upper().strip()
+                    new_amount = st.number_input("Coin Amount", value=float(abs(row['Amount'])), step=0.000001, format="%.8f")
+                    
+                    col_save, col_cancel = st.columns(2)
+                    with col_save:
+                        if st.form_submit_button("💾 Save Changes"):
+                            # Apply math based on Buy/Sell
+                            final_usdc = new_usdc if tx_type == "Buy" else -new_usdc
+                            final_amount = new_amount if tx_type == "Buy" else -new_amount
+                            new_price = round(new_usdc / new_amount, 8) if new_amount > 0 else 0.0
+                            
+                            st.session_state.crypto_df.loc[edit_idx] = {"Datum": new_datum, "USDC": final_usdc, "Ticker": new_ticker, "Amount": final_amount, "Price": new_price}
+                            save_crypto(st.session_state.crypto_df)
+                            del st.session_state.editing_row_crypto
+                            st.session_state.crypto_table_version += 1
+                            st.session_state.ui_version += 1
+                            st.success("✅ Transaction updated!")
+                            st.rerun()
+                    with col_cancel:
+                        if st.form_submit_button("❌ Cancel"):
+                            del st.session_state.editing_row_crypto
+                            st.rerun()
+
+        if edit_idx is None:
+            st.markdown("<h3 style='text-align: center; color: white; margin-top: 10px;'>➕ Add New Transaction</h3>", unsafe_allow_html=True)
+            with st.form("add_crypto", border=False):
+                tx_type = st.radio("Type", ["Buy", "Sell"], horizontal=True, label_visibility="collapsed")
+                col1, col2, col3 = st.columns([1.2, 1.2, 1.6])
+                with col1:
+                    selected_date = st.date_input("Date", value=date(2026, 3, 25))
+                    datum = date_to_excel_serial(selected_date)
+                with col2:
+                    usdc = st.number_input("USDC Amount", value=15.0, step=0.01)
+                with col3:
+                    ticker = st.text_input("Ticker", value="BTC").upper().strip()
+                amount = st.number_input("Coin Amount", value=0.1, step=0.000001, format="%.8f")
+                
+                if st.form_submit_button("Submit Transaction"):
+                    if ticker:
+                        final_usdc = usdc if tx_type == "Buy" else -usdc
+                        final_amount = amount if tx_type == "Buy" else -amount
+                        price = round(usdc / amount, 8) if amount > 0 else 0.0
                         
-                        st.session_state.crypto_df.loc[edit_idx] = {"Datum": new_datum, "USDC": final_usdc, "Ticker": new_ticker, "Amount": final_amount, "Price": new_price}
+                        new_row = pd.DataFrame([{"Datum": datum, "USDC": final_usdc, "Ticker": ticker, "Amount": final_amount, "Price": price}])
+                        st.session_state.crypto_df = pd.concat([st.session_state.crypto_df, new_row], ignore_index=True)
                         save_crypto(st.session_state.crypto_df)
-                        del st.session_state.editing_row_crypto
                         st.session_state.crypto_table_version += 1
                         st.session_state.ui_version += 1
-                        st.success("✅ Transaction updated!")
+                        st.success(f"✅ Executed {tx_type}: {amount} {ticker}")
                         st.rerun()
-                with col_cancel:
-                    if st.form_submit_button("❌ Cancel"):
-                        del st.session_state.editing_row_crypto
-                        st.rerun()
-
-        st.markdown("<h3 style='text-align: center; color: white; margin-top: 10px;'>➕ Add New Transaction</h3>", unsafe_allow_html=True)
-        with st.form("add_crypto", border=False):
-            tx_type = st.radio("Type", ["Buy", "Sell"], horizontal=True, label_visibility="collapsed")
-            col1, col2, col3 = st.columns([1.2, 1.2, 1.6])
-            with col1:
-                selected_date = st.date_input("Date", value=date(2026, 3, 25))
-                datum = date_to_excel_serial(selected_date)
-            with col2:
-                usdc = st.number_input("USDC Amount", value=15.0, step=0.01)
-            with col3:
-                ticker = st.text_input("Ticker", value="BTC").upper().strip()
-            amount = st.number_input("Coin Amount", value=0.1, step=0.000001, format="%.8f")
-            
-            if st.form_submit_button("Submit Transaction"):
-                if ticker:
-                    final_usdc = usdc if tx_type == "Buy" else -usdc
-                    final_amount = amount if tx_type == "Buy" else -amount
-                    price = round(usdc / amount, 8) if amount > 0 else 0.0
-                    
-                    new_row = pd.DataFrame([{"Datum": datum, "USDC": final_usdc, "Ticker": ticker, "Amount": final_amount, "Price": price}])
-                    st.session_state.crypto_df = pd.concat([st.session_state.crypto_df, new_row], ignore_index=True)
-                    save_crypto(st.session_state.crypto_df)
-                    st.session_state.crypto_table_version += 1
-                    st.session_state.ui_version += 1
-                    st.success(f"✅ Executed {tx_type}: {amount} {ticker}")
-                    st.rerun()
 
     # ====================== FIAT TRANSACTIONS ======================
     elif st.session_state.page == "Fiat Transactions":
