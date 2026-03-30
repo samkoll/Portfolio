@@ -217,15 +217,16 @@ div[data-testid="stMainBlockContainer"] {
     display: block;
 }
 
+/* Subdued and Smaller USDC Banner */
 .usdc-banner {
     position: relative;
     overflow: hidden;
-    background: #0f172a;
-    border: 2px solid rgba(39, 117, 202, 0.4);
-    border-radius: 18px;
-    box-shadow: 0 8px 24px rgba(0,0,0,0.3);
-    padding: 20px 26px;
-    margin-bottom: 30px;
+    background: rgba(15, 23, 42, 0.5);
+    border: 1px solid rgba(39, 117, 202, 0.2);
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    padding: 10px 20px;
+    margin-bottom: 24px;
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -233,31 +234,32 @@ div[data-testid="stMainBlockContainer"] {
 .usdc-banner-left {
     display: flex;
     align-items: center;
-    gap: 16px;
+    gap: 12px;
 }
 .usdc-banner-left img {
-    width: 46px;
-    height: 46px;
+    width: 28px;
+    height: 28px;
     border-radius: 50%;
     object-fit: contain;
+    opacity: 0.85;
 }
 .usdc-banner-title {
-    font-size: 1.45rem;
-    font-weight: 700;
-    color: #ffffff;
+    font-size: 1.05rem;
+    font-weight: 600;
+    color: #e2e8f0;
     display: flex;
     align-items: center;
     gap: 8px;
 }
 .usdc-banner-subtitle {
-    font-size: 0.95rem;
+    font-size: 0.75rem;
     font-weight: 500;
-    color: #94a3b8;
+    color: #64748b;
 }
 .usdc-banner-amount {
-    font-size: 1.7rem;
-    font-weight: 700;
-    color: #ffffff;
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: #e2e8f0;
 }
 
 /* Native CSS Privacy Mode for USDC Banner */
@@ -266,8 +268,8 @@ div[data-testid="stMainBlockContainer"] {
 }
 .dashboard-toggle:not(:checked) ~ .usdc-banner .usdc-banner-amount::after {
     content: '***';
-    font-size: 1.7rem;
-    color: #ffffff;
+    font-size: 1.2rem;
+    color: #e2e8f0;
 }
 
 /* GLOBALLY HIDE NUMBER INPUT STEP BUTTONS (+ / -) */
@@ -555,7 +557,7 @@ if 'refresh_key' not in st.session_state:
 # ====================== SIDEBAR ======================
 with st.sidebar:
     nav_items = [
-        ("🏠 Portfolio Dashboard", "Home"),
+        ("🏠 Overview", "Home"),
         ("📊 Crypto Transactions", "Crypto Transactions"),
         ("💰 Fiat Transactions", "Fiat Transactions")
     ]
@@ -595,7 +597,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
 <div class="dashboard-wrapper">
 <label for="dash-toggle" class="glossy-header-label">
 <div class="glossy-header home-header">
-{DASHBOARD_ICON}<span style="margin-left:12px;">Portfolio Dashboard</span>
+{DASHBOARD_ICON}<span style="margin-left:12px;">Overview</span>
 <div class="pull-indicator">
 {EYE_CLOSED}
 {EYE_OPEN}
@@ -1614,11 +1616,13 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
             .glossy-box.swapped { height: 80px !important; min-height: 80px !important; max-height: 80px !important; padding: 0 !important; min-width: 0 !important; }
             .dash-value { font-size: clamp(11px, 3.5vw, 15px) !important; top: 24px !important; } 
             .dash-label { font-size: clamp(8px, 2.5vw, 10px) !important; bottom: 8px !important; white-space: nowrap !important; letter-spacing: 0.5px !important; }
-            .usdc-banner { padding: 16px 18px; margin-bottom: 24px; }
-            .usdc-banner-left img { width: 36px; height: 36px; }
-            .usdc-banner-title { font-size: 1.2rem; }
-            .usdc-banner-subtitle { font-size: 0.85rem; }
-            .usdc-banner-amount { font-size: 1.4rem; }
+            
+            /* Restyled Subdued USDC Banner Mobile */
+            .usdc-banner { padding: 8px 14px; margin-bottom: 20px; }
+            .usdc-banner-left img { width: 24px; height: 24px; }
+            .usdc-banner-title { font-size: 0.95rem; }
+            .usdc-banner-subtitle { font-size: 0.7rem; }
+            .usdc-banner-amount { font-size: 1.1rem; }
         }
         </style>
         """, unsafe_allow_html=True)
