@@ -91,18 +91,18 @@ div[data-testid="stMainBlockContainer"] {
 .dashboard-toggle:checked ~ .dashboard-wrapper .stats-layer {
     margin-top: 14px !important; /* Drops down */
 }
+
+/* Force 3 columns globally without wrapping */
 .stats-layer-inner {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
-    align-items: center;
+    display: grid !important;
+    grid-template-columns: repeat(3, 1fr) !important;
     gap: 14px;
     width: 100%;
 }
 
 /* Tucked Text Fade Out */
 .dash-value {
-    font-size: clamp(16px, 2vw, 24px) !important; /* Fluid typography */
+    font-size: clamp(14px, 2.5vw, 24px) !important; /* Fluid typography */
     font-weight: 700;
     line-height: 1.05;
     color: #ffffff;
@@ -113,7 +113,7 @@ div[data-testid="stMainBlockContainer"] {
     text-align: center;
     margin: 0;
     transition: opacity 0.3s ease;
-    padding: 0 8px;
+    padding: 0 4px;
     box-sizing: border-box;
     white-space: nowrap;
     overflow: hidden;
@@ -209,8 +209,7 @@ div[data-testid="stMainBlockContainer"] {
 }
 
 .glossy-box.swapped {
-    flex: 1 1 130px;
-    min-width: 100px !important;
+    min-width: 0 !important;
     height: 80px !important;
     min-height: 80px !important;
     max-height: 80px !important;
@@ -1610,10 +1609,10 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
             .mobile-tx-sub { font-size: 0.7rem !important; white-space: nowrap !important; margin-left: 2px !important;}
             
             /* Dashboard Mobile Stats Override Fix */
-            .stats-layer-inner { gap: 8px !important; }
+            .stats-layer-inner { gap: 6px !important; }
             .stats-layer { margin-top: -60px !important; margin-bottom: 18px; } 
-            .glossy-box.swapped { flex: 1 1 calc(33.333% - 8px) !important; min-width: 90px !important; height: 80px !important; min-height: 80px !important; max-height: 80px !important; padding: 0 !important; }
-            .dash-value { font-size: clamp(11px, 3.5vw, 15px) !important; top: 24px !important; white-space: nowrap !important; overflow: hidden !important; text-overflow: ellipsis !important; } 
+            .glossy-box.swapped { height: 80px !important; min-height: 80px !important; max-height: 80px !important; padding: 0 !important; min-width: 0 !important; }
+            .dash-value { font-size: clamp(11px, 3.5vw, 15px) !important; top: 24px !important; } 
             .dash-label { font-size: clamp(8px, 2.5vw, 10px) !important; bottom: 8px !important; white-space: nowrap !important; letter-spacing: 0.5px !important; }
             .usdc-banner { padding: 16px 18px; margin-bottom: 24px; }
             .usdc-banner-left img { width: 36px; height: 36px; }
