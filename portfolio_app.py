@@ -1397,6 +1397,13 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                 }}
             }});
             
+            const backDiv = card.querySelector('.flip-card-back');
+            backDiv.addEventListener('click', (e) => {{
+                // Tapping anywhere on the back flips the card over
+                card.classList.remove('flipped');
+                card.classList.remove('touch-hover');
+            }});
+            
             // TradingView Fullscreen functionality (PERSISTENT STATE)
             const fsBtn = card.querySelector('.tv-btn');
             if (fsBtn) {{
