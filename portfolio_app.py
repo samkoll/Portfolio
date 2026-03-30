@@ -322,7 +322,8 @@ FIAT_ICON = '''<svg xmlns="http://www.w3.org/2000/svg" width="38" height="38" vi
 # Minimalist 16px eye icon, neutral color
 EYE_CLOSED = '''<svg class="eye-closed" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>'''
 EYE_OPEN = '''<svg class="eye-open" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>'''
-FULLSCREEN_ICON = '''<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/></svg>'''
+# TradingView SVG Logo
+TV_ICON = '''<svg xmlns="http://www.w3.org/2000/svg" width="18" height="14" viewBox="0 0 28 21" fill="currentColor"><path d="M12 21H8V3h4v18zm1.5-6h3.5l3.5-4.5V21h-7v-6zM28 21h-4l-6.5-9L21 6l7 10v5z"/></svg>'''
 
 DATA_DIR = Path("data")
 DATA_DIR.mkdir(exist_ok=True)
@@ -708,8 +709,8 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
             </div>
         </div>
         <div class="flip-card-back">
-            <div class="fullscreen-btn" title="Advanced Chart">
-                {FULLSCREEN_ICON}
+            <div class="tv-btn" title="Advanced TradingView Chart">
+                {TV_ICON}
             </div>
             <div class="chart-container">
                 <canvas id="chart-{ticker}"></canvas>
@@ -813,11 +814,11 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
             transform: rotateY(180deg);
             display: flex;
             flex-direction: column;
-            padding: 24px 16px 16px 16px; /* Extra top padding for the fullscreen button */
+            padding: 24px 16px 16px 16px; /* Extra top padding for the TV button */
         }}
         
-        /* Elegant Fullscreen Button for the back of the card */
-        .fullscreen-btn {{
+        /* TradingView Logo Button for the back of the card */
+        .tv-btn {{
             position: absolute;
             top: 10px;
             right: 12px;
@@ -827,7 +828,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
             transition: color 0.2s ease;
             padding: 4px;
         }}
-        .fullscreen-btn:hover {{ color: #ffffff; }}
+        .tv-btn:hover {{ color: #ffffff; }}
         
         /* Interactive dynamic colored border glow - ONLY applies on PC (fine pointers) */
         @media (hover: hover) and (pointer: fine) {{
@@ -1005,7 +1006,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
             // Only run if the click is outside a flip-card inner and outside dashboard wrapper
             const isCardClick = e && e.target && e.target.closest && e.target.closest('.flip-card');
             const isDashClick = e && e.target && e.target.closest && e.target.closest('.dashboard-wrapper');
-            const isFullscreenBtn = e && e.target && e.target.closest && e.target.closest('.fullscreen-btn');
+            const isFullscreenBtn = e && e.target && e.target.closest && e.target.closest('.tv-btn');
             
             if (!isCardClick && !isFullscreenBtn) {{
                 document.querySelectorAll('.flip-card.flipped').forEach(card => {{
@@ -1138,7 +1139,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                             pnlPctEl.style.color = color;
                         }}
                         
-                        // Update Live Chart Last Dot
+                        // Update Live Chart Last Dot dynamically
                         if (window.chartCache && window.chartCache[ticker] && window.chartCache[ticker].chartObj) {{
                             const chart = window.chartCache[ticker].chartObj;
                             const dataLen = chart.data.datasets[0].data.length;
@@ -1383,7 +1384,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
             }});
             
             // TradingView Fullscreen functionality
-            const fsBtn = card.querySelector('.fullscreen-btn');
+            const fsBtn = card.querySelector('.tv-btn');
             if (fsBtn) {{
                 fsBtn.addEventListener('click', (e) => {{
                     e.stopPropagation(); // prevent flipping the card
@@ -1413,7 +1414,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                       "backgroundColor": "#0f172a",
                       "gridColor": "#1e293b",
                       "hide_top_toolbar": false,
-                      "hide_legend": false,
+                      "hide_side_toolbar": false,
                       "save_image": false,
                       "container_id": "tv_chart_container",
                       "allow_symbol_change": true,
