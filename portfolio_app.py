@@ -881,30 +881,27 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                 
                 @media (max-width: 768px) {{
                     .pie-placeholder, .history-placeholder {{ 
-                        height: 300px; 
+                        height: 320px; 
                         width: 85vw; 
                         flex: 0 0 85vw; 
                     }}
+                    
                     .charts-flex {{ 
                         padding: 0 7.5vw; 
                         gap: 16px; 
-                    }}
-                    
-                    /* Pure Hardware Accelerated Keyframe Pop-in. No layout morphing. */
-                    @keyframes smoothPop {{
-                        0% {{ transform: translate(-50%, -48%) scale(0.96); opacity: 0; }}
-                        100% {{ transform: translate(-50%, -50%) scale(1); opacity: 1; }}
                     }}
                     
                     .expanded-chart {{
                         position: fixed !important;
                         top: 50% !important;
                         left: 50% !important;
-                        width: 95vw !important;
-                        height: 400px !important;
+                        transform: translate(-50%, -50%) !important;
                         z-index: 1001 !important;
                         margin: 0 !important;
-                        animation: smoothPop 0.3s cubic-bezier(0.2, 0.8, 0.2, 1) forwards !important;
+                        background: rgba(15, 23, 42, 0.95) !important;
+                        border: 1px solid rgba(0, 255, 157, 0.4) !important;
+                        box-shadow: 0 10px 40px rgba(0,0,0,0.8) !important;
+                        /* We don't force width/height here; Highcharts setSize dynamically applies it inline */
                     }}
                 }}
             </style>
@@ -1072,28 +1069,39 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                     const overlay = document.getElementById('chart-overlay');
                     const wrapper = document.getElementById('chartsScrollContainer');
                     const hc = Highcharts.charts.find(c => c && c.renderTo.id === chartId);
+                    if (!hc) return;
                     
                     // If Already Expanded, Close It
                     if (el.classList.contains('expanded-chart')) {{
                         el.classList.remove('expanded-chart');
                         overlay.classList.remove('active');
-                        // Reflow instantly so it fits back in the placeholder
-                        if (hc) setTimeout(() => hc.reflow(), 10);
+                        wrapper.style.overflowX = 'auto'; // Restore scroll snapping
+                        
+                        // Tell Highcharts to animate perfectly back to the placeholder dimensions
+                        hc.setSize(window.innerWidth * 0.85, 320, {{ duration: 350, easing: 'easeOutQuart' }});
+                        
+                        // Clear explicit sizing after animation finishes so CSS handles resizing later
+                        setTimeout(() => {{ hc.setSize(null, null, false); }}, 360);
                         return;
                     }}
                     
                     // Otherwise, Open It
+                    // Collapse any other open charts silently first
                     document.querySelectorAll('.expanded-chart').forEach(c => {{
                         c.classList.remove('expanded-chart');
                         const otherHc = Highcharts.charts.find(ohc => ohc && ohc.renderTo.id === c.id);
-                        if (otherHc) setTimeout(() => otherHc.reflow(), 10);
+                        if (otherHc) {{
+                            otherHc.setSize(window.innerWidth * 0.85, 320, false);
+                            setTimeout(() => {{ otherHc.setSize(null, null, false); }}, 50);
+                        }}
                     }});
                     
                     el.classList.add('expanded-chart');
                     overlay.classList.add('active');
+                    wrapper.style.overflowX = 'visible'; // Prevent clipping while expanded
                     
-                    // Delay reflow by a tiny fraction so CSS animation pops instantly
-                    if (hc) setTimeout(() => hc.reflow(), 50);
+                    // Instruct Highcharts to perfectly animate its internal SVG vectors to fill the new big space
+                    hc.setSize(window.innerWidth * 0.96, 440, {{ duration: 350, easing: 'easeOutQuart' }});
                 }}
 
                 function setupDoubleTap(elementId) {{
@@ -1128,9 +1136,13 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                     document.querySelectorAll('.expanded-chart').forEach(el => {{
                         el.classList.remove('expanded-chart');
                         const hc = Highcharts.charts.find(c => c && c.renderTo.id === el.id);
-                        if (hc) hc.reflow();
+                        if (hc) {{
+                            hc.setSize(window.innerWidth * 0.85, 320, {{ duration: 350, easing: 'easeOutQuart' }});
+                            setTimeout(() => {{ hc.setSize(null, null, false); }}, 360);
+                        }}
                     }});
                     document.getElementById('chart-overlay').classList.remove('active');
+                    document.getElementById('chartsScrollContainer').style.overflowX = 'auto'; // Restore scroll snapping
                 }});
 
 
@@ -1168,8 +1180,8 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
         </body>
         </html>
         """
-        # Height raised to 420 to provide plenty of vertical room for the pop-out modal without clipping the frame
-        components.html(charts_html, height=420, scrolling=False)
+        # Height raised to 460 to provide plenty of vertical room for the highcharts expansion without clipping the iframe
+        components.html(charts_html, height=460, scrolling=False)
 
         # ================== 3. SUBDUED USDC BANNER ==================
         usdc_banner_html = f"""
