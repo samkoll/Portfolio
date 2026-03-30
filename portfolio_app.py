@@ -1360,7 +1360,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
             align-items: center !important;
             width: 100% !important;
             margin: 0 !important;
-            height: 100% !important;
+            height: 46px !important; /* Perfect height matching */
             border: 1px solid rgba(255,255,255,0.05) !important;
         }
         div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label {
@@ -1402,14 +1402,15 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
             justify-content: center !important;
             align-items: center !important;
             height: 100% !important;
+            padding-top: 1px !important;
         }
         div[data-testid="stForm"]:has(.add-tx-card) .stButton > button {
             background: #1e2a44 !important;
-            color: #e0e0e0 !important; padding: 0 24px !important;
-            border-radius: 10px !important; font-size: 1rem !important; font-weight: 700 !important;
+            color: #e0e0e0 !important; padding: 0 16px !important;
+            border-radius: 12px !important; font-size: 1.05rem !important; font-weight: 700 !important;
             box-shadow: 0 4px 15px rgba(0,0,0,0.25) !important; transition: all 0.3s ease !important;
-            border: none !important; margin-top: 0px !important; width: auto !important;
-            height: 44px !important; min-height: 44px !important;
+            border: none !important; margin-top: 0px !important; width: 100% !important;
+            height: 46px !important; min-height: 46px !important;
         }
         div[data-testid="stForm"]:has(.add-tx-card) .stButton > button:hover {
             transform: translateY(-2px) !important;
@@ -1513,9 +1514,11 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                 gap: 10px !important;
                 align-items: stretch !important;
             }
-            div[data-testid="stForm"]:has(.add-tx-card) div[data-testid="stHorizontalBlock"]:nth-of-type(2) > div[data-testid="column"] {
-                min-width: calc(50% - 5px) !important;
-                width: calc(50% - 5px) !important;
+            div[data-testid="stForm"]:has(.add-tx-card) div[data-testid="stHorizontalBlock"]:nth-of-type(2) > div[data-testid="column"]:nth-child(1) {
+                width: 66% !important; flex: 2 !important;
+            }
+            div[data-testid="stForm"]:has(.add-tx-card) div[data-testid="stHorizontalBlock"]:nth-of-type(2) > div[data-testid="column"]:nth-child(2) {
+                width: 33% !important; flex: 1 !important;
             }
 
             /* Force Mobile Transaction Rows to stay perfectly horizontal */
@@ -1570,12 +1573,13 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
             # Adding some spacing before the action row
             st.markdown("<div style='margin-top: 15px;'></div>", unsafe_allow_html=True)
             
-            # Switch and Submit button on the same line
-            action_col1, action_col2 = st.columns([1, 1])
+            # Switch and Submit button perfectly sized (ratio 2:1 gives all 3 elements equal width)
+            action_col1, action_col2 = st.columns([2, 1])
             with action_col1:
                 tx_type = st.radio("Type", ["Buy", "Sell"], horizontal=True, label_visibility="collapsed")
             with action_col2:
-                submitted = st.form_submit_button("+ Add", use_container_width=False) [cite: 1]
+                # Removed the use_container_width flag that was breaking older Streamlit versions
+                submitted = st.form_submit_button("+ Add")
             
             if submitted:
                 if ticker:
