@@ -594,6 +594,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
         usdc_row = df_port[df_port['Ticker'] == 'USDC'].iloc[0] if not df_port[df_port['Ticker'] == 'USDC'].empty else None
         usdc_holdings = usdc_row['Holdings'] if usdc_row is not None else 0
 
+        # ================== 1. DASHBOARD OVERVIEW ==================
         value_box_html = f"""
 <input type="checkbox" id="dash-toggle" class="dashboard-toggle" style="display:none;">
 <div class="dashboard-wrapper">
@@ -614,6 +615,103 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
 </div>
 </div>
 </div>
+"""
+        st.markdown(value_box_html, unsafe_allow_html=True)
+
+        # ================== 2. 3D PIE CHART ==================
+        pie_data_js_lines = []
+        for _, r in df_port.iterrows():
+            ticker = r['Ticker']
+            if ticker == 'USDC':
+                continue
+            val = r['Value']
+            if pd.notna(val) and val > 0:
+                base_color = get_ticker_color(ticker)
+                # Ensure black logos like XRP or HBAR are visible on dark background
+                chart_color = base_color if base_color != '#000000' else '#ffffff' 
+                pie_data_js_lines.append(f"{{ name: '{ticker}', y: {val}, color: '{chart_color}' }}")
+        pie_data_js = ",\n".join(pie_data_js_lines)
+
+        pie_html = f"""
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <meta charset="UTF-8">
+            <script src="https://code.highcharts.com/highcharts.js"></script>
+            <script src="https://code.highcharts.com/highcharts-3d.js"></script>
+            <style>
+                body {{ margin: 0; padding: 0; background: transparent; overflow: hidden; font-family: system-ui, sans-serif; }}
+                #container {{ height: 320px; width: 100%; }}
+            </style>
+        </head>
+        <body>
+            <div id="container"></div>
+            <script>
+                Highcharts.chart('container', {{
+                    chart: {{
+                        type: 'pie',
+                        options3d: {{ enabled: true, alpha: 55, beta: 0 }},
+                        backgroundColor: 'transparent',
+                        margin: [0, 0, 0, 0]
+                    }},
+                    title: {{ text: null }},
+                    tooltip: {{
+                        formatter: function() {{
+                            const isPrivacy = document.body.classList.contains('privacy-mode');
+                            if (isPrivacy) {{
+                                return '<b>' + this.point.name + '</b><br/>' + this.point.percentage.toFixed(1) + '%';
+                            }}
+                            return '<b>' + this.point.name + '</b><br/>$' + Highcharts.numberFormat(this.point.y, 2) + '<br/>' + this.point.percentage.toFixed(1) + '%';
+                        }},
+                        backgroundColor: 'rgba(15, 23, 42, 0.95)',
+                        style: {{ color: '#fff' }},
+                        borderWidth: 1,
+                        borderColor: 'rgba(255,255,255,0.15)'
+                    }},
+                    plotOptions: {{
+                        pie: {{
+                            allowPointSelect: true,
+                            cursor: 'pointer',
+                            depth: 45,
+                            innerSize: '45%',
+                            dataLabels: {{
+                                enabled: true,
+                                format: '<b>{{point.name}}</b><br>{{point.percentage:.1f}}%',
+                                style: {{ color: '#e2e8f0', textOutline: 'none', fontSize: '11px', fontWeight: '600' }},
+                                connectorColor: 'rgba(255,255,255,0.2)'
+                            }},
+                            borderWidth: 0
+                        }}
+                    }},
+                    credits: {{ enabled: false }},
+                    series: [{{
+                        name: 'Holdings',
+                        data: [
+                            {pie_data_js}
+                        ]
+                    }}]
+                }});
+
+                // Sync privacy mode with Streamlit parent document
+                setInterval(() => {{
+                    try {{
+                        const saved = localStorage.getItem('dashboardOpen');
+                        if (saved === 'false') {{
+                            document.body.classList.add('privacy-mode');
+                        }} else {{
+                            document.body.classList.remove('privacy-mode');
+                        }}
+                    }} catch(e) {{}}
+                }}, 200);
+            </script>
+        </body>
+        </html>
+        """
+        components.html(pie_html, height=320, scrolling=False)
+
+        # ================== 3. SUBDUED USDC BANNER ==================
+        usdc_banner_html = f"""
+<input type="checkbox" id="dash-toggle-usdc" class="dashboard-toggle" style="display:none;">
 <div class="usdc-banner" style="--border: #2775ca;">
 <div class="usdc-banner-left">
 <img src="{get_ticker_logo('USDC')}" onerror="this.src='https://via.placeholder.com/42/1e2a44/ffffff?text=U';">
@@ -622,8 +720,9 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
 <div class="usdc-banner-amount">{format_holdings(usdc_holdings, 'USDC')}</div>
 </div>
 """
-        st.markdown(value_box_html, unsafe_allow_html=True)
+        st.markdown(usdc_banner_html, unsafe_allow_html=True)
 
+        # ================== 4. FLIP CARDS ==================
         cards_html = ""
         for _, r in df_port.iterrows():
             ticker = r['Ticker']
@@ -968,8 +1067,15 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
         setInterval(() => {{
             try {{
                 const dt = window.parent.document.getElementById('dash-toggle');
+                const dtUsdc = window.parent.document.getElementById('dash-toggle-usdc');
                 if (dt) {{
                     const isChecked = dt.checked;
+                    
+                    // Sync the split markdown CSS toggles
+                    if (dtUsdc && dtUsdc.checked !== isChecked) {{
+                        dtUsdc.checked = isChecked;
+                    }}
+
                     if (isChecked !== lastDashState) {{
                         lastDashState = isChecked;
                         if (isChecked) {{
@@ -986,14 +1092,17 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
         // Run once on cold load to enforce local storage memory immediately
         try {{
             const dt = window.parent.document.getElementById('dash-toggle');
+            const dtUsdc = window.parent.document.getElementById('dash-toggle-usdc');
             if (dt) {{
                 const saved = localStorage.getItem('dashboardOpen');
                 if (saved === 'true') {{
                     dt.checked = true;
+                    if(dtUsdc) dtUsdc.checked = true;
                     document.body.classList.remove('privacy-mode');
                     lastDashState = true;
                 }} else {{
                     dt.checked = false;
+                    if(dtUsdc) dtUsdc.checked = false;
                     document.body.classList.add('privacy-mode');
                     lastDashState = false;
                 }}
