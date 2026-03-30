@@ -99,7 +99,7 @@ div[data-testid="stMainBlockContainer"] {
 
 /* Tucked Text Fade Out */
 .dash-value {
-    font-size: 20px !important; /* Elegant size on PC */
+    font-size: 24px !important; /* Elegant size on PC */
     font-weight: 700;
     line-height: 1.05;
     color: #ffffff;
@@ -185,7 +185,17 @@ div[data-testid="stMainBlockContainer"] {
     justify-content: center;
 }
 
-.glossy-box > div:first-child {
+/* Swapped PnL Cards: Rectangular, Fixed Dimensions */
+.glossy-box.swapped {
+    height: 80px !important;
+    min-height: 80px !important;
+    max-height: 80px !important;
+    padding: 0;
+    display: block;
+}
+
+/* Base styles for standard (non-swapped) glossy boxes */
+.glossy-box:not(.swapped) > div:first-child {
     font-size: 12px;
     font-weight: 600;
     letter-spacing: 1.5px;
@@ -194,20 +204,11 @@ div[data-testid="stMainBlockContainer"] {
     margin-bottom: 6px;
     line-height: 1.2;
 }
-.glossy-box > div:last-child {
+.glossy-box:not(.swapped) > div:last-child {
     font-size: 27px;
     font-weight: 700;
     line-height: 1.05;
     color: #ffffff;
-}
-
-/* Swapped PnL Cards: Rectangular, Fixed Dimensions */
-.glossy-box.swapped {
-    height: 80px !important;
-    min-height: 80px !important;
-    max-height: 80px !important;
-    padding: 0;
-    display: block;
 }
 
 /* USDC Banner Styles (Static) */
@@ -277,6 +278,7 @@ div[data-testid="stMainBlockContainer"] {
     background: #263b5e !important;
     color: white !important;
 }
+
 @media (max-width: 700px) {
     .stApp { padding-top: 72px !important; }
     .glossy-header {
@@ -291,12 +293,13 @@ div[data-testid="stMainBlockContainer"] {
     }
 }
 @media (max-width: 600px) {
-    .glossy-box {
+    /* Safe overrides that don't affect .swapped cards */
+    .glossy-box:not(.swapped) {
         min-width: 98px !important;
         padding: 18px 14px !important;
     }
-    .glossy-box > div:first-child { font-size: 10px !important; }
-    .glossy-box > div:last-child { font-size: 21px !important; }
+    .glossy-box:not(.swapped) > div:first-child { font-size: 10px !important; }
+    .glossy-box:not(.swapped) > div:last-child { font-size: 21px !important; }
     
     .stats-layer-inner { 
         grid-template-columns: repeat(3, 1fr) !important; 
@@ -305,9 +308,10 @@ div[data-testid="stMainBlockContainer"] {
     
     .stats-layer { margin-top: -60px !important; margin-bottom: 18px; } 
     
+    /* Perfect sizes for swapped cards */
     .glossy-box.swapped { height: 80px !important; min-height: 80px !important; max-height: 80px !important; padding: 0; }
-    .dash-value { font-size: 14px !important; top: 16px; } /* Slimmed down for mobile */
-    .dash-label { font-size: 9px !important; bottom: 4px; }
+    .dash-value { font-size: 20px !important; top: 16px; } 
+    .dash-label { font-size: 10px !important; bottom: 6px; }
     
     .usdc-banner { padding: 16px 18px; margin-bottom: 24px; }
     .usdc-banner-left img { width: 36px; height: 36px; }
@@ -322,11 +326,9 @@ div[data-testid="stMainBlockContainer"] {
 DASHBOARD_ICON = '''<svg xmlns="http://www.w3.org/2000/svg" width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="#00ff9d" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>'''
 CRYPTO_ICON = '''<svg xmlns="http://www.w3.org/2000/svg" width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="#00ff9d" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M14.5 8.5L9.5 13.5"/><path d="M9.5 8.5L14.5 13.5"/></svg>'''
 FIAT_ICON = '''<svg xmlns="http://www.w3.org/2000/svg" width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="#00ff9d" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M6 8h12"/><path d="M6 12h12"/><path d="M6 16h12"/></svg>'''
-# Minimalist 16px eye icon, neutral color
 EYE_CLOSED = '''<svg class="eye-closed" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>'''
 EYE_OPEN = '''<svg class="eye-open" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>'''
-# TradingView SVG Logo
-TV_ICON = '''<svg xmlns="http://www.w3.org/2000/svg" width="18" height="14" viewBox="0 0 28 21" fill="currentColor"><path d="M12 21H8V3h4v18zm1.5-6h3.5l3.5-4.5V21h-7v-6zM28 21h-4l-6.5-9L21 6l7 10v5z"/></svg>'''
+EXTERNAL_LINK_ICON = '''<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>'''
 
 DATA_DIR = Path("data")
 DATA_DIR.mkdir(exist_ok=True)
@@ -625,6 +627,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
         usdc_row = df_port[df_port['Ticker'] == 'USDC'].iloc[0] if not df_port[df_port['Ticker'] == 'USDC'].empty else None
         usdc_holdings = usdc_row['Holdings'] if usdc_row is not None else 0
 
+        # Unindented string to prevent markdown rendering issues
         value_box_html = f"""
 <div class="dashboard-wrapper">
 <input type="checkbox" id="dash-toggle" class="dashboard-toggle" style="display:none;">
@@ -711,8 +714,8 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
             </div>
         </div>
         <div class="flip-card-back">
-            <a href="https://www.tradingview.com/chart/?symbol=BINANCE:{ticker}USDT" target="_blank" class="tv-btn" title="Open in TradingView to save drawings">
-                {TV_ICON}
+            <a href="https://www.tradingview.com/chart/?symbol=BINANCE:{ticker}USDT" target="_blank" class="tv-external-btn" title="Open in TradingView App/Web">
+                {EXTERNAL_LINK_ICON}
             </a>
             <div class="chart-container">
                 <canvas id="chart-{ticker}"></canvas>
@@ -819,10 +822,10 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
         }}
         
         /* TradingView External Link Button */
-        .tv-btn {{
+        .tv-external-btn {{
             position: absolute;
             top: 10px;
-            right: 14px;
+            right: 12px;
             color: #64748b;
             cursor: pointer;
             z-index: 20;
@@ -833,7 +836,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
             justify-content: center;
             text-decoration: none;
         }}
-        .tv-btn:hover {{ color: #ffffff; }}
+        .tv-external-btn:hover {{ color: #ffffff; }}
         
         /* Interactive dynamic colored border glow - ONLY applies on PC (fine pointers) */
         @media (hover: hover) and (pointer: fine) {{
@@ -971,16 +974,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
         // Define the close function for global click-away
         function closeAllOpenUI(e) {{
             // Only run if the click is outside a flip-card inner and outside dashboard wrapper
-            const isCardClick = e && e.target && e.target.closest && e.target.closest('.flip-card');
             const isDashClick = e && e.target && e.target.closest && e.target.closest('.dashboard-wrapper');
-            const isFullscreenBtn = e && e.target && e.target.closest && e.target.closest('.tv-btn');
-            
-            if (!isCardClick && !isFullscreenBtn) {{
-                document.querySelectorAll('.flip-card.flipped').forEach(card => {{
-                    card.classList.remove('flipped');
-                    card.classList.remove('touch-hover');
-                }});
-            }}
             
             if (!isDashClick) {{
                 const dashToggle = document.getElementById('dash-toggle');
@@ -1071,13 +1065,13 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                         const valEl = card.querySelector('.total-value');
                         if (valEl) valEl.innerText = valStr;
                         
-                        const pnlEl = card.querySelector('#dash-pnl');
+                        const pnlEl = card.querySelector('.card-pnl');
                         if (pnlEl) {{
                             pnlEl.innerText = pnlStr;
                             pnlEl.style.color = color;
                         }}
                         
-                        const pnlPctEl = card.querySelector('#dash-pnl-pct');
+                        const pnlPctEl = card.querySelector('.card-pnl-pct');
                         if (pnlPctEl) {{
                             pnlPctEl.innerText = pnlPctStr;
                             pnlPctEl.style.color = color;
@@ -1115,8 +1109,8 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                 const dPnlPct = parentDoc.getElementById('dash-pnl-pct');
                 
                 if (dValue) dValue.innerText = dashValStr;
-                if (dPnl) {{ dPnl.innerText = dashPnlStr; dPnl.style.color = dashColor; }}
-                if (dPnlPct) {{ dPnlPct.innerText = dashPnlPctStr; dPnlPct.style.color = dashColor; }}
+                if (dPnl) dPnl.innerHTML = `<span style="color:${{dashColor}}">${{dashPnlStr}}</span>`;
+                if (dPnlPct) dPnlPct.innerHTML = `<span style="color:${{dashColor}}">${{dashPnlPctStr}}</span>`;
                 
             }} catch (e) {{
                 console.error('Auto-refresh error:', e);
@@ -1321,15 +1315,6 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
             const front = card.querySelector('.flip-card-front');
             front.addEventListener('click', (e) => {{
                 e.stopPropagation();
-                
-                // Unflip all other cards first for clean UX
-                document.querySelectorAll('.flip-card.flipped').forEach(c => {{
-                    if (c !== card) {{
-                        c.classList.remove('flipped');
-                        c.classList.remove('touch-hover');
-                    }}
-                }});
-
                 // Toggle flipped state and touch-hover properly for mobile
                 if (!card.classList.contains('flipped')) {{
                     card.classList.add('flipped');
@@ -1348,7 +1333,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
             }});
             
             // Prevent the external link from triggering a flip
-            const extBtn = card.querySelector('.tv-btn');
+            const extBtn = card.querySelector('.tv-external-btn');
             if (extBtn) {{
                 extBtn.addEventListener('click', (e) => {{
                     e.stopPropagation();
@@ -1587,6 +1572,15 @@ body {{ background: transparent; margin: 0; padding: 0; }}
     </div>
 </div>
 <script>
+// --- Mobile Touch Hover Fix ---
+document.addEventListener('click', (e) => {{
+    const touchHoverTarget = e.target.closest('.transaction-card');
+    document.querySelectorAll('.touch-hover').forEach(el => {{
+        if (el !== touchHoverTarget) el.classList.remove('touch-hover');
+    }});
+    if (touchHoverTarget) touchHoverTarget.classList.toggle('touch-hover');
+}});
+
 // --- Wheel scrolling for PC ---
 const txScrollContainer = document.getElementById('txScrollContainer');
 if (txScrollContainer) {{
@@ -1684,12 +1678,12 @@ function editTransaction(i) {{
         # Unindented to prevent markdown code block rendering
         summary_html = f"""
 <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:20px;margin-bottom:30px;">
-<div class="glossy-box swapped" style="height:80px; min-height:80px; max-height:80px;"><div>{total_czk:,.2f}</div><div>Total CZK</div></div>
-<div class="glossy-box swapped" style="height:80px; min-height:80px; max-height:80px;"><div>{total_eur:,.2f}</div><div>Total EUR</div></div>
-<div class="glossy-box swapped" style="height:80px; min-height:80px; max-height:80px;"><div>{format_money(total_usdc)}</div><div>Total USDC</div></div>
-<div class="glossy-box swapped" style="height:80px; min-height:80px; max-height:80px;">
-<div style="font-size:22px; font-weight:700; color:#fff; margin-bottom:0; position:absolute; top:20px; width:100%; text-align:center;">{fees_eur:,.2f} EUR / {fees_czk:,.2f} CZK</div>
-<div>Fees</div>
+<div class="glossy-box swapped"><div class="dash-value">{total_czk:,.2f}</div><div class="dash-label">Total CZK</div></div>
+<div class="glossy-box swapped"><div class="dash-value">{total_eur:,.2f}</div><div class="dash-label">Total EUR</div></div>
+<div class="glossy-box swapped"><div class="dash-value">{format_money(total_usdc)}</div><div class="dash-label">Total USDC</div></div>
+<div class="glossy-box swapped">
+<div class="dash-value" style="font-size:16px !important;">{fees_eur:,.2f} EUR / {fees_czk:,.2f} CZK</div>
+<div class="dash-label">Fees</div>
 </div>
 </div>
 """
