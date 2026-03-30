@@ -58,7 +58,7 @@ div[data-testid="stMainBlockContainer"] {
 }
 .home-header {
     margin-bottom: 0 !important;
-    padding-bottom: 34px !important; /* space for the eye icon */
+    padding-bottom: 30px !important; /* space for the eye icon */
 }
 .pull-indicator {
     position: absolute;
@@ -69,26 +69,27 @@ div[data-testid="stMainBlockContainer"] {
     opacity: 0.8;
     transition: color 0.3s ease;
 }
-.glossy-header-label:hover .pull-indicator {
-    color: #00ff9d;
+@media (hover: hover) and (pointer: fine) {
+    .glossy-header-label:hover .pull-indicator {
+        color: #cbd5e1;
+    }
 }
 .pull-indicator .eye-open { display: none; }
 .pull-indicator .eye-closed { display: block; }
 
 .dashboard-toggle:checked + .glossy-header-label .pull-indicator .eye-open { display: block; }
 .dashboard-toggle:checked + .glossy-header-label .pull-indicator .eye-closed { display: none; }
-.dashboard-toggle:checked + .glossy-header-label .pull-indicator { color: #00ff9d; }
+.dashboard-toggle:checked + .glossy-header-label .pull-indicator { color: #ffffff; }
 
 .stats-layer {
     position: relative;
     z-index: 1;
-    /* Mathematically tucks the 80px box to hide the top 60px (the numbers) and expose exactly the bottom 20px (the label) */
-    margin-top: -60px; 
+    margin-top: -60px !important; /* Perfectly tucks the 80px box to expose exactly 20px */
     transition: margin-top 0.4s cubic-bezier(0.4, 0, 0.2, 1);
     margin-bottom: 24px;
 }
 .dashboard-toggle:checked ~ .stats-layer {
-    margin-top: 14px; /* Drops down */
+    margin-top: 14px !important; /* Drops down */
 }
 .stats-layer-inner {
     display: grid; 
@@ -176,12 +177,12 @@ div[data-testid="stMainBlockContainer"] {
     display: block;
 }
 .glossy-box.swapped > div:first-child {
-    font-size: 24px !important;
+    font-size: 22px !important;
     font-weight: 700;
     line-height: 1.05;
     color: #ffffff;
     position: absolute;
-    top: 20px; 
+    top: 16px; 
     left: 0;
     width: 100%;
     text-align: center;
@@ -195,7 +196,7 @@ div[data-testid="stMainBlockContainer"] {
     color: #94a3b8;
     line-height: 1.2;
     position: absolute;
-    bottom: 8px;
+    bottom: 6px;
     left: 0;
     width: 100%;
     text-align: center;
@@ -277,6 +278,10 @@ div[data-testid="stMainBlockContainer"] {
         font-size: 24px !important;
         min-height: 100px;
     }
+    /* Neutralize the buggy mobile margin that was exposing the cards */
+    .home-header {
+        margin-bottom: 0 !important;
+    }
 }
 @media (max-width: 600px) {
     .glossy-box {
@@ -291,7 +296,9 @@ div[data-testid="stMainBlockContainer"] {
         grid-template-columns: repeat(3, 1fr) !important; 
         gap: 8px; 
     }
-    .stats-layer { margin-bottom: 18px; }
+    
+    .glossy-box.swapped > div:first-child { font-size: 16px !important; top: 20px; }
+    .glossy-box.swapped > div:last-child { font-size: 9px !important; bottom: 4px; }
     
     .usdc-banner { padding: 16px 18px; margin-bottom: 24px; }
     .usdc-banner-left img { width: 36px; height: 36px; }
@@ -306,9 +313,9 @@ div[data-testid="stMainBlockContainer"] {
 DASHBOARD_ICON = '''<svg xmlns="http://www.w3.org/2000/svg" width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="#00ff9d" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>'''
 CRYPTO_ICON = '''<svg xmlns="http://www.w3.org/2000/svg" width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="#00ff9d" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M14.5 8.5L9.5 13.5"/><path d="M9.5 8.5L14.5 13.5"/></svg>'''
 FIAT_ICON = '''<svg xmlns="http://www.w3.org/2000/svg" width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="#00ff9d" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M6 8h12"/><path d="M6 12h12"/><path d="M6 16h12"/></svg>'''
-# More delicate, smaller eye icons
-EYE_CLOSED = '''<svg class="eye-closed" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>'''
-EYE_OPEN = '''<svg class="eye-open" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>'''
+# Minimalist 16px eye icon, neutral color
+EYE_CLOSED = '''<svg class="eye-closed" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>'''
+EYE_OPEN = '''<svg class="eye-open" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>'''
 
 DATA_DIR = Path("data")
 DATA_DIR.mkdir(exist_ok=True)
