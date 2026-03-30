@@ -256,14 +256,14 @@ div[data-testid="stForm"] {
     background: #0f172a !important;
     border: 1px solid rgba(255,255,255,0.05) !important;
     border-radius: 14px !important;
-    padding: 20px !important;
+    padding: 24px 20px !important;
     box-shadow: 0 4px 15px rgba(0,0,0,0.3) !important;
     margin-bottom: 24px !important;
 }
 div[data-testid="stForm"] .stNumberInput, 
 div[data-testid="stForm"] .stTextInput, 
 div[data-testid="stForm"] .stDateInput {
-    margin-bottom: -10px !important;
+    margin-bottom: -6px !important;
 }
 
 /* Form Submit Button */
@@ -272,8 +272,6 @@ div[data-testid="stForm"] .stDateInput {
     color: #e0e0e0 !important;
     padding: 12px 20px !important;
     border-radius: 10px !important;
-    margin-bottom: 4px !important;
-    margin-top: 6px !important;
     font-size: 1.1rem !important;
     font-weight: 700 !important;
     height: auto !important;
@@ -291,42 +289,139 @@ div[data-testid="stForm"] .stDateInput {
     color: white !important;
 }
 
+/* Modern Segmented Control for Buy/Sell Radio inside forms */
+div[data-testid="stForm"] div[role="radiogroup"] {
+    display: flex;
+    flex-direction: row;
+    background: rgba(255,255,255,0.05);
+    border-radius: 12px;
+    padding: 4px;
+    gap: 4px;
+    margin-top: 6px;
+    margin-bottom: 4px;
+}
+div[data-testid="stForm"] label[data-baseweb="radio"] {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 10px;
+    border-radius: 8px;
+    margin: 0;
+    background: transparent;
+    transition: all 0.2s;
+    cursor: pointer;
+}
+div[data-testid="stForm"] label[data-baseweb="radio"] div:first-child {
+    display: none; /* Hide actual radio circle */
+}
+div[data-testid="stForm"] label[data-baseweb="radio"]:hover {
+    background: rgba(255,255,255,0.1);
+}
+div[data-testid="stForm"] label[data-baseweb="radio"][aria-checked="true"] {
+    background: #00ff9d; /* Buy Green */
+    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+}
+div[data-testid="stForm"] label[data-baseweb="radio"][aria-checked="true"] p {
+    color: #0f172a !important; /* Dark text for contrast on active */
+}
+div[data-testid="stForm"] label[data-baseweb="radio"][aria-checked="true"]:nth-child(2) {
+    background: #ff4d4d; /* Sell Red */
+}
+div[data-testid="stForm"] label[data-baseweb="radio"][aria-checked="true"]:nth-child(2) p {
+    color: white !important; 
+}
+div[data-testid="stForm"] div[role="radiogroup"] p {
+    font-weight: 700 !important;
+    color: white !important;
+    margin: 0 !important;
+    font-size: 1rem !important;
+}
+
+/* Transaction List Native Button Styling */
+.stButton.tx-btn > button {
+    background: rgba(255,255,255,0.05) !important;
+    padding: 6px !important;
+    border-radius: 8px !important;
+    font-size: 1.1rem !important;
+    box-shadow: none !important;
+    opacity: 0.7;
+    margin: 0 !important;
+    width: 40px !important;
+    height: 40px !important;
+}
+.stButton.tx-btn > button:hover {
+    background: rgba(255,255,255,0.15) !important;
+    transform: scale(1.05) !important;
+    opacity: 1;
+}
+
+/* Edit Form Smooth Rollout Animation */
+@keyframes slideDown {
+    0% { opacity: 0; transform: scaleY(0.8) translateY(-20px); transform-origin: top; }
+    100% { opacity: 1; transform: scaleY(1) translateY(0); transform-origin: top; }
+}
+.edit-rollout-container {
+    animation: slideDown 0.35s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+    border-left: 3px solid #00ff9d;
+    padding-left: 14px;
+    margin-top: -10px;
+    margin-bottom: 20px;
+    background: linear-gradient(90deg, rgba(255,255,255,0.03) 0%, transparent 100%);
+    border-radius: 0 12px 12px 0;
+    padding-top: 14px;
+    padding-bottom: 4px;
+}
+
 @media (max-width: 700px) {
     .stApp { padding-top: 72px !important; }
-    .glossy-header {
-        margin-top: 48px !important;
-        margin-bottom: 24px !important;
-        padding: 20px 16px !important;
-        font-size: 22px !important;
-        min-height: 90px;
-    }
+    .glossy-header { margin-top: 48px !important; margin-bottom: 24px !important; padding: 20px 16px !important; font-size: 22px !important; min-height: 90px; }
     .home-header { margin-bottom: 0 !important; }
-}
-@media (max-width: 600px) {
-    .glossy-box {
-        min-width: 0px !important;
-        padding: 14px 10px !important;
-    }
-    .glossy-box:not(.swapped) > div:first-child { font-size: 10px !important; }
-    .glossy-box:not(.swapped) > div:last-child { font-size: 21px !important; }
     
-    .stats-layer-inner { 
-        grid-template-columns: repeat(3, 1fr) !important; 
-        gap: 6px !important; 
+    /* Force Form inputs to 2-columns on mobile */
+    div[data-testid="stForm"] div[data-testid="stHorizontalBlock"] {
+        flex-direction: row !important;
+        flex-wrap: wrap !important;
     }
+    div[data-testid="stForm"] div[data-testid="stHorizontalBlock"] > div[data-testid="column"] {
+        width: 48% !important;
+        flex: 1 1 48% !important;
+        min-width: 45% !important;
+    }
+    
+    /* Force Transaction Rows to be horizontal (inline) on mobile */
+    /* Exclude the inner form components so they retain their 2-grid layout above */
+    div[data-testid="stScrollableContainer"] div[data-testid="stHorizontalBlock"]:not(form div[data-testid="stHorizontalBlock"]) {
+        flex-direction: row !important;
+        flex-wrap: nowrap !important;
+        align-items: center !important;
+    }
+    div[data-testid="stScrollableContainer"] div[data-testid="stHorizontalBlock"]:not(form div[data-testid="stHorizontalBlock"]) > div[data-testid="column"] {
+        width: auto !important;
+        flex: 1 1 auto !important;
+        min-width: 0 !important;
+        padding: 0 4px !important;
+    }
+    div[data-testid="stScrollableContainer"] div[data-testid="stHorizontalBlock"]:not(form div[data-testid="stHorizontalBlock"]) > div[data-testid="column"]:last-child {
+        flex: 0 0 auto !important;
+        width: auto !important;
+    }
+    
+    /* Shrink text for row items to fit inline perfectly */
+    .mobile-tx-ticker { font-size: 0.95rem !important; }
+    .mobile-tx-amount { font-size: 0.95rem !important; }
+    .mobile-tx-sub { font-size: 0.7rem !important; }
+    .mobile-logo { width: 34px !important; height: 34px !important; }
+    
     .stats-layer { margin-top: -60px !important; margin-bottom: 18px; } 
-    
     .glossy-box.swapped { height: 80px !important; min-height: 80px !important; max-height: 80px !important; padding: 0 !important; min-width: 0 !important; }
     .dash-value { font-size: 15px !important; top: 22px; white-space: nowrap; } 
     .dash-label { font-size: 9px !important; bottom: 6px; white-space: nowrap; }
-    
     .usdc-banner { padding: 16px 18px; margin-bottom: 24px; }
     .usdc-banner-left img { width: 36px; height: 36px; }
     .usdc-banner-title { font-size: 1.2rem; }
     .usdc-banner-subtitle { font-size: 0.85rem; }
     .usdc-banner-amount { font-size: 1.4rem; }
-    
-    div[data-testid="stForm"] { padding: 16px !important; margin-bottom: 16px !important; }
 }
 </style>
 """, unsafe_allow_html=True)
@@ -629,11 +724,9 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
 
         df_port, total_value, total_pnl, total_pnl_pct = calculate_portfolio(st.session_state.crypto_df)
         
-        # Extract USDC row safely
         usdc_row = df_port[df_port['Ticker'] == 'USDC'].iloc[0] if not df_port[df_port['Ticker'] == 'USDC'].empty else None
         usdc_holdings = usdc_row['Holdings'] if usdc_row is not None else 0
 
-        # Unindented string to prevent markdown rendering issues
         value_box_html = f"""
 <div class="dashboard-wrapper">
 <input type="checkbox" id="dash-toggle" class="dashboard-toggle" style="display:none;">
@@ -1371,22 +1464,23 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
     elif st.session_state.page == "Crypto Transactions":
         glossy_header("Crypto Transactions", CRYPTO_ICON)
 
-        # 1. ADD NEW TRANSACTION CARD (Unified Box using our custom Form CSS)
-        with st.form("add_crypto", border=True):
-            st.markdown("<h3 style='text-align: center; color: white; margin-top: 0px; margin-bottom: 25px;'>➕ Add New Transaction</h3>", unsafe_allow_html=True)
+        # 1. ADD NEW TRANSACTION CARD (Modernized)
+        with st.form("add_crypto", border=False):
+            st.markdown("<h3 style='text-align: center; color: white; margin-top: 0px; margin-bottom: 25px;'>Add New Transaction</h3>", unsafe_allow_html=True)
             
-            tx_type = st.radio("Type", ["Buy", "Sell"], horizontal=True, label_visibility="collapsed")
-            col1, col2, col3 = st.columns(3)
+            # CSS handles making this mobile grid two-by-two
+            col1, col2 = st.columns(2)
             with col1: selected_date = st.date_input("Date", value=date(2026, 3, 25))
-            with col2: usdc = st.number_input("USDC Amount", value=15.0, step=0.01)
-            with col3: ticker = st.text_input("Ticker", value="BTC").upper().strip()
+            with col2: ticker = st.text_input("Ticker", value="BTC").upper().strip()
             
-            col4, col5 = st.columns([2, 1])
+            col3, col4 = st.columns(2)
+            with col3: usdc = st.number_input("USDC Amount", value=15.0, step=0.01)
             with col4: amount = st.number_input("Coin Amount", value=0.1, step=0.000001, format="%.8f")
-            with col5: 
-                st.write("") # Spacer to vertically align the submit button
-                st.write("")
-                submitted = st.form_submit_button("Submit")
+            
+            # Moved above the submit button and styled like a segmented pill control in CSS
+            tx_type = st.radio("Type", ["Buy", "Sell"], horizontal=True, label_visibility="collapsed")
+            
+            submitted = st.form_submit_button("Submit Transaction")
                 
             if submitted:
                 if ticker:
@@ -1408,133 +1502,113 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
         df_display = df_display.dropna(how='all')
         df_display = df_display.sort_values(by='Datum', ascending=False)
 
-        st.markdown("<h4 style='color: white; margin-top: 30px; margin-bottom: 15px;'>Transaction History</h4>", unsafe_allow_html=True)
+        st.markdown("<h4 style='color: white; margin-top: 20px; margin-bottom: 15px;'>Transaction History</h4>", unsafe_allow_html=True)
         
-        # Inject styling for our new pure Streamlit buttons so they look clean in the list
-        st.markdown("""
-        <style>
-        .stButton.tx-btn > button {
-            background: rgba(255,255,255,0.05) !important;
-            padding: 8px !important;
-            border-radius: 8px !important;
-            font-size: 1.1rem !important;
-            box-shadow: none !important;
-            opacity: 0.7;
-        }
-        .stButton.tx-btn > button:hover {
-            background: rgba(255,255,255,0.15) !important;
-            transform: scale(1.05) !important;
-            opacity: 1;
-        }
-        </style>
-        """, unsafe_allow_html=True)
-
-        # 2. TRANSACTION LIST (Using pure Python rendering)
-        for i, r in df_display.iterrows():
-            orig_idx = r['orig_idx']
-            logo_url = get_ticker_logo(r['Ticker'])
-            amount = r['Amount']
-            usdc = r['USDC']
-            is_buy = amount >= 0
-            
-            abs_amount = abs(amount)
-            abs_usdc = abs(usdc)
-            price = abs_usdc / abs_amount if abs_amount > 0 else 0
-            
-            sign = "+" if is_buy else "-"
-            color = "#00ff9d" if is_buy else "#ff4d4d"
-            action_text = "Spent" if is_buy else "Received"
-            
-            invested_formatted = format_money(abs_usdc)
-            amount_formatted = format_holdings(abs_amount, r['Ticker'])
-            price_formatted = format_price(price)
-            date_str = format_datum(r['Datum'])
-
-            with st.container(border=True):
-                # Row content
-                col_left, col_mid, col_right = st.columns([1, 4, 1.5])
+        # 2. SCROLLABLE TRANSACTION LIST
+        with st.container(height=550, border=False):
+            for i, r in df_display.iterrows():
+                orig_idx = r['orig_idx']
+                logo_url = get_ticker_logo(r['Ticker'])
+                amount = r['Amount']
+                usdc = r['USDC']
+                is_buy = amount >= 0
                 
-                with col_left:
-                    st.markdown(f"""
-                        <div style="display: flex; align-items: center; gap: 14px; margin-top: 6px;">
-                            <img src="{logo_url}" width="42" height="42" style="border-radius: 50%; object-fit: contain;" onerror="this.src='https://via.placeholder.com/42/1e2a44/ffffff?text={r['Ticker'][0]}';">
-                            <div style="line-height: 1.2;">
-                                <div style="font-weight: 700; font-size: 1.15rem; color: #ffffff;">{r['Ticker']}</div>
-                                <div style="font-size: 0.85rem; color: #94a3b8;">{date_str}</div>
-                            </div>
-                        </div>
-                    """, unsafe_allow_html=True)
-                    
-                with col_mid:
-                    st.markdown(f"""
-                        <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 2px; margin-top: 6px;">
-                            <div style="font-weight: 700; font-size: 1.15rem; color: {color};">{sign}{amount_formatted} {r['Ticker']}</div>
-                            <div style="font-size: 0.85rem; color: #cbd5e1;">{action_text}: {invested_formatted}</div>
-                            <div style="font-size: 0.75rem; color: #64748b;">@ ${price_formatted}</div>
-                        </div>
-                    """, unsafe_allow_html=True)
-                    
-                with col_right:
-                    st.markdown("<div style='margin-top: 8px;'></div>", unsafe_allow_html=True)
-                    btn_c1, btn_c2 = st.columns(2)
-                    
-                    with btn_c1:
-                        # Edit Button
-                        if st.button("✏️", key=f"edit_btn_{orig_idx}", help="Edit Transaction"):
-                            st.session_state['edit_crypto_row'] = orig_idx
-                            st.rerun()
-                            
-                    with btn_c2:
-                        # Delete Button
-                        if st.button("🗑️", key=f"del_btn_{orig_idx}", help="Delete Transaction"):
-                            st.session_state.crypto_df = st.session_state.crypto_df.drop(orig_idx).reset_index(drop=True)
-                            save_crypto(st.session_state.crypto_df)
-                            st.session_state.crypto_table_version += 1
-                            st.session_state.ui_version += 1
-                            if st.session_state.get('edit_crypto_row') == orig_idx:
-                                st.session_state['edit_crypto_row'] = None
-                            st.success("✅ Transaction deleted!")
-                            st.rerun()
+                abs_amount = abs(amount)
+                abs_usdc = abs(usdc)
+                price = abs_usdc / abs_amount if abs_amount > 0 else 0
+                
+                sign = "+" if is_buy else "-"
+                color = "#00ff9d" if is_buy else "#ff4d4d"
+                action_text = "Spent" if is_buy else "Received"
+                
+                invested_formatted = format_money(abs_usdc)
+                amount_formatted = format_holdings(abs_amount, r['Ticker'])
+                price_formatted = format_price(price)
+                date_str = format_datum(r['Datum'])
 
-            # 3. ROLL OUT EDIT FORM Directly Below Selected Transaction
-            if st.session_state.get('edit_crypto_row') == orig_idx:
-                with st.container():
-                    st.markdown("<div style='padding-left: 20px; border-left: 3px solid #00ff9d; margin-top: -15px; margin-bottom: 25px;'>", unsafe_allow_html=True)
-                    with st.form(f"edit_crypto_form_{orig_idx}", border=False):
-                        st.markdown("<h4 style='color: #00ff9d; margin-top: 0px; margin-bottom: 15px;'>✏️ Edit Row Details</h4>", unsafe_allow_html=True)
-                        tx_type_edit = st.radio("Type", ["Buy", "Sell"], horizontal=True, index=0 if is_buy else 1, label_visibility="collapsed")
+                with st.container(border=True):
+                    # Native Streamlit columns - CSS flex rules will ensure they stay side-by-side on mobile
+                    col_left, col_mid, col_right = st.columns([1, 4, 1.2])
+                    
+                    with col_left:
+                        st.markdown(f"""
+                            <div style="display: flex; align-items: center; gap: 14px; margin-top: 6px;">
+                                <img src="{logo_url}" class="mobile-logo" width="42" height="42" style="border-radius: 50%; object-fit: contain;" onerror="this.src='https://via.placeholder.com/42/1e2a44/ffffff?text={r['Ticker'][0]}';">
+                                <div style="line-height: 1.2;">
+                                    <div class="mobile-tx-ticker" style="font-weight: 700; font-size: 1.15rem; color: #ffffff;">{r['Ticker']}</div>
+                                    <div class="mobile-tx-sub" style="font-size: 0.85rem; color: #94a3b8;">{date_str}</div>
+                                </div>
+                            </div>
+                        """, unsafe_allow_html=True)
                         
-                        e_col1, e_col2, e_col3 = st.columns(3)
-                        with e_col1: new_date = st.date_input("Date", value=datetime(1899, 12, 30) + timedelta(days=int(r['Datum'])))
-                        with e_col2: new_usdc = st.number_input("USDC Amount", value=float(abs(r['USDC'])), step=0.01)
-                        with e_col3: new_ticker = st.text_input("Ticker", value=r['Ticker']).upper().strip()
+                    with col_mid:
+                        st.markdown(f"""
+                            <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 2px; margin-top: 6px;">
+                                <div class="mobile-tx-amount" style="font-weight: 700; font-size: 1.15rem; color: {color};">{sign}{amount_formatted} {r['Ticker']}</div>
+                                <div class="mobile-tx-sub" style="font-size: 0.85rem; color: #cbd5e1;">{action_text}: {invested_formatted}</div>
+                                <div class="mobile-tx-sub" style="font-size: 0.75rem; color: #64748b;">@ ${price_formatted}</div>
+                            </div>
+                        """, unsafe_allow_html=True)
                         
-                        e_col4, e_col5, e_col6 = st.columns([2, 1, 1])
-                        with e_col4: new_amount = st.number_input("Coin Amount", value=float(abs(r['Amount'])), step=0.000001, format="%.8f")
-                        
-                        with e_col5: 
-                            st.write("")
-                            st.write("")
-                            if st.form_submit_button("💾 Save"):
-                                final_usdc = new_usdc if tx_type_edit == "Buy" else -new_usdc
-                                final_amount = new_amount if tx_type_edit == "Buy" else -new_amount
-                                new_price = round(new_usdc / new_amount, 8) if new_amount > 0 else 0.0
+                    with col_right:
+                        btn_c1, btn_c2 = st.columns(2)
+                        with btn_c1:
+                            if st.button("✏️", key=f"edit_btn_{orig_idx}", help="Edit Transaction"):
+                                # Toggle the row to close if already open, else open
+                                if st.session_state.get('edit_crypto_row') == orig_idx:
+                                    st.session_state['edit_crypto_row'] = None
+                                else:
+                                    st.session_state['edit_crypto_row'] = orig_idx
+                                st.rerun()
                                 
-                                st.session_state.crypto_df.loc[orig_idx] = {"Datum": date_to_excel_serial(new_date), "USDC": final_usdc, "Ticker": new_ticker, "Amount": final_amount, "Price": new_price}
+                        with btn_c2:
+                            if st.button("🗑️", key=f"del_btn_{orig_idx}", help="Delete Transaction"):
+                                st.session_state.crypto_df = st.session_state.crypto_df.drop(orig_idx).reset_index(drop=True)
                                 save_crypto(st.session_state.crypto_df)
-                                st.session_state['edit_crypto_row'] = None
                                 st.session_state.crypto_table_version += 1
                                 st.session_state.ui_version += 1
-                                st.success("✅ Transaction updated!")
+                                if st.session_state.get('edit_crypto_row') == orig_idx:
+                                    st.session_state['edit_crypto_row'] = None
+                                st.success("✅ Transaction deleted!")
                                 st.rerun()
-                                
-                        with e_col6:
-                            st.write("")
-                            st.write("")
-                            if st.form_submit_button("❌ Cancel"):
-                                st.session_state['edit_crypto_row'] = None
-                                st.rerun()
-                    st.markdown("</div>", unsafe_allow_html=True)
+
+                # 3. ROLL OUT EDIT FORM Directly Below Selected Transaction
+                if st.session_state.get('edit_crypto_row') == orig_idx:
+                    with st.container():
+                        st.markdown("<div class='edit-rollout-container'>", unsafe_allow_html=True)
+                        with st.form(f"edit_crypto_form_{orig_idx}", border=False):
+                            st.markdown("<h4 style='color: #00ff9d; margin-top: 0px; margin-bottom: 15px;'>✏️ Edit Row Details</h4>", unsafe_allow_html=True)
+                            
+                            e_col1, e_col2 = st.columns(2)
+                            with e_col1: new_date = st.date_input("Date", value=datetime(1899, 12, 30) + timedelta(days=int(r['Datum'])))
+                            with e_col2: new_ticker = st.text_input("Ticker", value=r['Ticker']).upper().strip()
+                            
+                            e_col3, e_col4 = st.columns(2)
+                            with e_col3: new_usdc = st.number_input("USDC Amount", value=float(abs(r['USDC'])), step=0.01)
+                            with e_col4: new_amount = st.number_input("Coin Amount", value=float(abs(r['Amount'])), step=0.000001, format="%.8f")
+                            
+                            tx_type_edit = st.radio("Type", ["Buy", "Sell"], horizontal=True, index=0 if is_buy else 1, label_visibility="collapsed")
+                            
+                            e_save, e_cancel = st.columns(2)
+                            with e_save: 
+                                if st.form_submit_button("💾 Save Changes"):
+                                    final_usdc = new_usdc if tx_type_edit == "Buy" else -new_usdc
+                                    final_amount = new_amount if tx_type_edit == "Buy" else -new_amount
+                                    new_price = round(new_usdc / new_amount, 8) if new_amount > 0 else 0.0
+                                    
+                                    st.session_state.crypto_df.loc[orig_idx] = {"Datum": date_to_excel_serial(new_date), "USDC": final_usdc, "Ticker": new_ticker, "Amount": final_amount, "Price": new_price}
+                                    save_crypto(st.session_state.crypto_df)
+                                    st.session_state['edit_crypto_row'] = None
+                                    st.session_state.crypto_table_version += 1
+                                    st.session_state.ui_version += 1
+                                    st.success("✅ Transaction updated!")
+                                    st.rerun()
+                                    
+                            with e_cancel:
+                                if st.form_submit_button("❌ Cancel"):
+                                    st.session_state['edit_crypto_row'] = None
+                                    st.rerun()
+                        st.markdown("</div>", unsafe_allow_html=True)
 
     # ====================== FIAT TRANSACTIONS ======================
     elif st.session_state.page == "Fiat Transactions":
@@ -1547,7 +1621,6 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
 
         glossy_header("Fiat Transactions", FIAT_ICON)
 
-        # Unindented to prevent markdown code block rendering
         summary_html = f"""
 <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:12px;margin-bottom:30px;">
 <div class="glossy-box swapped"><div class="dash-value">{total_czk:,.2f}</div><div class="dash-label">Total CZK</div></div>
@@ -1572,7 +1645,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                 h[3].markdown("**Fee**")
                 h[4].markdown("**CZK/EUR**")
                 h[5].markdown("**USDC**")
-                h[6].markdown("**Delete**")
+                h[6].markdown("**Del**")
                 h[7].markdown("**Edit**")
                 for i, r in df_clean.iterrows():
                     cols = st.columns([1.0, 0.9, 0.9, 0.6, 0.9, 1.0, 0.4, 0.4])
