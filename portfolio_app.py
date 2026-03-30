@@ -918,7 +918,6 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
             display: flex;
             align-items: center;
             justify-content: center;
-            touch-action: pan-y; /* Prevent horizontal scroll, allow vertical scroll and scrubbing */
         }}
         canvas {{
             position: absolute;
@@ -926,7 +925,6 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
             left: 0;
             width: 100% !important;
             height: 100% !important;
-            touch-action: none; /* Let Chart.js handle tooltip touches without browser panning */
         }}
         .chart-loading {{
             position: absolute;
@@ -962,7 +960,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
         // Define the close function for global click-away
         function closeAllOpenUI(e) {{
             // Only run if the click is outside a flip-card inner and outside dashboard wrapper
-            const isCardClick = e && e.target && e.target.closest && e.target.closest('.flip-card');
+            const isCardClick = e && e.target && e.target.closest && e.target.closest('.flip-card-inner');
             const isDashClick = e && e.target && e.target.closest && e.target.closest('.dashboard-wrapper');
             
             if (!isCardClick) {{
@@ -973,7 +971,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
             }}
             
             if (!isDashClick) {{
-                const dashToggle = window.parent.document.getElementById('dash-toggle');
+                const dashToggle = document.getElementById('dash-toggle');
                 if (dashToggle && dashToggle.checked) {{
                     dashToggle.checked = false;
                 }}
@@ -1537,6 +1535,15 @@ body {{ background: transparent; margin: 0; padding: 0; }}
     </div>
 </div>
 <script>
+// --- Mobile Touch Hover Fix ---
+document.addEventListener('click', (e) => {{
+    const touchHoverTarget = e.target.closest('.transaction-card');
+    document.querySelectorAll('.touch-hover').forEach(el => {{
+        if (el !== touchHoverTarget) el.classList.remove('touch-hover');
+    }});
+    if (touchHoverTarget) touchHoverTarget.classList.toggle('touch-hover');
+}});
+
 // --- Wheel scrolling for PC ---
 const txScrollContainer = document.getElementById('txScrollContainer');
 if (txScrollContainer) {{
