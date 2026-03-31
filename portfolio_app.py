@@ -1954,7 +1954,6 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                     const chartColor = card.getAttribute('data-chart-color');
                     if (!chartCache[ticker] || !chartCache[ticker].chartObj) {{
                         renderChart(card, ticker, currentPrice, avgPrice, chartColor);
-                        update24hChange(card, ticker);
                     }}
                 }}
             }});
@@ -1966,27 +1965,37 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
         const chartCache = window.chartCache;
         const refreshKey = '{st.session_state.refresh_key}';
         
-        async function fetch24hChange(ticker) {{
+        async function fetchAll24hChanges() {{
+            const cards = Array.from(document.querySelectorAll('.flip-card'));
+            if (cards.length === 0) return;
+            const tickers = cards.map(card => card.getAttribute('data-ticker'));
             const symbolMap = {{
                 'BTC':'BTC','ETH':'ETH','SOL':'SOL','HBAR':'HBAR',
                 'XRP':'XRP','BNB':'BNB','TRX':'TRX','LINK':'LINK','SUI':'SUI'
             }};
-            const sym = symbolMap[ticker.toUpperCase()];
-            if (!sym) return null;
-            const url = `https://min-api.cryptocompare.com/data/v2/histoday?fsym=${{sym}}&tsym=USD&limit=2`;
+            const mappedTickers = tickers.map(t => symbolMap[t.toUpperCase()] || t.toUpperCase());
+
+            const url = `https://min-api.cryptocompare.com/data/pricemultifull?fsyms=${{mappedTickers.join(',')}}&tsyms=USD`;
             try {{
                 const resp = await fetch(url, {{ headers: {{ 'User-Agent': 'Mozilla/5.0' }} }});
                 const data = await resp.json();
-                if (data && data.Data && data.Data.Data && data.Data.Data.length >= 2) {{
-                    const yesterdayClose = data.Data.Data[0].close;
-                    const todayClose = data.Data.Data[1].close;
-                    const change = ((todayClose - yesterdayClose) / yesterdayClose) * 100;
-                    return change;
-                }}
-                return null;
+
+                cards.forEach(card => {{
+                    const ticker = card.getAttribute('data-ticker');
+                    const sym = symbolMap[ticker.toUpperCase()] || ticker.toUpperCase();
+                    const changeSpan = card.querySelector(`#change-${{ticker}}`);
+
+                    if (changeSpan && data.RAW && data.RAW[sym] && data.RAW[sym].USD && data.RAW[sym].USD.CHANGEPCT24HOUR !== undefined) {{
+                        const change = data.RAW[sym].USD.CHANGEPCT24HOUR;
+                        const sign = change >= 0 ? '▲' : '▼';
+                        const color = change >= 0 ? '#00ff9d' : '#ff4d4d';
+                        changeSpan.innerHTML = `<span style="color:${{color}};">${{sign}} ${{Math.abs(change).toFixed(2)}}%</span>`;
+                    }} else if (changeSpan) {{
+                        changeSpan.innerHTML = `N/A`;
+                    }}
+                }});
             }} catch(e) {{
-                console.error("24h change error", ticker, e);
-                return null;
+                console.error("Bulk 24h change error", e);
             }}
         }}
         
@@ -2083,19 +2092,6 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
             if (loadingDiv) loadingDiv.style.display = 'none';
         }}
         
-        async function update24hChange(card, ticker) {{
-            const changeSpan = card.querySelector(`#change-${{ticker}}`);
-            if (!changeSpan) return;
-            const change = await fetch24hChange(ticker);
-            if (change !== null) {{
-                const sign = change >= 0 ? '▲' : '▼';
-                const color = change >= 0 ? '#00ff9d' : '#ff4d4d';
-                changeSpan.innerHTML = `<span style="color:${{color}};">${{sign}} ${{Math.abs(change).toFixed(2)}}%</span>`;
-            }} else {{
-                changeSpan.innerHTML = `N/A`;
-            }}
-        }}
-        
         flipCards.forEach(card => {{
             const ticker = card.getAttribute('data-ticker');
             const currentPrice = parseFloat(card.getAttribute('data-current-price'));
@@ -2103,8 +2099,6 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
             const chartColor = card.getAttribute('data-chart-color');
             const border = card.getAttribute('data-border');
             card.style.setProperty('--border', border);
-            
-            update24hChange(card, ticker);
             
             const front = card.querySelector('.flip-card-front');
             front.addEventListener('click', (e) => {{
@@ -2129,6 +2123,8 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                 }});
             }}
         }});
+
+        fetchAll24hChanges();
         
         restoreFlippedState();
         if (window.oldRefreshKey && window.oldRefreshKey !== refreshKey) {{
