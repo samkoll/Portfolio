@@ -862,6 +862,17 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
             val = r['Value'] if pd.notna(r['Value']) else 0
             val_data_points.append(f"{{ y: {val}, color: '{c}' }}")
         val_data_js = ",".join(val_data_points)
+        
+        # Chart 6: ROI % Bar Data
+        df_roi = df_port[df_port['Ticker'] != 'USDC'].sort_values(by='PnL %', ascending=False)
+        roi_data_js_lines = []
+        for _, r in df_roi.iterrows():
+            t = r['Ticker']
+            val = r['PnL %']
+            if pd.notna(val):
+                c = get_ticker_color(t)
+                roi_data_js_lines.append(f"{{ name: '{t}', y: {val}, color: '{c}' }}")
+        roi_data_js = ",\n".join(roi_data_js_lines)
 
         charts_html = f"""
         <!DOCTYPE html>
@@ -901,6 +912,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                 .chart-placeholder[data-type="pie"] {{ width: 350px; flex: 0 0 350px; height: 340px; }}
                 .chart-placeholder[data-type="history"] {{ width: 600px; flex: 0 0 600px; height: 340px; }}
                 .chart-placeholder[data-type="pnl"] {{ width: 400px; flex: 0 0 400px; height: 340px; }}
+                .chart-placeholder[data-type="roi"] {{ width: 400px; flex: 0 0 400px; height: 340px; }}
                 .chart-placeholder[data-type="allocation"] {{ width: 600px; flex: 0 0 600px; height: 340px; }}
                 .chart-placeholder[data-type="inv-val"] {{ width: 500px; flex: 0 0 500px; height: 340px; }}
                 
@@ -1032,7 +1044,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                     <div class="chart-placeholder" data-type="pnl">
                         <div id="pnl-wrapper" class="chart-box">
                             <div class="chart-header">
-                                <div class="chart-title">Winners & Losers</div>
+                                <div class="chart-title">Winners & Losers ($)</div>
                                 <div class="chart-controls pnl-controls">
                                     <button class="active" data-range="all">All</button>
                                     <button data-range="1d">Today</button>
@@ -1042,6 +1054,15 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                                 </div>
                             </div>
                             <div id="pnl-container" class="chart-body"></div>
+                        </div>
+                    </div>
+                    
+                    <div class="chart-placeholder" data-type="roi">
+                        <div id="roi-wrapper" class="chart-box">
+                            <div class="chart-header">
+                                <div class="chart-title">ROI (%) by Asset</div>
+                            </div>
+                            <div id="roi-container" class="chart-body"></div>
                         </div>
                     </div>
                     
@@ -1172,6 +1193,25 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                             chart.series[0].setData(pnlDataMap[range], true, true, false);
                         }}
                     }});
+                }});
+                
+                // Chart 6: ROI % Bar Chart
+                Highcharts.chart('roi-container', {{
+                    chart: {{ type: 'bar', backgroundColor: 'transparent', marginTop: 15, marginBottom: 25 }},
+                    title: {{ text: null }},
+                    xAxis: {{ type: 'category', labels: {{ style: {{ color: '#94a3b8', fontWeight: 'bold' }} }}, gridLineColor: 'rgba(255,255,255,0.05)', tickWidth: 0, lineWidth: 0 }},
+                    yAxis: {{ title: {{ text: null }}, labels: {{ enabled: false }}, gridLineColor: 'rgba(255,255,255,0.05)' }},
+                    legend: {{ enabled: false }},
+                    tooltip: {{
+                        backgroundColor: 'rgba(15, 23, 42, 0.95)', style: {{ color: '#fff' }}, borderColor: 'rgba(255,255,255,0.15)',
+                        formatter: function() {{
+                            const val = Highcharts.numberFormat(this.y, 2) + '%';
+                            return `<b>${{this.point.name}}</b><br/>ROI: <b style="color:${{this.point.color}}">${{val}}</b>`;
+                        }}
+                    }},
+                    plotOptions: {{ bar: {{ borderRadius: 3, borderWidth: 0, pointPadding: 0.1, groupPadding: 0.1, dataLabels: {{ enabled: true, inside: false, crop: false, overflow: 'allow', style: {{ color: '#fff', textOutline: '2px #0f172a', fontWeight: 'bold', fontSize: '10px' }}, formatter: function() {{ return Highcharts.numberFormat(this.y, 2) + '%'; }} }} }} }},
+                    credits: {{ enabled: false }},
+                    series: [{{ name: 'ROI %', data: [ {roi_data_js} ] }}]
                 }});
 
                 // Chart 4: Portfolio Allocation (Stacked Area)
@@ -1387,6 +1427,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                 setupDoubleTap('pie-container');
                 setupDoubleTap('history-wrapper');
                 setupDoubleTap('pnl-wrapper');
+                setupDoubleTap('roi-wrapper');
                 setupDoubleTap('allocation-container');
                 setupDoubleTap('inv-val-container');
 
@@ -1420,7 +1461,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                             }} else {{
                                 document.body.classList.remove('privacy-mode');
                             }}
-                            ['history-container', 'pnl-container', 'inv-val-container'].forEach(id => {{
+                            ['history-container', 'pnl-container', 'roi-container', 'inv-val-container'].forEach(id => {{
                                 const hc = Highcharts.charts.find(c => c && c.renderTo.id === id);
                                 if (hc && hc.yAxis && hc.yAxis[0]) {{ hc.yAxis[0].isDirty = true; hc.redraw(); }}
                             }});
