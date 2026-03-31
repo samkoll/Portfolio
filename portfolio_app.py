@@ -388,7 +388,6 @@ def get_with_retry(url: str, headers: dict, timeout: int = 12, retries: int = 4)
             resp = requests.get(url, headers=headers, timeout=timeout)
             resp.raise_for_status()
             data = resp.json()
-            # If the API hits a rate limit, it still returns HTTP 200 but sets 'Response' to 'Error'. 
             if isinstance(data, dict) and data.get('Response') == 'Error':
                 if attempt == retries - 1:
                     return None
@@ -1122,14 +1121,15 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
 
                         // Phase 3: Cleanup once animation ends - Direct snap to CSS layout
                         setTimeout(() => {{
+                            el.classList.remove('expanded-chart');
+                            el.style.cssText = ''; 
+                            
+                            // Let Highcharts auto-fit exactly to the restored flex container instantly
+                            hc.setSize(null, null, false); 
+                            
                             if (parentIframe) {{
                                 parentIframe.classList.remove('fullscreen-mode');
                             }}
-                            el.style.cssText = ''; 
-                            el.classList.remove('expanded-chart');
-                            
-                            // Let highcharts silently reflow to the restored CSS container instantly
-                            hc.setSize(null, null, false); 
                         }}, 360);
 
                         return;
