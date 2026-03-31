@@ -869,16 +869,20 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
         
         inv_data_points = []
         val_data_points = []
+        coin_stats_dict = {}
         for _, r in df_iv.iterrows():
             ticker = str(r['Ticker'])
             inv = r['USDC'] if pd.notna(r['USDC']) else 0
             val = r['Value'] if pd.notna(r['Value']) else 0
+            holdings = r['Holdings'] if pd.notna(r['Holdings']) else 0
             c = get_ticker_color(ticker)
             inv_data_points.append(f"{{ name: '{ticker}', y: {inv} }}")
             val_data_points.append(f"{{ name: '{ticker}', y: {val}, color: '{c}' }}")
+            coin_stats_dict[ticker] = {'holdings': float(holdings), 'invested': float(inv)}
         
         inv_data_js = ",".join(inv_data_points)
         val_data_js = ",".join(val_data_points)
+        coin_stats_js = json.dumps(coin_stats_dict)
 
         charts_html = f"""
         <!DOCTYPE html>
@@ -1076,6 +1080,8 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                 Highcharts.setOptions({{ global: {{ useUTC: false }} }});
                 
                 const baselines = {baselines_js_str};
+                const coinStats = {coin_stats_js};
+                const usdcHoldings = {usdc_holdings};
 
                 // Chart 1: Pie
                 Highcharts.chart('pie-container', {{
@@ -1294,14 +1300,22 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                         // ==========================================
                         overlay.classList.remove('active');
                         
-                        const origTop = parseFloat(el.getAttribute('data-orig-top')) || 0;
-                        const origLeft = parseFloat(el.getAttribute('data-orig-left')) || 0;
+                        // Re-calculate the current layout position to avoid scroll-shift blinks
+                        const placeholder = el.parentElement;
+                        const targetRect = placeholder.getBoundingClientRect();
+                        let targetTop = targetRect.top;
+                        let targetLeft = targetRect.left;
+                        if (parentIframe) {{
+                            const iframeRect = parentIframe.getBoundingClientRect();
+                            targetTop += iframeRect.top;
+                            targetLeft += iframeRect.left;
+                        }}
 
                         // Phase 1: Keep it position: fixed, but set its standard visual coordinates. 
                         // Crossfade the class instantly to lose expanded background while traveling.
                         el.classList.remove('expanded-chart');
                         el.style.transition = 'transform 0.4s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.4s ease, box-shadow 0.4s ease';
-                        el.style.transform = `translate(${{origLeft}}px, ${{origTop}}px) scale(1)`;
+                        el.style.transform = `translate(${{targetLeft}}px, ${{targetTop}}px) scale(1)`;
 
                         // Phase 2: Once the visual transition finishes, silently revert CSS layout from fixed to standard flow
                         const finishClose = (e) => {{
@@ -1439,13 +1453,9 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                 }}
 
                 // ---- LIVE UPDATE SCRIPT INJECTION ----
-                const usdcHoldings = {usdc_holdings};
-                
-                async function updateLivePrices() {{
-                    const cards = Array.from(document.querySelectorAll('.flip-card'));
-                    if (cards.length === 0) return;
-                    const tickers = cards.map(card => card.getAttribute('data-ticker'));
-                    
+                async function updateLivePricesCharts() {{
+                    const tickers = Object.keys(coinStats);
+                    if (tickers.length === 0) return;
                     const url = `https://min-api.cryptocompare.com/data/pricemulti?fsyms=${{tickers.join(',')}}&tsyms=USD`;
                     try {{
                         const resp = await fetch(url);
@@ -1458,59 +1468,23 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                         const invChart = Highcharts.charts.find(c => c && c.renderTo && c.renderTo.id === 'inv-val-container');
                         const allocChart = Highcharts.charts.find(c => c && c.renderTo && c.renderTo.id === 'allocation-container');
 
-                        cards.forEach(card => {{
-                            const ticker = card.getAttribute('data-ticker');
-                            const holdings = parseFloat(card.getAttribute('data-holdings'));
-                            const invested = parseFloat(card.getAttribute('data-invested'));
-                            let price = parseFloat(card.getAttribute('data-current-price'));
-                            
+                        tickers.forEach(ticker => {{
                             if (data[ticker] && data[ticker].USD) {{
-                                price = data[ticker].USD;
-                                card.setAttribute('data-current-price', price);
+                                const price = data[ticker].USD;
+                                const stats = coinStats[ticker];
+                                const value = stats.holdings * price;
+                                const pnl = value - stats.invested;
                                 
-                                const priceFmt = price < 1 ? price.toFixed(4) : price.toLocaleString('en-US', {{minimumFractionDigits: 2, maximumFractionDigits: 2}});
-                                const currentEl = card.querySelector('.current-value');
-                                if (currentEl) currentEl.innerText = '$' + priceFmt;
+                                totalCoinValue += value;
+                                totalCoinInvested += stats.invested;
                                 
-                                const value = holdings * price;
-                                const pnl = value - invested;
-                                const pnlPct = invested > 0 ? (pnl / invested) * 100 : 0;
-                                const valStr = '$' + value.toLocaleString('en-US', {{minimumFractionDigits: 2, maximumFractionDigits: 2}});
-                                const pnlStr = (pnl >= 0 ? '▲ $' : '▼ $') + Math.abs(pnl).toLocaleString('en-US', {{minimumFractionDigits: 2, maximumFractionDigits: 2}});
-                                const pnlPctStr = (pnl >= 0 ? '▲ ' : '▼ ') + Math.abs(pnlPct).toFixed(2) + '%';
-                                const color = pnl >= 0 ? '#00ff9d' : '#ff4d4d';
-                                
-                                const valEl = card.querySelector('.total-value');
-                                if (valEl) valEl.innerText = valStr;
-                                const pnlEl = card.querySelector('.card-pnl');
-                                if (pnlEl) {{
-                                    pnlEl.innerText = pnlStr;
-                                    pnlEl.style.color = color;
-                                }}
-                                
-                                const pnlPctEl = card.querySelector('.card-pnl-pct');
-                                if (pnlPctEl) {{
-                                    pnlPctEl.innerText = pnlPctStr;
-                                    pnlPctEl.style.color = color;
-                                }}
-                                
-                                if (window.chartCache && window.chartCache[ticker] && window.chartCache[ticker].chartObj) {{
-                                    const chart = window.chartCache[ticker].chartObj;
-                                    const dataLen = chart.data.datasets[0].data.length;
-                                    if (dataLen > 0) {{
-                                        chart.data.datasets[0].data[dataLen - 1] = price;
-                                        chart.update('none'); 
-                                    }}
-                                }}
-                                
-                                // Highcharts Live Updates
                                 if (pieChart && pieChart.series[0]) {{
                                     const pt = pieChart.series[0].points.find(p => p.name === ticker);
                                     if (pt) pt.update({{y: value}}, false);
                                 }}
 
                                 if (invChart && invChart.series[1]) {{ 
-                                    const pt = invChart.series[1].points.find(p => p.name === ticker);
+                                    const pt = invChart.series[1].points.find(p => (p.category || p.name) === ticker);
                                     if (pt) pt.update({{y: value}}, false);
                                 }}
 
@@ -1522,7 +1496,6 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                                     }}
                                 }}
 
-                                // Update isolated background arrays
                                 ['all', '1d', '7d', '30d', '1y'].forEach(tf => {{
                                     const mapArray = pnlDataMap[tf];
                                     if (mapArray) {{
@@ -1538,29 +1511,9 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                                     }}
                                 }});
                             }}
-                            
-                            totalCoinValue += (holdings * price);
-                            totalCoinInvested += invested;
                         }});
                         
                         const totalPortfolioValue = totalCoinValue + usdcHoldings;
-                        const totalPnL = totalCoinValue - totalCoinInvested; 
-                        const totalInvestedBase = totalPortfolioValue - totalPnL;
-                        const totalPnLPct = totalInvestedBase !== 0 ? (totalPnL / totalInvestedBase) * 100 : 0;
-                        
-                        const dashValStr = '$' + totalPortfolioValue.toLocaleString('en-US', {{minimumFractionDigits: 2, maximumFractionDigits: 2}});
-                        const dashPnlStr = (totalPnL >= 0 ? '▲ $' : '▼ $') + Math.abs(totalPnL).toLocaleString('en-US', {{minimumFractionDigits: 2, maximumFractionDigits: 2}});
-                        const dashPnlPctStr = (totalPnL >= 0 ? '▲ ' : '▼ ') + Math.abs(totalPnLPct).toFixed(2) + '%';
-                        const dashColor = totalPnL >= 0 ? '#00ff9d' : '#ff4d4d';
-                        
-                        const parentDoc = window.parent.document;
-                        const dValue = parentDoc.getElementById('dash-total-value');
-                        const dPnl = parentDoc.getElementById('dash-pnl');
-                        const dPnlPct = parentDoc.getElementById('dash-pnl-pct');
-                        
-                        if (dValue) dValue.innerText = dashValStr;
-                        if (dPnl) {{ dPnl.innerText = dashPnlStr; dPnl.style.color = dashColor; }}
-                        if (dPnlPct) {{ dPnlPct.innerText = dashPnlPctStr; dPnlPct.style.color = dashColor; }}
                         
                         const histChart = Highcharts.charts.find(c => c && c.renderTo && c.renderTo.id === 'history-container');
                         if (histChart && histChart.series[0] && histChart.series[0].points.length > 0) {{
@@ -1573,12 +1526,10 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                         if (pnlChart) {{
                             const activeBtn = document.querySelector('.pnl-controls button.active');
                             const range = activeBtn ? activeBtn.getAttribute('data-range') : 'all';
-                            // Grab fresh copy from background map so Highcharts mutates the copy, not the source
                             const freshData = getPnlDataCopy(range);
                             pnlChart.series[0].setData(freshData, false);
                         }}
 
-                        // Only redraw what is rendered
                         if (pieChart) pieChart.redraw(true);
                         if (invChart) invChart.redraw(true);
                         if (allocChart) allocChart.redraw(true);
@@ -1586,10 +1537,10 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                         if (pnlChart) pnlChart.redraw(true);
                         
                     }} catch (e) {{
-                        console.error('Auto-refresh error:', e);
+                        console.error('Auto-refresh error charts:', e);
                     }}
                 }}
-                setInterval(updateLivePrices, 10000);
+                setInterval(updateLivePricesCharts, 10000);
 
                 setInterval(() => {{
                     try {{
