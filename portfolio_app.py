@@ -874,6 +874,13 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                 roi_data_js_lines.append(f"{{ name: '{t}', y: {val}, color: '{c}' }}")
         roi_data_js = ",\n".join(roi_data_js_lines)
 
+        # Chart 7: 24h Change Placeholder Data
+        daily_data_js_lines = []
+        for _, r in df_port[df_port['Ticker'] != 'USDC'].iterrows():
+            t = r['Ticker']
+            daily_data_js_lines.append(f"{{ name: '{t}', y: 0, color: '#64748b' }}")
+        daily_data_js = ",\n".join(daily_data_js_lines)
+
         charts_html = f"""
         <!DOCTYPE html>
         <html>
@@ -915,6 +922,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                 .chart-placeholder[data-type="roi"] {{ width: 400px; flex: 0 0 400px; height: 340px; }}
                 .chart-placeholder[data-type="allocation"] {{ width: 600px; flex: 0 0 600px; height: 340px; }}
                 .chart-placeholder[data-type="inv-val"] {{ width: 500px; flex: 0 0 500px; height: 340px; }}
+                .chart-placeholder[data-type="daily"] {{ width: 400px; flex: 0 0 400px; height: 340px; }}
                 
                 .chart-box {{
                     width: 100%;
@@ -1063,6 +1071,15 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                                 <div class="chart-title">ROI (%) by Asset</div>
                             </div>
                             <div id="roi-container" class="chart-body"></div>
+                        </div>
+                    </div>
+                    
+                    <div class="chart-placeholder" data-type="daily">
+                        <div id="daily-wrapper" class="chart-box">
+                            <div class="chart-header">
+                                <div class="chart-title">24h Market Movers (%)</div>
+                            </div>
+                            <div id="daily-container" class="chart-body"></div>
                         </div>
                     </div>
                     
@@ -1221,6 +1238,26 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                     plotOptions: {{ bar: {{ borderRadius: 6, borderWidth: 0, pointPadding: 0.1, groupPadding: 0.1, maxPointWidth: 35, shadow: {{ color: 'rgba(0,0,0,0.3)', offsetX: 1, offsetY: 2, width: 4 }}, dataLabels: {{ enabled: true, inside: false, crop: false, overflow: 'allow', style: {{ color: '#fff', textOutline: '2px #0f172a', fontWeight: 'bold', fontSize: '10px' }}, formatter: function() {{ return Highcharts.numberFormat(this.y, 2) + '%'; }} }} }} }},
                     credits: {{ enabled: false }},
                     series: [{{ name: 'ROI %', data: [ {roi_data_js} ] }}]
+                }});
+                
+                // Chart 7: 24h Change Bar Chart
+                Highcharts.chart('daily-container', {{
+                    chart: {{ type: 'bar', backgroundColor: 'transparent', marginTop: 15, marginBottom: 25 }},
+                    title: {{ text: null }},
+                    xAxis: {{ type: 'category', labels: {{ style: {{ color: '#94a3b8', fontWeight: 'bold' }} }}, gridLineColor: 'rgba(255,255,255,0.05)', tickWidth: 0, lineWidth: 0 }},
+                    yAxis: {{ title: {{ text: null }}, labels: {{ enabled: false }}, gridLineColor: 'rgba(255,255,255,0.05)' }},
+                    legend: {{ enabled: false }},
+                    tooltip: {{
+                        backgroundColor: 'rgba(15, 23, 42, 0.95)', style: {{ color: '#fff' }}, borderColor: 'rgba(255,255,255,0.15)',
+                        formatter: function() {{
+                            const val = Highcharts.numberFormat(Math.abs(this.y), 2) + '%';
+                            const sign = this.y >= 0 ? '▲ ' : '▼ ';
+                            return `<b>${{this.point.name}}</b><br/>24h Change: <b style="color:${{this.point.color}}">${{sign}}${{val}}</b>`;
+                        }}
+                    }},
+                    plotOptions: {{ bar: {{ borderRadius: 6, borderWidth: 0, pointPadding: 0.1, groupPadding: 0.1, maxPointWidth: 35, shadow: {{ color: 'rgba(0,0,0,0.3)', offsetX: 1, offsetY: 2, width: 4 }}, dataLabels: {{ enabled: true, inside: false, crop: false, overflow: 'allow', style: {{ color: '#fff', textOutline: '2px #0f172a', fontWeight: 'bold', fontSize: '10px' }}, formatter: function() {{ return (this.y >= 0 ? '+' : '') + Highcharts.numberFormat(this.y, 2) + '%'; }} }} }} }},
+                    credits: {{ enabled: false }},
+                    series: [{{ name: '24h Change', data: [ {daily_data_js} ] }}]
                 }});
 
                 // Chart 4: Portfolio Allocation (Stacked Area)
@@ -1437,6 +1474,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                 setupDoubleTap('history-wrapper');
                 setupDoubleTap('pnl-wrapper');
                 setupDoubleTap('roi-wrapper');
+                setupDoubleTap('daily-wrapper');
                 setupDoubleTap('allocation-container');
                 setupDoubleTap('inv-val-container');
 
@@ -1470,7 +1508,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                             }} else {{
                                 document.body.classList.remove('privacy-mode');
                             }}
-                            ['history-container', 'pnl-container', 'roi-container', 'inv-val-container'].forEach(id => {{
+                            ['history-container', 'pnl-container', 'roi-container', 'daily-container', 'inv-val-container'].forEach(id => {{
                                 const hc = Highcharts.charts.find(c => c && c.renderTo.id === id);
                                 if (hc && hc.yAxis && hc.yAxis[0]) {{ hc.yAxis[0].isDirty = true; hc.redraw(); }}
                             }});
@@ -1914,6 +1952,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                 let tickerValues = {{}};
                 let tickerDiffs = {{}};
                 let tickerRoi = {{}};
+                let ticker24h = {{}};
                 
                 cards.forEach(card => {{
                     const ticker = card.getAttribute('data-ticker');
@@ -1976,6 +2015,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                         // Also update 24h change text
                         if (changeSpan && data.RAW[sym].USD.CHANGEPCT24HOUR !== undefined) {{
                             const change = data.RAW[sym].USD.CHANGEPCT24HOUR;
+                            ticker24h[ticker] = change;
                             const sign = change >= 0 ? '▲' : '▼';
                             const color = change >= 0 ? '#00ff9d' : '#ff4d4d';
                             changeSpan.innerHTML = `<span style="color:${{color}};">${{sign}} ${{Math.abs(change).toFixed(2)}}%</span>`;
@@ -2026,6 +2066,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                         const histChart = HC.charts.find(c => c && c.renderTo.id === 'history-container');
                         const pnlChart = HC.charts.find(c => c && c.renderTo.id === 'pnl-container');
                         const roiChart = HC.charts.find(c => c && c.renderTo.id === 'roi-container');
+                        const dailyChart = HC.charts.find(c => c && c.renderTo.id === 'daily-container');
                         const allocChart = HC.charts.find(c => c && c.renderTo.id === 'allocation-container');
                         const invValChart = HC.charts.find(c => c && c.renderTo.id === 'inv-val-container');
 
@@ -2057,7 +2098,6 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                                     point.update({{y: point.y + tickerDiffs[point.name]}}, false);
                                 }}
                             }});
-                            // Update the background data map so toggling timeframes preserves live data
                             // Note: pnlDataMap is scoped to the other iframe, but Highcharts series state is safe
                             pnlChart.redraw();
                         }}
@@ -2071,8 +2111,20 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                             }});
                             roiChart.redraw();
                         }}
+                        
+                        // 5. Daily 24h Chart
+                        if (dailyChart && dailyChart.series[0]) {{
+                            dailyChart.series[0].points.forEach(point => {{
+                                if (ticker24h[point.name] !== undefined) {{
+                                    const val = ticker24h[point.name];
+                                    const color = val >= 0 ? '#00ff9d' : '#ff4d4d'; 
+                                    point.update({{y: val, color: color}}, false);
+                                }}
+                            }});
+                            dailyChart.redraw();
+                        }}
 
-                        // 5. Asset Allocation Chart
+                        // 6. Asset Allocation Chart
                         if (allocChart) {{
                             allocChart.series.forEach(s => {{
                                 if (tickerValues[s.name] !== undefined) {{
@@ -2086,7 +2138,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                             allocChart.redraw();
                         }}
 
-                        // 6. Invested vs Value Chart (Series 1 is 'Current Value')
+                        // 7. Invested vs Value Chart (Series 1 is 'Current Value')
                         if (invValChart && invValChart.series[1]) {{
                             const categories = invValChart.xAxis[0].categories;
                             invValChart.series[1].points.forEach((point, index) => {{
@@ -2143,6 +2195,70 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
         window.chartCache = window.chartCache || {{}};
         const chartCache = window.chartCache;
         const refreshKey = '{st.session_state.refresh_key}';
+        
+        async function fetchAll24hChanges() {{
+            const cards = Array.from(document.querySelectorAll('.flip-card'));
+            if (cards.length === 0) return;
+            const tickers = cards.map(card => card.getAttribute('data-ticker'));
+            const symbolMap = {{
+                'BTC':'BTC','ETH':'ETH','SOL':'SOL','HBAR':'HBAR',
+                'XRP':'XRP','BNB':'BNB','TRX':'TRX','LINK':'LINK','SUI':'SUI'
+            }};
+            const mappedTickers = tickers.map(t => symbolMap[t.toUpperCase()] || t.toUpperCase());
+
+            const url = `https://min-api.cryptocompare.com/data/pricemultifull?fsyms=${{mappedTickers.join(',')}}&tsyms=USD`;
+            try {{
+                const resp = await fetch(url, {{ headers: {{ 'User-Agent': 'Mozilla/5.0' }} }});
+                const data = await resp.json();
+                
+                let init24h = {{}};
+
+                cards.forEach(card => {{
+                    const ticker = card.getAttribute('data-ticker');
+                    const sym = symbolMap[ticker.toUpperCase()] || ticker.toUpperCase();
+                    const changeSpan = card.querySelector(`#change-${{ticker}}`);
+
+                    if (changeSpan && data.RAW && data.RAW[sym] && data.RAW[sym].USD && data.RAW[sym].USD.CHANGEPCT24HOUR !== undefined) {{
+                        const change = data.RAW[sym].USD.CHANGEPCT24HOUR;
+                        init24h[ticker] = change;
+                        const sign = change >= 0 ? '▲' : '▼';
+                        const color = change >= 0 ? '#00ff9d' : '#ff4d4d';
+                        changeSpan.innerHTML = `<span style="color:${{color}};">${{sign}} ${{Math.abs(change).toFixed(2)}}%</span>`;
+                    }} else if (changeSpan) {{
+                        changeSpan.innerHTML = `N/A`;
+                    }}
+                }});
+                
+                // Immediately push this initial fetch into the daily Highcharts graph
+                try {{
+                    let hcWin = window;
+                    if (window !== window.parent) {{
+                        const iframes = window.parent.document.querySelectorAll('iframe');
+                        for (let i = 0; i < iframes.length; i++) {{
+                            if (iframes[i].contentWindow && iframes[i].contentWindow.Highcharts) {{
+                                hcWin = iframes[i].contentWindow;
+                                break;
+                            }}
+                        }}
+                    }}
+                    if (hcWin && hcWin.Highcharts) {{
+                        const dailyC = hcWin.Highcharts.charts.find(c => c && c.renderTo.id === 'daily-container');
+                        if (dailyC && dailyC.series[0]) {{
+                            dailyC.series[0].points.forEach(pt => {{
+                                if (init24h[pt.name] !== undefined) {{
+                                    const val = init24h[pt.name];
+                                    pt.update({{y: val, color: val >= 0 ? '#00ff9d' : '#ff4d4d'}}, false);
+                                }}
+                            }});
+                            dailyC.redraw();
+                        }}
+                    }}
+                }} catch(e) {{}}
+                
+            }} catch(e) {{
+                console.error("Bulk 24h change error", e);
+            }}
+        }}
         
         async function fetchHistoricalData(ticker) {{
             const symbolMap = {{
