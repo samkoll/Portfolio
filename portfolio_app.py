@@ -817,8 +817,8 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                     width: 100%;
                     overflow-y: hidden;
                     overflow-x: auto;
-                    padding: 12px 0px 20px 0px;
-                    margin-bottom: 24px;
+                    padding: 6px 0px 6px 0px; /* Reduced gap padding */
+                    margin-bottom: 0px; /* Eliminated bottom gap */
                     scroll-snap-type: x mandatory;
                     -webkit-overflow-scrolling: touch;
                     scrollbar-width: none; /* Firefox */
@@ -868,10 +868,8 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                     opacity: 0;
                     position: fixed;
                     top: 0; left: 0; width: 100%; height: 100%;
-                    background: rgba(10, 15, 28, 0.85);
+                    background: rgba(10, 15, 28, 0.5); /* Lighter as parent iframe handles main background blur */
                     z-index: 1000;
-                    backdrop-filter: blur(4px);
-                    -webkit-backdrop-filter: blur(4px);
                     transition: opacity 0.3s ease, visibility 0.3s ease;
                 }}
                 #chart-overlay.active {{
@@ -879,6 +877,20 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                     opacity: 1;
                 }}
                 
+                /* Expanded Chart Global (Applied to PC and Mobile) */
+                .expanded-chart {{
+                    position: fixed !important;
+                    top: 50% !important;
+                    left: 50% !important;
+                    transform: translate(-50%, -50%) !important;
+                    z-index: 1001 !important;
+                    margin: 0 !important;
+                    background: rgba(15, 23, 42, 0.95) !important;
+                    border: 1px solid rgba(0, 255, 157, 0.4) !important;
+                    box-shadow: 0 10px 40px rgba(0,0,0,0.8) !important;
+                    border-radius: 16px !important;
+                }}
+
                 @media (max-width: 768px) {{
                     .pie-placeholder, .history-placeholder {{ 
                         height: 320px; 
@@ -889,19 +901,6 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                     .charts-flex {{ 
                         padding: 0 7.5vw; 
                         gap: 16px; 
-                    }}
-                    
-                    .expanded-chart {{
-                        position: fixed !important;
-                        top: 50% !important;
-                        left: 50% !important;
-                        transform: translate(-50%, -50%) !important;
-                        z-index: 1001 !important;
-                        margin: 0 !important;
-                        background: rgba(15, 23, 42, 0.95) !important;
-                        border: 1px solid rgba(0, 255, 157, 0.4) !important;
-                        box-shadow: 0 10px 40px rgba(0,0,0,0.8) !important;
-                        /* We don't force width/height here; Highcharts setSize dynamically applies it inline */
                     }}
                 }}
             </style>
@@ -1061,15 +1060,49 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                     }}]
                 }});
 
-                // --- Mobile Double-Tap Expand Mechanics ---
+                // --- Inject Parent Fullscreen CSS ---
+                try {{
+                    if (window !== window.parent && window.parent.document) {{
+                        if (!window.parent.document.getElementById('chart-fullscreen-css')) {{
+                            const style = window.parent.document.createElement('style');
+                            style.id = 'chart-fullscreen-css';
+                            style.innerHTML = `
+                                iframe.fullscreen-mode {{
+                                    position: fixed !important;
+                                    top: 0 !important;
+                                    left: 0 !important;
+                                    width: 100vw !important;
+                                    height: 100vh !important;
+                                    max-width: 100vw !important;
+                                    max-height: 100vh !important;
+                                    z-index: 999999 !important;
+                                    border: none !important;
+                                    background: rgba(10, 15, 28, 0.85) !important;
+                                    backdrop-filter: blur(5px) !important;
+                                    -webkit-backdrop-filter: blur(5px) !important;
+                                    transition: all 0.3s ease;
+                                }}
+                            `;
+                            window.parent.document.head.appendChild(style);
+                        }}
+                    }}
+                }} catch(e) {{}}
+
+                // --- New Window / Overlay Modal Mechanics ---
                 function toggleExpandChart(chartId) {{
-                    if (window.innerWidth > 768) return; 
-                    
                     const el = document.getElementById(chartId);
                     const overlay = document.getElementById('chart-overlay');
                     const wrapper = document.getElementById('chartsScrollContainer');
                     const hc = Highcharts.charts.find(c => c && c.renderTo.id === chartId);
                     if (!hc) return;
+
+                    let parentIframe = null;
+                    try {{
+                        const iframes = window.parent.document.querySelectorAll('iframe');
+                        for (let ifr of iframes) {{
+                            if (ifr.contentWindow === window) parentIframe = ifr;
+                        }}
+                    }} catch(e) {{}}
                     
                     // If Already Expanded, Close It
                     if (el.classList.contains('expanded-chart')) {{
@@ -1077,8 +1110,18 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                         overlay.classList.remove('active');
                         wrapper.style.overflowX = 'auto'; // Restore scroll snapping
                         
+                        // Shrink the iframe back to its original slot immediately
+                        if (parentIframe) {{
+                            parentIframe.classList.remove('fullscreen-mode');
+                        }}
+                        
                         // Tell Highcharts to animate perfectly back to the placeholder dimensions
-                        hc.setSize(window.innerWidth * 0.85, 320, {{ duration: 350, easing: 'easeOutQuart' }});
+                        const isMobile = window.innerWidth <= 768;
+                        const isPie = chartId === 'pie-container';
+                        const targetW = isMobile ? window.innerWidth * 0.85 : (isPie ? 350 : 600);
+                        const targetH = isMobile ? 320 : 340;
+
+                        hc.setSize(targetW, targetH, {{ duration: 350, easing: 'easeOutQuart' }});
                         
                         // Clear explicit sizing after animation finishes so CSS handles resizing later
                         setTimeout(() => {{ hc.setSize(null, null, false); }}, 360);
@@ -1091,17 +1134,32 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                         c.classList.remove('expanded-chart');
                         const otherHc = Highcharts.charts.find(ohc => ohc && ohc.renderTo.id === c.id);
                         if (otherHc) {{
-                            otherHc.setSize(window.innerWidth * 0.85, 320, false);
-                            setTimeout(() => {{ otherHc.setSize(null, null, false); }}, 50);
+                            otherHc.setSize(null, null, false);
                         }}
                     }});
                     
+                    // Expand iframe to fit entire Streamlit window over the home screen
+                    if (parentIframe) {{
+                        parentIframe.classList.add('fullscreen-mode');
+                    }}
+
                     el.classList.add('expanded-chart');
                     overlay.classList.add('active');
                     wrapper.style.overflowX = 'visible'; // Prevent clipping while expanded
                     
-                    // Instruct Highcharts to perfectly animate its internal SVG vectors to fill the new big space
-                    hc.setSize(window.innerWidth * 0.96, 440, {{ duration: 350, easing: 'easeOutQuart' }});
+                    // Instruct Highcharts to fill the new big space (the 100vw/vh iframe)
+                    setTimeout(() => {{
+                        const screenW = window.innerWidth;
+                        const screenH = window.innerHeight;
+                        
+                        let targetW = screenW * 0.9;
+                        let targetH = screenH * 0.7;
+                        if (targetW > 1000) targetW = 1000;
+                        if (targetH > 700) targetH = 700;
+                        if (targetH < 400) targetH = 400;
+
+                        hc.setSize(targetW, targetH, {{ duration: 350, easing: 'easeOutQuart' }});
+                    }, 50); // slight delay allowing iframe geometry to resolve
                 }}
 
                 function setupDoubleTap(elementId) {{
@@ -1134,15 +1192,10 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                 // Close expanded chart when tapping the dark background overlay
                 document.getElementById('chart-overlay').addEventListener('click', () => {{
                     document.querySelectorAll('.expanded-chart').forEach(el => {{
-                        el.classList.remove('expanded-chart');
-                        const hc = Highcharts.charts.find(c => c && c.renderTo.id === el.id);
-                        if (hc) {{
-                            hc.setSize(window.innerWidth * 0.85, 320, {{ duration: 350, easing: 'easeOutQuart' }});
-                            setTimeout(() => {{ hc.setSize(null, null, false); }}, 360);
+                        if (el.classList.contains('expanded-chart')) {{
+                            toggleExpandChart(el.id);
                         }}
                     }});
-                    document.getElementById('chart-overlay').classList.remove('active');
-                    document.getElementById('chartsScrollContainer').style.overflowX = 'auto'; // Restore scroll snapping
                 }});
 
 
@@ -1180,8 +1233,8 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
         </body>
         </html>
         """
-        # Height raised to 460 to provide plenty of vertical room for the highcharts expansion without clipping the iframe
-        components.html(charts_html, height=460, scrolling=False)
+        # Height shrunk to 355 to eliminate the gap completely! The script handles expanding perfectly over the entire screen when needed.
+        components.html(charts_html, height=355, scrolling=False)
 
         # ================== 3. SUBDUED USDC BANNER ==================
         usdc_banner_html = f"""
