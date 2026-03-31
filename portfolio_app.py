@@ -1074,35 +1074,62 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                         }}
                     }} catch(e) {{}}
                     
-                    // --- CLOSING LOGIC ---
+                    const screenW = window.parent ? window.parent.innerWidth : window.innerWidth;
+                    const screenH = window.parent ? window.parent.innerHeight : window.innerHeight;
+
                     if (el.classList.contains('expanded-chart')) {{
+                        // ==========================================
+                        // CLOSING MECHANICS (Pre-emptive setSize)
+                        // ==========================================
                         wrapper.style.overflowX = 'auto';
                         overlay.classList.remove('active');
                         
-                        // Retrieve perfectly stored math from when we opened
-                        const transformSmall = el.getAttribute('data-transform-small');
+                        const visualTop = parseFloat(el.getAttribute('data-orig-top')) || 0;
+                        const visualLeft = parseFloat(el.getAttribute('data-orig-left')) || 0;
+                        const origW = parseFloat(el.getAttribute('data-orig-w')) || 350;
+                        const origH = parseFloat(el.getAttribute('data-orig-h')) || 320;
+                        const targetW = parseFloat(el.getAttribute('data-target-w')) || screenW;
+                        const targetH = parseFloat(el.getAttribute('data-target-h')) || screenH;
+                        const centerLeft = parseFloat(el.getAttribute('data-center-left')) || 0;
+                        const centerTop = parseFloat(el.getAttribute('data-center-top')) || 0;
 
-                        // Execute smooth transition back to the exact small coordinates
-                        el.style.transition = 'transform 0.35s cubic-bezier(0.4, 0, 0.2, 1)';
-                        el.style.transform = transformSmall;
+                        // Calculate inverted scales for perfectly covering the large center area
+                        const scaleXClose = targetW / origW;
+                        const scaleYClose = targetH / origH;
 
-                        // Cleanup exactly once animation finishes
+                        // Phase 1: Instantly snap to native small size, but scale it UP to visually fill the center
+                        el.style.transition = 'none';
+                        el.style.width = origW + 'px';
+                        el.style.height = origH + 'px';
+                        el.style.transform = `translate(${{centerLeft}}px, ${{centerTop}}px) scale(${{scaleXClose}}, ${{scaleYClose}})`;
+                        
+                        // Force internal HC instance to exactly the small size natively right now
+                        hc.setSize(origW, origH, false);
+                        
+                        void el.offsetWidth; // Force Reflow to lock coordinates
+
+                        // Phase 2: Smooth CSS transition down to scale 1 at original slot coordinates
+                        requestAnimationFrame(() => {{
+                            el.style.transition = 'transform 0.35s cubic-bezier(0.4, 0, 0.2, 1)';
+                            el.style.transform = `translate(${{visualLeft}}px, ${{visualTop}}px) scale(1)`;
+                        }});
+
+                        // Phase 3: Flawless cleanup at end of animation. No HC resizing needed.
                         setTimeout(() => {{
-                            if (parentIframe) {{
-                                parentIframe.classList.remove('fullscreen-mode');
-                            }}
-                            
-                            // Instantly clear styles and seamlessly snap into native CSS layout without calculations
-                            el.style.cssText = ''; 
                             el.classList.remove('expanded-chart');
-                            hc.setSize(null, null, false); 
+                            el.style.cssText = ''; 
+                            if (parentIframe) parentIframe.classList.remove('fullscreen-mode');
                             
+                            // Let the container safely resume native CSS responsive behavior silently
+                            hc.setSize(null, null, false);
                         }}, 350);
 
                         return;
                     }}
                     
-                    // --- OPENING LOGIC ---
+                    // ==========================================
+                    // OPENING MECHANICS (Pre-emptive setSize)
+                    // ==========================================
                     document.querySelectorAll('.expanded-chart').forEach(c => {{
                         c.classList.remove('expanded-chart');
                         c.style.cssText = '';
@@ -1110,24 +1137,21 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                         if (otherHc) otherHc.setSize(null, null, false);
                     }});
 
-                    // 1. Measure exact starting pixel coordinates
                     const chartRect = el.getBoundingClientRect();
-                    let absLeft = chartRect.left;
-                    let absTop = chartRect.top;
-                    
+                    let visualTop = chartRect.top;
+                    let visualLeft = chartRect.left;
                     if (parentIframe) {{
                         const iframeRect = parentIframe.getBoundingClientRect();
-                        absLeft += iframeRect.left;
-                        absTop += iframeRect.top;
-                        parentIframe.classList.add('fullscreen-mode');
+                        visualTop += iframeRect.top;
+                        visualLeft += iframeRect.left;
                     }}
 
+                    if (parentIframe) parentIframe.classList.add('fullscreen-mode');
                     overlay.classList.add('active'); 
                     wrapper.style.overflowX = 'visible';
 
-                    // 2. Measure actual full screen
-                    const screenW = window.parent ? window.parent.innerWidth : window.innerWidth;
-                    const screenH = window.parent ? window.parent.innerHeight : window.innerHeight;
+                    const origW = chartRect.width;
+                    const origH = chartRect.height;
                     
                     let targetW = screenW * 0.9;
                     let targetH = screenH * 0.7;
@@ -1135,20 +1159,23 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                     if (targetH > 700) targetH = 700;
                     if (targetH < 400) targetH = 400;
 
-                    // 3. FLIP Math: Create starting and ending transform strings
-                    const scaleX = chartRect.width / targetW;
-                    const scaleY = chartRect.height / targetH;
+                    const scaleXOpen = origW / targetW;
+                    const scaleYOpen = origH / targetH;
                     
                     const centerLeft = (screenW - targetW) / 2;
                     const centerTop = (screenH - targetH) / 2;
 
-                    const transformSmall = `translate(${{absLeft}}px, ${{absTop}}px) scale(${{scaleX}}, ${{scaleY}})`;
-                    const transformLarge = `translate(${{centerLeft}}px, ${{centerTop}}px) scale(1)`;
+                    // Store everything for perfect closing math
+                    el.setAttribute('data-orig-top', visualTop);
+                    el.setAttribute('data-orig-left', visualLeft);
+                    el.setAttribute('data-orig-w', origW);
+                    el.setAttribute('data-orig-h', origH);
+                    el.setAttribute('data-target-w', targetW);
+                    el.setAttribute('data-target-h', targetH);
+                    el.setAttribute('data-center-left', centerLeft);
+                    el.setAttribute('data-center-top', centerTop);
 
-                    // Store the starting spot so closing knows exactly where to go
-                    el.setAttribute('data-transform-small', transformSmall);
-
-                    // 4. Pin large chart exactly at the small chart's location invisibly
+                    // Phase 1: Instantly snap to native large size, but scale it DOWN to visually sit in small slot
                     el.classList.add('expanded-chart');
                     el.style.position = 'fixed';
                     el.style.top = '0px';
@@ -1159,20 +1186,26 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                     el.style.zIndex = '1001';
                     el.style.transformOrigin = 'top left'; 
                     el.style.transition = 'none';
-                    el.style.transform = transformSmall;
+                    el.style.transform = `translate(${{visualLeft}}px, ${{visualTop}}px) scale(${{scaleXOpen}}, ${{scaleYOpen}})`;
                     
+                    // Force HC into exactly the large layout natively right now
                     hc.setSize(targetW, targetH, false);
+                    
                     void el.offsetWidth; // Force Reflow
 
-                    // 5. Execute smooth CSS translation to the center
-                    el.style.transition = 'transform 0.4s cubic-bezier(0.16, 1, 0.3, 1)';
-                    el.style.transform = transformLarge;
+                    // Phase 2: Smooth CSS transition to target center at scale 1
+                    requestAnimationFrame(() => {{
+                        el.style.transition = 'transform 0.35s cubic-bezier(0.4, 0, 0.2, 1)';
+                        el.style.transform = `translate(${{centerLeft}}px, ${{centerTop}}px) scale(1)`;
+                    }});
                 }}
 
                 function setupDoubleTap(elementId) {{
                     const el = document.getElementById(elementId);
                     if (!el) return;
                     let lastTap = 0;
+
+                    // Removed dblclick event listener completely - no more PC firing.
 
                     el.addEventListener('touchend', function(e) {{
                         const currentTime = new Date().getTime();
