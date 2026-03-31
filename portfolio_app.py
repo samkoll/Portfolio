@@ -745,7 +745,6 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
         last_prices_dict = st.session_state.last_known_prices.copy()
         history_data_raw = build_portfolio_history(st.session_state.crypto_df, st.session_state.fiat_df, last_prices_dict, st.session_state.refresh_key)
         
-        # Override the final point (today) to guarantee exact match with live dashboard metrics
         hist_val_js_list = []
         hist_inv_js_list = []
         hist_btc_js_list = []
@@ -861,10 +860,11 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                 }}
                 
                 .expanded-chart {{
-                    background: rgba(15, 23, 42, 0.95) !important;
-                    border: 1px solid rgba(0, 255, 157, 0.4) !important;
-                    box-shadow: 0 10px 40px rgba(0,0,0,0.8) !important;
-                    border-radius: 16px !important;
+                    background: rgba(15, 23, 42, 0.98) !important; /* solid color fit for app */
+                    border: 1px solid rgba(255, 255, 255, 0.08) !important; /* subdued fit */
+                    box-shadow: 0 15px 50px rgba(0,0,0,0.9) !important;
+                    border-radius: 20px !important; /* softer fit */
+                    transition: none !important; /* We handle transitions manually via JS */
                 }}
 
                 @media (max-width: 768px) {{
@@ -1033,7 +1033,6 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                     }}]
                 }});
 
-                // --- Inject Parent Fullscreen CSS without transitions to avoid jumps ---
                 try {{
                     if (window !== window.parent && window.parent.document) {{
                         if (!window.parent.document.getElementById('chart-fullscreen-css')) {{
@@ -1058,7 +1057,6 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                     }}
                 }} catch(e) {{}}
 
-                // --- Smooth Expansion Mechanics ---
                 function toggleExpandChart(chartId) {{
                     const el = document.getElementById(chartId);
                     const overlay = document.getElementById('chart-overlay');
@@ -1075,32 +1073,55 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                     }} catch(e) {{}}
                     
                     if (el.classList.contains('expanded-chart')) {{
-                        // CLOSING
-                        el.classList.remove('expanded-chart');
-                        overlay.classList.remove('active');
+                        // CLOSING MECHANICS
                         wrapper.style.overflowX = 'auto';
+                        overlay.classList.remove('active');
                         
-                        // Clear inline JS styles to restore flex layout instantly
-                        el.style.cssText = ''; 
-                        
-                        // Shrink iframe instantly
-                        if (parentIframe) {{
-                            parentIframe.classList.remove('fullscreen-mode');
-                        }}
-                        
+                        // We use the last stored visual coordinates from when we opened
+                        const invertTop = parseFloat(el.getAttribute('data-flip-top')) || 0;
+                        const invertLeft = parseFloat(el.getAttribute('data-flip-left')) || 0;
+                        const scaleX = parseFloat(el.getAttribute('data-flip-scale-x')) || 1;
+                        const scaleY = parseFloat(el.getAttribute('data-flip-scale-y')) || 1;
+
+                        // Phase 1: Lock to fixed center (where it currently is large) but no transition
+                        el.style.position = 'fixed';
+                        el.style.top = '50%';
+                        el.style.left = '50%';
+                        el.style.transform = 'translate(-50%, -50%) scale(1)';
+                        el.style.transition = 'none';
+                        el.style.zIndex = '1001';
+                        el.style.margin = '0';
+                        void el.offsetWidth; // Force Reflow
+
+                        // Phase 2: Smooth transition from large scale(1) back to invert scale
+                        // The bezier curve 0.4, 0, 0.2, 1 mimics standard material design out-of-screen feeling
+                        el.style.transition = 'transform 0.35s cubic-bezier(0.4, 0, 0.2, 1)';
+                        // Note how we move to the stored visual coordinates while simultaneously scaling down
+                        el.style.transform = `translate(${invertLeft}px, ${invertTop}px) scale(${scaleX}, ${scaleY})`;
+
+                        // Highcharts internal is large, let it snap to small instantly, it's invisible inside the div
                         const isMobile = window.innerWidth <= 768;
                         const isPie = chartId === 'pie-container';
                         const targetW = isMobile ? window.innerWidth * 0.85 : (isPie ? 350 : 600);
                         const targetH = isMobile ? 320 : 340;
+                        hc.setSize(targetW, targetH, false);
 
-                        hc.setSize(targetW, targetH, {{ duration: 350, easing: 'easeOutQuart' }});
-                        setTimeout(() => {{ hc.setSize(null, null, false); }}, 360);
+                        setTimeout(() => {{
+                            el.classList.remove('expanded-chart');
+                            if (parentIframe) {{
+                                parentIframe.classList.remove('fullscreen-mode');
+                            }}
+                            // Phase 3: Animation complete, clear all manual styling to return to inline flex flow
+                            el.style.cssText = ''; 
+                            hc.setSize(null, null, false); // Final clean up so CSS controls size
+                        }}, 350);
+
                         return;
                     }}
                     
-                    // OPENING
-                    
-                    // 1. Close others silently
+                    // OPENING MECHANICS
+
+                    // 1. SILENT CLOSE OTHERS
                     document.querySelectorAll('.expanded-chart').forEach(c => {{
                         c.classList.remove('expanded-chart');
                         c.style.cssText = '';
@@ -1108,59 +1129,77 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                         if (otherHc) otherHc.setSize(null, null, false);
                     }});
 
-                    // 2. Measure exactly where the chart is right now on the screen
+                    // 2. MEASURE INITIAL SLOT
                     const chartRect = el.getBoundingClientRect();
                     let visualTop = chartRect.top;
                     let visualLeft = chartRect.left;
-
                     if (parentIframe) {{
                         const iframeRect = parentIframe.getBoundingClientRect();
                         visualTop += iframeRect.top;
                         visualLeft += iframeRect.left;
                     }}
 
-                    // 3. Pin it exactly to that visual coordinate (locks its position)
-                    el.style.position = 'fixed';
-                    el.style.top = visualTop + 'px';
-                    el.style.left = visualLeft + 'px';
-                    el.style.width = chartRect.width + 'px';
-                    el.style.height = chartRect.height + 'px';
-                    el.style.margin = '0';
-                    el.style.transform = 'none';
-                    el.style.transition = 'none';
-                    el.style.zIndex = '1001';
-
-                    // 4. Make iframe fullscreen instantly (no CSS transition on the iframe)
+                    // 3. EXPAND IFRAME IMMEDIATELY (Invisible behind parent's backdrop blur)
                     if (parentIframe) {{
                         parentIframe.classList.add('fullscreen-mode');
                     }}
-                    overlay.classList.add('active'); // Fade in the dark backdrop inside the iframe
+                    overlay.classList.add('active'); // Fade backdrop inside iframe
                     wrapper.style.overflowX = 'visible';
-                    el.classList.add('expanded-chart');
-
-                    // 5. Force the browser to register the locked initial coordinates before animating
-                    void el.offsetWidth;
-
-                    // 6. Calculate target fullscreen dimensions
+                    
+                    // 4. PRE-CALCULATE TARGET SIZE (Instantly inside the already fullscreen iframe)
                     const screenW = window.innerWidth;
                     const screenH = window.innerHeight;
-                    
                     let targetW = screenW * 0.9;
                     let targetH = screenH * 0.7;
                     if (targetW > 1000) targetW = 1000;
                     if (targetH > 700) targetH = 700;
                     if (targetH < 400) targetH = 400;
 
-                    // 7. Apply the smooth CSS transition and target destination
-                    el.style.transition = 'all 0.4s cubic-bezier(0.16, 1, 0.3, 1)';
-                    el.style.top = '50%';
-                    el.style.left = '50%';
+                    const scaleX = chartRect.width / targetW;
+                    const scaleY = chartRect.height / targetH;
+
+                    // INVERT: Calculate where it has to move from center (target) to visual origin
+                    // Visual origin is visualLeft, visualTop. Center is screenW/2, screenH/2.
+                    // When expanded, we use transform-origin: top left; so the translation is simpler.
+                    const invertLeft = visualLeft;
+                    const invertTop = visualTop;
+
+                    // STORE INVERT STATE FOR SMOOTH CLOSE
+                    el.setAttribute('data-flip-top', invertTop);
+                    el.setAttribute('data-flip-left', invertLeft);
+                    el.setAttribute('data-flip-scale-x', scaleX);
+                    el.setAttribute('data-flip-scale-y', scaleY);
+
+                    // 5. PHASE 1: PIN LARGE CHART IN INVERTED STATE INSTANTLY (Invisible transition)
+                    // Set zIndex super high, lock size to LARGE target, but scale DOWN to look like small chart.
+                    el.classList.add('expanded-chart');
+                    el.style.position = 'fixed';
+                    el.style.top = '0px';
+                    el.style.left = '0px';
                     el.style.width = targetW + 'px';
                     el.style.height = targetH + 'px';
-                    el.style.transform = 'translate(-50%, -50%)';
+                    el.style.margin = '0';
+                    el.style.zIndex = '1001';
+                    el.style.transformOrigin = 'top left'; // Vital for simpler inverse math
+                    el.style.transition = 'none';
+                    // Apply inverse transform to appear exactly where the small chart used to be.
+                    el.style.transform = `translate(${invertLeft}px, ${invertTop}px) scale(${scaleX}, ${scaleY})`;
+                    
+                    // Set Highcharts internal instantly to large, it will look small inside the scaled div.
+                    hc.setSize(targetW, targetH, false);
 
-                    // Sync Highcharts internal vectors
-                    hc.setSize(targetW, targetH, {{ duration: 400, easing: 'easeOutQuart' }});
+                    void el.offsetWidth; // Force Reflow, locking the instant invert state
+
+                    // 6. PHASE 2: APPLY SMOOTH CSS TRANSITION (GPU Accelerated)
+                    // Cubic bezier bezier(0.16, 1, 0.3, 1) is "easeOutQuart" - slow start, super fast middle, slow finish
+                    el.style.transition = 'transform 0.4s cubic-bezier(0.16, 1, 0.3, 1)';
+                    
+                    // Release the inversion. We move to target center and scale to full size(1).
+                    const targetLeft = (screenW - targetW) / 2;
+                    const targetTop = (screenH - targetH) / 2;
+                    
+                    // Transform to the standard center spot at scale(1)
+                    el.style.transform = `translate(${targetLeft}px, ${targetTop}px) scale(1)`;
                 }}
 
                 function setupDoubleTap(elementId) {{
@@ -2429,7 +2468,6 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                     with cols[4]: st.write(f"{r['CZK/EUR']:,.5f}")
                     with cols[5]: st.write(format_money(r['USDC']))
                     with cols[6]:
-                        # Quick fiat delete logic with confirmation
                         if st.session_state.get(f'confirm_del_fiat_{i}'):
                             if st.button("✅", key=f"yes_fiat_{i}"):
                                 st.session_state.fiat_df = st.session_state.fiat_df.drop(i).reset_index(drop=True)
