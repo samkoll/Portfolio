@@ -818,7 +818,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
         pie_data_js = ",\n".join(pie_data_js_lines)
 
         # Chart 3: PnL Bar Data with Timeframes
-        pnl_data_js_dict = {'all': '', '30d': '', '7d': '', '1d': ''}
+        pnl_data_js_dict = {'all': '', '1y': '', '30d': '', '7d': '', '1d': ''}
         if not pnl_df.empty:
             active_tickers = [t for t in df_port['Ticker'] if t != 'USDC']
             valid_cols = [c for c in active_tickers if c in pnl_df.columns]
@@ -837,15 +837,18 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
             idx_1d = -2 if len(pnl_df_active) >= 2 else 0
             idx_7d = -8 if len(pnl_df_active) >= 8 else 0
             idx_30d = -31 if len(pnl_df_active) >= 31 else 0
+            idx_1y = -365 if len(pnl_df_active) >= 365 else 0
 
             pnl_1d = pnl_all - pnl_df_active.iloc[idx_1d]
             pnl_7d = pnl_all - pnl_df_active.iloc[idx_7d]
             pnl_30d = pnl_all - pnl_df_active.iloc[idx_30d]
+            pnl_1y = pnl_all - pnl_df_active.iloc[idx_1y]
 
             pnl_data_js_dict['all'] = format_pnl_js(pnl_all)
             pnl_data_js_dict['1d'] = format_pnl_js(pnl_1d)
             pnl_data_js_dict['7d'] = format_pnl_js(pnl_7d)
             pnl_data_js_dict['30d'] = format_pnl_js(pnl_30d)
+            pnl_data_js_dict['1y'] = format_pnl_js(pnl_1y)
 
         # Chart 5: Invested vs Current Value Data
         df_iv = df_port[df_port['Ticker'] != 'USDC'].sort_values(by='Value', ascending=False)
@@ -859,7 +862,6 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
             val = r['Value'] if pd.notna(r['Value']) else 0
             val_data_points.append(f"{{ y: {val}, color: '{c}' }}")
         val_data_js = ",".join(val_data_points)
-
 
         charts_html = f"""
         <!DOCTYPE html>
@@ -912,8 +914,51 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                     touch-action: pan-x pan-y; 
                     will-change: transform; 
                     position: relative;
+                    display: flex;
+                    flex-direction: column;
                 }}
                 
+                /* Responsive Custom Headers for Charts */
+                .chart-header {{
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    padding: 12px 16px 0 16px;
+                    width: 100%;
+                    box-sizing: border-box;
+                }}
+                .chart-title {{
+                    color: #e2e8f0;
+                    font-size: 13px;
+                    font-weight: bold;
+                    white-space: nowrap;
+                }}
+                .chart-controls {{
+                    display: flex;
+                    gap: 4px;
+                }}
+                .chart-controls button {{
+                    background: rgba(0,0,0,0.3);
+                    border: 1px solid rgba(255,255,255,0.1);
+                    color: #94a3b8;
+                    border-radius: 4px;
+                    padding: 3px 8px;
+                    font-size: 10px;
+                    cursor: pointer;
+                    font-weight: bold;
+                    transition: all 0.2s;
+                }}
+                .chart-controls button.active {{
+                    background: rgba(0, 255, 157, 0.15);
+                    color: #00ff9d;
+                    border-color: #00ff9d;
+                }}
+                .chart-body {{
+                    flex: 1;
+                    width: 100%;
+                    position: relative;
+                }}
+
                 /* Smooth Fade Overlay */
                 #chart-overlay {{
                     visibility: hidden;
@@ -938,43 +983,23 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                     box-shadow: 0 15px 50px rgba(0,0,0,0.9) !important;
                     border-radius: 20px !important; 
                 }}
-                
-                /* PnL HTML Overlay Controls */
-                .chart-controls {{
-                    position: absolute;
-                    top: 12px;
-                    right: 12px;
-                    z-index: 10;
-                    display: flex;
-                    gap: 6px;
-                }}
-                .chart-controls button {{
-                    background: rgba(0,0,0,0.3);
-                    border: 1px solid rgba(255,255,255,0.1);
-                    color: #94a3b8;
-                    border-radius: 4px;
-                    padding: 4px 10px;
-                    font-size: 11px;
-                    cursor: pointer;
-                    font-weight: bold;
-                    transition: all 0.2s;
-                }}
-                .chart-controls button.active {{
-                    background: rgba(0, 255, 157, 0.15);
-                    color: #00ff9d;
-                    border-color: #00ff9d;
-                }}
 
                 @media (max-width: 768px) {{
                     .chart-placeholder {{ 
                         height: 320px !important; 
-                        width: 85vw !important; 
-                        flex: 0 0 85vw !important; 
+                        width: 90vw !important; 
+                        flex: 0 0 90vw !important; 
                     }}
                     
                     .charts-flex {{ 
-                        padding: 0 7.5vw; 
+                        padding: 0 5vw; 
                         gap: 16px; 
+                    }}
+                    
+                    /* Shrink buttons slightly on very small phones to prevent overlap */
+                    .chart-controls button {{
+                        padding: 3px 6px;
+                        font-size: 9px;
                     }}
                 }}
             </style>
@@ -984,21 +1009,49 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
             
             <div class="charts-scroll-wrapper" id="chartsScrollContainer">
                 <div class="charts-flex">
-                    <div class="chart-placeholder" data-type="pie"><div id="pie-container" class="chart-box"></div></div>
-                    <div class="chart-placeholder" data-type="history"><div id="history-container" class="chart-box"></div></div>
-                    <div class="chart-placeholder" data-type="pnl">
-                        <div id="pnl-wrapper" class="chart-box">
-                            <div class="chart-controls pnl-controls">
-                                <button class="active" data-range="all">All</button>
-                                <button data-range="30d">1M</button>
-                                <button data-range="7d">1W</button>
-                                <button data-range="1d">Today</button>
+                    <div class="chart-placeholder" data-type="pie">
+                        <div id="pie-container" class="chart-box"></div>
+                    </div>
+                    
+                    <div class="chart-placeholder" data-type="history">
+                        <div id="history-wrapper" class="chart-box">
+                            <div class="chart-header">
+                                <div class="chart-title">Historical Performance</div>
+                                <div class="chart-controls hist-controls">
+                                    <button class="active" data-range="all">All</button>
+                                    <button data-range="1w">1W</button>
+                                    <button data-range="1m">1M</button>
+                                    <button data-range="1y">1Y</button>
+                                    <button data-range="ytd">YTD</button>
+                                </div>
                             </div>
-                            <div id="pnl-container" style="width:100%; height:100%;"></div>
+                            <div id="history-container" class="chart-body"></div>
                         </div>
                     </div>
-                    <div class="chart-placeholder" data-type="allocation"><div id="allocation-container" class="chart-box"></div></div>
-                    <div class="chart-placeholder" data-type="inv-val"><div id="inv-val-container" class="chart-box"></div></div>
+                    
+                    <div class="chart-placeholder" data-type="pnl">
+                        <div id="pnl-wrapper" class="chart-box">
+                            <div class="chart-header">
+                                <div class="chart-title">Winners & Losers</div>
+                                <div class="chart-controls pnl-controls">
+                                    <button class="active" data-range="all">All</button>
+                                    <button data-range="1d">Today</button>
+                                    <button data-range="7d">1W</button>
+                                    <button data-range="30d">1M</button>
+                                    <button data-range="1y">1Y</button>
+                                </div>
+                            </div>
+                            <div id="pnl-container" class="chart-body"></div>
+                        </div>
+                    </div>
+                    
+                    <div class="chart-placeholder" data-type="allocation">
+                        <div id="allocation-container" class="chart-box"></div>
+                    </div>
+                    
+                    <div class="chart-placeholder" data-type="inv-val">
+                        <div id="inv-val-container" class="chart-box"></div>
+                    </div>
                 </div>
             </div>
             
@@ -1008,7 +1061,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                 // Chart 1: Pie
                 Highcharts.chart('pie-container', {{
                     chart: {{ type: 'pie', options3d: {{ enabled: true, alpha: 55, beta: 0 }}, backgroundColor: 'transparent', margin: [0, 0, 0, 0] }},
-                    title: {{ text: 'Current Holdings', style: {{ color: '#e2e8f0', fontSize: '13px', fontWeight: 'bold' }} }},
+                    title: {{ text: 'Current Holdings', style: {{ color: '#e2e8f0', fontSize: '13px', fontWeight: 'bold' }}, align: 'left', x: 16, y: 24 }},
                     tooltip: {{
                         formatter: function() {{
                             const isPrivacy = document.body.classList.contains('privacy-mode');
@@ -1024,32 +1077,12 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
 
                 // Chart 2: History Area (Using Highstock)
                 Highcharts.stockChart('history-container', {{
-                    chart: {{ type: 'areaspline', backgroundColor: 'transparent', marginLeft: 60, marginRight: 20, marginTop: 50, marginBottom: 35 }}, 
-                    rangeSelector: {{
-                        enabled: true,
-                        buttons: [
-                            {{ type: 'week', count: 1, text: '1W' }},
-                            {{ type: 'month', count: 1, text: '1M' }},
-                            {{ type: 'year', count: 1, text: '1Y' }},
-                            {{ type: 'ytd', text: 'YTD' }},
-                            {{ type: 'all', text: 'All' }}
-                        ],
-                        selected: 4,
-                        buttonTheme: {{
-                            fill: 'none', stroke: 'none',
-                            style: {{ color: '#94a3b8', fontWeight: 'bold' }},
-                            states: {{
-                                hover: {{ fill: 'rgba(255,255,255,0.1)', style: {{ color: '#fff' }} }},
-                                select: {{ fill: 'rgba(0, 255, 157, 0.2)', style: {{ color: '#00ff9d' }} }}
-                            }}
-                        }},
-                        inputEnabled: false,
-                        labelStyle: {{ display: 'none' }}
-                    }},
+                    chart: {{ type: 'areaspline', backgroundColor: 'transparent', marginLeft: 60, marginRight: 20, marginTop: 25, marginBottom: 35 }}, 
+                    rangeSelector: {{ enabled: false }}, // Hidden native range selector in favor of our custom header HTML
                     navigator: {{ enabled: false }},
                     scrollbar: {{ enabled: false }},
-                    title: {{ text: 'Historical Performance', style: {{ color: '#e2e8f0', fontSize: '13px', fontWeight: 'bold' }} }},
-                    legend: {{ enabled: true, itemStyle: {{ color: '#94a3b8', fontSize: '11px', fontWeight: 'normal' }}, itemHoverStyle: {{ color: '#ffffff' }}, verticalAlign: 'top', align: 'center', y: -15 }},
+                    title: {{ text: null }},
+                    legend: {{ enabled: true, itemStyle: {{ color: '#94a3b8', fontSize: '11px', fontWeight: 'normal' }}, itemHoverStyle: {{ color: '#ffffff' }}, verticalAlign: 'top', align: 'center', y: -10 }},
                     xAxis: {{ gridLineColor: 'rgba(255,255,255,0.05)', tickWidth: 0, minorGridLineWidth: 0 }},
                     yAxis: {{ title: {{ text: null }}, labels: {{ style: {{ color: '#94a3b8', fontSize: '10px' }}, align: 'right', formatter: function() {{ return document.body.classList.contains('privacy-mode') ? '***' : '$' + this.axis.defaultLabelFormatter.call(this); }} }}, gridLineColor: 'rgba(255,255,255,0.05)' }},
                     tooltip: {{
@@ -1070,18 +1103,44 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                              {{ name: 'BTC Benchmark', type: 'line', data: [{hist_btc_js}], color: '#f7931a', lineWidth: 2, zIndex: 2 }}, 
                              {{ name: 'Net Invested', type: 'line', data: [{hist_inv_js}], color: '#64748b', dashStyle: 'Dash', lineWidth: 2, zIndex: 1 }}]
                 }});
+                
+                // Custom Range Logic for History Chart
+                document.querySelectorAll('.hist-controls button').forEach(btn => {{
+                    btn.addEventListener('click', (e) => {{
+                        e.stopPropagation();
+                        document.querySelectorAll('.hist-controls button').forEach(b => b.classList.remove('active'));
+                        btn.classList.add('active');
+                        const range = btn.getAttribute('data-range');
+                        const chart = Highcharts.charts.find(c => c && c.renderTo.id === 'history-container');
+                        if (chart) {{
+                            const max = chart.xAxis[0].dataMax;
+                            const min = chart.xAxis[0].dataMin;
+                            const day = 24 * 3600 * 1000;
+                            let newMin = min;
+                            if (range === '1w') newMin = max - 7 * day;
+                            else if (range === '1m') newMin = max - 30 * day;
+                            else if (range === '1y') newMin = max - 365 * day;
+                            else if (range === 'ytd') {{
+                                const d = new Date(max);
+                                newMin = new Date(d.getFullYear(), 0, 1).getTime();
+                            }}
+                            chart.xAxis[0].setExtremes(Math.max(min, newMin), max);
+                        }}
+                    }});
+                }});
 
                 // Chart 3: Winners & Losers (PnL Bar)
                 const pnlDataMap = {{
                     'all': [{pnl_data_js_dict['all']}],
+                    '1y': [{pnl_data_js_dict['1y']}],
                     '30d': [{pnl_data_js_dict['30d']}],
                     '7d': [{pnl_data_js_dict['7d']}],
                     '1d': [{pnl_data_js_dict['1d']}]
                 }};
 
                 Highcharts.chart('pnl-container', {{
-                    chart: {{ type: 'bar', backgroundColor: 'transparent', marginLeft: 65, marginRight: 35, marginTop: 45, marginBottom: 25 }},
-                    title: {{ text: 'Winners & Losers', align: 'left', style: {{ color: '#e2e8f0', fontSize: '13px', fontWeight: 'bold' }} }},
+                    chart: {{ type: 'bar', backgroundColor: 'transparent', marginLeft: 65, marginRight: 35, marginTop: 15, marginBottom: 25 }},
+                    title: {{ text: null }},
                     xAxis: {{ type: 'category', labels: {{ style: {{ color: '#94a3b8', fontWeight: 'bold' }} }}, gridLineColor: 'rgba(255,255,255,0.05)', tickWidth: 0, lineWidth: 0 }},
                     yAxis: {{ title: {{ text: null }}, labels: {{ enabled: false }}, gridLineColor: 'rgba(255,255,255,0.05)' }},
                     legend: {{ enabled: false }},
@@ -1093,7 +1152,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                             return `<b>${{this.point.name}}</b><br/>PnL: <b style="color:${{this.point.color}}">${{val}}</b>`;
                         }}
                     }},
-                    plotOptions: {{ bar: {{ borderRadius: 4, dataLabels: {{ enabled: true, style: {{ color: '#fff', textOutline: 'none', fontWeight: 'bold' }}, formatter: function() {{ return document.body.classList.contains('privacy-mode') ? '***' : '$' + Highcharts.numberFormat(this.y, 2); }} }} }} }},
+                    plotOptions: {{ bar: {{ borderRadius: 4, pointPadding: 0.1, groupPadding: 0.1, dataLabels: {{ enabled: true, style: {{ color: '#fff', textOutline: 'none', fontWeight: 'bold' }}, formatter: function() {{ return document.body.classList.contains('privacy-mode') ? '***' : '$' + Highcharts.numberFormat(this.y, 2); }} }} }} }},
                     credits: {{ enabled: false }},
                     series: [{{ name: 'PnL', data: pnlDataMap['all'] }}]
                 }});
@@ -1114,7 +1173,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                 // Chart 4: Portfolio Allocation (Stacked Area)
                 Highcharts.chart('allocation-container', {{
                     chart: {{ type: 'area', backgroundColor: 'transparent', marginLeft: 60, marginRight: 20, marginTop: 45, marginBottom: 35 }},
-                    title: {{ text: 'Asset Allocation', style: {{ color: '#e2e8f0', fontSize: '13px', fontWeight: 'bold' }} }},
+                    title: {{ text: 'Asset Allocation', align: 'left', x: 8, y: 24, style: {{ color: '#e2e8f0', fontSize: '13px', fontWeight: 'bold' }} }},
                     xAxis: {{ type: 'datetime', labels: {{ style: {{ color: '#94a3b8', fontSize: '10px' }} }}, gridLineColor: 'rgba(255,255,255,0.05)', tickWidth: 0, minorGridLineWidth: 0 }},
                     yAxis: {{ title: {{ text: null }}, labels: {{ formatter: function() {{ return this.value + '%'; }}, style: {{ color: '#94a3b8', fontSize: '10px' }} }}, gridLineColor: 'rgba(255,255,255,0.05)', max: 100 }},
                     legend: {{ enabled: false }},
@@ -1136,7 +1195,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                 // Chart 5: Invested vs Current Value (Grouped Column)
                 Highcharts.chart('inv-val-container', {{
                     chart: {{ type: 'column', backgroundColor: 'transparent', marginLeft: 60, marginRight: 20, marginTop: 45, marginBottom: 35 }},
-                    title: {{ text: 'Invested vs Current Value', style: {{ color: '#e2e8f0', fontSize: '13px', fontWeight: 'bold' }} }},
+                    title: {{ text: 'Invested vs Current Value', align: 'left', x: 8, y: 24, style: {{ color: '#e2e8f0', fontSize: '13px', fontWeight: 'bold' }} }},
                     xAxis: {{ categories: {inv_val_categories_js}, labels: {{ style: {{ color: '#94a3b8', fontWeight: 'bold', fontSize: '10px' }} }}, gridLineColor: 'rgba(255,255,255,0.05)', tickWidth: 0 }},
                     yAxis: {{ title: {{ text: null }}, labels: {{ style: {{ color: '#94a3b8', fontSize: '10px' }}, formatter: function() {{ return document.body.classList.contains('privacy-mode') ? '***' : '$' + this.axis.defaultLabelFormatter.call(this); }} }}, gridLineColor: 'rgba(255,255,255,0.05)' }},
                     legend: {{ enabled: true, itemStyle: {{ color: '#94a3b8', fontSize: '11px', fontWeight: 'normal' }}, itemHoverStyle: {{ color: '#ffffff' }}, verticalAlign: 'top', y: -5 }},
@@ -1319,7 +1378,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                 }}
 
                 setupDoubleTap('pie-container');
-                setupDoubleTap('history-container');
+                setupDoubleTap('history-wrapper');
                 setupDoubleTap('pnl-wrapper');
                 setupDoubleTap('allocation-container');
                 setupDoubleTap('inv-val-container');
