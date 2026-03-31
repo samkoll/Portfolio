@@ -831,6 +831,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                     height: 340px;
                 }}
                 
+                /* Pure Hardware Acceleration */
                 .pie-box, .history-box {{
                     width: 100%;
                     height: 100%;
@@ -839,6 +840,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                     border-radius: 16px;
                     box-shadow: 0 4px 15px rgba(0,0,0,0.2);
                     touch-action: pan-x pan-y; 
+                    will-change: transform; 
                 }}
                 
                 /* Smooth Fade Overlay */
@@ -847,7 +849,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                     opacity: 0;
                     position: fixed;
                     top: 0; left: 0; width: 100%; height: 100%;
-                    background: rgba(10, 15, 28, 0.85); /* Inner background to dim the app */
+                    background: rgba(10, 15, 28, 0.85); 
                     z-index: 1000;
                     backdrop-filter: blur(5px);
                     -webkit-backdrop-filter: blur(5px);
@@ -858,13 +860,12 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                     opacity: 1;
                 }}
                 
+                /* The background color is applied via class so it can crossfade smoothly during the transform transition */
                 .expanded-chart {{
-                    background: rgba(15, 23, 42, 0.98) !important; /* solid color fit for app */
-                    border: 1px solid rgba(255, 255, 255, 0.08) !important; /* subdued fit */
+                    background: rgba(15, 23, 42, 0.98) !important; 
+                    border: 1px solid rgba(255, 255, 255, 0.08) !important; 
                     box-shadow: 0 15px 50px rgba(0,0,0,0.9) !important;
-                    border-radius: 20px !important; /* softer fit */
-                    transition: none !important; /* We handle transitions manually via JS */
-                    will-change: transform; /* Hardware accelerate for flawless mobile animation */
+                    border-radius: 20px !important; 
                 }}
 
                 @media (max-width: 768px) {{
@@ -1058,7 +1059,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                 }} catch(e) {{}}
 
                 function toggleExpandChart(chartId) {{
-                    // BLOCK PC COMPLETELY - Only runs on Mobile
+                    // STRICT MOBILE ONLY BLOCK
                     if (window.innerWidth > 768) return;
                 
                     const el = document.getElementById(chartId);
@@ -1074,62 +1075,61 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                             if (ifr.contentWindow === window) parentIframe = ifr;
                         }}
                     }} catch(e) {{}}
-                    
+
                     if (el.classList.contains('expanded-chart')) {{
                         // ==========================================
-                        // CLOSING MECHANICS (FLIP Reverse)
+                        // CLOSING MECHANICS (Pure Reverse GPU Scale)
                         // ==========================================
                         overlay.classList.remove('active');
                         
-                        // Retrieve the stored exact coordinates of the small grid slot
+                        // We extract the exact visual coordinates saved when we opened it
                         const origTop = parseFloat(el.getAttribute('data-orig-top')) || 0;
                         const origLeft = parseFloat(el.getAttribute('data-orig-left')) || 0;
-                        const scaleX = parseFloat(el.getAttribute('data-scale-x')) || 1;
-                        const scaleY = parseFloat(el.getAttribute('data-scale-y')) || 1;
 
-                        // Lock Origin to top left so scale matches the exact X/Y coordinate mapping
-                        el.style.transformOrigin = 'top left';
-                        el.style.transition = 'transform 0.4s cubic-bezier(0.4, 0, 0.2, 1)';
+                        // We immediately remove the class so the background crossfades to transparent 
+                        // while it travels across the screen
+                        el.classList.remove('expanded-chart');
                         
-                        // Move the physically huge container over to the small slot, while scaling it down to fit perfectly
-                        el.style.transform = `translate(${{origLeft}}px, ${{origTop}}px) scale(${{scaleX}}, ${{scaleY}})`;
+                        // Transition back to the starting position at native size (scale 1)
+                        el.style.transition = 'transform 0.4s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.4s ease, box-shadow 0.4s ease';
+                        el.style.transform = `translate(${{origLeft}}px, ${{origTop}}px) scale(1)`;
 
-                        // Execute cleanup exactly as animation finishes
+                        // Clean up entirely once the transition finishes
                         setTimeout(() => {{
-                            if (parentIframe) {{
-                                parentIframe.classList.remove('fullscreen-mode');
-                            }}
+                            if (parentIframe) parentIframe.classList.remove('fullscreen-mode');
                             
-                            // Instantly wipe all CSS overrides.
-                            // Because Highcharts was natively rendered large during the animation, 
-                            // wiping the CSS immediately snaps it into its flex container natively without recalculation.
+                            // The chart is ALREADY at scale(1) with its native width/height.
+                            // Wiping the styles instantly drops it into the flexbox perfectly with zero shift.
                             el.style.cssText = ''; 
-                            el.classList.remove('expanded-chart');
+                            wrapper.style.overflowX = 'auto'; // Restore scroll snapping
                             
-                            // Re-enable scrolling only AFTER animation to prevent grid shifts
-                            wrapper.style.overflowX = 'auto';
+                            // Un-hide the sibling charts
+                            document.querySelectorAll('.pie-box, .history-box').forEach(c => {{
+                                c.style.opacity = '1';
+                                c.style.pointerEvents = 'auto';
+                            }});
                             
-                            // Let Highcharts cleanly sync to the restored CSS container instantly and silently.
-                            hc.setSize(null, null, false); 
-                            
+                            // Notice: We specifically DO NOT call hc.setSize() here! 
+                            // The SVG was never warped, so there is no layout to redraw, guaranteeing zero flicker.
                         }}, 400);
 
                         return;
                     }}
                     
                     // ==========================================
-                    // OPENING MECHANICS (FLIP Forward)
+                    // OPENING MECHANICS (Pure Forward GPU Scale)
                     // ==========================================
                     
-                    // 1. Silent Close Others
-                    document.querySelectorAll('.expanded-chart').forEach(c => {{
-                        c.classList.remove('expanded-chart');
-                        c.style.cssText = '';
-                        const otherHc = Highcharts.charts.find(ohc => ohc && ohc.renderTo.id === c.id);
-                        if (otherHc) otherHc.setSize(null, null, false);
+                    // 1. Instantly fade out other charts so they don't bleed through the overlay background
+                    document.querySelectorAll('.pie-box, .history-box').forEach(c => {{
+                        if (c.id !== chartId) {{
+                            c.style.transition = 'opacity 0.2s ease';
+                            c.style.opacity = '0';
+                            c.style.pointerEvents = 'none';
+                        }}
                     }});
 
-                    // 2. Measure exactly where the small chart is natively
+                    // 2. Extract current coordinates
                     const chartRect = el.getBoundingClientRect();
                     let visualTop = chartRect.top;
                     let visualLeft = chartRect.left;
@@ -1139,59 +1139,54 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                         visualLeft += iframeRect.left;
                     }}
 
-                    // 3. Set Stage
+                    // 3. Prepare Fullscreen
                     if (parentIframe) parentIframe.classList.add('fullscreen-mode');
                     overlay.classList.add('active'); 
                     wrapper.style.overflowX = 'visible';
 
-                    // 4. Measure target Fullscreen size
+                    // 4. Calculate Maximum Uniform Scale
+                    const origW = chartRect.width;
+                    const origH = chartRect.height;
+                    
                     const screenW = window.parent ? window.parent.innerWidth : window.innerWidth;
                     const screenH = window.parent ? window.parent.innerHeight : window.innerHeight;
                     
-                    let targetW = screenW * 0.9;
-                    let targetH = screenH * 0.7;
-                    if (targetW > 1000) targetW = 1000;
-                    if (targetH > 700) targetH = 700;
-                    if (targetH < 400) targetH = 400;
-
-                    // 5. Calculate Scale & Centers
-                    const origW = chartRect.width;
-                    const origH = chartRect.height;
-                    const scaleX = origW / targetW;
-                    const scaleY = origH / targetH;
+                    // We calculate how much we can multiply the small chart by to fit the screen
+                    const maxScaleX = (screenW * 0.95) / origW;
+                    const maxScaleY = (screenH * 0.70) / origH;
                     
-                    const centerLeft = (screenW - targetW) / 2;
-                    const centerTop = (screenH - targetH) / 2;
+                    // Crucial: we pick the SMALLER multiplier. This ensures the chart stays perfectly uniform and doesn't squish.
+                    const targetScale = Math.min(maxScaleX, maxScaleY);
+                    
+                    // 5. Calculate Center Position for the scaled chart
+                    const scaledW = origW * targetScale;
+                    const scaledH = origH * targetScale;
+                    const centerLeft = (screenW - scaledW) / 2;
+                    const centerTop = (screenH - scaledH) / 2;
 
-                    // Store math so closing logic perfectly reverses to the exact pixel slot
+                    // 6. Save original coordinates so closing can seamlessly return here
                     el.setAttribute('data-orig-top', visualTop);
                     el.setAttribute('data-orig-left', visualLeft);
-                    el.setAttribute('data-scale-x', scaleX);
-                    el.setAttribute('data-scale-y', scaleY);
 
-                    // Phase 1: Pin large chart in inverted state (Invisible jump)
-                    el.classList.add('expanded-chart');
+                    // Phase 1: Lock the chart in exactly its current spot using absolute positioning
+                    // We keep its native width/height exactly as they are. No Highcharts reflow happens!
                     el.style.position = 'fixed';
                     el.style.top = '0px';
                     el.style.left = '0px';
-                    el.style.width = targetW + 'px';
-                    el.style.height = targetH + 'px';
+                    el.style.width = origW + 'px';
+                    el.style.height = origH + 'px';
                     el.style.margin = '0';
                     el.style.zIndex = '1001';
                     el.style.transformOrigin = 'top left'; 
                     el.style.transition = 'none';
+                    el.style.transform = `translate(${{visualLeft}}px, ${{visualTop}}px) scale(1)`;
                     
-                    // Visually shrink it back to the exact starting slot
-                    el.style.transform = `translate(${{visualLeft}}px, ${{visualTop}}px) scale(${{scaleX}}, ${{scaleY}})`;
-                    
-                    // Force HC into exactly the large layout natively right now (no animation)
-                    hc.setSize(targetW, targetH, false);
-                    
-                    void el.offsetWidth; // Force Browser Reflow to commit starting state
+                    void el.offsetWidth; // Force Reflow to commit starting position
 
-                    // Phase 2: Smooth CSS GPU transition to target center
-                    el.style.transition = 'transform 0.4s cubic-bezier(0.16, 1, 0.3, 1)';
-                    el.style.transform = `translate(${{centerLeft}}px, ${{centerTop}}px) scale(1)`;
+                    // Phase 2: Add CSS class for background color and apply transform translation/scale
+                    el.classList.add('expanded-chart');
+                    el.style.transition = 'transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.4s ease, box-shadow 0.4s ease';
+                    el.style.transform = `translate(${{centerLeft}}px, ${{centerTop}}px) scale(${{targetScale}})`;
                 }}
 
                 function setupDoubleTap(elementId) {{
@@ -1199,7 +1194,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                     if (!el) return;
                     let lastTap = 0;
 
-                    // Removed dblclick event listener completely - no more PC firing.
+                    // NO double click listener - PC strictly prevented.
 
                     el.addEventListener('touchend', function(e) {{
                         const currentTime = new Date().getTime();
