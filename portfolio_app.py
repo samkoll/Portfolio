@@ -839,6 +839,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                     border-radius: 16px;
                     box-shadow: 0 4px 15px rgba(0,0,0,0.2);
                     touch-action: pan-x pan-y; 
+                    will-change: transform; /* Hardware accelerate immediately */
                 }}
                 
                 /* Smooth Fade Overlay */
@@ -1074,66 +1075,76 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                         }}
                     }} catch(e) {{}}
                     
+                    // GET TRUE SCREEN DIMENSIONS FROM PARENT WINDOW
                     const screenW = window.parent ? window.parent.innerWidth : window.innerWidth;
                     const screenH = window.parent ? window.parent.innerHeight : window.innerHeight;
+                    
+                    // TARGET DIMENSIONS FOR LARGE CHART
+                    let targetW = screenW * 0.9;
+                    let targetH = screenH * 0.7;
+                    if (targetW > 1000) targetW = 1000;
+                    if (targetH > 700) targetH = 700;
+                    if (targetH < 400) targetH = 400;
+                    
+                    // Coordinates needed to perfectly center the large chart via absolute translation
+                    const centerLeft = (screenW - targetW) / 2;
+                    const centerTop = (screenH - targetH) / 2;
 
                     if (el.classList.contains('expanded-chart')) {{
                         // ==========================================
-                        // CLOSING MECHANICS (Pre-emptive setSize)
+                        // CLOSING MECHANICS
                         // ==========================================
                         wrapper.style.overflowX = 'auto';
                         overlay.classList.remove('active');
                         
-                        const visualTop = parseFloat(el.getAttribute('data-orig-top')) || 0;
-                        const visualLeft = parseFloat(el.getAttribute('data-orig-left')) || 0;
-                        const origW = parseFloat(el.getAttribute('data-orig-w')) || 350;
-                        const origH = parseFloat(el.getAttribute('data-orig-h')) || 320;
-                        const targetW = parseFloat(el.getAttribute('data-target-w')) || screenW;
-                        const targetH = parseFloat(el.getAttribute('data-target-h')) || screenH;
-                        const centerLeft = parseFloat(el.getAttribute('data-center-left')) || 0;
-                        const centerTop = parseFloat(el.getAttribute('data-center-top')) || 0;
+                        // Retrieve the exact pixel math from when we opened
+                        const originTop = parseFloat(el.getAttribute('data-origin-top')) || 0;
+                        const originLeft = parseFloat(el.getAttribute('data-origin-left')) || 0;
+                        const scaleX = parseFloat(el.getAttribute('data-scale-x')) || 1;
+                        const scaleY = parseFloat(el.getAttribute('data-scale-y')) || 1;
 
-                        // Calculate inverted scales for perfectly covering the large center area
-                        const scaleXClose = targetW / origW;
-                        const scaleYClose = targetH / origH;
-
-                        // Phase 1: Instantly snap to native small size, but scale it UP to visually fill the center
+                        // Phase 1: Lock to absolute top:0 left:0 and translate to current center position. No transition!
+                        el.style.position = 'fixed';
+                        el.style.top = '0px';
+                        el.style.left = '0px';
+                        el.style.width = targetW + 'px';
+                        el.style.height = targetH + 'px';
+                        el.style.transformOrigin = 'top left';
                         el.style.transition = 'none';
-                        el.style.width = origW + 'px';
-                        el.style.height = origH + 'px';
-                        el.style.transform = `translate(${{centerLeft}}px, ${{centerTop}}px) scale(${{scaleXClose}}, ${{scaleYClose}})`;
-                        
-                        // Force internal HC instance to exactly the small size natively right now
-                        hc.setSize(origW, origH, false);
-                        
-                        void el.offsetWidth; // Force Reflow to lock coordinates
+                        el.style.zIndex = '1001';
+                        el.style.margin = '0';
+                        el.style.transform = `translate(${{centerLeft}}px, ${{centerTop}}px) scale(1)`;
+                        void el.offsetWidth; // Force browser to register this start position
 
-                        // Phase 2: Smooth CSS transition down to scale 1 at original slot coordinates
-                        requestAnimationFrame(() => {{
-                            el.style.transition = 'transform 0.35s cubic-bezier(0.4, 0, 0.2, 1)';
-                            el.style.transform = `translate(${{visualLeft}}px, ${{visualTop}}px) scale(1)`;
-                        }});
+                        // Phase 2: Smooth transition directly to the stored original coordinates
+                        el.style.transition = 'transform 0.35s cubic-bezier(0.4, 0, 0.2, 1)';
+                        el.style.transform = `translate(${{originLeft}}px, ${{originTop}}px) scale(${{scaleX}}, ${{scaleY}})`;
 
-                        // Phase 3: Flawless cleanup at end of animation. No HC resizing needed.
+                        // Phase 3: Flawless cleanup at end of animation.
                         setTimeout(() => {{
-                            el.classList.remove('expanded-chart');
-                            el.style.cssText = ''; 
-                            if (parentIframe) parentIframe.classList.remove('fullscreen-mode');
+                            if (parentIframe) {{
+                                parentIframe.classList.remove('fullscreen-mode');
+                            }}
                             
-                            // Let the container safely resume native CSS responsive behavior silently
-                            hc.setSize(null, null, false);
+                            // Instantly clear styles to snap seamlessly back to native CSS layout
+                            el.style.cssText = ''; 
+                            el.classList.remove('expanded-chart');
+                            
+                            // We purposefully DO NOT call hc.setSize() here! 
+                            // The chart is already the exact perfect size, skipping this removes the final SVG redraw blink.
                         }}, 350);
 
                         return;
                     }}
                     
                     // ==========================================
-                    // OPENING MECHANICS (Pre-emptive setSize)
+                    // OPENING MECHANICS 
                     // ==========================================
                     document.querySelectorAll('.expanded-chart').forEach(c => {{
                         c.classList.remove('expanded-chart');
                         c.style.cssText = '';
                         const otherHc = Highcharts.charts.find(ohc => ohc && ohc.renderTo.id === c.id);
+                        // Safe to call setSize here because the other chart is hidden/inactive anyway
                         if (otherHc) otherHc.setSize(null, null, false);
                     }});
 
@@ -1152,30 +1163,17 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
 
                     const origW = chartRect.width;
                     const origH = chartRect.height;
-                    
-                    let targetW = screenW * 0.9;
-                    let targetH = screenH * 0.7;
-                    if (targetW > 1000) targetW = 1000;
-                    if (targetH > 700) targetH = 700;
-                    if (targetH < 400) targetH = 400;
 
                     const scaleXOpen = origW / targetW;
                     const scaleYOpen = origH / targetH;
-                    
-                    const centerLeft = (screenW - targetW) / 2;
-                    const centerTop = (screenH - targetH) / 2;
 
-                    // Store everything for perfect closing math
-                    el.setAttribute('data-orig-top', visualTop);
-                    el.setAttribute('data-orig-left', visualLeft);
-                    el.setAttribute('data-orig-w', origW);
-                    el.setAttribute('data-orig-h', origH);
-                    el.setAttribute('data-target-w', targetW);
-                    el.setAttribute('data-target-h', targetH);
-                    el.setAttribute('data-center-left', centerLeft);
-                    el.setAttribute('data-center-top', centerTop);
+                    // Store math so closing logic perfectly reverses
+                    el.setAttribute('data-origin-top', visualTop);
+                    el.setAttribute('data-origin-left', visualLeft);
+                    el.setAttribute('data-scale-x', scaleXOpen);
+                    el.setAttribute('data-scale-y', scaleYOpen);
 
-                    // Phase 1: Instantly snap to native large size, but scale it DOWN to visually sit in small slot
+                    // Phase 1: Pin large chart in inverted state (Invisible jump)
                     el.classList.add('expanded-chart');
                     el.style.position = 'fixed';
                     el.style.top = '0px';
@@ -1195,7 +1193,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
 
                     // Phase 2: Smooth CSS transition to target center at scale 1
                     requestAnimationFrame(() => {{
-                        el.style.transition = 'transform 0.35s cubic-bezier(0.4, 0, 0.2, 1)';
+                        el.style.transition = 'transform 0.4s cubic-bezier(0.16, 1, 0.3, 1)';
                         el.style.transform = `translate(${{centerLeft}}px, ${{centerTop}}px) scale(1)`;
                     }});
                 }}
