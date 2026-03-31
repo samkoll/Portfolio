@@ -1199,7 +1199,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                         const range = btn.getAttribute('data-range');
                         const chart = Highcharts.charts.find(c => c && c.renderTo && c.renderTo.id === 'pnl-container');
                         if (chart) {{
-                            chart.series[0].setData(getPnlDataCopy(range), true, {{ duration: 500 }}, false);
+                            chart.series[0].update({{data: getPnlDataCopy(range)}}, true);
                         }}
                     }});
                 }});
@@ -1300,7 +1300,10 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                         // ==========================================
                         overlay.classList.remove('active');
                         
-                        // Re-calculate the current layout position to avoid scroll-shift blinks
+                        // Phase 1: Keep it position: fixed, but set its standard visual coordinates. 
+                        // Crossfade the class instantly to lose expanded background while traveling.
+                        el.classList.remove('expanded-chart');
+                        
                         const placeholder = el.parentElement;
                         const targetRect = placeholder.getBoundingClientRect();
                         let targetTop = targetRect.top;
@@ -1311,9 +1314,6 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                             targetLeft += iframeRect.left;
                         }}
 
-                        // Phase 1: Keep it position: fixed, but set its standard visual coordinates. 
-                        // Crossfade the class instantly to lose expanded background while traveling.
-                        el.classList.remove('expanded-chart');
                         el.style.transition = 'transform 0.4s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.4s ease, box-shadow 0.4s ease';
                         el.style.transform = `translate(${{targetLeft}}px, ${{targetTop}}px) scale(1)`;
 
@@ -1326,13 +1326,6 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                             
                             el.style.transition = 'none';
                             el.style.cssText = ''; // Full layout revert
-                            
-                            // Prevent layout thrashing: Highcharts Redraw SILENTLY to correct slot dimensions
-                            Highcharts.charts.forEach(c => {{ 
-                                if(c && c.renderTo && el.contains(c.renderTo)) {{
-                                    c.setSize(null, null, false);
-                                }}
-                            }});
                             
                             // Reveal siblings smoothly
                             document.querySelectorAll('.chart-box').forEach(c => {{
@@ -1386,10 +1379,6 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                     const scaledH = origH * targetScale;
                     const centerLeft = (screenW - scaledW) / 2;
                     const centerTop = (screenH - scaledH) / 2;
-
-                    // Save origins
-                    el.setAttribute('data-orig-top', visualTop);
-                    el.setAttribute('data-orig-left', visualLeft);
 
                     // Phase 1: Lock the chart in its starting spot natively small, no HC Redraw
                     el.style.position = 'fixed';
@@ -1452,15 +1441,23 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                     }}, {{ passive: false }});
                 }}
 
-                // ---- LIVE UPDATE SCRIPT INJECTION ----
-                async function updateLivePricesCharts() {{
+                // ---- MASTER LIVE FETCH LOOP FOR CHARTS ----
+                // Charts iframe acts as the master fetcher and broadcasts prices to the cards iframe
+                async function fetchLivePricesMaster() {{
                     const tickers = Object.keys(coinStats);
                     if (tickers.length === 0) return;
                     const url = `https://min-api.cryptocompare.com/data/pricemulti?fsyms=${{tickers.join(',')}}&tsyms=USD`;
+                    
                     try {{
                         const resp = await fetch(url);
                         const data = await resp.json();
                         
+                        // 1. Broadcast to sibling flip-cards iframe (if cross-origin allows, or just broadcast globally)
+                        if (window.parent) {{
+                            window.parent.postMessage({{type: 'SYNC_PRICES', prices: data}}, '*');
+                        }}
+                        
+                        // 2. Update all charts instantly
                         let totalCoinValue = 0;
                         let totalCoinInvested = 0;
                         
@@ -1527,7 +1524,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                             const activeBtn = document.querySelector('.pnl-controls button.active');
                             const range = activeBtn ? activeBtn.getAttribute('data-range') : 'all';
                             const freshData = getPnlDataCopy(range);
-                            pnlChart.series[0].setData(freshData, false);
+                            pnlChart.series[0].update({{data: freshData}}, false);
                         }}
 
                         if (pieChart) pieChart.redraw(true);
@@ -1537,10 +1534,11 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                         if (pnlChart) pnlChart.redraw(true);
                         
                     }} catch (e) {{
-                        console.error('Auto-refresh error charts:', e);
+                        console.error('Master live fetch error:', e);
                     }}
                 }}
-                setInterval(updateLivePricesCharts, 10000);
+                // Initiate the master heartbeat loop
+                setInterval(fetchLivePricesMaster, 10000);
 
                 setInterval(() => {{
                     try {{
@@ -1976,15 +1974,13 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
         }}
 
         const usdcHoldings = {usdc_holdings};
-        async function updateLivePrices() {{
-            const cards = Array.from(document.querySelectorAll('.flip-card'));
-            if (cards.length === 0) return;
-            const tickers = cards.map(card => card.getAttribute('data-ticker'));
-            
-            const url = `https://min-api.cryptocompare.com/data/pricemulti?fsyms=${{tickers.join(',')}}&tsyms=USD`;
-            try {{
-                const resp = await fetch(url);
-                const data = await resp.json();
+        
+        // ---- SYNC LISTENER FROM MASTER CHARTS LOOP ----
+        window.addEventListener('message', function(e) {{
+            if (e.data && e.data.type === 'SYNC_PRICES') {{
+                const data = e.data.prices;
+                const cards = Array.from(document.querySelectorAll('.flip-card'));
+                if (cards.length === 0) return;
                 
                 let totalCoinValue = 0;
                 let totalCoinInvested = 0;
@@ -2056,12 +2052,8 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                 if (dValue) dValue.innerText = dashValStr;
                 if (dPnl) {{ dPnl.innerText = dashPnlStr; dPnl.style.color = dashColor; }}
                 if (dPnlPct) {{ dPnlPct.innerText = dashPnlPctStr; dPnlPct.style.color = dashColor; }}
-                
-            }} catch (e) {{
-                console.error('Auto-refresh error:', e);
             }}
-        }}
-        setInterval(updateLivePrices, 10000);
+        }});
 
         function saveFlippedState() {{
             const flippedCards = [];
