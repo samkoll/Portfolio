@@ -862,8 +862,8 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
             inv = r['USDC'] if pd.notna(r['USDC']) else 0
             val = r['Value'] if pd.notna(r['Value']) else 0
             c = get_ticker_color(ticker)
-            inv_data_points.append(f"{{ name: '{ticker}', y: {inv} }}")
-            val_data_points.append(f"{{ name: '{ticker}', y: {val}, color: '{c}' }}")
+            inv_data_points.append(f"{inv}")
+            val_data_points.append(f"{{ y: {val}, color: '{c}' }}")
         
         inv_data_js = ",".join(inv_data_points)
         val_data_js = ",".join(val_data_points)
@@ -1082,14 +1082,14 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
 
                 // Chart 2: History Area (Using Highstock)
                 Highcharts.stockChart('history-container', {{
-                    chart: {{ type: 'areaspline', backgroundColor: 'transparent', marginLeft: 55, marginRight: 15, marginTop: 25, marginBottom: 35 }}, 
+                    chart: {{ type: 'areaspline', backgroundColor: 'transparent', marginLeft: 45, marginRight: 15, marginTop: 25, marginBottom: 35 }}, 
                     rangeSelector: {{ enabled: false }}, // Hidden native range selector in favor of our custom header HTML
                     navigator: {{ enabled: false }},
                     scrollbar: {{ enabled: false }},
                     title: {{ text: null }},
                     legend: {{ enabled: true, itemStyle: {{ color: '#94a3b8', fontSize: '11px', fontWeight: 'normal' }}, itemHoverStyle: {{ color: '#ffffff' }}, verticalAlign: 'top', align: 'center', y: -10 }},
                     xAxis: {{ gridLineColor: 'rgba(255,255,255,0.05)', tickWidth: 0, minorGridLineWidth: 0 }},
-                    yAxis: {{ opposite: false, title: {{ text: null }}, labels: {{ align: 'right', x: -5, style: {{ color: '#94a3b8', fontSize: '10px', textOverflow: 'none', whiteSpace: 'nowrap' }}, formatter: function() {{ return document.body.classList.contains('privacy-mode') ? '***' : '$' + this.axis.defaultLabelFormatter.call(this); }} }}, gridLineColor: 'rgba(255,255,255,0.05)' }},
+                    yAxis: {{ opposite: false, title: {{ text: null }}, labels: {{ align: 'right', x: -4, style: {{ color: '#94a3b8', fontSize: '10px', textOverflow: 'none', whiteSpace: 'nowrap' }}, formatter: function() {{ return document.body.classList.contains('privacy-mode') ? '***' : '$' + this.axis.defaultLabelFormatter.call(this); }} }}, gridLineColor: 'rgba(255,255,255,0.05)' }},
                     tooltip: {{
                         shared: true, backgroundColor: 'rgba(15, 23, 42, 0.95)', style: {{ color: '#fff' }}, borderColor: 'rgba(255,255,255,0.15)',
                         formatter: function() {{
@@ -1181,7 +1181,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
 
                 // Chart 4: Portfolio Allocation (Stacked Area)
                 Highcharts.chart('allocation-container', {{
-                    chart: {{ type: 'area', backgroundColor: 'transparent', marginLeft: 55, marginRight: 15, marginTop: 45, marginBottom: 35 }},
+                    chart: {{ type: 'area', backgroundColor: 'transparent', marginLeft: 45, marginRight: 15, marginTop: 45, marginBottom: 35 }},
                     title: {{ text: 'Asset Allocation', align: 'left', x: 8, y: 24, style: {{ color: '#e2e8f0', fontSize: '13px', fontWeight: 'bold' }} }},
                     xAxis: {{ type: 'datetime', labels: {{ style: {{ color: '#94a3b8', fontSize: '10px' }} }}, gridLineColor: 'rgba(255,255,255,0.05)', tickWidth: 0, minorGridLineWidth: 0 }},
                     yAxis: {{ title: {{ text: null }}, labels: {{ align: 'right', x: -4, formatter: function() {{ return this.value + '%'; }}, style: {{ color: '#94a3b8', fontSize: '10px' }} }}, gridLineColor: 'rgba(255,255,255,0.05)', max: 100 }},
@@ -1203,7 +1203,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
 
                 // Chart 5: Invested vs Current Value (Grouped Column)
                 Highcharts.chart('inv-val-container', {{
-                    chart: {{ type: 'column', backgroundColor: 'transparent', marginLeft: 55, marginRight: 15, marginTop: 45, marginBottom: 35 }},
+                    chart: {{ type: 'column', backgroundColor: 'transparent', marginLeft: 45, marginRight: 15, marginTop: 45, marginBottom: 35 }},
                     title: {{ text: 'Invested vs Current Value', align: 'left', x: 8, y: 24, style: {{ color: '#e2e8f0', fontSize: '13px', fontWeight: 'bold' }} }},
                     xAxis: {{ categories: {inv_val_categories_js}, labels: {{ style: {{ color: '#94a3b8', fontWeight: 'bold', fontSize: '10px' }} }}, gridLineColor: 'rgba(255,255,255,0.05)', tickWidth: 0 }},
                     yAxis: {{ title: {{ text: null }}, labels: {{ align: 'right', x: -4, style: {{ color: '#94a3b8', fontSize: '10px', textOverflow: 'none', whiteSpace: 'nowrap' }}, formatter: function() {{ return document.body.classList.contains('privacy-mode') ? '***' : '$' + this.axis.defaultLabelFormatter.call(this); }} }}, gridLineColor: 'rgba(255,255,255,0.05)' }},
@@ -1211,7 +1211,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                     tooltip: {{
                         shared: true, backgroundColor: 'rgba(15, 23, 42, 0.95)', style: {{ color: '#fff' }}, borderColor: 'rgba(255,255,255,0.15)',
                         formatter: function() {{
-                            let s = '<b style="font-size: 13px;">' + (this.points[0].point.name || this.points[0].key || this.x) + '</b>';
+                            let s = '<b style="font-size: 13px;">' + this.x + '</b>';
                             const isPrivacy = document.body.classList.contains('privacy-mode');
                             this.points.forEach(function(point) {{
                                 let val = isPrivacy ? '***' : '$' + Highcharts.numberFormat(point.y, 2);
@@ -1295,14 +1295,9 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                             el.style.transition = 'none';
                             el.style.cssText = ''; 
                             
-                            Highcharts.charts.forEach(c => {{ 
-                                if(c && c.renderTo && el.contains(c.renderTo)) {{
-                                    c.setSize(null, null, false);
-                                }}
-                            }});
-                            
-                            // Restore siblings
+                            // Restore siblings smoothly
                             document.querySelectorAll('.chart-box').forEach(c => {{
+                                c.style.transition = 'opacity 0.25s ease';
                                 c.style.opacity = '1';
                                 c.style.pointerEvents = 'auto';
                             }});
