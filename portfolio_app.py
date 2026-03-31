@@ -1097,7 +1097,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                         // The bezier curve 0.4, 0, 0.2, 1 mimics standard material design out-of-screen feeling
                         el.style.transition = 'transform 0.35s cubic-bezier(0.4, 0, 0.2, 1)';
                         // Note how we move to the stored visual coordinates while simultaneously scaling down
-                        el.style.transform = `translate(${invertLeft}px, ${invertTop}px) scale(${scaleX}, ${scaleY})`;
+                        el.style.transform = `translate(${{invertLeft}}px, ${{invertTop}}px) scale(${{scaleX}}, ${{scaleY}})`;
 
                         // Highcharts internal is large, let it snap to small instantly, it's invisible inside the div
                         const isMobile = window.innerWidth <= 768;
@@ -1183,7 +1183,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                     el.style.transformOrigin = 'top left'; // Vital for simpler inverse math
                     el.style.transition = 'none';
                     // Apply inverse transform to appear exactly where the small chart used to be.
-                    el.style.transform = `translate(${invertLeft}px, ${invertTop}px) scale(${scaleX}, ${scaleY})`;
+                    el.style.transform = `translate(${{invertLeft}}px, ${{invertTop}}px) scale(${{scaleX}}, ${{scaleY}})`;
                     
                     // Set Highcharts internal instantly to large, it will look small inside the scaled div.
                     hc.setSize(targetW, targetH, false);
@@ -1199,7 +1199,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                     const targetTop = (screenH - targetH) / 2;
                     
                     // Transform to the standard center spot at scale(1)
-                    el.style.transform = `translate(${targetLeft}px, ${targetTop}px) scale(1)`;
+                    el.style.transform = `translate(${{targetLeft}}px, ${{targetTop}}px) scale(1)`;
                 }}
 
                 function setupDoubleTap(elementId) {{
