@@ -416,7 +416,7 @@ def get_all_cryptocompare_prices(tickers, refresh_key=0):
         if data:
             for sym, price_data in data.items():
                 if isinstance(price_data, dict) and "USD" in price_data:
-                    # Find back the original ticker requested
+                    # Map back dynamically if missing
                     ticker = next((t for t in tickers if CRYPTOCOMPARE_SYMBOL_MAP.get(t.upper(), t.upper()) == sym), sym)
                     if ticker:
                         prices[ticker] = float(price_data["USD"])
@@ -1175,7 +1175,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                 }}
 
                 Highcharts.chart('pnl-container', {{
-                    chart: {{ type: 'bar', backgroundColor: 'transparent', marginLeft: 55, marginRight: 45, marginTop: 15, marginBottom: 25 }},
+                    chart: {{ type: 'bar', backgroundColor: 'transparent', marginLeft: 55, marginRight: 55, marginTop: 15, marginBottom: 25 }},
                     title: {{ text: null }},
                     xAxis: {{ type: 'category', labels: {{ style: {{ color: '#94a3b8', fontWeight: 'bold' }} }}, gridLineColor: 'rgba(255,255,255,0.05)', tickWidth: 0, lineWidth: 0 }},
                     yAxis: {{ title: {{ text: null }}, labels: {{ enabled: false }}, gridLineColor: 'rgba(255,255,255,0.05)' }},
@@ -1188,7 +1188,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                             return `<b>${{this.point.name}}</b><br/>PnL: <b style="color:${{this.point.color}}">${{val}}</b>`;
                         }}
                     }},
-                    plotOptions: {{ bar: {{ borderRadius: 3, borderWidth: 0, pointPadding: 0.1, groupPadding: 0.1, dataLabels: {{ enabled: true, inside: false, crop: false, overflow: 'none', style: {{ color: '#fff', textOutline: '3px #0f172a', fontWeight: 'bold', fontSize: '10px' }}, formatter: function() {{ return document.body.classList.contains('privacy-mode') ? '***' : (this.y < 0 ? '-$' : '$') + Highcharts.numberFormat(Math.abs(this.y), 2); }} }} }} }},
+                    plotOptions: {{ bar: {{ borderRadius: 3, borderWidth: 0, pointPadding: 0.1, groupPadding: 0.1, dataLabels: {{ enabled: true, inside: false, crop: false, overflow: 'allow', style: {{ color: '#fff', textOutline: '3px #0f172a', fontWeight: 'bold', fontSize: '10px' }}, formatter: function() {{ return document.body.classList.contains('privacy-mode') ? '***' : (this.y < 0 ? '-$' : '$') + Highcharts.numberFormat(Math.abs(this.y), 2); }} }} }} }},
                     credits: {{ enabled: false }},
                     series: [{{ name: 'PnL', data: getPnlDataCopy('all') }}]
                 }});
@@ -1201,7 +1201,8 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                         const range = btn.getAttribute('data-range');
                         const chart = Highcharts.charts.find(c => c && c.renderTo && c.renderTo.id === 'pnl-container');
                         if (chart && chart.series[0]) {{
-                            chart.series[0].setData(getPnlDataCopy(range), true, true, true);
+                            // The true, true parameters animate the bars dynamically without destroying them
+                            chart.series[0].setData(getPnlDataCopy(range), true, {{ duration: 500 }}, true);
                         }}
                     }});
                 }});
@@ -1230,7 +1231,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
 
                 // Chart 5: Invested vs Current Value (Grouped Column)
                 Highcharts.chart('inv-val-container', {{
-                    chart: {{ type: 'column', backgroundColor: 'transparent', marginLeft: 45, marginRight: 15, marginTop: 45, marginBottom: 35 }},
+                    chart: {{ type: 'column', backgroundColor: 'transparent', marginLeft: 55, marginRight: 20, marginTop: 45, marginBottom: 35 }},
                     title: {{ text: 'Invested vs Current Value', align: 'left', x: 8, y: 24, style: {{ color: '#e2e8f0', fontSize: '13px', fontWeight: 'bold' }} }},
                     xAxis: {{ categories: {inv_val_categories_js}, labels: {{ style: {{ color: '#94a3b8', fontWeight: 'bold', fontSize: '10px' }} }}, gridLineColor: 'rgba(255,255,255,0.05)', tickWidth: 0 }},
                     yAxis: {{ title: {{ text: null }}, labels: {{ align: 'right', x: -4, style: {{ color: '#94a3b8', fontSize: '10px', textOverflow: 'none', whiteSpace: 'nowrap' }}, formatter: function() {{ return document.body.classList.contains('privacy-mode') ? '***' : '$' + this.axis.defaultLabelFormatter.call(this); }} }}, gridLineColor: 'rgba(255,255,255,0.05)' }},
@@ -1298,11 +1299,11 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
 
                     if (el.classList.contains('expanded-chart')) {{
                         // ==========================================
-                        // CLOSING MECHANICS (Seamless settle Fix)
+                        // CLOSING MECHANICS (FLIP Animation)
                         // ==========================================
                         overlay.classList.remove('active');
                         
-                        // Re-calculate the current layout position to avoid scroll-shift blinks
+                        // Calculate exact destination based on current scroll position
                         const placeholder = el.parentElement;
                         const targetRect = placeholder.getBoundingClientRect();
                         let targetTop = targetRect.top;
@@ -1313,20 +1314,20 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                             targetLeft += iframeRect.left;
                         }}
 
-                        // Phase 1: Keep it position: fixed, but set its standard visual coordinates. 
-                        // Crossfade the class instantly to lose expanded background while traveling.
-                        el.classList.remove('expanded-chart');
-                        el.style.transition = 'transform 0.4s cubic-bezier(0.2, 0.8, 0.2, 1), background-color 0.4s ease, box-shadow 0.4s ease';
+                        // Smoothly animate back to the grid position
+                        el.style.transition = 'transform 0.35s cubic-bezier(0.25, 1, 0.5, 1), background-color 0.4s ease, box-shadow 0.4s ease';
                         el.style.transform = `translate(${{targetLeft}}px, ${{targetTop}}px) scale(1)`;
 
-                        // Phase 2: Once the visual transition finishes, silently revert CSS layout from fixed to standard flow
+                        // Once the physical travel finishes, carefully reset CSS without blowing away Highcharts
                         const finishClose = (e) => {{
                             if (e && e.propertyName !== 'transform') return;
                             el.removeEventListener('transitionend', finishClose);
                             clearTimeout(el._closeTimeout);
                             if (parentIframe) parentIframe.classList.remove('fullscreen-mode');
                             
-                            // CLEANLY remove only OUR applied styles. Wiping cssText destroys Highcharts native inline styles and causes extreme glitching!
+                            el.classList.remove('expanded-chart');
+                            
+                            el.style.transition = 'none';
                             el.style.position = '';
                             el.style.top = '';
                             el.style.left = '';
@@ -1336,24 +1337,28 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                             el.style.zIndex = '';
                             el.style.transformOrigin = '';
                             el.style.transform = '';
-                            el.style.transition = '';
                             
-                            wrapper.style.overflowX = 'auto'; // Restore scroll snapping
+                            // Highcharts Redraw SILENTLY to correct slot dimensions
+                            Highcharts.charts.forEach(c => {{ 
+                                if(c && c.renderTo && el.contains(c.renderTo)) {{
+                                    c.setSize(null, null, false);
+                                }}
+                            }});
                             
-                            // Restore siblings smoothly
+                            // Reveal siblings smoothly
                             document.querySelectorAll('.chart-box').forEach(c => {{
                                 c.style.opacity = '1';
                                 c.style.pointerEvents = 'auto';
                             }});
                         }};
                         el.addEventListener('transitionend', finishClose);
-                        el._closeTimeout = setTimeout(() => {{ finishClose(); }}, 450); // Fallback
+                        el._closeTimeout = setTimeout(() => {{ finishClose(); }}, 400); // Fallback
 
                         return;
                     }}
                     
                     // ==========================================
-                    // OPENING MECHANICS (Retained seamless flow)
+                    // OPENING MECHANICS
                     // ==========================================
                     
                     // 1. SILENT VANISH: instantly hide siblings to prevent bleeding
@@ -1394,10 +1399,6 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                     const centerLeft = (screenW - scaledW) / 2;
                     const centerTop = (screenH - scaledH) / 2;
 
-                    // Save origins
-                    el.setAttribute('data-orig-top', visualTop);
-                    el.setAttribute('data-orig-left', visualLeft);
-
                     // Phase 1: Lock the chart in its starting spot natively small, no HC Redraw
                     el.style.position = 'fixed';
                     el.style.top = '0px';
@@ -1414,7 +1415,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
 
                     // Phase 2: Travel to center while scaling using native browser hardware acceleration
                     el.classList.add('expanded-chart');
-                    el.style.transition = 'transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.4s ease, box-shadow 0.4s ease';
+                    el.style.transition = 'transform 0.35s cubic-bezier(0.25, 1, 0.5, 1), background-color 0.4s ease, box-shadow 0.4s ease';
                     el.style.transform = `translate(${{centerLeft}}px, ${{centerTop}}px) scale(${{targetScale}})`;
                 }}
 
@@ -2106,9 +2107,10 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                 const resp = await fetch(url, {{ headers: {{ 'User-Agent': 'Mozilla/5.0' }} }});
                 const data = await resp.json();
                 if (data && data.Data && data.Data.Data && data.Data.Data.length >= 2) {{
-                    const yesterdayClose = data.Data.Data[0].close;
-                    const todayClose = data.Data.Data[1].close;
-                    if (yesterdayClose === 0) return 0;
+                    const arr = data.Data.Data;
+                    const yesterdayClose = arr[arr.length - 2].close;
+                    const todayClose = arr[arr.length - 1].close;
+                    if (!yesterdayClose) return 0;
                     const change = ((todayClose - yesterdayClose) / yesterdayClose) * 100;
                     return change;
                 }}
