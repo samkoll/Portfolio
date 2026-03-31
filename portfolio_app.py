@@ -1159,7 +1159,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                         if (targetH < 400) targetH = 400;
 
                         hc.setSize(targetW, targetH, {{ duration: 350, easing: 'easeOutQuart' }});
-                    }, 50); // slight delay allowing iframe geometry to resolve
+                    }}, 50); // slight delay allowing iframe geometry to resolve
                 }}
 
                 function setupDoubleTap(elementId) {{
