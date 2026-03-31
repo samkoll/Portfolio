@@ -388,6 +388,7 @@ def get_with_retry(url: str, headers: dict, timeout: int = 12, retries: int = 4)
             resp = requests.get(url, headers=headers, timeout=timeout)
             resp.raise_for_status()
             data = resp.json()
+            # If the API hits a rate limit, it still returns HTTP 200 but sets 'Response' to 'Error'. 
             if isinstance(data, dict) and data.get('Response') == 'Error':
                 if attempt == retries - 1:
                     return None
@@ -1119,22 +1120,17 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                         el.style.transition = 'transform 0.35s cubic-bezier(0.4, 0, 0.2, 1)';
                         el.style.transform = `translate(${{originLeft}}px, ${{originTop}}px) scale(${{scaleX}}, ${{scaleY}})`;
 
-                        // Phase 3: Cleanup once animation ends
+                        // Phase 3: Cleanup once animation ends - Direct snap to CSS layout
                         setTimeout(() => {{
-                            el.classList.remove('expanded-chart');
                             if (parentIframe) {{
                                 parentIframe.classList.remove('fullscreen-mode');
                             }}
                             el.style.cssText = ''; 
+                            el.classList.remove('expanded-chart');
                             
-                            // Highcharts only resizes AFTER the animation finishes so it doesn't flicker
-                            const isPie = chartId === 'pie-container';
-                            const smallW = window.innerWidth * 0.85;
-                            const smallH = 320;
-                            hc.setSize(smallW, smallH, false);
-                            
-                            setTimeout(() => {{ hc.setSize(null, null, false); }}, 50); // Final clean CSS fit
-                        }}, 350);
+                            // Let highcharts silently reflow to the restored CSS container instantly
+                            hc.setSize(null, null, false); 
+                        }}, 360);
 
                         return;
                     }}
