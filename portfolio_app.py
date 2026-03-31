@@ -441,7 +441,7 @@ def get_all_cryptocompare_prices(tickers, refresh_key=0):
 # ====================== HISTORICAL PORTFOLIO BUILDER ======================
 @st.cache_data(ttl=3600, show_spinner=False)
 def build_portfolio_history(crypto_df, fiat_df, last_prices, refresh_key):
-    if crypto_df.empty and fiat_df.empty: return [], ""
+    if crypto_df.empty and fiat_df.empty: return [], "", pd.DataFrame()
 
     fiat = fiat_df.copy()
     if not fiat.empty:
@@ -458,7 +458,7 @@ def build_portfolio_history(crypto_df, fiat_df, last_prices, refresh_key):
         daily_crypto_spent = pd.Series(dtype=float)
 
     all_dates = sorted(set(daily_fiat_usdc.index) | set(crypto['Date'].dropna() if not crypto.empty else []))
-    if not all_dates: return [], ""
+    if not all_dates: return [], "", pd.DataFrame()
     
     min_date = min(all_dates)
     today = datetime.now().date()
@@ -514,12 +514,21 @@ def build_portfolio_history(crypto_df, fiat_df, last_prices, refresh_key):
             
         if coin not in prices_df.columns:
             prices_df[coin] = live_p
-        else:
-            prices_df[coin] = prices_df[coin].replace(0.0, live_p)
-            prices_df[coin] = prices_df[coin].fillna(live_p)
+        
+        # Inject precise live price directly into the end of history for precise 1D PnL calculation
+        prices_df.loc[date_range[-1], coin] = live_p
     
+    # Calculate PnL Tracking Dataframe
+    pnl_df = pd.DataFrame()
+    if not crypto.empty and not crypto_assets.empty:
+        invested_daily = crypto_assets.groupby(['Date', 'Ticker'])['USDC'].sum().unstack(fill_value=0)
+        invested_daily = invested_daily.reindex(date_range, fill_value=0).fillna(0)
+        cum_invested = invested_daily.cumsum()
+        
+        common_cols = cum_holdings.columns.intersection(prices_df.columns)
+        pnl_df = (cum_holdings[common_cols] * prices_df[common_cols]) - cum_invested[common_cols]
+
     daily_crypto_value = pd.Series(0.0, index=date_range)
-    common_cols = cum_holdings.columns.intersection(prices_df.columns)
     if not common_cols.empty:
         daily_crypto_value = (cum_holdings[common_cols] * prices_df[common_cols]).sum(axis=1)
 
@@ -544,7 +553,6 @@ def build_portfolio_history(crypto_df, fiat_df, last_prices, refresh_key):
         
     allocation_series_js_list = []
     if not common_cols.empty:
-        # Sort coins so biggest holdings are stacked neatly at the bottom
         last_date = date_range[-1]
         coin_values_last_day = {c: (cum_holdings[c].loc[last_date] * prices_df[c].loc[last_date]) for c in common_cols}
         sorted_coins = sorted(coin_values_last_day.keys(), key=lambda c: coin_values_last_day[c], reverse=True)
@@ -562,7 +570,7 @@ def build_portfolio_history(crypto_df, fiat_df, last_prices, refresh_key):
 
     allocation_series_js = ",\n".join(allocation_series_js_list)
         
-    return history_data, allocation_series_js
+    return history_data, allocation_series_js, pnl_df
 
 # ====================== LOGOS & COLORS ======================
 def get_ticker_logo(ticker: str) -> str:
@@ -587,7 +595,7 @@ def get_ticker_color(ticker: str) -> str:
     ticker = ticker.upper()
     known = {
         'USDC': '#2775ca', 'BTC': '#f7931a', 'ETH': '#627eea',
-        'SOL': '#9b59b6', 'HBAR': '#ffffff', 'XRP': '#ffffff', # Black logos made white for chart background, as requested.
+        'SOL': '#9b59b6', 'HBAR': '#ffffff', 'XRP': '#ffffff', 
         'SUI': '#60a5fa', 'LINK': '#1e3a8a', 'BNB': '#f4c430',
         'TRX': '#ff2d55'
     }
@@ -599,6 +607,14 @@ def get_ticker_color(ticker: str) -> str:
     if c == '#000000': 
         return '#ffffff'
     return c
+
+def get_chart_color(ticker: str) -> str:
+    color_map = {
+        'BTC': '#f7931a', 'ETH': '#627eea', 'SOL': '#9b59b6',
+        'HBAR': '#00b4d8', 'XRP': '#1e3a8a', 'BNB': '#f4c430',
+        'TRX': '#ff2d55', 'LINK': '#2ecc71', 'SUI': '#60a5fa',
+    }
+    return color_map.get(ticker.upper(), '#00ff9d')
 
 # ====================== FORMATTING ======================
 def format_money(val):
@@ -759,7 +775,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
 
         # ================== 2. ASSEMBLE ALL CHARTS DATA ==================
         last_prices_dict = st.session_state.last_known_prices.copy()
-        history_data_raw, allocation_series_js = build_portfolio_history(st.session_state.crypto_df, st.session_state.fiat_df, last_prices_dict, st.session_state.refresh_key)
+        history_data_raw, allocation_series_js, pnl_df = build_portfolio_history(st.session_state.crypto_df, st.session_state.fiat_df, last_prices_dict, st.session_state.refresh_key)
         
         hist_val_js_list = []
         hist_inv_js_list = []
@@ -801,16 +817,35 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                 pie_data_js_lines.append(f"{{ name: '{ticker}', y: {val}, color: '{chart_color}' }}")
         pie_data_js = ",\n".join(pie_data_js_lines)
 
-        # Chart 3: PnL Bar Data
-        pnl_data_js_lines = []
-        df_pnl = df_port[df_port['Ticker'] != 'USDC'].sort_values(by='PnL', ascending=True)
-        for _, r in df_pnl.iterrows():
-            ticker = r['Ticker']
-            pnl = r['PnL']
-            if pd.notna(pnl):
-                color = get_ticker_color(ticker)
-                pnl_data_js_lines.append(f"{{ name: '{ticker}', y: {pnl}, color: '{color}' }}")
-        pnl_data_js = ",\n".join(pnl_data_js_lines)
+        # Chart 3: PnL Bar Data with Timeframes
+        pnl_data_js_dict = {'all': '', '30d': '', '7d': '', '1d': ''}
+        if not pnl_df.empty:
+            active_tickers = [t for t in df_port['Ticker'] if t != 'USDC']
+            valid_cols = [c for c in active_tickers if c in pnl_df.columns]
+            pnl_df_active = pnl_df[valid_cols] if valid_cols else pnl_df
+
+            def format_pnl_js(series):
+                series = series.dropna().sort_values(ascending=True)
+                lines = []
+                for ticker, val in series.items():
+                    c = get_ticker_color(ticker)
+                    lines.append(f"{{ name: '{ticker}', y: {val}, color: '{c}' }}")
+                return ",\n".join(lines)
+
+            pnl_all = pnl_df_active.iloc[-1]
+            
+            idx_1d = -2 if len(pnl_df_active) >= 2 else 0
+            idx_7d = -8 if len(pnl_df_active) >= 8 else 0
+            idx_30d = -31 if len(pnl_df_active) >= 31 else 0
+
+            pnl_1d = pnl_all - pnl_df_active.iloc[idx_1d]
+            pnl_7d = pnl_all - pnl_df_active.iloc[idx_7d]
+            pnl_30d = pnl_all - pnl_df_active.iloc[idx_30d]
+
+            pnl_data_js_dict['all'] = format_pnl_js(pnl_all)
+            pnl_data_js_dict['1d'] = format_pnl_js(pnl_1d)
+            pnl_data_js_dict['7d'] = format_pnl_js(pnl_7d)
+            pnl_data_js_dict['30d'] = format_pnl_js(pnl_30d)
 
         # Chart 5: Invested vs Current Value Data
         df_iv = df_port[df_port['Ticker'] != 'USDC'].sort_values(by='Value', ascending=False)
@@ -831,8 +866,8 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
         <html>
         <head>
             <meta charset="UTF-8">
-            <script src="https://code.highcharts.com/highcharts.js"></script>
-            <script src="https://code.highcharts.com/highcharts-3d.js"></script>
+            <script src="https://code.highcharts.com/stock/highstock.js"></script>
+            <script src="https://code.highcharts.com/stock/highcharts-3d.js"></script>
             <style>
                 body {{ margin: 0; padding: 0; background: transparent; overflow: hidden; font-family: system-ui, sans-serif; }}
                 
@@ -875,9 +910,11 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                     border-radius: 16px;
                     box-shadow: 0 4px 15px rgba(0,0,0,0.2);
                     touch-action: pan-x pan-y; 
-                    will-change: transform, background-color, box-shadow; /* Strict GPU Acceleration */
+                    will-change: transform; 
+                    position: relative;
                 }}
                 
+                /* Smooth Fade Overlay */
                 #chart-overlay {{
                     visibility: hidden;
                     opacity: 0;
@@ -894,11 +931,38 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                     opacity: 1;
                 }}
                 
+                /* Expanded state strictly overrides visuals */
                 .expanded-chart {{
                     background: rgba(15, 23, 42, 0.98) !important; 
                     border: 1px solid rgba(255, 255, 255, 0.08) !important; 
                     box-shadow: 0 15px 50px rgba(0,0,0,0.9) !important;
                     border-radius: 20px !important; 
+                }}
+                
+                /* PnL HTML Overlay Controls */
+                .chart-controls {{
+                    position: absolute;
+                    top: 12px;
+                    right: 12px;
+                    z-index: 10;
+                    display: flex;
+                    gap: 6px;
+                }}
+                .chart-controls button {{
+                    background: rgba(0,0,0,0.3);
+                    border: 1px solid rgba(255,255,255,0.1);
+                    color: #94a3b8;
+                    border-radius: 4px;
+                    padding: 4px 10px;
+                    font-size: 11px;
+                    cursor: pointer;
+                    font-weight: bold;
+                    transition: all 0.2s;
+                }}
+                .chart-controls button.active {{
+                    background: rgba(0, 255, 157, 0.15);
+                    color: #00ff9d;
+                    border-color: #00ff9d;
                 }}
 
                 @media (max-width: 768px) {{
@@ -922,7 +986,17 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                 <div class="charts-flex">
                     <div class="chart-placeholder" data-type="pie"><div id="pie-container" class="chart-box"></div></div>
                     <div class="chart-placeholder" data-type="history"><div id="history-container" class="chart-box"></div></div>
-                    <div class="chart-placeholder" data-type="pnl"><div id="pnl-container" class="chart-box"></div></div>
+                    <div class="chart-placeholder" data-type="pnl">
+                        <div id="pnl-wrapper" class="chart-box">
+                            <div class="chart-controls pnl-controls">
+                                <button class="active" data-range="all">All</button>
+                                <button data-range="30d">1M</button>
+                                <button data-range="7d">1W</button>
+                                <button data-range="1d">Today</button>
+                            </div>
+                            <div id="pnl-container" style="width:100%; height:100%;"></div>
+                        </div>
+                    </div>
                     <div class="chart-placeholder" data-type="allocation"><div id="allocation-container" class="chart-box"></div></div>
                     <div class="chart-placeholder" data-type="inv-val"><div id="inv-val-container" class="chart-box"></div></div>
                 </div>
@@ -948,12 +1022,35 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                     series: [{{ name: 'Holdings', data: [{pie_data_js}] }}]
                 }});
 
-                // Chart 2: History Area
-                Highcharts.chart('history-container', {{
-                    chart: {{ type: 'areaspline', backgroundColor: 'transparent', marginLeft: 60, marginRight: 20, marginTop: 55, marginBottom: 35 }}, 
+                // Chart 2: History Area (Using Highstock)
+                Highcharts.stockChart('history-container', {{
+                    chart: {{ type: 'areaspline', backgroundColor: 'transparent', marginLeft: 60, marginRight: 20, marginTop: 50, marginBottom: 35 }}, 
+                    rangeSelector: {{
+                        enabled: true,
+                        buttons: [
+                            {{ type: 'week', count: 1, text: '1W' }},
+                            {{ type: 'month', count: 1, text: '1M' }},
+                            {{ type: 'year', count: 1, text: '1Y' }},
+                            {{ type: 'ytd', text: 'YTD' }},
+                            {{ type: 'all', text: 'All' }}
+                        ],
+                        selected: 4,
+                        buttonTheme: {{
+                            fill: 'none', stroke: 'none',
+                            style: {{ color: '#94a3b8', fontWeight: 'bold' }},
+                            states: {{
+                                hover: {{ fill: 'rgba(255,255,255,0.1)', style: {{ color: '#fff' }} }},
+                                select: {{ fill: 'rgba(0, 255, 157, 0.2)', style: {{ color: '#00ff9d' }} }}
+                            }}
+                        }},
+                        inputEnabled: false,
+                        labelStyle: {{ display: 'none' }}
+                    }},
+                    navigator: {{ enabled: false }},
+                    scrollbar: {{ enabled: false }},
                     title: {{ text: 'Historical Performance', style: {{ color: '#e2e8f0', fontSize: '13px', fontWeight: 'bold' }} }},
-                    legend: {{ enabled: true, itemStyle: {{ color: '#94a3b8', fontSize: '11px', fontWeight: 'normal' }}, itemHoverStyle: {{ color: '#ffffff' }}, verticalAlign: 'top', align: 'center', y: -10 }},
-                    xAxis: {{ type: 'datetime', labels: {{ style: {{ color: '#94a3b8', fontSize: '10px' }} }}, gridLineColor: 'rgba(255,255,255,0.05)', tickWidth: 0, minorGridLineWidth: 0 }},
+                    legend: {{ enabled: true, itemStyle: {{ color: '#94a3b8', fontSize: '11px', fontWeight: 'normal' }}, itemHoverStyle: {{ color: '#ffffff' }}, verticalAlign: 'top', align: 'center', y: -15 }},
+                    xAxis: {{ gridLineColor: 'rgba(255,255,255,0.05)', tickWidth: 0, minorGridLineWidth: 0 }},
                     yAxis: {{ title: {{ text: null }}, labels: {{ style: {{ color: '#94a3b8', fontSize: '10px' }}, align: 'right', formatter: function() {{ return document.body.classList.contains('privacy-mode') ? '***' : '$' + this.axis.defaultLabelFormatter.call(this); }} }}, gridLineColor: 'rgba(255,255,255,0.05)' }},
                     tooltip: {{
                         shared: true, backgroundColor: 'rgba(15, 23, 42, 0.95)', style: {{ color: '#fff' }}, borderColor: 'rgba(255,255,255,0.15)',
@@ -967,7 +1064,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                             return s;
                         }}
                     }},
-                    plotOptions: {{ areaspline: {{ fillOpacity: 0.3, lineWidth: 2, marker: {{ enabled: false, symbol: 'circle', radius: 3, states: {{ hover: {{ enabled: true }} }} }} }}, line: {{ marker: {{ enabled: false }} }} }},
+                    plotOptions: {{ areaspline: {{ fillOpacity: 0.3, lineWidth: 2 }} }},
                     credits: {{ enabled: false }},
                     series: [{{ name: 'Portfolio Value', data: [{hist_val_js}], color: '#00ff9d', fillColor: {{ linearGradient: {{ x1: 0, y1: 0, x2: 0, y2: 1 }}, stops: [ [0, 'rgba(0, 255, 157, 0.5)'], [1, 'rgba(0, 255, 157, 0.0)'] ] }}, zIndex: 3 }}, 
                              {{ name: 'BTC Benchmark', type: 'line', data: [{hist_btc_js}], color: '#f7931a', lineWidth: 2, zIndex: 2 }}, 
@@ -975,9 +1072,16 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                 }});
 
                 // Chart 3: Winners & Losers (PnL Bar)
+                const pnlDataMap = {{
+                    'all': [{pnl_data_js_dict['all']}],
+                    '30d': [{pnl_data_js_dict['30d']}],
+                    '7d': [{pnl_data_js_dict['7d']}],
+                    '1d': [{pnl_data_js_dict['1d']}]
+                }};
+
                 Highcharts.chart('pnl-container', {{
                     chart: {{ type: 'bar', backgroundColor: 'transparent', marginLeft: 65, marginRight: 35, marginTop: 45, marginBottom: 25 }},
-                    title: {{ text: 'Winners & Losers', style: {{ color: '#e2e8f0', fontSize: '13px', fontWeight: 'bold' }} }},
+                    title: {{ text: 'Winners & Losers', align: 'left', style: {{ color: '#e2e8f0', fontSize: '13px', fontWeight: 'bold' }} }},
                     xAxis: {{ type: 'category', labels: {{ style: {{ color: '#94a3b8', fontWeight: 'bold' }} }}, gridLineColor: 'rgba(255,255,255,0.05)', tickWidth: 0, lineWidth: 0 }},
                     yAxis: {{ title: {{ text: null }}, labels: {{ enabled: false }}, gridLineColor: 'rgba(255,255,255,0.05)' }},
                     legend: {{ enabled: false }},
@@ -991,7 +1095,20 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                     }},
                     plotOptions: {{ bar: {{ borderRadius: 4, dataLabels: {{ enabled: true, style: {{ color: '#fff', textOutline: 'none', fontWeight: 'bold' }}, formatter: function() {{ return document.body.classList.contains('privacy-mode') ? '***' : '$' + Highcharts.numberFormat(this.y, 2); }} }} }} }},
                     credits: {{ enabled: false }},
-                    series: [{{ name: 'PnL', data: [{pnl_data_js}] }}]
+                    series: [{{ name: 'PnL', data: pnlDataMap['all'] }}]
+                }});
+
+                document.querySelectorAll('.pnl-controls button').forEach(btn => {{
+                    btn.addEventListener('click', (e) => {{
+                        e.stopPropagation(); 
+                        document.querySelectorAll('.pnl-controls button').forEach(b => b.classList.remove('active'));
+                        btn.classList.add('active');
+                        const range = btn.getAttribute('data-range');
+                        const chart = Highcharts.charts.find(c => c && c.renderTo.id === 'pnl-container');
+                        if (chart) {{
+                            chart.series[0].setData(pnlDataMap[range], true, {{duration: 300}});
+                        }}
+                    }});
                 }});
 
                 // Chart 4: Portfolio Allocation (Stacked Area)
@@ -1020,7 +1137,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                 Highcharts.chart('inv-val-container', {{
                     chart: {{ type: 'column', backgroundColor: 'transparent', marginLeft: 60, marginRight: 20, marginTop: 45, marginBottom: 35 }},
                     title: {{ text: 'Invested vs Current Value', style: {{ color: '#e2e8f0', fontSize: '13px', fontWeight: 'bold' }} }},
-                    xAxis: {{ type: 'category', categories: {inv_val_categories_js}, labels: {{ style: {{ color: '#94a3b8', fontWeight: 'bold', fontSize: '10px' }} }}, gridLineColor: 'rgba(255,255,255,0.05)', tickWidth: 0 }},
+                    xAxis: {{ categories: {inv_val_categories_js}, labels: {{ style: {{ color: '#94a3b8', fontWeight: 'bold', fontSize: '10px' }} }}, gridLineColor: 'rgba(255,255,255,0.05)', tickWidth: 0 }},
                     yAxis: {{ title: {{ text: null }}, labels: {{ style: {{ color: '#94a3b8', fontSize: '10px' }}, formatter: function() {{ return document.body.classList.contains('privacy-mode') ? '***' : '$' + this.axis.defaultLabelFormatter.call(this); }} }}, gridLineColor: 'rgba(255,255,255,0.05)' }},
                     legend: {{ enabled: true, itemStyle: {{ color: '#94a3b8', fontSize: '11px', fontWeight: 'normal' }}, itemHoverStyle: {{ color: '#ffffff' }}, verticalAlign: 'top', y: -5 }},
                     tooltip: {{
@@ -1067,11 +1184,11 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                     }}
                 }} catch(e) {{}}
 
-                function toggleExpandChart(chartId) {{
+                function toggleExpandChart(wrapperId) {{
                     // BLOCK PC COMPLETELY - Only runs on Mobile
                     if (window.innerWidth > 768) return;
                 
-                    const el = document.getElementById(chartId);
+                    const el = document.getElementById(wrapperId);
                     const overlay = document.getElementById('chart-overlay');
                     const wrapper = document.getElementById('chartsScrollContainer');
 
@@ -1086,7 +1203,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
 
                     if (el.classList.contains('expanded-chart')) {{
                         // ==========================================
-                        // CLOSING MECHANICS (Pure Reverse GPU Scale)
+                        // CLOSING MECHANICS 
                         // ==========================================
                         overlay.classList.remove('active');
                         
@@ -1119,12 +1236,12 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                     }}
                     
                     // ==========================================
-                    // OPENING MECHANICS (Pure Forward GPU Scale)
+                    // OPENING MECHANICS 
                     // ==========================================
                     
                     // 1. SILENT VANISH: instantly hide siblings to prevent bleeding
                     document.querySelectorAll('.chart-box').forEach(c => {{
-                        if (c.id !== chartId) {{
+                        if (c.id !== wrapperId) {{
                             c.style.transition = 'opacity 0.15s ease';
                             c.style.opacity = '0';
                             c.style.pointerEvents = 'none';
@@ -1203,7 +1320,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
 
                 setupDoubleTap('pie-container');
                 setupDoubleTap('history-container');
-                setupDoubleTap('pnl-container');
+                setupDoubleTap('pnl-wrapper');
                 setupDoubleTap('allocation-container');
                 setupDoubleTap('inv-val-container');
 
