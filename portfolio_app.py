@@ -1104,7 +1104,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                 // Chart 2: Performance Area (Using Highstock)
                 Highcharts.stockChart('history-container', {{
                     chart: {{ type: 'areaspline', backgroundColor: 'transparent', marginLeft: 45, marginRight: 15, marginTop: 25, marginBottom: 35 }}, 
-                    rangeSelector: {{ enabled: false }}, 
+                    rangeSelector: {{ enabled: false }}, // Hidden native range selector in favor of our custom header HTML
                     navigator: {{ enabled: false }},
                     scrollbar: {{ enabled: false }},
                     title: {{ text: null }},
@@ -1188,7 +1188,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                             return `<b>${{this.point.name}}</b><br/>PnL: <b style="color:${{this.point.color}}">${{val}}</b>`;
                         }}
                     }},
-                    plotOptions: {{ bar: {{ borderRadius: 3, borderWidth: 0, pointPadding: 0.1, groupPadding: 0.1, dataLabels: {{ enabled: true, inside: false, crop: false, overflow: 'none', style: {{ color: '#fff', textOutline: '3px #0f172a', fontWeight: 'bold', fontSize: '10px' }}, formatter: function() {{ return document.body.classList.contains('privacy-mode') ? '***' : (this.y < 0 ? '-$' : '$') + Highcharts.numberFormat(Math.abs(this.y), 2); }} }} }} }},
+                    plotOptions: {{ bar: {{ borderRadius: 3, borderWidth: 0, pointPadding: 0.1, groupPadding: 0.1, dataLabels: {{ enabled: true, inside: false, crop: false, overflow: 'allow', style: {{ color: '#fff', textOutline: '3px #0f172a', fontWeight: 'bold', fontSize: '10px' }}, formatter: function() {{ return document.body.classList.contains('privacy-mode') ? '***' : (this.y < 0 ? '-$' : '$') + Highcharts.numberFormat(Math.abs(this.y), 2); }} }} }} }},
                     credits: {{ enabled: false }},
                     series: [{{ name: 'PnL', data: getPnlDataCopy('all') }}]
                 }});
@@ -1201,8 +1201,9 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                         const range = btn.getAttribute('data-range');
                         const chart = Highcharts.charts.find(c => c && c.renderTo && c.renderTo.id === 'pnl-container');
                         if (chart && chart.series[0]) {{
-                            // Setting true, true, true ensures smooth animation between data sets
-                            chart.series[0].setData(getPnlDataCopy(range), true, {{ duration: 500, easing: 'easeOutBounce' }}, true);
+                            const freshData = getPnlDataCopy(range);
+                            chart.xAxis[0].setCategories(freshData.map(d => d.name), false);
+                            chart.series[0].setData(freshData, true, {{ duration: 400 }}, true);
                         }}
                     }});
                 }});
@@ -1303,15 +1304,13 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                         // ==========================================
                         overlay.classList.remove('active');
                         
-                        // Calculate exact destination based on current scroll position
-                        const placeholder = el.parentElement;
-                        const targetRect = placeholder.getBoundingClientRect();
-                        let targetTop = targetRect.top;
-                        let targetLeft = targetRect.left;
+                        // Use exact original coordinates to prevent flicking to top corner
+                        const origTop = parseFloat(el.getAttribute('data-orig-top')) || 0;
+                        const origLeft = parseFloat(el.getAttribute('data-orig-left')) || 0;
 
-                        // Smoothly animate back to the grid position
+                        // Smoothly animate back to the saved grid position
                         el.style.transition = 'transform 0.35s cubic-bezier(0.25, 1, 0.5, 1), background-color 0.4s ease, box-shadow 0.4s ease';
-                        el.style.transform = `translate(${{targetLeft}}px, ${{targetTop}}px) scale(1)`;
+                        el.style.transform = `translate(${{origLeft}}px, ${{origTop}}px) scale(1)`;
 
                         // Once the physical travel finishes, carefully reset CSS without blowing away Highcharts
                         const finishClose = (e) => {{
@@ -1333,7 +1332,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                             el.style.transformOrigin = '';
                             el.style.transform = '';
                             
-                            // Highcharts Redraw SILENTLY to correct slot dimensions
+                            // Highcharts Redraw SILENTLY to correct slot dimensions without shivering
                             Highcharts.charts.forEach(c => {{ 
                                 if(c && c.renderTo && el.contains(c.renderTo)) {{
                                     c.setSize(null, null, false);
@@ -1353,7 +1352,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                     }}
                     
                     // ==========================================
-                    // OPENING MECHANICS 
+                    // OPENING MECHANICS
                     // ==========================================
                     
                     // 1. SILENT VANISH: instantly hide siblings to prevent bleeding
@@ -1393,6 +1392,10 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                     const scaledH = origH * targetScale;
                     const centerLeft = (screenW - scaledW) / 2;
                     const centerTop = (screenH - scaledH) / 2;
+
+                    // Save origins
+                    el.setAttribute('data-orig-top', visualTop);
+                    el.setAttribute('data-orig-left', visualLeft);
 
                     // Phase 1: Lock the chart in its starting spot natively small, no HC Redraw
                     el.style.position = 'fixed';
@@ -1547,6 +1550,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                             const activeBtn = document.querySelector('.pnl-controls button.active');
                             const range = activeBtn ? activeBtn.getAttribute('data-range') : 'all';
                             const freshData = getPnlDataCopy(range);
+                            pnlChart.xAxis[0].setCategories(freshData.map(d => d.name), false);
                             pnlChart.series[0].setData(freshData, false, false, true);
                         }}
 
