@@ -989,7 +989,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                             return `<b>${{this.point.name}}</b><br/>PnL: <b style="color:${{this.point.color}}">${{val}}</b>`;
                         }}
                     }},
-                    plotOptions: {{ bar: {{ borderRadius: 4, dataLabels: {{ enabled: true, style: {{ color: '#fff', textOutline: 'none', fontWeight: 'bold' }}, formatter: function() {{ return document.body.classList.contains('privacy-mode') ? '***' : '$' + Highcharts.numberFormat(this.y, 0); }} }} }} }},
+                    plotOptions: {{ bar: {{ borderRadius: 4, dataLabels: {{ enabled: true, style: {{ color: '#fff', textOutline: 'none', fontWeight: 'bold' }}, formatter: function() {{ return document.body.classList.contains('privacy-mode') ? '***' : '$' + Highcharts.numberFormat(this.y, 2); }} }} }} }},
                     credits: {{ enabled: false }},
                     series: [{{ name: 'PnL', data: [{pnl_data_js}] }}]
                 }});
