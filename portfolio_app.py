@@ -542,10 +542,8 @@ def build_portfolio_history(crypto_df, fiat_df, last_prices, refresh_key):
         btc_val = float(btc_benchmark_value.loc[d])
         history_data.append({'time': ts, 'value': val, 'invested': inv, 'btc': btc_val})
         
-    # NEW: Prepare Allocation (Stacked Area) Series
     allocation_series_js_list = []
     if not common_cols.empty:
-        # Sort coins so biggest holdings are stacked neatly at the bottom
         last_date = date_range[-1]
         coin_values_last_day = {c: (cum_holdings[c].loc[last_date] * prices_df[c].loc[last_date]) for c in common_cols}
         sorted_coins = sorted(coin_values_last_day.keys(), key=lambda c: coin_values_last_day[c], reverse=True)
@@ -558,7 +556,7 @@ def build_portfolio_history(crypto_df, fiat_df, last_prices, refresh_key):
                 ts = int(dt.timestamp()) * 1000
                 val = float(coin_val_series.loc[d])
                 data_points.append(f"[{ts}, {val}]")
-            color = get_chart_color(coin)
+            color = get_ticker_color(coin)
             allocation_series_js_list.append(f"{{ name: '{coin}', data: [{','.join(data_points)}], color: '{color}', marker: {{ enabled: false }} }}")
 
     allocation_series_js = ",\n".join(allocation_series_js_list)
@@ -588,21 +586,18 @@ def get_ticker_color(ticker: str) -> str:
     ticker = ticker.upper()
     known = {
         'USDC': '#2775ca', 'BTC': '#f7931a', 'ETH': '#627eea',
-        'SOL': '#9b59b6', 'HBAR': '#000000', 'XRP': '#000000',
+        'SOL': '#9b59b6', 'HBAR': '#ffffff', 'XRP': '#ffffff',
         'SUI': '#60a5fa', 'LINK': '#1e3a8a', 'BNB': '#f4c430',
         'TRX': '#ff2d55'
     }
     if ticker in known:
         return known[ticker]
-    return f"#{hashlib.md5(ticker.encode()).hexdigest()[:6]}"
-
-def get_chart_color(ticker: str) -> str:
-    color_map = {
-        'BTC': '#f7931a', 'ETH': '#627eea', 'SOL': '#9b59b6',
-        'HBAR': '#00b4d8', 'XRP': '#1e3a8a', 'BNB': '#f4c430',
-        'TRX': '#ff2d55', 'LINK': '#2ecc71', 'SUI': '#60a5fa',
-    }
-    return color_map.get(ticker.upper(), '#00ff9d')
+    
+    # Fallback dynamic color
+    c = f"#{hashlib.md5(ticker.encode()).hexdigest()[:6]}"
+    if c == '#000000': 
+        return '#ffffff'
+    return c
 
 # ====================== FORMATTING ======================
 def format_money(val):
@@ -801,8 +796,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                 continue
             val = r['Value']
             if pd.notna(val) and val > 0:
-                base_color = get_ticker_color(ticker)
-                chart_color = base_color if base_color != '#000000' else '#ffffff' 
+                chart_color = get_ticker_color(ticker)
                 pie_data_js_lines.append(f"{{ name: '{ticker}', y: {val}, color: '{chart_color}' }}")
         pie_data_js = ",\n".join(pie_data_js_lines)
 
@@ -813,15 +807,22 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
             ticker = r['Ticker']
             pnl = r['PnL']
             if pd.notna(pnl):
-                color = '#00ff9d' if pnl >= 0 else '#ff4d4d'
+                color = get_ticker_color(ticker)
                 pnl_data_js_lines.append(f"{{ name: '{ticker}', y: {pnl}, color: '{color}' }}")
         pnl_data_js = ",\n".join(pnl_data_js_lines)
 
         # Chart 5: Invested vs Current Value Data
         df_iv = df_port[df_port['Ticker'] != 'USDC'].sort_values(by='Value', ascending=False)
-        inv_val_categories_js = ",".join([f"'{r['Ticker']}'" for _, r in df_iv.iterrows()])
+        inv_val_categories_list = [str(r['Ticker']) for _, r in df_iv.iterrows()]
+        inv_val_categories_js = json.dumps(inv_val_categories_list)
         inv_data_js = ",".join([str(r['USDC'] if pd.notna(r['USDC']) else 0) for _, r in df_iv.iterrows()])
-        val_data_js = ",".join([str(r['Value'] if pd.notna(r['Value']) else 0) for _, r in df_iv.iterrows()])
+        
+        val_data_points = []
+        for _, r in df_iv.iterrows():
+            c = get_ticker_color(r['Ticker'])
+            val = r['Value'] if pd.notna(r['Value']) else 0
+            val_data_points.append(f"{{ y: {val}, color: '{c}' }}")
+        val_data_js = ",".join(val_data_points)
 
 
         charts_html = f"""
@@ -932,7 +933,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                 // Chart 1: Pie
                 Highcharts.chart('pie-container', {{
                     chart: {{ type: 'pie', options3d: {{ enabled: true, alpha: 55, beta: 0 }}, backgroundColor: 'transparent', margin: [0, 0, 0, 0] }},
-                    title: {{ text: null }},
+                    title: {{ text: 'Current Holdings', style: {{ color: '#e2e8f0', fontSize: '13px', fontWeight: 'bold' }} }},
                     tooltip: {{
                         formatter: function() {{
                             const isPrivacy = document.body.classList.contains('privacy-mode');
@@ -949,7 +950,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                 // Chart 2: History Area
                 Highcharts.chart('history-container', {{
                     chart: {{ type: 'areaspline', backgroundColor: 'transparent', marginLeft: 60, marginRight: 20, marginTop: 55, marginBottom: 35 }}, 
-                    title: {{ text: null }},
+                    title: {{ text: 'Historical Performance', style: {{ color: '#e2e8f0', fontSize: '13px', fontWeight: 'bold' }} }},
                     legend: {{ enabled: true, itemStyle: {{ color: '#94a3b8', fontSize: '11px', fontWeight: 'normal' }}, itemHoverStyle: {{ color: '#ffffff' }}, verticalAlign: 'top', align: 'center', y: -10 }},
                     xAxis: {{ type: 'datetime', labels: {{ style: {{ color: '#94a3b8', fontSize: '10px' }} }}, gridLineColor: 'rgba(255,255,255,0.05)', tickWidth: 0, minorGridLineWidth: 0 }},
                     yAxis: {{ title: {{ text: null }}, labels: {{ style: {{ color: '#94a3b8', fontSize: '10px' }}, align: 'right', formatter: function() {{ return document.body.classList.contains('privacy-mode') ? '***' : '$' + this.axis.defaultLabelFormatter.call(this); }} }}, gridLineColor: 'rgba(255,255,255,0.05)' }},
@@ -1018,7 +1019,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                 Highcharts.chart('inv-val-container', {{
                     chart: {{ type: 'column', backgroundColor: 'transparent', marginLeft: 60, marginRight: 20, marginTop: 45, marginBottom: 35 }},
                     title: {{ text: 'Invested vs Current Value', style: {{ color: '#e2e8f0', fontSize: '13px', fontWeight: 'bold' }} }},
-                    xAxis: {{ categories: [{inv_val_categories_js}], labels: {{ style: {{ color: '#94a3b8', fontWeight: 'bold', fontSize: '10px' }} }}, gridLineColor: 'rgba(255,255,255,0.05)', tickWidth: 0 }},
+                    xAxis: {{ type: 'category', categories: {inv_val_categories_js}, labels: {{ style: {{ color: '#94a3b8', fontWeight: 'bold', fontSize: '10px' }} }}, gridLineColor: 'rgba(255,255,255,0.05)', tickWidth: 0 }},
                     yAxis: {{ title: {{ text: null }}, labels: {{ style: {{ color: '#94a3b8', fontSize: '10px' }}, formatter: function() {{ return document.body.classList.contains('privacy-mode') ? '***' : '$' + this.axis.defaultLabelFormatter.call(this); }} }}, gridLineColor: 'rgba(255,255,255,0.05)' }},
                     legend: {{ enabled: true, itemStyle: {{ color: '#94a3b8', fontSize: '11px', fontWeight: 'normal' }}, itemHoverStyle: {{ color: '#ffffff' }}, verticalAlign: 'top', y: -5 }},
                     tooltip: {{
@@ -1037,7 +1038,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                     credits: {{ enabled: false }},
                     series: [
                         {{ name: 'Invested', data: [{inv_data_js}], color: '#64748b' }},
-                        {{ name: 'Value', data: [{val_data_js}], color: '#00ff9d' }}
+                        {{ name: 'Current Value', data: [{val_data_js}] }}
                     ]
                 }});
 
@@ -1176,7 +1177,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                     
                     void el.offsetWidth; // Force CSS Engine Reflow
 
-                    // Phase 2: Add expanded class (starts background fade) and move to center scaled up
+                    // Phase 2: Add CSS class for background color and apply transform translation/scale
                     el.classList.add('expanded-chart');
                     el.style.transition = 'transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.4s ease, box-shadow 0.4s ease';
                     el.style.transform = `translate(${{centerLeft}}px, ${{centerTop}}px) scale(${{targetScale}})`;
