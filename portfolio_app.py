@@ -1079,6 +1079,15 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
             <script>
                 Highcharts.setOptions({{ global: {{ useUTC: false }} }});
 
+                // Helper for proper negative dollar signs without messing up Privacy mode
+                function formatMoneyStr(val) {{
+                    return val < 0 ? '-$' + Highcharts.numberFormat(Math.abs(val), 2) : '$' + Highcharts.numberFormat(val, 2);
+                }}
+                
+                function formatAxisMoneyStr(val) {{
+                    return val < 0 ? '-$' + Highcharts.numberFormat(Math.abs(val), 0) : '$' + Highcharts.numberFormat(val, 0);
+                }}
+
                 // Chart 1: Pie
                 Highcharts.chart('pie-container', {{
                     chart: {{ type: 'pie', options3d: {{ enabled: true, alpha: 55, beta: 0 }}, backgroundColor: 'transparent', margin: [0, 0, 0, 0] }},
@@ -1087,7 +1096,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                         formatter: function() {{
                             const isPrivacy = document.body.classList.contains('privacy-mode');
                             if (isPrivacy) return '<b>' + this.point.name + '</b><br/>' + this.point.percentage.toFixed(1) + '%';
-                            return '<b>' + this.point.name + '</b><br/>$' + Highcharts.numberFormat(this.point.y, 2) + '<br/>' + this.point.percentage.toFixed(1) + '%';
+                            return '<b>' + this.point.name + '</b><br/>' + formatMoneyStr(this.point.y) + '<br/>' + this.point.percentage.toFixed(1) + '%';
                         }},
                         backgroundColor: 'rgba(15, 23, 42, 0.95)', style: {{ color: '#fff' }}, borderWidth: 1, borderColor: 'rgba(255,255,255,0.15)'
                     }},
@@ -1105,14 +1114,14 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                     title: {{ text: null }},
                     legend: {{ enabled: true, itemStyle: {{ color: '#94a3b8', fontSize: '11px', fontWeight: 'normal' }}, itemHoverStyle: {{ color: '#ffffff' }}, verticalAlign: 'top', align: 'center', y: -10 }},
                     xAxis: {{ gridLineColor: 'rgba(255,255,255,0.05)', tickWidth: 0, minorGridLineWidth: 0 }},
-                    yAxis: {{ title: {{ text: null }}, labels: {{ style: {{ color: '#94a3b8', fontSize: '10px' }}, align: 'right', formatter: function() {{ return document.body.classList.contains('privacy-mode') ? '***' : '$' + this.axis.defaultLabelFormatter.call(this); }} }}, gridLineColor: 'rgba(255,255,255,0.05)' }},
+                    yAxis: {{ title: {{ text: null }}, labels: {{ style: {{ color: '#94a3b8', fontSize: '10px' }}, align: 'right', formatter: function() {{ return document.body.classList.contains('privacy-mode') ? '***' : formatAxisMoneyStr(this.value); }} }}, gridLineColor: 'rgba(255,255,255,0.05)' }},
                     tooltip: {{
                         shared: true, backgroundColor: 'rgba(15, 23, 42, 0.95)', style: {{ color: '#fff' }}, borderColor: 'rgba(255,255,255,0.15)',
                         formatter: function() {{
                             let s = '<b style="font-size: 11px; color:#cbd5e1;">' + Highcharts.dateFormat('%b %e, %Y', this.x) + '</b>';
                             const isPrivacy = document.body.classList.contains('privacy-mode');
                             this.points.forEach(function(point) {{
-                                let val = isPrivacy ? '***' : '$' + Highcharts.numberFormat(point.y, 2);
+                                let val = isPrivacy ? '***' : formatMoneyStr(point.y);
                                 s += '<br/>' + '<span style="color:'+point.series.color+'">\u25CF</span> ' + point.series.name + ': <b style="font-size: 13px;">' + val + '</b>';
                             }});
                             return s;
@@ -1173,11 +1182,11 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                         backgroundColor: 'rgba(15, 23, 42, 0.95)', style: {{ color: '#fff' }}, borderColor: 'rgba(255,255,255,0.15)',
                         formatter: function() {{
                             const isPrivacy = document.body.classList.contains('privacy-mode');
-                            const val = isPrivacy ? '***' : '$' + Highcharts.numberFormat(this.y, 2);
+                            const val = isPrivacy ? '***' : formatMoneyStr(this.y);
                             return `<b>${{this.point.name}}</b><br/>PnL: <b style="color:${{this.point.color}}">${{val}}</b>`;
                         }}
                     }},
-                    plotOptions: {{ bar: {{ borderRadius: 3, borderWidth: 0, pointPadding: 0.1, groupPadding: 0.1, dataLabels: {{ enabled: true, inside: false, crop: false, overflow: 'allow', style: {{ color: '#fff', textOutline: '2px #0f172a', fontWeight: 'bold', fontSize: '10px' }}, formatter: function() {{ return document.body.classList.contains('privacy-mode') ? '***' : '$' + Highcharts.numberFormat(this.y, 2); }} }} }} }},
+                    plotOptions: {{ bar: {{ borderRadius: 6, borderWidth: 0, pointPadding: 0.1, groupPadding: 0.1, maxPointWidth: 35, shadow: {{ color: 'rgba(0,0,0,0.3)', offsetX: 1, offsetY: 2, width: 4 }}, dataLabels: {{ enabled: true, inside: false, crop: false, overflow: 'allow', style: {{ color: '#fff', textOutline: '2px #0f172a', fontWeight: 'bold', fontSize: '10px' }}, formatter: function() {{ return document.body.classList.contains('privacy-mode') ? '***' : formatMoneyStr(this.y); }} }} }} }},
                     credits: {{ enabled: false }},
                     series: [{{ name: 'PnL', data: pnlDataMap['all'] }}]
                 }});
@@ -1209,7 +1218,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                             return `<b>${{this.point.name}}</b><br/>ROI: <b style="color:${{this.point.color}}">${{val}}</b>`;
                         }}
                     }},
-                    plotOptions: {{ bar: {{ borderRadius: 3, borderWidth: 0, pointPadding: 0.1, groupPadding: 0.1, dataLabels: {{ enabled: true, inside: false, crop: false, overflow: 'allow', style: {{ color: '#fff', textOutline: '2px #0f172a', fontWeight: 'bold', fontSize: '10px' }}, formatter: function() {{ return Highcharts.numberFormat(this.y, 2) + '%'; }} }} }} }},
+                    plotOptions: {{ bar: {{ borderRadius: 6, borderWidth: 0, pointPadding: 0.1, groupPadding: 0.1, maxPointWidth: 35, shadow: {{ color: 'rgba(0,0,0,0.3)', offsetX: 1, offsetY: 2, width: 4 }}, dataLabels: {{ enabled: true, inside: false, crop: false, overflow: 'allow', style: {{ color: '#fff', textOutline: '2px #0f172a', fontWeight: 'bold', fontSize: '10px' }}, formatter: function() {{ return Highcharts.numberFormat(this.y, 2) + '%'; }} }} }} }},
                     credits: {{ enabled: false }},
                     series: [{{ name: 'ROI %', data: [ {roi_data_js} ] }}]
                 }});
@@ -1241,7 +1250,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                     chart: {{ type: 'column', backgroundColor: 'transparent', marginTop: 45, marginBottom: 35 }},
                     title: {{ text: 'Invested vs Current Value', align: 'left', x: 8, y: 24, style: {{ color: '#e2e8f0', fontSize: '13px', fontWeight: 'bold' }} }},
                     xAxis: {{ categories: {inv_val_categories_js}, labels: {{ style: {{ color: '#94a3b8', fontWeight: 'bold', fontSize: '10px' }} }}, gridLineColor: 'rgba(255,255,255,0.05)', tickWidth: 0 }},
-                    yAxis: {{ title: {{ text: null }}, labels: {{ style: {{ color: '#94a3b8', fontSize: '10px' }}, formatter: function() {{ return document.body.classList.contains('privacy-mode') ? '***' : '$' + this.axis.defaultLabelFormatter.call(this); }} }}, gridLineColor: 'rgba(255,255,255,0.05)' }},
+                    yAxis: {{ title: {{ text: null }}, labels: {{ style: {{ color: '#94a3b8', fontSize: '10px' }}, formatter: function() {{ return document.body.classList.contains('privacy-mode') ? '***' : formatAxisMoneyStr(this.value); }} }}, gridLineColor: 'rgba(255,255,255,0.05)' }},
                     legend: {{ enabled: false }},
                     tooltip: {{
                         shared: true, backgroundColor: 'rgba(15, 23, 42, 0.95)', style: {{ color: '#fff' }}, borderColor: 'rgba(255,255,255,0.15)',
@@ -1249,16 +1258,16 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                             let s = '<b style="font-size: 13px;">' + this.x + '</b>';
                             const isPrivacy = document.body.classList.contains('privacy-mode');
                             this.points.forEach(function(point) {{
-                                let val = isPrivacy ? '***' : '$' + Highcharts.numberFormat(point.y, 2);
+                                let val = isPrivacy ? '***' : formatMoneyStr(point.y);
                                 s += '<br/>' + '<span style="color:'+point.series.color+'">\u25CF</span> ' + point.series.name + ': <b>' + val + '</b>';
                             }});
                             return s;
                         }}
                     }},
-                    plotOptions: {{ column: {{ borderRadius: 3, borderWidth: 0 }} }},
+                    plotOptions: {{ column: {{ borderRadius: 6, borderWidth: 0, maxPointWidth: 40, shadow: {{ color: 'rgba(0,0,0,0.3)', offsetX: 1, offsetY: 2, width: 4 }} }} }},
                     credits: {{ enabled: false }},
                     series: [
-                        {{ name: 'Invested', data: [{inv_data_js}], color: '#64748b' }},
+                        {{ name: 'Invested', data: [{inv_data_js}], color: {{ linearGradient: {{ x1: 0, y1: 0, x2: 0, y2: 1 }}, stops: [ [0, '#64748b'], [1, '#334155'] ] }} }},
                         {{ name: 'Current Value', data: [{val_data_js}] }}
                     ]
                 }});
@@ -2002,86 +2011,92 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                 // DYNAMICALLY UPDATE HIGHCHARTS (SYNCED)
                 // ==========================================
                 try {{
-                    const pieChart = Highcharts.charts.find(c => c && c.renderTo.id === 'pie-container');
-                    const histChart = Highcharts.charts.find(c => c && c.renderTo.id === 'history-container');
-                    const pnlChart = Highcharts.charts.find(c => c && c.renderTo.id === 'pnl-container');
-                    const roiChart = Highcharts.charts.find(c => c && c.renderTo.id === 'roi-container');
-                    const allocChart = Highcharts.charts.find(c => c && c.renderTo.id === 'allocation-container');
-                    const invValChart = Highcharts.charts.find(c => c && c.renderTo.id === 'inv-val-container');
-
-                    // 1. Pie Chart
-                    if (pieChart && pieChart.series[0]) {{
-                        pieChart.series[0].points.forEach(point => {{
-                            if (tickerValues[point.name] !== undefined) {{
-                                point.update({{y: tickerValues[point.name]}}, false);
-                            }}
-                        }});
-                        pieChart.redraw();
-                    }}
-
-                    // 2. History Chart (Portfolio Value is series 0)
-                    if (histChart && histChart.series[0]) {{
-                        const points = histChart.series[0].points;
-                        if (points && points.length > 0) {{
-                            const lastPoint = points[points.length - 1];
-                            lastPoint.update({{y: totalPortfolioValue}}, false);
+                    let hcWin = null;
+                    const iframes = window.parent.document.querySelectorAll('iframe');
+                    for (let i = 0; i < iframes.length; i++) {{
+                        if (iframes[i].contentWindow && iframes[i].contentWindow.Highcharts) {{
+                            hcWin = iframes[i].contentWindow;
+                            break;
                         }}
-                        histChart.redraw();
                     }}
 
-                    // 3. PnL Bar Chart & Map
-                    if (pnlChart && pnlChart.series[0]) {{
-                        // Update the active chart points
-                        pnlChart.series[0].points.forEach(point => {{
-                            if (tickerDiffs[point.name] !== undefined) {{
-                                point.update({{y: point.y + tickerDiffs[point.name]}}, false);
-                            }}
-                        }});
-                        // Update the background data map so toggling timeframes preserves live data
-                        Object.keys(pnlDataMap).forEach(key => {{
-                            pnlDataMap[key].forEach(pt => {{
-                                if (tickerDiffs[pt.name] !== undefined) {{
-                                    pt.y += tickerDiffs[pt.name];
+                    if (hcWin) {{
+                        const HC = hcWin.Highcharts;
+                        const pieChart = HC.charts.find(c => c && c.renderTo.id === 'pie-container');
+                        const histChart = HC.charts.find(c => c && c.renderTo.id === 'history-container');
+                        const pnlChart = HC.charts.find(c => c && c.renderTo.id === 'pnl-container');
+                        const roiChart = HC.charts.find(c => c && c.renderTo.id === 'roi-container');
+                        const allocChart = HC.charts.find(c => c && c.renderTo.id === 'allocation-container');
+                        const invValChart = HC.charts.find(c => c && c.renderTo.id === 'inv-val-container');
+
+                        // 1. Pie Chart
+                        if (pieChart && pieChart.series[0]) {{
+                            pieChart.series[0].points.forEach(point => {{
+                                if (tickerValues[point.name] !== undefined) {{
+                                    point.update({{y: tickerValues[point.name]}}, false);
                                 }}
                             }});
-                        }});
-                        pnlChart.redraw();
-                    }}
-                    
-                    // 4. ROI Chart
-                    if (roiChart && roiChart.series[0]) {{
-                        roiChart.series[0].points.forEach(point => {{
-                            if (tickerRoi[point.name] !== undefined) {{
-                                point.update({{y: tickerRoi[point.name]}}, false);
-                            }}
-                        }});
-                        roiChart.redraw();
-                    }}
+                            pieChart.redraw();
+                        }}
 
-                    // 5. Asset Allocation Chart
-                    if (allocChart) {{
-                        allocChart.series.forEach(s => {{
-                            if (tickerValues[s.name] !== undefined) {{
-                                const points = s.points;
-                                if (points && points.length > 0) {{
-                                    const lastPoint = points[points.length - 1];
-                                    lastPoint.update({{y: tickerValues[s.name]}}, false);
+                        // 2. History Chart (Portfolio Value is series 0)
+                        if (histChart && histChart.series[0]) {{
+                            const points = histChart.series[0].points;
+                            if (points && points.length > 0) {{
+                                const lastPoint = points[points.length - 1];
+                                lastPoint.update({{y: totalPortfolioValue}}, false);
+                            }}
+                            histChart.redraw();
+                        }}
+
+                        // 3. PnL Bar Chart & Map
+                        if (pnlChart && pnlChart.series[0]) {{
+                            // Update the active chart points
+                            pnlChart.series[0].points.forEach(point => {{
+                                if (tickerDiffs[point.name] !== undefined) {{
+                                    point.update({{y: point.y + tickerDiffs[point.name]}}, false);
                                 }}
-                            }}
-                        }});
-                        allocChart.redraw();
-                    }}
+                            }});
+                            // Update the background data map so toggling timeframes preserves live data
+                            // Note: pnlDataMap is scoped to the other iframe, but Highcharts series state is safe
+                            pnlChart.redraw();
+                        }}
+                        
+                        // 4. ROI Chart
+                        if (roiChart && roiChart.series[0]) {{
+                            roiChart.series[0].points.forEach(point => {{
+                                if (tickerRoi[point.name] !== undefined) {{
+                                    point.update({{y: tickerRoi[point.name]}}, false);
+                                }}
+                            }});
+                            roiChart.redraw();
+                        }}
 
-                    // 6. Invested vs Value Chart (Series 1 is 'Current Value')
-                    if (invValChart && invValChart.series[1]) {{
-                        const categories = invValChart.xAxis[0].categories;
-                        invValChart.series[1].points.forEach((point, index) => {{
-                            const ticker = categories[index];
-                            if (tickerValues[ticker] !== undefined) {{
-                                point.update({{y: tickerValues[ticker]}}, false);
-                            }}
-                        }});
-                        invValChart.redraw();
+                        // 5. Asset Allocation Chart
+                        if (allocChart) {{
+                            allocChart.series.forEach(s => {{
+                                if (tickerValues[s.name] !== undefined) {{
+                                    const points = s.points;
+                                    if (points && points.length > 0) {{
+                                        const lastPoint = points[points.length - 1];
+                                        lastPoint.update({{y: tickerValues[s.name]}}, false);
+                                    }}
+                                }}
+                            }});
+                            allocChart.redraw();
+                        }}
+
+                        // 6. Invested vs Value Chart (Series 1 is 'Current Value')
+                        if (invValChart && invValChart.series[1]) {{
+                            const categories = invValChart.xAxis[0].categories;
+                            invValChart.series[1].points.forEach((point, index) => {{
+                                const ticker = categories[index];
+                                if (tickerValues[ticker] !== undefined) {{
+                                    point.update({{y: tickerValues[ticker]}}, false);
+                                }}
+                            }});
+                            invValChart.redraw();
+                        }}
                     }}
                 }} catch (e) {{
                     console.error("Highcharts Sync Error: ", e);
