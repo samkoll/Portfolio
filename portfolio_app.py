@@ -817,8 +817,10 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                 pie_data_js_lines.append(f"{{ name: '{ticker}', y: {val}, color: '{chart_color}' }}")
         pie_data_js = ",\n".join(pie_data_js_lines)
 
-        # Chart 3: PnL Bar Data with Timeframes
+        # Chart 3: PnL Bar Data with Timeframes & Live Baselines
         pnl_data_js_dict = {'all': '', '1y': '', '30d': '', '7d': '', '1d': ''}
+        baselines_dict = {'1d': {}, '7d': {}, '30d': {}, '1y': {}}
+        
         if not pnl_df.empty:
             active_tickers = [t for t in df_port['Ticker'] if t != 'USDC']
             valid_cols = [c for c in active_tickers if c in pnl_df.columns]
@@ -849,6 +851,14 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
             pnl_data_js_dict['7d'] = format_pnl_js(pnl_7d)
             pnl_data_js_dict['30d'] = format_pnl_js(pnl_30d)
             pnl_data_js_dict['1y'] = format_pnl_js(pnl_1y)
+            
+            for t in valid_cols:
+                baselines_dict['1d'][t] = float(pnl_df_active[t].iloc[idx_1d]) if len(pnl_df_active) > idx_1d else 0.0
+                baselines_dict['7d'][t] = float(pnl_df_active[t].iloc[idx_7d]) if len(pnl_df_active) > idx_7d else 0.0
+                baselines_dict['30d'][t] = float(pnl_df_active[t].iloc[idx_30d]) if len(pnl_df_active) > idx_30d else 0.0
+                baselines_dict['1y'][t] = float(pnl_df_active[t].iloc[idx_1y]) if len(pnl_df_active) > idx_1y else 0.0
+                
+        baselines_js_str = json.dumps(baselines_dict)
 
         # Chart 5: Invested vs Current Value Data
         df_iv = df_port[df_port['Ticker'] != 'USDC'].sort_values(by='Value', ascending=False)
@@ -1062,6 +1072,8 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
             
             <script>
                 Highcharts.setOptions({{ global: {{ useUTC: false }} }});
+                
+                const baselines = {baselines_js_str};
 
                 // Chart 1: Pie
                 Highcharts.chart('pie-container', {{
@@ -1089,7 +1101,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                     title: {{ text: null }},
                     legend: {{ enabled: true, itemStyle: {{ color: '#94a3b8', fontSize: '11px', fontWeight: 'normal' }}, itemHoverStyle: {{ color: '#ffffff' }}, verticalAlign: 'top', align: 'center', y: -10 }},
                     xAxis: {{ gridLineColor: 'rgba(255,255,255,0.05)', tickWidth: 0, minorGridLineWidth: 0 }},
-                    yAxis: {{ opposite: false, title: {{ text: null }}, labels: {{ style: {{ color: '#94a3b8', fontSize: '10px', textOverflow: 'none', whiteSpace: 'nowrap' }}, formatter: function() {{ return document.body.classList.contains('privacy-mode') ? '***' : '$' + this.axis.defaultLabelFormatter.call(this); }} }}, gridLineColor: 'rgba(255,255,255,0.05)' }},
+                    yAxis: {{ opposite: false, title: {{ text: null }}, labels: {{ align: 'right', x: -4, style: {{ color: '#94a3b8', fontSize: '10px', textOverflow: 'none', whiteSpace: 'nowrap' }}, formatter: function() {{ return document.body.classList.contains('privacy-mode') ? '***' : '$' + this.axis.defaultLabelFormatter.call(this); }} }}, gridLineColor: 'rgba(255,255,255,0.05)' }},
                     tooltip: {{
                         shared: true, backgroundColor: 'rgba(15, 23, 42, 0.95)', style: {{ color: '#fff' }}, borderColor: 'rgba(255,255,255,0.15)',
                         formatter: function() {{
@@ -1271,21 +1283,20 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
 
                     if (el.classList.contains('expanded-chart')) {{
                         // ==========================================
-                        // CLOSING MECHANICS 
+                        // CLOSING MECHANICS (Seamless settle Fix)
                         // ==========================================
                         overlay.classList.remove('active');
                         
                         const origTop = parseFloat(el.getAttribute('data-orig-top')) || 0;
                         const origLeft = parseFloat(el.getAttribute('data-orig-left')) || 0;
 
-                        // Instantly remove class so background crossfades cleanly during the travel
+                        // Phase 1: Keep it position: fixed, but set its standard visual coordinates. 
+                        // Crossfade the class instantly to lose expanded background while traveling.
                         el.classList.remove('expanded-chart');
-                        
-                        // Transition smoothly to original slot
                         el.style.transition = 'transform 0.4s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.4s ease, box-shadow 0.4s ease';
                         el.style.transform = `translate(${{origLeft}}px, ${{origTop}}px) scale(1)`;
 
-                        // Ensure flawless snapping without a flash when the CSS transition finishes
+                        // Phase 2: Once the visual transition finishes, silently revert CSS layout from fixed to standard flow
                         const finishClose = (e) => {{
                             if (e && e.propertyName !== 'transform') return;
                             el.removeEventListener('transitionend', finishClose);
@@ -1293,11 +1304,17 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                             if (parentIframe) parentIframe.classList.remove('fullscreen-mode');
                             
                             el.style.transition = 'none';
-                            el.style.cssText = ''; 
+                            el.style.cssText = ''; // Full layout revert
                             
-                            // Restore siblings smoothly
+                            // Highcharts Redraw SILENTLY to correct slot dimensions
+                            Highcharts.charts.forEach(c => {{ 
+                                if(c && c.renderTo && el.contains(c.renderTo)) {{
+                                    c.setSize(null, null, false);
+                                }}
+                            }});
+                            
+                            // Reveal siblings smoothly
                             document.querySelectorAll('.chart-box').forEach(c => {{
-                                c.style.transition = 'opacity 0.25s ease';
                                 c.style.opacity = '1';
                                 c.style.pointerEvents = 'auto';
                             }});
@@ -1309,7 +1326,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                     }}
                     
                     // ==========================================
-                    // OPENING MECHANICS 
+                    // OPENING MECHANICS (Retained seamless flow)
                     // ==========================================
                     
                     // 1. SILENT VANISH: instantly hide siblings to prevent bleeding
@@ -1367,7 +1384,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                     
                     void el.offsetWidth; // Force CSS Engine Reflow
 
-                    // Phase 2: Add CSS class for background color and apply transform translation/scale
+                    // Phase 2: Travel to center while scaling using native browser hardware acceleration
                     el.classList.add('expanded-chart');
                     el.style.transition = 'transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.4s ease, box-shadow 0.4s ease';
                     el.style.transform = `translate(${{centerLeft}}px, ${{centerTop}}px) scale(${{targetScale}})`;
@@ -1413,6 +1430,156 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                         }}
                     }}, {{ passive: false }});
                 }}
+
+                // ---- LIVE UPDATE SCRIPT INJECTION ----
+                const usdcHoldings = {usdc_holdings};
+                
+                async function updateLivePrices() {{
+                    const cards = Array.from(document.querySelectorAll('.flip-card'));
+                    if (cards.length === 0) return;
+                    const tickers = cards.map(card => card.getAttribute('data-ticker'));
+                    
+                    const url = `https://min-api.cryptocompare.com/data/pricemulti?fsyms=${{tickers.join(',')}}&tsyms=USD`;
+                    try {{
+                        const resp = await fetch(url);
+                        const data = await resp.json();
+                        
+                        let totalCoinValue = 0;
+                        let totalCoinInvested = 0;
+                        
+                        const pieChart = Highcharts.charts.find(c => c && c.renderTo.id === 'pie-container');
+                        const invChart = Highcharts.charts.find(c => c && c.renderTo.id === 'inv-val-container');
+                        const allocChart = Highcharts.charts.find(c => c && c.renderTo.id === 'allocation-container');
+
+                        cards.forEach(card => {{
+                            const ticker = card.getAttribute('data-ticker');
+                            const holdings = parseFloat(card.getAttribute('data-holdings'));
+                            const invested = parseFloat(card.getAttribute('data-invested'));
+                            let price = parseFloat(card.getAttribute('data-current-price'));
+                            
+                            if (data[ticker] && data[ticker].USD) {{
+                                price = data[ticker].USD;
+                                card.setAttribute('data-current-price', price);
+                                
+                                const priceFmt = price < 1 ? price.toFixed(4) : price.toLocaleString('en-US', {{minimumFractionDigits: 2, maximumFractionDigits: 2}});
+                                const currentEl = card.querySelector('.current-value');
+                                if (currentEl) currentEl.innerText = '$' + priceFmt;
+                                
+                                const value = holdings * price;
+                                const pnl = value - invested;
+                                const pnlPct = invested > 0 ? (pnl / invested) * 100 : 0;
+                                const valStr = '$' + value.toLocaleString('en-US', {{minimumFractionDigits: 2, maximumFractionDigits: 2}});
+                                const pnlStr = (pnl >= 0 ? '▲ $' : '▼ $') + Math.abs(pnl).toLocaleString('en-US', {{minimumFractionDigits: 2, maximumFractionDigits: 2}});
+                                const pnlPctStr = (pnl >= 0 ? '▲ ' : '▼ ') + Math.abs(pnlPct).toFixed(2) + '%';
+                                const color = pnl >= 0 ? '#00ff9d' : '#ff4d4d';
+                                
+                                const valEl = card.querySelector('.total-value');
+                                if (valEl) valEl.innerText = valStr;
+                                const pnlEl = card.querySelector('.card-pnl');
+                                if (pnlEl) {{
+                                    pnlEl.innerText = pnlStr;
+                                    pnlEl.style.color = color;
+                                }}
+                                
+                                const pnlPctEl = card.querySelector('.card-pnl-pct');
+                                if (pnlPctEl) {{
+                                    pnlPctEl.innerText = pnlPctStr;
+                                    pnlPctEl.style.color = color;
+                                }}
+                                
+                                if (window.chartCache && window.chartCache[ticker] && window.chartCache[ticker].chartObj) {{
+                                    const chart = window.chartCache[ticker].chartObj;
+                                    const dataLen = chart.data.datasets[0].data.length;
+                                    if (dataLen > 0) {{
+                                        chart.data.datasets[0].data[dataLen - 1] = price;
+                                        chart.update('none'); 
+                                    }}
+                                }}
+                                
+                                // Highcharts Live Updates
+                                if (pieChart && pieChart.series[0]) {{
+                                    const pt = pieChart.series[0].points.find(p => p.name === ticker);
+                                    if (pt) pt.update({{y: value}}, false);
+                                }}
+
+                                if (invChart && invChart.series[1]) {{ 
+                                    const pt = invChart.series[1].points.find(p => (p.category || p.name) === ticker);
+                                    if (pt) pt.update({{y: value}}, false);
+                                }}
+
+                                if (allocChart) {{
+                                    const series = allocChart.series.find(s => s.name === ticker);
+                                    if (series && series.points.length > 0) {{
+                                        const lastPt = series.points[series.points.length - 1];
+                                        lastPt.update({{y: value}}, false);
+                                    }}
+                                }}
+
+                                ['all', '1d', '7d', '30d', '1y'].forEach(tf => {{
+                                    const mapArray = pnlDataMap[tf];
+                                    if (mapArray) {{
+                                        const pt = mapArray.find(p => p.name === ticker);
+                                        if (pt) {{
+                                            if (tf === 'all') {{
+                                                pt.y = pnl;
+                                            }} else {{
+                                                const baseline = baselines[tf][ticker] || 0;
+                                                pt.y = pnl - baseline;
+                                            }}
+                                        }}
+                                    }}
+                                }});
+                            }}
+                            
+                            totalCoinValue += (holdings * price);
+                            totalCoinInvested += invested;
+                        }});
+                        
+                        const totalPortfolioValue = totalCoinValue + usdcHoldings;
+                        const totalPnL = totalCoinValue - totalCoinInvested; 
+                        const totalInvestedBase = totalPortfolioValue - totalPnL;
+                        const totalPnLPct = totalInvestedBase !== 0 ? (totalPnL / totalInvestedBase) * 100 : 0;
+                        
+                        const dashValStr = '$' + totalPortfolioValue.toLocaleString('en-US', {{minimumFractionDigits: 2, maximumFractionDigits: 2}});
+                        const dashPnlStr = (totalPnL >= 0 ? '▲ $' : '▼ $') + Math.abs(totalPnL).toLocaleString('en-US', {{minimumFractionDigits: 2, maximumFractionDigits: 2}});
+                        const dashPnlPctStr = (totalPnL >= 0 ? '▲ ' : '▼ ') + Math.abs(totalPnLPct).toFixed(2) + '%';
+                        const dashColor = totalPnL >= 0 ? '#00ff9d' : '#ff4d4d';
+                        
+                        const parentDoc = window.parent.document;
+                        const dValue = parentDoc.getElementById('dash-total-value');
+                        const dPnl = parentDoc.getElementById('dash-pnl');
+                        const dPnlPct = parentDoc.getElementById('dash-pnl-pct');
+                        
+                        if (dValue) dValue.innerText = dashValStr;
+                        if (dPnl) {{ dPnl.innerText = dashPnlStr; dPnl.style.color = dashColor; }}
+                        if (dPnlPct) {{ dPnlPct.innerText = dashPnlPctStr; dPnlPct.style.color = dashColor; }}
+                        
+                        const histChart = Highcharts.charts.find(c => c && c.renderTo.id === 'history-container');
+                        if (histChart && histChart.series[0] && histChart.series[0].points.length > 0) {{
+                            const pvSeries = histChart.series[0];
+                            const lastPt = pvSeries.points[pvSeries.points.length - 1];
+                            lastPt.update({{y: totalPortfolioValue}}, false);
+                        }}
+
+                        const pnlChart = Highcharts.charts.find(c => c && c.renderTo.id === 'pnl-container');
+                        if (pnlChart) {{
+                            const activeBtn = document.querySelector('.pnl-controls button.active');
+                            const range = activeBtn ? activeBtn.getAttribute('data-range') : 'all';
+                            pnlDataMap[range].sort((a, b) => a.y - b.y);
+                            pnlChart.series[0].setData(pnlDataMap[range], false);
+                        }}
+
+                        if (pieChart) pieChart.redraw(true);
+                        if (invChart) invChart.redraw(true);
+                        if (allocChart) allocChart.redraw(true);
+                        if (histChart) histChart.redraw(true);
+                        if (pnlChart) pnlChart.redraw(true);
+                        
+                    }} catch (e) {{
+                        console.error('Auto-refresh error:', e);
+                    }}
+                }}
+                setInterval(updateLivePrices, 10000);
 
                 setInterval(() => {{
                     try {{
@@ -1765,176 +1932,6 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
 
 <script>
     (function() {{
-        function closeAllOpenUI(e) {{
-            const isCardClick = e && e.target && typeof e.target.closest === 'function' && e.target.closest('.flip-card');
-            
-            if (!isCardClick) {{
-                document.querySelectorAll('.flip-card.flipped').forEach(card => {{
-                    card.classList.remove('flipped');
-                    card.classList.remove('touch-hover');
-                }});
-            }}
-        }}
-
-        ['click', 'touchstart'].forEach(evt => {{
-            document.addEventListener(evt, (e) => {{
-                closeAllOpenUI(e);
-            }}, {{ passive: true }});
-        }});
-
-        let lastDashState = null;
-        setInterval(() => {{
-            try {{
-                const dt = window.parent.document.getElementById('dash-toggle');
-                const dtUsdc = window.parent.document.getElementById('dash-toggle-usdc');
-                if (dt) {{
-                    const isChecked = dt.checked;
-                    
-                    if (dtUsdc && dtUsdc.checked !== isChecked) {{
-                        dtUsdc.checked = isChecked;
-                    }}
-
-                    if (isChecked !== lastDashState) {{
-                        lastDashState = isChecked;
-                        if (isChecked) {{
-                            document.body.classList.remove('privacy-mode');
-                            localStorage.setItem('dashboardOpen', 'true');
-                        }} else {{
-                            document.body.classList.add('privacy-mode');
-                            localStorage.setItem('dashboardOpen', 'false');
-                        }}
-                    }}
-                }}
-            }} catch(e) {{}}
-        }}, 150);
-
-        try {{
-            const dt = window.parent.document.getElementById('dash-toggle');
-            const dtUsdc = window.parent.document.getElementById('dash-toggle-usdc');
-            if (dt) {{
-                const saved = localStorage.getItem('dashboardOpen');
-                if (saved === 'true') {{
-                    dt.checked = true;
-                    if(dtUsdc) dtUsdc.checked = true;
-                    document.body.classList.remove('privacy-mode');
-                    lastDashState = true;
-                }} else {{
-                    dt.checked = false;
-                    if(dtUsdc) dtUsdc.checked = false;
-                    document.body.classList.add('privacy-mode');
-                    lastDashState = false;
-                }}
-            }}
-        }} catch(e) {{}}
-
-        try {{
-            ['click', 'touchstart'].forEach(evt => {{
-                window.parent.document.addEventListener(evt, (e) => {{
-                    closeAllOpenUI(e); 
-                }}, {{ passive: true }});
-            }});
-        }} catch(err) {{
-            console.log("Cannot bind to parent document");
-        }}
-
-        const scrollContainer = document.getElementById('scrollContainer');
-        if (scrollContainer) {{
-            scrollContainer.addEventListener('wheel', (evt) => {{
-                if (Math.abs(evt.deltaY) > Math.abs(evt.deltaX)) {{
-                    evt.preventDefault();
-                    scrollContainer.scrollBy({{ left: evt.deltaY > 0 ? 200 : -200, behavior: 'smooth' }});
-                }}
-            }}, {{ passive: false }});
-        }}
-
-        const usdcHoldings = {usdc_holdings};
-        async function updateLivePrices() {{
-            const cards = Array.from(document.querySelectorAll('.flip-card'));
-            if (cards.length === 0) return;
-            const tickers = cards.map(card => card.getAttribute('data-ticker'));
-            
-            const url = `https://min-api.cryptocompare.com/data/pricemulti?fsyms=${{tickers.join(',')}}&tsyms=USD`;
-            try {{
-                const resp = await fetch(url);
-                const data = await resp.json();
-                
-                let totalCoinValue = 0;
-                let totalCoinInvested = 0;
-                cards.forEach(card => {{
-                    const ticker = card.getAttribute('data-ticker');
-                    const holdings = parseFloat(card.getAttribute('data-holdings'));
-                    const invested = parseFloat(card.getAttribute('data-invested'));
-                    let price = parseFloat(card.getAttribute('data-current-price'));
-                    
-                    if (data[ticker] && data[ticker].USD) {{
-                        price = data[ticker].USD;
-                        card.setAttribute('data-current-price', price);
-                        
-                        const priceFmt = price < 1 ? price.toFixed(4) : price.toLocaleString('en-US', {{minimumFractionDigits: 2, maximumFractionDigits: 2}});
-                        const currentEl = card.querySelector('.current-value');
-                        if (currentEl) currentEl.innerText = '$' + priceFmt;
-                        
-                        const value = holdings * price;
-                        const pnl = value - invested;
-                        const pnlPct = invested > 0 ? (pnl / invested) * 100 : 0;
-                        const valStr = '$' + value.toLocaleString('en-US', {{minimumFractionDigits: 2, maximumFractionDigits: 2}});
-                        const pnlStr = (pnl >= 0 ? '▲ $' : '▼ $') + Math.abs(pnl).toLocaleString('en-US', {{minimumFractionDigits: 2, maximumFractionDigits: 2}});
-                        const pnlPctStr = (pnl >= 0 ? '▲ ' : '▼ ') + Math.abs(pnlPct).toFixed(2) + '%';
-                        const color = pnl >= 0 ? '#00ff9d' : '#ff4d4d';
-                        
-                        const valEl = card.querySelector('.total-value');
-                        if (valEl) valEl.innerText = valStr;
-                        const pnlEl = card.querySelector('.card-pnl');
-                        if (pnlEl) {{
-                            pnlEl.innerText = pnlStr;
-                            pnlEl.style.color = color;
-                        }}
-                        
-                        const pnlPctEl = card.querySelector('.card-pnl-pct');
-                        if (pnlPctEl) {{
-                            pnlPctEl.innerText = pnlPctStr;
-                            pnlPctEl.style.color = color;
-                        }}
-                        
-                        if (window.chartCache && window.chartCache[ticker] && window.chartCache[ticker].chartObj) {{
-                            const chart = window.chartCache[ticker].chartObj;
-                            const dataLen = chart.data.datasets[0].data.length;
-                            if (dataLen > 0) {{
-                                chart.data.datasets[0].data[dataLen - 1] = price;
-                                chart.update('none'); 
-                            }}
-                        }}
-                    }}
-                    
-                    totalCoinValue += (holdings * price);
-                    totalCoinInvested += invested;
-                }});
-                
-                const totalPortfolioValue = totalCoinValue + usdcHoldings;
-                const totalPnL = totalCoinValue - totalCoinInvested; 
-                const totalInvestedBase = totalPortfolioValue - totalPnL;
-                const totalPnLPct = totalInvestedBase !== 0 ? (totalPnL / totalInvestedBase) * 100 : 0;
-                
-                const dashValStr = '$' + totalPortfolioValue.toLocaleString('en-US', {{minimumFractionDigits: 2, maximumFractionDigits: 2}});
-                const dashPnlStr = (totalPnL >= 0 ? '▲ $' : '▼ $') + Math.abs(totalPnL).toLocaleString('en-US', {{minimumFractionDigits: 2, maximumFractionDigits: 2}});
-                const dashPnlPctStr = (totalPnL >= 0 ? '▲ ' : '▼ ') + Math.abs(totalPnLPct).toFixed(2) + '%';
-                const dashColor = totalPnL >= 0 ? '#00ff9d' : '#ff4d4d';
-                
-                const parentDoc = window.parent.document;
-                const dValue = parentDoc.getElementById('dash-total-value');
-                const dPnl = parentDoc.getElementById('dash-pnl');
-                const dPnlPct = parentDoc.getElementById('dash-pnl-pct');
-                
-                if (dValue) dValue.innerText = dashValStr;
-                if (dPnl) {{ dPnl.innerText = dashPnlStr; dPnl.style.color = dashColor; }}
-                if (dPnlPct) {{ dPnlPct.innerText = dashPnlPctStr; dPnlPct.style.color = dashColor; }}
-                
-            }} catch (e) {{
-                console.error('Auto-refresh error:', e);
-            }}
-        }}
-        setInterval(updateLivePrices, 10000);
-
         function saveFlippedState() {{
             const flippedCards = [];
             document.querySelectorAll('.flip-card').forEach(card => {{
