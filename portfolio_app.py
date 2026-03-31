@@ -441,7 +441,7 @@ def get_all_cryptocompare_prices(tickers, refresh_key=0):
 # ====================== HISTORICAL PORTFOLIO BUILDER ======================
 @st.cache_data(ttl=3600, show_spinner=False)
 def build_portfolio_history(crypto_df, fiat_df, last_prices, refresh_key):
-    if crypto_df.empty and fiat_df.empty: return []
+    if crypto_df.empty and fiat_df.empty: return [], ""
 
     fiat = fiat_df.copy()
     if not fiat.empty:
@@ -458,7 +458,7 @@ def build_portfolio_history(crypto_df, fiat_df, last_prices, refresh_key):
         daily_crypto_spent = pd.Series(dtype=float)
 
     all_dates = sorted(set(daily_fiat_usdc.index) | set(crypto['Date'].dropna() if not crypto.empty else []))
-    if not all_dates: return []
+    if not all_dates: return [], ""
     
     min_date = min(all_dates)
     today = datetime.now().date()
@@ -542,7 +542,28 @@ def build_portfolio_history(crypto_df, fiat_df, last_prices, refresh_key):
         btc_val = float(btc_benchmark_value.loc[d])
         history_data.append({'time': ts, 'value': val, 'invested': inv, 'btc': btc_val})
         
-    return history_data
+    # NEW: Prepare Allocation (Stacked Area) Series
+    allocation_series_js_list = []
+    if not common_cols.empty:
+        # Sort coins so biggest holdings are stacked neatly at the bottom
+        last_date = date_range[-1]
+        coin_values_last_day = {c: (cum_holdings[c].loc[last_date] * prices_df[c].loc[last_date]) for c in common_cols}
+        sorted_coins = sorted(coin_values_last_day.keys(), key=lambda c: coin_values_last_day[c], reverse=True)
+        
+        for coin in sorted_coins:
+            coin_val_series = cum_holdings[coin] * prices_df[coin]
+            data_points = []
+            for d in date_range:
+                dt = datetime.combine(d, datetime.min.time())
+                ts = int(dt.timestamp()) * 1000
+                val = float(coin_val_series.loc[d])
+                data_points.append(f"[{ts}, {val}]")
+            color = get_chart_color(coin)
+            allocation_series_js_list.append(f"{{ name: '{coin}', data: [{','.join(data_points)}], color: '{color}', marker: {{ enabled: false }} }}")
+
+    allocation_series_js = ",\n".join(allocation_series_js_list)
+        
+    return history_data, allocation_series_js
 
 # ====================== LOGOS & COLORS ======================
 def get_ticker_logo(ticker: str) -> str:
@@ -740,9 +761,9 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
 """
         st.markdown(value_box_html, unsafe_allow_html=True)
 
-        # ================== 2. HISTORICAL AND PIE CHARTS ==================
+        # ================== 2. ASSEMBLE ALL CHARTS DATA ==================
         last_prices_dict = st.session_state.last_known_prices.copy()
-        history_data_raw = build_portfolio_history(st.session_state.crypto_df, st.session_state.fiat_df, last_prices_dict, st.session_state.refresh_key)
+        history_data_raw, allocation_series_js = build_portfolio_history(st.session_state.crypto_df, st.session_state.fiat_df, last_prices_dict, st.session_state.refresh_key)
         
         hist_val_js_list = []
         hist_inv_js_list = []
@@ -772,6 +793,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
         else:
             hist_val_js, hist_inv_js, hist_btc_js = "", "", ""
 
+        # Chart 1: Pie Data
         pie_data_js_lines = []
         for _, r in df_port.iterrows():
             ticker = r['Ticker']
@@ -783,6 +805,24 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                 chart_color = base_color if base_color != '#000000' else '#ffffff' 
                 pie_data_js_lines.append(f"{{ name: '{ticker}', y: {val}, color: '{chart_color}' }}")
         pie_data_js = ",\n".join(pie_data_js_lines)
+
+        # Chart 3: PnL Bar Data
+        pnl_data_js_lines = []
+        df_pnl = df_port[df_port['Ticker'] != 'USDC'].sort_values(by='PnL', ascending=True)
+        for _, r in df_pnl.iterrows():
+            ticker = r['Ticker']
+            pnl = r['PnL']
+            if pd.notna(pnl):
+                color = '#00ff9d' if pnl >= 0 else '#ff4d4d'
+                pnl_data_js_lines.append(f"{{ name: '{ticker}', y: {pnl}, color: '{color}' }}")
+        pnl_data_js = ",\n".join(pnl_data_js_lines)
+
+        # Chart 5: Invested vs Current Value Data
+        df_iv = df_port[df_port['Ticker'] != 'USDC'].sort_values(by='Value', ascending=False)
+        inv_val_categories_js = ",".join([f"'{r['Ticker']}'" for _, r in df_iv.iterrows()])
+        inv_data_js = ",".join([str(r['USDC'] if pd.notna(r['USDC']) else 0) for _, r in df_iv.iterrows()])
+        val_data_js = ",".join([str(r['Value'] if pd.notna(r['Value']) else 0) for _, r in df_iv.iterrows()])
+
 
         charts_html = f"""
         <!DOCTYPE html>
@@ -817,22 +857,15 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                     padding: 0 24px;
                 }}
                 
-                .chart-placeholder {{
-                    scroll-snap-align: center;
-                }}
-                .pie-placeholder {{
-                    width: 350px;
-                    flex: 0 0 350px;
-                    height: 340px;
-                }}
-                .history-placeholder {{
-                    width: 600px;
-                    flex: 0 0 600px;
-                    height: 340px;
-                }}
+                .chart-placeholder {{ scroll-snap-align: center; }}
                 
-                /* Pure Hardware Acceleration */
-                .pie-box, .history-box {{
+                .chart-placeholder[data-type="pie"] {{ width: 350px; flex: 0 0 350px; height: 340px; }}
+                .chart-placeholder[data-type="history"] {{ width: 600px; flex: 0 0 600px; height: 340px; }}
+                .chart-placeholder[data-type="pnl"] {{ width: 400px; flex: 0 0 400px; height: 340px; }}
+                .chart-placeholder[data-type="allocation"] {{ width: 600px; flex: 0 0 600px; height: 340px; }}
+                .chart-placeholder[data-type="inv-val"] {{ width: 500px; flex: 0 0 500px; height: 340px; }}
+                
+                .chart-box {{
                     width: 100%;
                     height: 100%;
                     background: rgba(15, 23, 42, 0.4);
@@ -840,10 +873,9 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                     border-radius: 16px;
                     box-shadow: 0 4px 15px rgba(0,0,0,0.2);
                     touch-action: pan-x pan-y; 
-                    will-change: transform; 
+                    will-change: transform, background-color, box-shadow; /* Strict GPU Acceleration */
                 }}
                 
-                /* Smooth Fade Overlay */
                 #chart-overlay {{
                     visibility: hidden;
                     opacity: 0;
@@ -860,7 +892,6 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                     opacity: 1;
                 }}
                 
-                /* The background color is applied via class so it can crossfade smoothly during the transform transition */
                 .expanded-chart {{
                     background: rgba(15, 23, 42, 0.98) !important; 
                     border: 1px solid rgba(255, 255, 255, 0.08) !important; 
@@ -869,10 +900,10 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                 }}
 
                 @media (max-width: 768px) {{
-                    .pie-placeholder, .history-placeholder {{ 
-                        height: 320px; 
-                        width: 85vw; 
-                        flex: 0 0 85vw; 
+                    .chart-placeholder {{ 
+                        height: 320px !important; 
+                        width: 85vw !important; 
+                        flex: 0 0 85vw !important; 
                     }}
                     
                     .charts-flex {{ 
@@ -887,109 +918,43 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
             
             <div class="charts-scroll-wrapper" id="chartsScrollContainer">
                 <div class="charts-flex">
-                    <div class="chart-placeholder pie-placeholder">
-                        <div id="pie-container" class="pie-box"></div>
-                    </div>
-                    <div class="chart-placeholder history-placeholder">
-                        <div id="history-container" class="history-box"></div>
-                    </div>
+                    <div class="chart-placeholder" data-type="pie"><div id="pie-container" class="chart-box"></div></div>
+                    <div class="chart-placeholder" data-type="history"><div id="history-container" class="chart-box"></div></div>
+                    <div class="chart-placeholder" data-type="pnl"><div id="pnl-container" class="chart-box"></div></div>
+                    <div class="chart-placeholder" data-type="allocation"><div id="allocation-container" class="chart-box"></div></div>
+                    <div class="chart-placeholder" data-type="inv-val"><div id="inv-val-container" class="chart-box"></div></div>
                 </div>
             </div>
             
             <script>
                 Highcharts.setOptions({{ global: {{ useUTC: false }} }});
 
+                // Chart 1: Pie
                 Highcharts.chart('pie-container', {{
-                    chart: {{
-                        type: 'pie',
-                        options3d: {{ enabled: true, alpha: 55, beta: 0 }},
-                        backgroundColor: 'transparent',
-                        margin: [0, 0, 0, 0]
-                    }},
+                    chart: {{ type: 'pie', options3d: {{ enabled: true, alpha: 55, beta: 0 }}, backgroundColor: 'transparent', margin: [0, 0, 0, 0] }},
                     title: {{ text: null }},
                     tooltip: {{
                         formatter: function() {{
                             const isPrivacy = document.body.classList.contains('privacy-mode');
-                            if (isPrivacy) {{
-                                return '<b>' + this.point.name + '</b><br/>' + this.point.percentage.toFixed(1) + '%';
-                            }}
+                            if (isPrivacy) return '<b>' + this.point.name + '</b><br/>' + this.point.percentage.toFixed(1) + '%';
                             return '<b>' + this.point.name + '</b><br/>$' + Highcharts.numberFormat(this.point.y, 2) + '<br/>' + this.point.percentage.toFixed(1) + '%';
                         }},
-                        backgroundColor: 'rgba(15, 23, 42, 0.95)',
-                        style: {{ color: '#fff' }},
-                        borderWidth: 1,
-                        borderColor: 'rgba(255,255,255,0.15)'
+                        backgroundColor: 'rgba(15, 23, 42, 0.95)', style: {{ color: '#fff' }}, borderWidth: 1, borderColor: 'rgba(255,255,255,0.15)'
                     }},
-                    plotOptions: {{
-                        pie: {{
-                            allowPointSelect: true,
-                            cursor: 'pointer',
-                            depth: 40,
-                            innerSize: '40%',
-                            size: '65%',
-                            dataLabels: {{
-                                enabled: true,
-                                format: '<b>{{point.name}}</b><br>{{point.percentage:.1f}}%',
-                                style: {{ color: '#e2e8f0', textOutline: 'none', fontSize: '10px', fontWeight: '600' }},
-                                connectorColor: 'rgba(255,255,255,0.2)',
-                                distance: 10,
-                                crop: false, 
-                                overflow: 'allow',
-                                padding: 0
-                            }},
-                            borderWidth: 0
-                        }}
-                    }},
+                    plotOptions: {{ pie: {{ allowPointSelect: true, cursor: 'pointer', depth: 40, innerSize: '40%', size: '65%', dataLabels: {{ enabled: true, format: '<b>{{point.name}}</b><br>{{point.percentage:.1f}}%', style: {{ color: '#e2e8f0', textOutline: 'none', fontSize: '10px', fontWeight: '600' }}, connectorColor: 'rgba(255,255,255,0.2)', distance: 10, padding: 0 }}, borderWidth: 0 }} }},
                     credits: {{ enabled: false }},
-                    series: [{{
-                        name: 'Holdings',
-                        data: [
-                            {pie_data_js}
-                        ]
-                    }}]
+                    series: [{{ name: 'Holdings', data: [{pie_data_js}] }}]
                 }});
 
+                // Chart 2: History Area
                 Highcharts.chart('history-container', {{
-                    chart: {{ 
-                        type: 'areaspline', 
-                        backgroundColor: 'transparent', 
-                        marginLeft: 60, 
-                        marginRight: 20,
-                        marginTop: 55, 
-                        marginBottom: 35 
-                    }}, 
+                    chart: {{ type: 'areaspline', backgroundColor: 'transparent', marginLeft: 60, marginRight: 20, marginTop: 55, marginBottom: 35 }}, 
                     title: {{ text: null }},
-                    legend: {{
-                        enabled: true,
-                        itemStyle: {{ color: '#94a3b8', fontSize: '11px', fontWeight: 'normal' }},
-                        itemHoverStyle: {{ color: '#ffffff' }},
-                        verticalAlign: 'top',
-                        align: 'center',
-                        y: -10
-                    }},
-                    xAxis: {{ 
-                        type: 'datetime', 
-                        labels: {{ style: {{ color: '#94a3b8', fontSize: '10px' }} }}, 
-                        gridLineColor: 'rgba(255,255,255,0.05)',
-                        tickWidth: 0,
-                        minorGridLineWidth: 0
-                    }},
-                    yAxis: {{ 
-                        title: {{ text: null }}, 
-                        labels: {{ 
-                            style: {{ color: '#94a3b8', fontSize: '10px' }}, 
-                            align: 'right',
-                            formatter: function() {{ 
-                                return document.body.classList.contains('privacy-mode') ? '***' : '$' + this.axis.defaultLabelFormatter.call(this); 
-                            }} 
-                        }}, 
-                        gridLineColor: 'rgba(255,255,255,0.05)' 
-                    }},
+                    legend: {{ enabled: true, itemStyle: {{ color: '#94a3b8', fontSize: '11px', fontWeight: 'normal' }}, itemHoverStyle: {{ color: '#ffffff' }}, verticalAlign: 'top', align: 'center', y: -10 }},
+                    xAxis: {{ type: 'datetime', labels: {{ style: {{ color: '#94a3b8', fontSize: '10px' }} }}, gridLineColor: 'rgba(255,255,255,0.05)', tickWidth: 0, minorGridLineWidth: 0 }},
+                    yAxis: {{ title: {{ text: null }}, labels: {{ style: {{ color: '#94a3b8', fontSize: '10px' }}, align: 'right', formatter: function() {{ return document.body.classList.contains('privacy-mode') ? '***' : '$' + this.axis.defaultLabelFormatter.call(this); }} }}, gridLineColor: 'rgba(255,255,255,0.05)' }},
                     tooltip: {{
-                        shared: true,
-                        backgroundColor: 'rgba(15, 23, 42, 0.95)',
-                        style: {{ color: '#fff' }},
-                        borderColor: 'rgba(255,255,255,0.15)',
+                        shared: true, backgroundColor: 'rgba(15, 23, 42, 0.95)', style: {{ color: '#fff' }}, borderColor: 'rgba(255,255,255,0.15)',
                         formatter: function() {{
                             let s = '<b style="font-size: 11px; color:#cbd5e1;">' + Highcharts.dateFormat('%b %e, %Y', this.x) + '</b>';
                             const isPrivacy = document.body.classList.contains('privacy-mode');
@@ -1000,38 +965,80 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                             return s;
                         }}
                     }},
-                    plotOptions: {{
-                        areaspline: {{
-                            fillOpacity: 0.3,
-                            lineWidth: 2,
-                            marker: {{ enabled: false, symbol: 'circle', radius: 3, states: {{ hover: {{ enabled: true }} }} }}
-                        }},
-                        line: {{ marker: {{ enabled: false }} }}
-                    }},
+                    plotOptions: {{ areaspline: {{ fillOpacity: 0.3, lineWidth: 2, marker: {{ enabled: false, symbol: 'circle', radius: 3, states: {{ hover: {{ enabled: true }} }} }} }}, line: {{ marker: {{ enabled: false }} }} }},
                     credits: {{ enabled: false }},
-                    series: [{{
-                        name: 'Portfolio Value',
-                        data: [{hist_val_js}],
-                        color: '#00ff9d',
-                        fillColor: {{ linearGradient: {{ x1: 0, y1: 0, x2: 0, y2: 1 }}, stops: [ [0, 'rgba(0, 255, 157, 0.5)'], [1, 'rgba(0, 255, 157, 0.0)'] ] }},
-                        zIndex: 3
-                    }}, {{
-                        name: 'BTC Benchmark',
-                        type: 'line',
-                        data: [{hist_btc_js}],
-                        color: '#f7931a', 
-                        lineWidth: 2,
-                        zIndex: 2,
-                        visible: true
-                    }}, {{
-                        name: 'Net Invested',
-                        type: 'line',
-                        data: [{hist_inv_js}],
-                        color: '#64748b',
-                        dashStyle: 'Dash',
-                        lineWidth: 2,
-                        zIndex: 1
-                    }}]
+                    series: [{{ name: 'Portfolio Value', data: [{hist_val_js}], color: '#00ff9d', fillColor: {{ linearGradient: {{ x1: 0, y1: 0, x2: 0, y2: 1 }}, stops: [ [0, 'rgba(0, 255, 157, 0.5)'], [1, 'rgba(0, 255, 157, 0.0)'] ] }}, zIndex: 3 }}, 
+                             {{ name: 'BTC Benchmark', type: 'line', data: [{hist_btc_js}], color: '#f7931a', lineWidth: 2, zIndex: 2 }}, 
+                             {{ name: 'Net Invested', type: 'line', data: [{hist_inv_js}], color: '#64748b', dashStyle: 'Dash', lineWidth: 2, zIndex: 1 }}]
+                }});
+
+                // Chart 3: Winners & Losers (PnL Bar)
+                Highcharts.chart('pnl-container', {{
+                    chart: {{ type: 'bar', backgroundColor: 'transparent', marginLeft: 65, marginRight: 35, marginTop: 45, marginBottom: 25 }},
+                    title: {{ text: 'Winners & Losers', style: {{ color: '#e2e8f0', fontSize: '13px', fontWeight: 'bold' }} }},
+                    xAxis: {{ type: 'category', labels: {{ style: {{ color: '#94a3b8', fontWeight: 'bold' }} }}, gridLineColor: 'rgba(255,255,255,0.05)', tickWidth: 0, lineWidth: 0 }},
+                    yAxis: {{ title: {{ text: null }}, labels: {{ enabled: false }}, gridLineColor: 'rgba(255,255,255,0.05)' }},
+                    legend: {{ enabled: false }},
+                    tooltip: {{
+                        backgroundColor: 'rgba(15, 23, 42, 0.95)', style: {{ color: '#fff' }}, borderColor: 'rgba(255,255,255,0.15)',
+                        formatter: function() {{
+                            const isPrivacy = document.body.classList.contains('privacy-mode');
+                            const val = isPrivacy ? '***' : '$' + Highcharts.numberFormat(this.y, 2);
+                            return `<b>${{this.point.name}}</b><br/>PnL: <b style="color:${{this.y >= 0 ? '#00ff9d' : '#ff4d4d'}}">${{val}}</b>`;
+                        }}
+                    }},
+                    plotOptions: {{ bar: {{ borderRadius: 4, dataLabels: {{ enabled: true, style: {{ color: '#fff', textOutline: 'none', fontWeight: 'bold' }}, formatter: function() {{ return document.body.classList.contains('privacy-mode') ? '***' : '$' + Highcharts.numberFormat(this.y, 0); }} }} }} }},
+                    credits: {{ enabled: false }},
+                    series: [{{ name: 'PnL', data: [{pnl_data_js}] }}]
+                }});
+
+                // Chart 4: Portfolio Allocation (Stacked Area)
+                Highcharts.chart('allocation-container', {{
+                    chart: {{ type: 'area', backgroundColor: 'transparent', marginLeft: 60, marginRight: 20, marginTop: 45, marginBottom: 35 }},
+                    title: {{ text: 'Asset Allocation', style: {{ color: '#e2e8f0', fontSize: '13px', fontWeight: 'bold' }} }},
+                    xAxis: {{ type: 'datetime', labels: {{ style: {{ color: '#94a3b8', fontSize: '10px' }} }}, gridLineColor: 'rgba(255,255,255,0.05)', tickWidth: 0, minorGridLineWidth: 0 }},
+                    yAxis: {{ title: {{ text: null }}, labels: {{ formatter: function() {{ return this.value + '%'; }}, style: {{ color: '#94a3b8', fontSize: '10px' }} }}, gridLineColor: 'rgba(255,255,255,0.05)', max: 100 }},
+                    legend: {{ enabled: true, itemStyle: {{ color: '#94a3b8', fontSize: '11px', fontWeight: 'normal' }}, itemHoverStyle: {{ color: '#ffffff' }}, verticalAlign: 'top', y: -5 }},
+                    tooltip: {{
+                        shared: true, backgroundColor: 'rgba(15, 23, 42, 0.95)', style: {{ color: '#fff' }}, borderColor: 'rgba(255,255,255,0.15)',
+                        formatter: function() {{
+                            let s = '<b style="font-size: 11px; color:#cbd5e1;">' + Highcharts.dateFormat('%b %e, %Y', this.x) + '</b>';
+                            this.points.forEach(function(point) {{
+                                s += '<br/>' + '<span style="color:'+point.series.color+'">\u25CF</span> ' + point.series.name + ': <b>' + Highcharts.numberFormat(point.percentage, 1) + '%</b>';
+                            }});
+                            return s;
+                        }}
+                    }},
+                    plotOptions: {{ area: {{ stacking: 'percent', lineWidth: 1, marker: {{ enabled: false, symbol: 'circle', radius: 2, states: {{ hover: {{ enabled: true }} }} }} }} }},
+                    credits: {{ enabled: false }},
+                    series: [{allocation_series_js}]
+                }});
+
+                // Chart 5: Invested vs Current Value (Grouped Column)
+                Highcharts.chart('inv-val-container', {{
+                    chart: {{ type: 'column', backgroundColor: 'transparent', marginLeft: 60, marginRight: 20, marginTop: 45, marginBottom: 35 }},
+                    title: {{ text: 'Invested vs Current Value', style: {{ color: '#e2e8f0', fontSize: '13px', fontWeight: 'bold' }} }},
+                    xAxis: {{ categories: [{inv_val_categories_js}], labels: {{ style: {{ color: '#94a3b8', fontWeight: 'bold', fontSize: '10px' }} }}, gridLineColor: 'rgba(255,255,255,0.05)', tickWidth: 0 }},
+                    yAxis: {{ title: {{ text: null }}, labels: {{ style: {{ color: '#94a3b8', fontSize: '10px' }}, formatter: function() {{ return document.body.classList.contains('privacy-mode') ? '***' : '$' + this.axis.defaultLabelFormatter.call(this); }} }}, gridLineColor: 'rgba(255,255,255,0.05)' }},
+                    legend: {{ enabled: true, itemStyle: {{ color: '#94a3b8', fontSize: '11px', fontWeight: 'normal' }}, itemHoverStyle: {{ color: '#ffffff' }}, verticalAlign: 'top', y: -5 }},
+                    tooltip: {{
+                        shared: true, backgroundColor: 'rgba(15, 23, 42, 0.95)', style: {{ color: '#fff' }}, borderColor: 'rgba(255,255,255,0.15)',
+                        formatter: function() {{
+                            let s = '<b style="font-size: 13px;">' + this.x + '</b>';
+                            const isPrivacy = document.body.classList.contains('privacy-mode');
+                            this.points.forEach(function(point) {{
+                                let val = isPrivacy ? '***' : '$' + Highcharts.numberFormat(point.y, 2);
+                                s += '<br/>' + '<span style="color:'+point.series.color+'">\u25CF</span> ' + point.series.name + ': <b>' + val + '</b>';
+                            }});
+                            return s;
+                        }}
+                    }},
+                    plotOptions: {{ column: {{ borderRadius: 3, borderWidth: 0 }} }},
+                    credits: {{ enabled: false }},
+                    series: [
+                        {{ name: 'Invested', data: [{inv_data_js}], color: '#64748b' }},
+                        {{ name: 'Value', data: [{val_data_js}], color: '#00ff9d' }}
+                    ]
                 }});
 
                 try {{
@@ -1059,22 +1066,21 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                 }} catch(e) {{}}
 
                 function toggleExpandChart(chartId) {{
-                    // STRICT MOBILE ONLY BLOCK
+                    // BLOCK PC COMPLETELY - Only runs on Mobile
                     if (window.innerWidth > 768) return;
                 
                     const el = document.getElementById(chartId);
                     const overlay = document.getElementById('chart-overlay');
                     const wrapper = document.getElementById('chartsScrollContainer');
-                    const hc = Highcharts.charts.find(c => c && c.renderTo.id === chartId);
-                    if (!hc) return;
 
                     let parentIframe = null;
                     try {{
                         const iframes = window.parent.document.querySelectorAll('iframe');
-                        for (let ifr of iframes) {{
-                            if (ifr.contentWindow === window) parentIframe = ifr;
-                        }}
+                        for (let ifr of iframes) {{ if (ifr.contentWindow === window) parentIframe = ifr; }}
                     }} catch(e) {{}}
+                    
+                    const screenW = window.parent ? window.parent.innerWidth : window.innerWidth;
+                    const screenH = window.parent ? window.parent.innerHeight : window.innerHeight;
 
                     if (el.classList.contains('expanded-chart')) {{
                         // ==========================================
@@ -1082,35 +1088,29 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                         // ==========================================
                         overlay.classList.remove('active');
                         
-                        // We extract the exact visual coordinates saved when we opened it
                         const origTop = parseFloat(el.getAttribute('data-orig-top')) || 0;
                         const origLeft = parseFloat(el.getAttribute('data-orig-left')) || 0;
 
-                        // We immediately remove the class so the background crossfades to transparent 
-                        // while it travels across the screen
+                        // Instantly remove class so background crossfades cleanly during the travel
                         el.classList.remove('expanded-chart');
                         
-                        // Transition back to the starting position at native size (scale 1)
+                        // Transition smoothly to original slot
                         el.style.transition = 'transform 0.4s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.4s ease, box-shadow 0.4s ease';
                         el.style.transform = `translate(${{origLeft}}px, ${{origTop}}px) scale(1)`;
 
-                        // Clean up entirely once the transition finishes
+                        // Flawless Cleanup at end of transition
                         setTimeout(() => {{
                             if (parentIframe) parentIframe.classList.remove('fullscreen-mode');
                             
-                            // The chart is ALREADY at scale(1) with its native width/height.
-                            // Wiping the styles instantly drops it into the flexbox perfectly with zero shift.
+                            // Because Highcharts was natively small the entire time, wiping CSS drops it in perfectly
                             el.style.cssText = ''; 
                             wrapper.style.overflowX = 'auto'; // Restore scroll snapping
                             
-                            // Un-hide the sibling charts
-                            document.querySelectorAll('.pie-box, .history-box').forEach(c => {{
+                            // Restore siblings
+                            document.querySelectorAll('.chart-box').forEach(c => {{
                                 c.style.opacity = '1';
                                 c.style.pointerEvents = 'auto';
                             }});
-                            
-                            // Notice: We specifically DO NOT call hc.setSize() here! 
-                            // The SVG was never warped, so there is no layout to redraw, guaranteeing zero flicker.
                         }}, 400);
 
                         return;
@@ -1120,16 +1120,15 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                     // OPENING MECHANICS (Pure Forward GPU Scale)
                     // ==========================================
                     
-                    // 1. Instantly fade out other charts so they don't bleed through the overlay background
-                    document.querySelectorAll('.pie-box, .history-box').forEach(c => {{
+                    // 1. SILENT VANISH: instantly hide siblings to prevent bleeding
+                    document.querySelectorAll('.chart-box').forEach(c => {{
                         if (c.id !== chartId) {{
-                            c.style.transition = 'opacity 0.2s ease';
+                            c.style.transition = 'opacity 0.15s ease';
                             c.style.opacity = '0';
                             c.style.pointerEvents = 'none';
                         }}
                     }});
 
-                    // 2. Extract current coordinates
                     const chartRect = el.getBoundingClientRect();
                     let visualTop = chartRect.top;
                     let visualLeft = chartRect.left;
@@ -1139,37 +1138,31 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                         visualLeft += iframeRect.left;
                     }}
 
-                    // 3. Prepare Fullscreen
                     if (parentIframe) parentIframe.classList.add('fullscreen-mode');
                     overlay.classList.add('active'); 
                     wrapper.style.overflowX = 'visible';
 
-                    // 4. Calculate Maximum Uniform Scale
                     const origW = chartRect.width;
                     const origH = chartRect.height;
                     
-                    const screenW = window.parent ? window.parent.innerWidth : window.innerWidth;
-                    const screenH = window.parent ? window.parent.innerHeight : window.innerHeight;
+                    let targetW = screenW * 0.95;
+                    let targetH = screenH * 0.70;
                     
-                    // We calculate how much we can multiply the small chart by to fit the screen
-                    const maxScaleX = (screenW * 0.95) / origW;
-                    const maxScaleY = (screenH * 0.70) / origH;
-                    
-                    // Crucial: we pick the SMALLER multiplier. This ensures the chart stays perfectly uniform and doesn't squish.
+                    // Calculate perfectly uniform maximum scale
+                    const maxScaleX = targetW / origW;
+                    const maxScaleY = targetH / origH;
                     const targetScale = Math.min(maxScaleX, maxScaleY);
                     
-                    // 5. Calculate Center Position for the scaled chart
                     const scaledW = origW * targetScale;
                     const scaledH = origH * targetScale;
                     const centerLeft = (screenW - scaledW) / 2;
                     const centerTop = (screenH - scaledH) / 2;
 
-                    // 6. Save original coordinates so closing can seamlessly return here
+                    // Save origins
                     el.setAttribute('data-orig-top', visualTop);
                     el.setAttribute('data-orig-left', visualLeft);
 
-                    // Phase 1: Lock the chart in exactly its current spot using absolute positioning
-                    // We keep its native width/height exactly as they are. No Highcharts reflow happens!
+                    // Phase 1: Lock the chart in its starting spot natively small, no HC Redraw
                     el.style.position = 'fixed';
                     el.style.top = '0px';
                     el.style.left = '0px';
@@ -1181,9 +1174,9 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                     el.style.transition = 'none';
                     el.style.transform = `translate(${{visualLeft}}px, ${{visualTop}}px) scale(1)`;
                     
-                    void el.offsetWidth; // Force Reflow to commit starting position
+                    void el.offsetWidth; // Force CSS Engine Reflow
 
-                    // Phase 2: Add CSS class for background color and apply transform translation/scale
+                    // Phase 2: Add expanded class (starts background fade) and move to center scaled up
                     el.classList.add('expanded-chart');
                     el.style.transition = 'transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.4s ease, box-shadow 0.4s ease';
                     el.style.transform = `translate(${{centerLeft}}px, ${{centerTop}}px) scale(${{targetScale}})`;
@@ -1193,8 +1186,6 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                     const el = document.getElementById(elementId);
                     if (!el) return;
                     let lastTap = 0;
-
-                    // NO double click listener - PC strictly prevented.
 
                     el.addEventListener('touchend', function(e) {{
                         const currentTime = new Date().getTime();
@@ -1210,6 +1201,9 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
 
                 setupDoubleTap('pie-container');
                 setupDoubleTap('history-container');
+                setupDoubleTap('pnl-container');
+                setupDoubleTap('allocation-container');
+                setupDoubleTap('inv-val-container');
 
                 document.getElementById('chart-overlay').addEventListener('click', () => {{
                     document.querySelectorAll('.expanded-chart').forEach(el => {{
@@ -1241,8 +1235,10 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                             }} else {{
                                 document.body.classList.remove('privacy-mode');
                             }}
-                            const hc = Highcharts.charts.find(c => c && c.renderTo.id === 'history-container');
-                            if (hc) {{ hc.yAxis[0].isDirty = true; hc.redraw(); }}
+                            ['history-container', 'pnl-container', 'inv-val-container'].forEach(id => {{
+                                const hc = Highcharts.charts.find(c => c && c.renderTo.id === id);
+                                if (hc && hc.yAxis && hc.yAxis[0]) {{ hc.yAxis[0].isDirty = true; hc.redraw(); }}
+                            }});
                         }}
                     }} catch(e) {{}}
                 }}, 200);
