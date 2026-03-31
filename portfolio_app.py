@@ -1104,7 +1104,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                 // Chart 2: Performance Area (Using Highstock)
                 Highcharts.stockChart('history-container', {{
                     chart: {{ type: 'areaspline', backgroundColor: 'transparent', marginLeft: 45, marginRight: 15, marginTop: 25, marginBottom: 35 }}, 
-                    rangeSelector: {{ enabled: false }}, // Hidden native range selector in favor of our custom header HTML
+                    rangeSelector: {{ enabled: false }}, 
                     navigator: {{ enabled: false }},
                     scrollbar: {{ enabled: false }},
                     title: {{ text: null }},
@@ -1168,10 +1168,10 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                     '1d': {pnl_data_js_dict['1d']}
                 }};
                 
-                // Helper to cleanly deep-clone our data objects before handing them to Highcharts
+                // Helper to cleanly deep-clone our data objects and apply an ID so Highcharts can animate the transition
                 function getPnlDataCopy(range) {{
                     if (!pnlDataMap[range]) return [];
-                    return pnlDataMap[range].map(item => ({{...item}})).sort((a, b) => a.y - b.y);
+                    return pnlDataMap[range].map(item => ({{...item, id: item.name}})).sort((a, b) => a.y - b.y);
                 }}
 
                 Highcharts.chart('pnl-container', {{
@@ -1188,7 +1188,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                             return `<b>${{this.point.name}}</b><br/>PnL: <b style="color:${{this.point.color}}">${{val}}</b>`;
                         }}
                     }},
-                    plotOptions: {{ bar: {{ borderRadius: 3, borderWidth: 0, pointPadding: 0.1, groupPadding: 0.1, dataLabels: {{ enabled: true, inside: false, crop: false, overflow: 'allow', style: {{ color: '#fff', textOutline: '3px #0f172a', fontWeight: 'bold', fontSize: '10px' }}, formatter: function() {{ return document.body.classList.contains('privacy-mode') ? '***' : (this.y < 0 ? '-$' : '$') + Highcharts.numberFormat(Math.abs(this.y), 2); }} }} }} }},
+                    plotOptions: {{ bar: {{ borderRadius: 3, borderWidth: 0, pointPadding: 0.1, groupPadding: 0.1, dataLabels: {{ enabled: true, inside: false, crop: false, overflow: 'none', style: {{ color: '#fff', textOutline: '3px #0f172a', fontWeight: 'bold', fontSize: '10px' }}, formatter: function() {{ return document.body.classList.contains('privacy-mode') ? '***' : (this.y < 0 ? '-$' : '$') + Highcharts.numberFormat(Math.abs(this.y), 2); }} }} }} }},
                     credits: {{ enabled: false }},
                     series: [{{ name: 'PnL', data: getPnlDataCopy('all') }}]
                 }});
@@ -1201,8 +1201,8 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                         const range = btn.getAttribute('data-range');
                         const chart = Highcharts.charts.find(c => c && c.renderTo && c.renderTo.id === 'pnl-container');
                         if (chart && chart.series[0]) {{
-                            // The true, true parameters animate the bars dynamically without destroying them
-                            chart.series[0].setData(getPnlDataCopy(range), true, {{ duration: 500 }}, true);
+                            // Setting true, true, true ensures smooth animation between data sets
+                            chart.series[0].setData(getPnlDataCopy(range), true, {{ duration: 500, easing: 'easeOutBounce' }}, true);
                         }}
                     }});
                 }});
@@ -1231,7 +1231,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
 
                 // Chart 5: Invested vs Current Value (Grouped Column)
                 Highcharts.chart('inv-val-container', {{
-                    chart: {{ type: 'column', backgroundColor: 'transparent', marginLeft: 55, marginRight: 20, marginTop: 45, marginBottom: 35 }},
+                    chart: {{ type: 'column', backgroundColor: 'transparent', marginLeft: 45, marginRight: 15, marginTop: 45, marginBottom: 35 }},
                     title: {{ text: 'Invested vs Current Value', align: 'left', x: 8, y: 24, style: {{ color: '#e2e8f0', fontSize: '13px', fontWeight: 'bold' }} }},
                     xAxis: {{ categories: {inv_val_categories_js}, labels: {{ style: {{ color: '#94a3b8', fontWeight: 'bold', fontSize: '10px' }} }}, gridLineColor: 'rgba(255,255,255,0.05)', tickWidth: 0 }},
                     yAxis: {{ title: {{ text: null }}, labels: {{ align: 'right', x: -4, style: {{ color: '#94a3b8', fontSize: '10px', textOverflow: 'none', whiteSpace: 'nowrap' }}, formatter: function() {{ return document.body.classList.contains('privacy-mode') ? '***' : '$' + this.axis.defaultLabelFormatter.call(this); }} }}, gridLineColor: 'rgba(255,255,255,0.05)' }},
@@ -1308,11 +1308,6 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                         const targetRect = placeholder.getBoundingClientRect();
                         let targetTop = targetRect.top;
                         let targetLeft = targetRect.left;
-                        if (parentIframe) {{
-                            const iframeRect = parentIframe.getBoundingClientRect();
-                            targetTop += iframeRect.top;
-                            targetLeft += iframeRect.left;
-                        }}
 
                         // Smoothly animate back to the grid position
                         el.style.transition = 'transform 0.35s cubic-bezier(0.25, 1, 0.5, 1), background-color 0.4s ease, box-shadow 0.4s ease';
@@ -1358,7 +1353,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                     }}
                     
                     // ==========================================
-                    // OPENING MECHANICS
+                    // OPENING MECHANICS 
                     // ==========================================
                     
                     // 1. SILENT VANISH: instantly hide siblings to prevent bleeding
@@ -2000,6 +1995,39 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
             }}, {{ passive: false }});
         }}
 
+        // ---- BULK FETCH 24H CHANGES ON LOAD TO PREVENT N/A RATE LIMITING ----
+        async function fetchAll24hChanges(tickers) {{
+            if (!tickers || tickers.length === 0) return;
+            const url = `https://min-api.cryptocompare.com/data/pricemultifull?fsyms=${{tickers.join(',')}}&tsyms=USD`;
+            try {{
+                const resp = await fetch(url);
+                const data = await resp.json();
+                if (data && data.RAW) {{
+                    document.querySelectorAll('.flip-card').forEach(card => {{
+                        const ticker = card.getAttribute('data-ticker');
+                        const changeSpan = card.querySelector(`#change-${{ticker}}`);
+                        if (changeSpan && data.RAW[ticker] && data.RAW[ticker].USD) {{
+                            const change = data.RAW[ticker].USD.CHANGEPCT24HOUR;
+                            const sign = change >= 0 ? '▲' : '▼';
+                            const color = change >= 0 ? '#00ff9d' : '#ff4d4d';
+                            changeSpan.innerHTML = `<span style="color:${{color}};">${{sign}} ${{Math.abs(change).toFixed(2)}}%</span>`;
+                        }} else if (changeSpan) {{
+                            changeSpan.innerHTML = `N/A`;
+                        }}
+                    }});
+                }}
+            }} catch(e) {{
+                console.error("24h change bulk fetch error", e);
+            }}
+        }}
+
+        // Extract all active tickers to fetch at once
+        const activeCards = Array.from(document.querySelectorAll('.flip-card'))
+            .map(c => c.getAttribute('data-ticker'))
+            .filter(t => t !== 'USDC');
+        const uniqueTickers = [...new Set(activeCards)];
+        fetchAll24hChanges(uniqueTickers);
+
         // ---- LIVE UPDATE SCRIPT INJECTION FOR FLIP CARDS ----
         async function updateLivePricesCards() {{
             const cards = Array.from(document.querySelectorAll('.flip-card'));
@@ -2088,7 +2116,6 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                     const chartColor = card.getAttribute('data-chart-color');
                     if (!window.chartCache[ticker] || !window.chartCache[ticker].chartObj) {{
                         renderChart(card, ticker, currentPrice, avgPrice, chartColor);
-                        update24hChange(card, ticker);
                     }}
                 }}
             }});
@@ -2099,30 +2126,12 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
         window.chartCache = window.chartCache || {{}};
         const refreshKey = '{st.session_state.refresh_key}';
         
-        async function fetch24hChange(ticker) {{
-            const sym = ticker.toUpperCase();
-            if (!sym || sym === 'USDC') return null;
-            const url = `https://min-api.cryptocompare.com/data/v2/histoday?fsym=${{sym}}&tsym=USD&limit=2`;
-            try {{
-                const resp = await fetch(url, {{ headers: {{ 'User-Agent': 'Mozilla/5.0' }} }});
-                const data = await resp.json();
-                if (data && data.Data && data.Data.Data && data.Data.Data.length >= 2) {{
-                    const arr = data.Data.Data;
-                    const yesterdayClose = arr[arr.length - 2].close;
-                    const todayClose = arr[arr.length - 1].close;
-                    if (!yesterdayClose) return 0;
-                    const change = ((todayClose - yesterdayClose) / yesterdayClose) * 100;
-                    return change;
-                }}
-                return null;
-            }} catch(e) {{
-                console.error("24h change error", ticker, e);
-                return null;
-            }}
-        }}
-        
         async function fetchHistoricalData(ticker) {{
-            const sym = ticker.toUpperCase();
+            const symbolMap = {{
+                'BTC':'BTC','ETH':'ETH','SOL':'SOL','HBAR':'HBAR',
+                'XRP':'XRP','BNB':'BNB','TRX':'TRX','LINK':'LINK','SUI':'SUI'
+            }};
+            const sym = symbolMap[ticker.toUpperCase()] || ticker.toUpperCase();
             if (!sym || sym === 'USDC') return null;
             const url = `https://min-api.cryptocompare.com/data/v2/histoday?fsym=${{sym}}&tsym=USD&limit=30`;
             try {{
@@ -2210,19 +2219,6 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
             if (loadingDiv) loadingDiv.style.display = 'none';
         }}
         
-        async function update24hChange(card, ticker) {{
-            const changeSpan = card.querySelector(`#change-${{ticker}}`);
-            if (!changeSpan) return;
-            const change = await fetch24hChange(ticker);
-            if (change !== null) {{
-                const sign = change >= 0 ? '▲' : '▼';
-                const color = change >= 0 ? '#00ff9d' : '#ff4d4d';
-                changeSpan.innerHTML = `<span style="color:${{color}};">${{sign}} ${{Math.abs(change).toFixed(2)}}%</span>`;
-            }} else {{
-                changeSpan.innerHTML = `N/A`;
-            }}
-        }}
-        
         flipCards.forEach(card => {{
             const ticker = card.getAttribute('data-ticker');
             const currentPrice = parseFloat(card.getAttribute('data-current-price'));
@@ -2230,8 +2226,6 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
             const chartColor = card.getAttribute('data-chart-color');
             const border = card.getAttribute('data-border');
             card.style.setProperty('--border', border);
-            
-            update24hChange(card, ticker);
             
             const front = card.querySelector('.flip-card-front');
             front.addEventListener('click', (e) => {{
