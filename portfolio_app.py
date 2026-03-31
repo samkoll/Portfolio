@@ -1887,58 +1887,92 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
             const cards = Array.from(document.querySelectorAll('.flip-card'));
             if (cards.length === 0) return;
             const tickers = cards.map(card => card.getAttribute('data-ticker'));
-            
-            const url = `https://min-api.cryptocompare.com/data/pricemulti?fsyms=${{tickers.join(',')}}&tsyms=USD`;
+            const symbolMap = {{
+                'BTC':'BTC','ETH':'ETH','SOL':'SOL','HBAR':'HBAR',
+                'XRP':'XRP','BNB':'BNB','TRX':'TRX','LINK':'LINK','SUI':'SUI'
+            }};
+            const mappedTickers = tickers.map(t => symbolMap[t.toUpperCase()] || t.toUpperCase());
+
+            const url = `https://min-api.cryptocompare.com/data/pricemultifull?fsyms=${{mappedTickers.join(',')}}&tsyms=USD`;
             try {{
-                const resp = await fetch(url);
+                const resp = await fetch(url, {{ headers: {{ 'User-Agent': 'Mozilla/5.0' }} }});
                 const data = await resp.json();
                 
                 let totalCoinValue = 0;
                 let totalCoinInvested = 0;
+                
+                // Keep track of diffs to update charts smoothly
+                let tickerValues = {{}};
+                let tickerDiffs = {{}};
+                let tickerRoi = {{}};
+                
                 cards.forEach(card => {{
                     const ticker = card.getAttribute('data-ticker');
+                    const sym = symbolMap[ticker.toUpperCase()] || ticker.toUpperCase();
                     const holdings = parseFloat(card.getAttribute('data-holdings'));
                     const invested = parseFloat(card.getAttribute('data-invested'));
                     let price = parseFloat(card.getAttribute('data-current-price'));
                     
-                    if (data[ticker] && data[ticker].USD) {{
-                        price = data[ticker].USD;
-                        card.setAttribute('data-current-price', price);
-                        
-                        const priceFmt = price < 1 ? price.toFixed(4) : price.toLocaleString('en-US', {{minimumFractionDigits: 2, maximumFractionDigits: 2}});
-                        const currentEl = card.querySelector('.current-value');
-                        if (currentEl) currentEl.innerText = '$' + priceFmt;
-                        
-                        const value = holdings * price;
-                        const pnl = value - invested;
-                        const pnlPct = invested > 0 ? (pnl / invested) * 100 : 0;
-                        const valStr = '$' + value.toLocaleString('en-US', {{minimumFractionDigits: 2, maximumFractionDigits: 2}});
-                        const pnlStr = (pnl >= 0 ? '▲ $' : '▼ $') + Math.abs(pnl).toLocaleString('en-US', {{minimumFractionDigits: 2, maximumFractionDigits: 2}});
-                        const pnlPctStr = (pnl >= 0 ? '▲ ' : '▼ ') + Math.abs(pnlPct).toFixed(2) + '%';
-                        const color = pnl >= 0 ? '#00ff9d' : '#ff4d4d';
-                        
-                        const valEl = card.querySelector('.total-value');
-                        if (valEl) valEl.innerText = valStr;
-                        const pnlEl = card.querySelector('.card-pnl');
-                        if (pnlEl) {{
-                            pnlEl.innerText = pnlStr;
-                            pnlEl.style.color = color;
-                        }}
-                        
-                        const pnlPctEl = card.querySelector('.card-pnl-pct');
-                        if (pnlPctEl) {{
-                            pnlPctEl.innerText = pnlPctStr;
-                            pnlPctEl.style.color = color;
-                        }}
-                        
-                        if (window.chartCache && window.chartCache[ticker] && window.chartCache[ticker].chartObj) {{
-                            const chart = window.chartCache[ticker].chartObj;
-                            const dataLen = chart.data.datasets[0].data.length;
-                            if (dataLen > 0) {{
-                                chart.data.datasets[0].data[dataLen - 1] = price;
-                                chart.update('none'); 
+                    const changeSpan = card.querySelector(`#change-${{ticker}}`);
+
+                    if (data.RAW && data.RAW[sym] && data.RAW[sym].USD) {{
+                        const newPrice = data.RAW[sym].USD.PRICE;
+                        if (newPrice !== undefined) {{
+                            const oldVal = holdings * price;
+                            price = newPrice;
+                            card.setAttribute('data-current-price', price);
+                            
+                            const value = holdings * price;
+                            tickerValues[ticker] = value;
+                            tickerDiffs[ticker] = value - oldVal;
+                            
+                            const priceFmt = price < 1 ? price.toFixed(4) : price.toLocaleString('en-US', {{minimumFractionDigits: 2, maximumFractionDigits: 2}});
+                            const currentEl = card.querySelector('.current-value');
+                            if (currentEl) currentEl.innerText = '$' + priceFmt;
+                            
+                            const pnl = value - invested;
+                            const pnlPct = invested > 0 ? (pnl / invested) * 100 : 0;
+                            tickerRoi[ticker] = pnlPct;
+                            
+                            const valStr = '$' + value.toLocaleString('en-US', {{minimumFractionDigits: 2, maximumFractionDigits: 2}});
+                            const pnlStr = (pnl >= 0 ? '▲ $' : '▼ $') + Math.abs(pnl).toLocaleString('en-US', {{minimumFractionDigits: 2, maximumFractionDigits: 2}});
+                            const pnlPctStr = (pnl >= 0 ? '▲ ' : '▼ ') + Math.abs(pnlPct).toFixed(2) + '%';
+                            const color = pnl >= 0 ? '#00ff9d' : '#ff4d4d';
+                            
+                            const valEl = card.querySelector('.total-value');
+                            if (valEl) valEl.innerText = valStr;
+                            const pnlEl = card.querySelector('.card-pnl');
+                            if (pnlEl) {{
+                                pnlEl.innerText = pnlStr;
+                                pnlEl.style.color = color;
+                            }}
+                            
+                            const pnlPctEl = card.querySelector('.card-pnl-pct');
+                            if (pnlPctEl) {{
+                                pnlPctEl.innerText = pnlPctStr;
+                                pnlPctEl.style.color = color;
+                            }}
+                            
+                            // Update sparkline chart
+                            if (window.chartCache && window.chartCache[ticker] && window.chartCache[ticker].chartObj) {{
+                                const chart = window.chartCache[ticker].chartObj;
+                                const dataLen = chart.data.datasets[0].data.length;
+                                if (dataLen > 0) {{
+                                    chart.data.datasets[0].data[dataLen - 1] = price;
+                                    chart.update('none'); 
+                                }}
                             }}
                         }}
+                        
+                        // Also update 24h change text
+                        if (changeSpan && data.RAW[sym].USD.CHANGEPCT24HOUR !== undefined) {{
+                            const change = data.RAW[sym].USD.CHANGEPCT24HOUR;
+                            const sign = change >= 0 ? '▲' : '▼';
+                            const color = change >= 0 ? '#00ff9d' : '#ff4d4d';
+                            changeSpan.innerHTML = `<span style="color:${{color}};">${{sign}} ${{Math.abs(change).toFixed(2)}}%</span>`;
+                        }}
+                    }} else if (changeSpan && changeSpan.innerText === '...') {{
+                         changeSpan.innerHTML = `N/A`;
                     }}
                     
                     totalCoinValue += (holdings * price);
@@ -1963,6 +1997,95 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                 if (dValue) dValue.innerText = dashValStr;
                 if (dPnl) {{ dPnl.innerText = dashPnlStr; dPnl.style.color = dashColor; }}
                 if (dPnlPct) {{ dPnlPct.innerText = dashPnlPctStr; dPnlPct.style.color = dashColor; }}
+
+                // ==========================================
+                // DYNAMICALLY UPDATE HIGHCHARTS (SYNCED)
+                // ==========================================
+                try {{
+                    const pieChart = Highcharts.charts.find(c => c && c.renderTo.id === 'pie-container');
+                    const histChart = Highcharts.charts.find(c => c && c.renderTo.id === 'history-container');
+                    const pnlChart = Highcharts.charts.find(c => c && c.renderTo.id === 'pnl-container');
+                    const roiChart = Highcharts.charts.find(c => c && c.renderTo.id === 'roi-container');
+                    const allocChart = Highcharts.charts.find(c => c && c.renderTo.id === 'allocation-container');
+                    const invValChart = Highcharts.charts.find(c => c && c.renderTo.id === 'inv-val-container');
+
+                    // 1. Pie Chart
+                    if (pieChart && pieChart.series[0]) {{
+                        pieChart.series[0].points.forEach(point => {{
+                            if (tickerValues[point.name] !== undefined) {{
+                                point.update({{y: tickerValues[point.name]}}, false);
+                            }}
+                        }});
+                        pieChart.redraw();
+                    }}
+
+                    // 2. History Chart (Portfolio Value is series 0)
+                    if (histChart && histChart.series[0]) {{
+                        const points = histChart.series[0].points;
+                        if (points && points.length > 0) {{
+                            const lastPoint = points[points.length - 1];
+                            lastPoint.update({{y: totalPortfolioValue}}, false);
+                        }}
+                        histChart.redraw();
+                    }}
+
+                    // 3. PnL Bar Chart & Map
+                    if (pnlChart && pnlChart.series[0]) {{
+                        // Update the active chart points
+                        pnlChart.series[0].points.forEach(point => {{
+                            if (tickerDiffs[point.name] !== undefined) {{
+                                point.update({{y: point.y + tickerDiffs[point.name]}}, false);
+                            }}
+                        }});
+                        // Update the background data map so toggling timeframes preserves live data
+                        Object.keys(pnlDataMap).forEach(key => {{
+                            pnlDataMap[key].forEach(pt => {{
+                                if (tickerDiffs[pt.name] !== undefined) {{
+                                    pt.y += tickerDiffs[pt.name];
+                                }}
+                            }});
+                        }});
+                        pnlChart.redraw();
+                    }}
+                    
+                    // 4. ROI Chart
+                    if (roiChart && roiChart.series[0]) {{
+                        roiChart.series[0].points.forEach(point => {{
+                            if (tickerRoi[point.name] !== undefined) {{
+                                point.update({{y: tickerRoi[point.name]}}, false);
+                            }}
+                        }});
+                        roiChart.redraw();
+                    }}
+
+                    // 5. Asset Allocation Chart
+                    if (allocChart) {{
+                        allocChart.series.forEach(s => {{
+                            if (tickerValues[s.name] !== undefined) {{
+                                const points = s.points;
+                                if (points && points.length > 0) {{
+                                    const lastPoint = points[points.length - 1];
+                                    lastPoint.update({{y: tickerValues[s.name]}}, false);
+                                }}
+                            }}
+                        }});
+                        allocChart.redraw();
+                    }}
+
+                    // 6. Invested vs Value Chart (Series 1 is 'Current Value')
+                    if (invValChart && invValChart.series[1]) {{
+                        const categories = invValChart.xAxis[0].categories;
+                        invValChart.series[1].points.forEach((point, index) => {{
+                            const ticker = categories[index];
+                            if (tickerValues[ticker] !== undefined) {{
+                                point.update({{y: tickerValues[ticker]}}, false);
+                            }}
+                        }});
+                        invValChart.redraw();
+                    }}
+                }} catch (e) {{
+                    console.error("Highcharts Sync Error: ", e);
+                }}
                 
             }} catch (e) {{
                 console.error('Auto-refresh error:', e);
@@ -2005,40 +2128,6 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
         window.chartCache = window.chartCache || {{}};
         const chartCache = window.chartCache;
         const refreshKey = '{st.session_state.refresh_key}';
-        
-        async function fetchAll24hChanges() {{
-            const cards = Array.from(document.querySelectorAll('.flip-card'));
-            if (cards.length === 0) return;
-            const tickers = cards.map(card => card.getAttribute('data-ticker'));
-            const symbolMap = {{
-                'BTC':'BTC','ETH':'ETH','SOL':'SOL','HBAR':'HBAR',
-                'XRP':'XRP','BNB':'BNB','TRX':'TRX','LINK':'LINK','SUI':'SUI'
-            }};
-            const mappedTickers = tickers.map(t => symbolMap[t.toUpperCase()] || t.toUpperCase());
-
-            const url = `https://min-api.cryptocompare.com/data/pricemultifull?fsyms=${{mappedTickers.join(',')}}&tsyms=USD`;
-            try {{
-                const resp = await fetch(url, {{ headers: {{ 'User-Agent': 'Mozilla/5.0' }} }});
-                const data = await resp.json();
-
-                cards.forEach(card => {{
-                    const ticker = card.getAttribute('data-ticker');
-                    const sym = symbolMap[ticker.toUpperCase()] || ticker.toUpperCase();
-                    const changeSpan = card.querySelector(`#change-${{ticker}}`);
-
-                    if (changeSpan && data.RAW && data.RAW[sym] && data.RAW[sym].USD && data.RAW[sym].USD.CHANGEPCT24HOUR !== undefined) {{
-                        const change = data.RAW[sym].USD.CHANGEPCT24HOUR;
-                        const sign = change >= 0 ? '▲' : '▼';
-                        const color = change >= 0 ? '#00ff9d' : '#ff4d4d';
-                        changeSpan.innerHTML = `<span style="color:${{color}};">${{sign}} ${{Math.abs(change).toFixed(2)}}%</span>`;
-                    }} else if (changeSpan) {{
-                        changeSpan.innerHTML = `N/A`;
-                    }}
-                }});
-            }} catch(e) {{
-                console.error("Bulk 24h change error", e);
-            }}
-        }}
         
         async function fetchHistoricalData(ticker) {{
             const symbolMap = {{
@@ -2164,8 +2253,9 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                 }});
             }}
         }});
-
-        fetchAll24hChanges();
+        
+        // Initial call to sync 24h change values immediately on load
+        updateLivePrices();
         
         restoreFlippedState();
         if (window.oldRefreshKey && window.oldRefreshKey !== refreshKey) {{
