@@ -1077,8 +1077,8 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
 
                 // Chart 2: History Area (Using Highstock)
                 Highcharts.stockChart('history-container', {{
-                    chart: {{ type: 'areaspline', backgroundColor: 'transparent', marginLeft: 15, marginRight: 45, marginTop: 25, marginBottom: 35 }}, 
-                    rangeSelector: {{ enabled: false }}, // Hidden native range selector in favor of our custom header HTML
+                    chart: {{ type: 'areaspline', backgroundColor: 'transparent', marginTop: 25, marginBottom: 35 }}, 
+                    rangeSelector: {{ enabled: false }}, 
                     navigator: {{ enabled: false }},
                     scrollbar: {{ enabled: false }},
                     title: {{ text: null }},
@@ -1143,7 +1143,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                 }};
 
                 Highcharts.chart('pnl-container', {{
-                    chart: {{ type: 'bar', backgroundColor: 'transparent', marginLeft: 65, marginRight: 35, marginTop: 15, marginBottom: 25 }},
+                    chart: {{ type: 'bar', backgroundColor: 'transparent', marginTop: 15, marginBottom: 25 }},
                     title: {{ text: null }},
                     xAxis: {{ type: 'category', labels: {{ style: {{ color: '#94a3b8', fontWeight: 'bold' }} }}, gridLineColor: 'rgba(255,255,255,0.05)', tickWidth: 0, lineWidth: 0 }},
                     yAxis: {{ title: {{ text: null }}, labels: {{ enabled: false }}, gridLineColor: 'rgba(255,255,255,0.05)' }},
@@ -1156,7 +1156,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                             return `<b>${{this.point.name}}</b><br/>PnL: <b style="color:${{this.point.color}}">${{val}}</b>`;
                         }}
                     }},
-                    plotOptions: {{ bar: {{ borderRadius: 4, pointPadding: 0.1, groupPadding: 0.1, dataLabels: {{ enabled: true, inside: false, crop: false, overflow: 'allow', style: {{ color: '#fff', textOutline: '3px #0f172a', fontWeight: 'bold' }}, formatter: function() {{ return document.body.classList.contains('privacy-mode') ? '***' : '$' + Highcharts.numberFormat(this.y, 2); }} }} }} }},
+                    plotOptions: {{ bar: {{ borderRadius: 3, borderWidth: 0, pointPadding: 0.1, groupPadding: 0.1, dataLabels: {{ enabled: true, inside: false, crop: false, overflow: 'allow', style: {{ color: '#fff', textOutline: '2px #0f172a', fontWeight: 'bold', fontSize: '10px' }}, formatter: function() {{ return document.body.classList.contains('privacy-mode') ? '***' : '$' + Highcharts.numberFormat(this.y, 2); }} }} }} }},
                     credits: {{ enabled: false }},
                     series: [{{ name: 'PnL', data: pnlDataMap['all'] }}]
                 }});
@@ -1169,14 +1169,14 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                         const range = btn.getAttribute('data-range');
                         const chart = Highcharts.charts.find(c => c && c.renderTo.id === 'pnl-container');
                         if (chart) {{
-                            chart.series[0].setData(pnlDataMap[range], true, {{duration: 300}});
+                            chart.series[0].setData(pnlDataMap[range], true, true, false);
                         }}
                     }});
                 }});
 
                 // Chart 4: Portfolio Allocation (Stacked Area)
                 Highcharts.chart('allocation-container', {{
-                    chart: {{ type: 'area', backgroundColor: 'transparent', marginLeft: 15, marginRight: 45, marginTop: 45, marginBottom: 35 }},
+                    chart: {{ type: 'area', backgroundColor: 'transparent', marginTop: 45, marginBottom: 35 }},
                     title: {{ text: 'Asset Allocation', align: 'left', x: 8, y: 24, style: {{ color: '#e2e8f0', fontSize: '13px', fontWeight: 'bold' }} }},
                     xAxis: {{ type: 'datetime', labels: {{ style: {{ color: '#94a3b8', fontSize: '10px' }} }}, gridLineColor: 'rgba(255,255,255,0.05)', tickWidth: 0, minorGridLineWidth: 0 }},
                     yAxis: {{ title: {{ text: null }}, labels: {{ formatter: function() {{ return this.value + '%'; }}, style: {{ color: '#94a3b8', fontSize: '10px' }} }}, gridLineColor: 'rgba(255,255,255,0.05)', max: 100 }},
@@ -1198,11 +1198,11 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
 
                 // Chart 5: Invested vs Current Value (Grouped Column)
                 Highcharts.chart('inv-val-container', {{
-                    chart: {{ type: 'column', backgroundColor: 'transparent', marginLeft: 15, marginRight: 45, marginTop: 45, marginBottom: 35 }},
+                    chart: {{ type: 'column', backgroundColor: 'transparent', marginTop: 45, marginBottom: 35 }},
                     title: {{ text: 'Invested vs Current Value', align: 'left', x: 8, y: 24, style: {{ color: '#e2e8f0', fontSize: '13px', fontWeight: 'bold' }} }},
                     xAxis: {{ categories: {inv_val_categories_js}, labels: {{ style: {{ color: '#94a3b8', fontWeight: 'bold', fontSize: '10px' }} }}, gridLineColor: 'rgba(255,255,255,0.05)', tickWidth: 0 }},
                     yAxis: {{ title: {{ text: null }}, labels: {{ style: {{ color: '#94a3b8', fontSize: '10px' }}, formatter: function() {{ return document.body.classList.contains('privacy-mode') ? '***' : '$' + this.axis.defaultLabelFormatter.call(this); }} }}, gridLineColor: 'rgba(255,255,255,0.05)' }},
-                    legend: {{ enabled: true, itemStyle: {{ color: '#94a3b8', fontSize: '11px', fontWeight: 'normal' }}, itemHoverStyle: {{ color: '#ffffff' }}, verticalAlign: 'top', y: -5 }},
+                    legend: {{ enabled: false }},
                     tooltip: {{
                         shared: true, backgroundColor: 'rgba(15, 23, 42, 0.95)', style: {{ color: '#fff' }}, borderColor: 'rgba(255,255,255,0.15)',
                         formatter: function() {{
@@ -1280,22 +1280,23 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                         el.style.transition = 'transform 0.4s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.4s ease, box-shadow 0.4s ease';
                         el.style.transform = `translate(${{origLeft}}px, ${{origTop}}px) scale(1)`;
 
-                        // Flawless Cleanup at end of transition
-                        setTimeout(() => {{
+                        // Ensure flawless snapping without a flash when the CSS transition finishes
+                        const finishClose = (e) => {{
+                            if (e && e.propertyName !== 'transform') return;
+                            el.removeEventListener('transitionend', finishClose);
+                            clearTimeout(el._closeTimeout);
                             if (parentIframe) parentIframe.classList.remove('fullscreen-mode');
-                            
                             el.style.cssText = ''; 
                             wrapper.style.overflowX = 'auto'; // Restore scroll snapping
-                            
-                            // Silently trigger Highcharts reflow so it adapts to the restored grid slot without flashing
-                            Highcharts.charts.forEach(c => {{ if(c && c.renderTo && el.contains(c.renderTo)) c.reflow(); }});
                             
                             // Restore siblings
                             document.querySelectorAll('.chart-box').forEach(c => {{
                                 c.style.opacity = '1';
                                 c.style.pointerEvents = 'auto';
                             }});
-                        }}, 400);
+                        }};
+                        el.addEventListener('transitionend', finishClose);
+                        el._closeTimeout = setTimeout(() => {{ finishClose(); }}, 450); // Fallback
 
                         return;
                     }}
