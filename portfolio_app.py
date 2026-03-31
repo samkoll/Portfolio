@@ -862,8 +862,8 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
             inv = r['USDC'] if pd.notna(r['USDC']) else 0
             val = r['Value'] if pd.notna(r['Value']) else 0
             c = get_ticker_color(ticker)
-            inv_data_points.append(f"{inv}")
-            val_data_points.append(f"{{ y: {val}, color: '{c}' }}")
+            inv_data_points.append(f"{{ name: '{ticker}', y: {inv} }}")
+            val_data_points.append(f"{{ name: '{ticker}', y: {val}, color: '{c}' }}")
         
         inv_data_js = ",".join(inv_data_points)
         val_data_js = ",".join(val_data_points)
@@ -1021,7 +1021,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                     <div class="chart-placeholder" data-type="history">
                         <div id="history-wrapper" class="chart-box">
                             <div class="chart-header">
-                                <div class="chart-title">Performance</div>
+                                <div class="chart-title">Historical Performance</div>
                                 <div class="chart-controls hist-controls">
                                     <button class="active" data-range="all">All</button>
                                     <button data-range="1w">1W</button>
@@ -1082,14 +1082,14 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
 
                 // Chart 2: History Area (Using Highstock)
                 Highcharts.stockChart('history-container', {{
-                    chart: {{ type: 'areaspline', backgroundColor: 'transparent', marginLeft: 45, marginRight: 15, marginTop: 25, marginBottom: 35 }}, 
+                    chart: {{ type: 'areaspline', backgroundColor: 'transparent', marginLeft: 15, marginRight: 45, marginTop: 25, marginBottom: 35 }}, 
                     rangeSelector: {{ enabled: false }}, // Hidden native range selector in favor of our custom header HTML
                     navigator: {{ enabled: false }},
                     scrollbar: {{ enabled: false }},
                     title: {{ text: null }},
                     legend: {{ enabled: true, itemStyle: {{ color: '#94a3b8', fontSize: '11px', fontWeight: 'normal' }}, itemHoverStyle: {{ color: '#ffffff' }}, verticalAlign: 'top', align: 'center', y: -10 }},
                     xAxis: {{ gridLineColor: 'rgba(255,255,255,0.05)', tickWidth: 0, minorGridLineWidth: 0 }},
-                    yAxis: {{ opposite: false, title: {{ text: null }}, labels: {{ align: 'right', x: -4, style: {{ color: '#94a3b8', fontSize: '10px', textOverflow: 'none', whiteSpace: 'nowrap' }}, formatter: function() {{ return document.body.classList.contains('privacy-mode') ? '***' : '$' + this.axis.defaultLabelFormatter.call(this); }} }}, gridLineColor: 'rgba(255,255,255,0.05)' }},
+                    yAxis: {{ title: {{ text: null }}, labels: {{ align: 'right', x: -4, style: {{ color: '#94a3b8', fontSize: '10px', textOverflow: 'none', whiteSpace: 'nowrap' }}, formatter: function() {{ return document.body.classList.contains('privacy-mode') ? '***' : '$' + this.axis.defaultLabelFormatter.call(this); }} }}, gridLineColor: 'rgba(255,255,255,0.05)' }},
                     tooltip: {{
                         shared: true, backgroundColor: 'rgba(15, 23, 42, 0.95)', style: {{ color: '#fff' }}, borderColor: 'rgba(255,255,255,0.15)',
                         formatter: function() {{
@@ -1148,7 +1148,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                 }};
 
                 Highcharts.chart('pnl-container', {{
-                    chart: {{ type: 'bar', backgroundColor: 'transparent', marginLeft: 55, marginRight: 45, marginTop: 15, marginBottom: 25 }},
+                    chart: {{ type: 'bar', backgroundColor: 'transparent', marginLeft: 15, marginRight: 45, marginTop: 15, marginBottom: 25 }},
                     title: {{ text: null }},
                     xAxis: {{ type: 'category', labels: {{ style: {{ color: '#94a3b8', fontWeight: 'bold' }} }}, gridLineColor: 'rgba(255,255,255,0.05)', tickWidth: 0, lineWidth: 0 }},
                     yAxis: {{ title: {{ text: null }}, labels: {{ enabled: false }}, gridLineColor: 'rgba(255,255,255,0.05)' }},
@@ -1174,14 +1174,14 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                         const range = btn.getAttribute('data-range');
                         const chart = Highcharts.charts.find(c => c && c.renderTo.id === 'pnl-container');
                         if (chart) {{
-                            chart.series[0].setData(pnlDataMap[range], true, false, false);
+                            chart.series[0].setData(pnlDataMap[range], true);
                         }}
                     }});
                 }});
 
                 // Chart 4: Portfolio Allocation (Stacked Area)
                 Highcharts.chart('allocation-container', {{
-                    chart: {{ type: 'area', backgroundColor: 'transparent', marginLeft: 45, marginRight: 15, marginTop: 45, marginBottom: 35 }},
+                    chart: {{ type: 'area', backgroundColor: 'transparent', marginLeft: 15, marginRight: 45, marginTop: 45, marginBottom: 35 }},
                     title: {{ text: 'Asset Allocation', align: 'left', x: 8, y: 24, style: {{ color: '#e2e8f0', fontSize: '13px', fontWeight: 'bold' }} }},
                     xAxis: {{ type: 'datetime', labels: {{ style: {{ color: '#94a3b8', fontSize: '10px' }} }}, gridLineColor: 'rgba(255,255,255,0.05)', tickWidth: 0, minorGridLineWidth: 0 }},
                     yAxis: {{ title: {{ text: null }}, labels: {{ align: 'right', x: -4, formatter: function() {{ return this.value + '%'; }}, style: {{ color: '#94a3b8', fontSize: '10px' }} }}, gridLineColor: 'rgba(255,255,255,0.05)', max: 100 }},
@@ -1203,7 +1203,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
 
                 // Chart 5: Invested vs Current Value (Grouped Column)
                 Highcharts.chart('inv-val-container', {{
-                    chart: {{ type: 'column', backgroundColor: 'transparent', marginLeft: 45, marginRight: 15, marginTop: 45, marginBottom: 35 }},
+                    chart: {{ type: 'column', backgroundColor: 'transparent', marginLeft: 15, marginRight: 45, marginTop: 45, marginBottom: 35 }},
                     title: {{ text: 'Invested vs Current Value', align: 'left', x: 8, y: 24, style: {{ color: '#e2e8f0', fontSize: '13px', fontWeight: 'bold' }} }},
                     xAxis: {{ categories: {inv_val_categories_js}, labels: {{ style: {{ color: '#94a3b8', fontWeight: 'bold', fontSize: '10px' }} }}, gridLineColor: 'rgba(255,255,255,0.05)', tickWidth: 0 }},
                     yAxis: {{ title: {{ text: null }}, labels: {{ align: 'right', x: -4, style: {{ color: '#94a3b8', fontSize: '10px', textOverflow: 'none', whiteSpace: 'nowrap' }}, formatter: function() {{ return document.body.classList.contains('privacy-mode') ? '***' : '$' + this.axis.defaultLabelFormatter.call(this); }} }}, gridLineColor: 'rgba(255,255,255,0.05)' }},
@@ -1211,7 +1211,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                     tooltip: {{
                         shared: true, backgroundColor: 'rgba(15, 23, 42, 0.95)', style: {{ color: '#fff' }}, borderColor: 'rgba(255,255,255,0.15)',
                         formatter: function() {{
-                            let s = '<b style="font-size: 13px;">' + this.x + '</b>';
+                            let s = '<b style="font-size: 13px;">' + (this.points[0].point.name || this.points[0].key || this.x) + '</b>';
                             const isPrivacy = document.body.classList.contains('privacy-mode');
                             this.points.forEach(function(point) {{
                                 let val = isPrivacy ? '***' : '$' + Highcharts.numberFormat(point.y, 2);
@@ -1271,21 +1271,20 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
 
                     if (el.classList.contains('expanded-chart')) {{
                         // ==========================================
-                        // CLOSING MECHANICS 
+                        // CLOSING MECHANICS (Seamless settle Fix)
                         // ==========================================
                         overlay.classList.remove('active');
                         
                         const origTop = parseFloat(el.getAttribute('data-orig-top')) || 0;
                         const origLeft = parseFloat(el.getAttribute('data-orig-left')) || 0;
 
-                        // Instantly remove class so background crossfades cleanly during the travel
+                        // Phase 1: Keep it position: fixed, but set its standard visual coordinates. 
+                        // Crossfade the class instantly to lose expanded background while traveling.
                         el.classList.remove('expanded-chart');
-                        
-                        // Transition smoothly to original slot
                         el.style.transition = 'transform 0.4s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.4s ease, box-shadow 0.4s ease';
                         el.style.transform = `translate(${{origLeft}}px, ${{origTop}}px) scale(1)`;
 
-                        // Ensure flawless snapping without a flash when the CSS transition finishes
+                        // Phase 2: Once the visual transition finishes, silently revert CSS layout from fixed to standard flow
                         const finishClose = (e) => {{
                             if (e && e.propertyName !== 'transform') return;
                             el.removeEventListener('transitionend', finishClose);
@@ -1293,11 +1292,17 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                             if (parentIframe) parentIframe.classList.remove('fullscreen-mode');
                             
                             el.style.transition = 'none';
-                            el.style.cssText = ''; 
+                            el.style.cssText = ''; // Full layout revert
                             
-                            // Restore siblings smoothly
+                            // Highcharts Redraw SILENTLY to correct slot dimensions
+                            Highcharts.charts.forEach(c => {{ 
+                                if(c && c.renderTo && el.contains(c.renderTo)) {{
+                                    c.setSize(null, null, false);
+                                }}
+                            }});
+                            
+                            // Reveal siblings smoothly
                             document.querySelectorAll('.chart-box').forEach(c => {{
-                                c.style.transition = 'opacity 0.25s ease';
                                 c.style.opacity = '1';
                                 c.style.pointerEvents = 'auto';
                             }});
@@ -1309,7 +1314,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                     }}
                     
                     // ==========================================
-                    // OPENING MECHANICS 
+                    // OPENING MECHANICS (Retained seamless flow)
                     // ==========================================
                     
                     // 1. SILENT VANISH: instantly hide siblings to prevent bleeding
@@ -1367,7 +1372,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                     
                     void el.offsetWidth; // Force CSS Engine Reflow
 
-                    // Phase 2: Add CSS class for background color and apply transform translation/scale
+                    // Phase 2: Travel to center while scaling using native browser hardware acceleration
                     el.classList.add('expanded-chart');
                     el.style.transition = 'transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.4s ease, box-shadow 0.4s ease';
                     el.style.transform = `translate(${{centerLeft}}px, ${{centerTop}}px) scale(${{targetScale}})`;
