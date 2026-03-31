@@ -389,7 +389,6 @@ def get_with_retry(url: str, headers: dict, timeout: int = 12, retries: int = 4)
             resp.raise_for_status()
             data = resp.json()
             # If the API hits a rate limit, it still returns HTTP 200 but sets 'Response' to 'Error'. 
-            # We catch this and apply an exponential backoff so the chart loads perfectly the first time.
             if isinstance(data, dict) and data.get('Response') == 'Error':
                 if attempt == retries - 1:
                     return None
@@ -445,7 +444,6 @@ def get_all_cryptocompare_prices(tickers, refresh_key=0):
 def build_portfolio_history(crypto_df, fiat_df, last_prices, refresh_key):
     if crypto_df.empty and fiat_df.empty: return []
 
-    # Process Fiat to track total cumulative USDC deposits available
     fiat = fiat_df.copy()
     if not fiat.empty:
         fiat['Date'] = fiat['Datum'].apply(parse_excel_date)
@@ -453,7 +451,6 @@ def build_portfolio_history(crypto_df, fiat_df, last_prices, refresh_key):
     else:
         daily_fiat_usdc = pd.Series(dtype=float)
 
-    # Process Crypto to track total USDC spent over time
     crypto = crypto_df.copy()
     if not crypto.empty:
         crypto['Date'] = crypto['Datum'].apply(parse_excel_date)
@@ -469,17 +466,14 @@ def build_portfolio_history(crypto_df, fiat_df, last_prices, refresh_key):
     if min_date > today: min_date = today
     date_range = pd.date_range(start=min_date, end=today).date
 
-    # Reindex and cumulative sum for Fiat USDC and Crypto Spent USDC
     daily_fiat_usdc = daily_fiat_usdc.reindex(date_range, fill_value=0)
     cum_fiat_usdc = daily_fiat_usdc.cumsum()
 
     daily_crypto_spent = daily_crypto_spent.reindex(date_range, fill_value=0)
     cum_crypto_spent = daily_crypto_spent.cumsum()
 
-    # Track unused USDC caching over time
     cum_unused_usdc = cum_fiat_usdc - cum_crypto_spent
 
-    # Calculate Holdings
     if not crypto.empty:
         crypto_assets = crypto[crypto['Ticker'].str.upper() != 'USDC']
         if not crypto_assets.empty:
@@ -494,7 +488,6 @@ def build_portfolio_history(crypto_df, fiat_df, last_prices, refresh_key):
         cum_holdings = pd.DataFrame(index=date_range)
         coins = []
 
-    # Fetch daily close historical prices (Including BTC for the benchmark)
     prices_dict = {}
     fetch_coins = set(coins) | {'BTC'}
     
@@ -515,11 +508,8 @@ def build_portfolio_history(crypto_df, fiat_df, last_prices, refresh_key):
     else:
         prices_df = pd.DataFrame(index=date_range)
         
-    # FORCE INJECT LIVE PRICES IF HISTORICAL API FAILED/MISSED
-    # This prevents the chart from dropping massively to zero if a coin history fetch fails
     for coin in fetch_coins:
         live_p = last_prices.get(coin, 0.0)
-        # Avoid zero price for BTC fallback so it doesn't divide by 1 and mirror the investment line
         if live_p == 0.0 and coin == 'BTC':
             live_p = 65000.0 
             
@@ -529,7 +519,6 @@ def build_portfolio_history(crypto_df, fiat_df, last_prices, refresh_key):
             prices_df[coin] = prices_df[coin].replace(0.0, live_p)
             prices_df[coin] = prices_df[coin].fillna(live_p)
     
-    # Calculate portfolio values (Crypto + Unused USDC)
     daily_crypto_value = pd.Series(0.0, index=date_range)
     common_cols = cum_holdings.columns.intersection(prices_df.columns)
     if not common_cols.empty:
@@ -537,16 +526,14 @@ def build_portfolio_history(crypto_df, fiat_df, last_prices, refresh_key):
 
     total_portfolio_value = daily_crypto_value + cum_unused_usdc
 
-    # Calculate BTC Benchmark: What if ALL Fiat deposits went straight into BTC instead?
     if 'BTC' in prices_df.columns:
         btc_prices = prices_df['BTC']
-        btc_bought = daily_fiat_usdc / btc_prices.replace(0, 1) # Avoid division by zero
+        btc_bought = daily_fiat_usdc / btc_prices.replace(0, 1) 
         cum_btc_benchmark_holdings = btc_bought.cumsum()
         btc_benchmark_value = cum_btc_benchmark_holdings * btc_prices
     else:
         btc_benchmark_value = pd.Series(0.0, index=date_range)
 
-    # Output formatted array for JavaScript Highcharts
     history_data = []
     for d in date_range:
         dt = datetime.combine(d, datetime.min.time())
@@ -648,7 +635,6 @@ def calculate_portfolio(crypto_df):
     usdc_holdings = fiat_usdc - crypto_spent
     coin_tickers = [t for t in crypto_df['Ticker'].unique() if t != 'USDC']
     
-    # Pre-fetch BTC live price so the historical fallback benchmark never fails
     fetch_tickers = list(set(coin_tickers) | {'BTC'})
     
     live_prices = get_all_cryptocompare_prices(fetch_tickers, st.session_state.refresh_key)
@@ -774,7 +760,6 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                 inv = d['invested']
                 btc = d['btc']
                 
-                # Math lock to force perfect synchronicity with live cards
                 if idx == len(history_data_raw) - 1 and ts == today_ts:
                     val = float(total_value)
                     inv = float(fiat_usdc_total)
@@ -789,7 +774,6 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
         else:
             hist_val_js, hist_inv_js, hist_btc_js = "", "", ""
 
-        # Pie Chart Data Construction
         pie_data_js_lines = []
         for _, r in df_port.iterrows():
             ticker = r['Ticker']
@@ -798,7 +782,6 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
             val = r['Value']
             if pd.notna(val) and val > 0:
                 base_color = get_ticker_color(ticker)
-                # Ensure black logos like XRP or HBAR are visible on dark background
                 chart_color = base_color if base_color != '#000000' else '#ffffff' 
                 pie_data_js_lines.append(f"{{ name: '{ticker}', y: {val}, color: '{chart_color}' }}")
         pie_data_js = ",\n".join(pie_data_js_lines)
@@ -817,15 +800,15 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                     width: 100%;
                     overflow-y: hidden;
                     overflow-x: auto;
-                    padding: 6px 0px 6px 0px; /* Reduced gap padding */
-                    margin-bottom: 0px; /* Eliminated bottom gap */
+                    padding: 6px 0px 6px 0px; 
+                    margin-bottom: 0px; 
                     scroll-snap-type: x mandatory;
                     -webkit-overflow-scrolling: touch;
-                    scrollbar-width: none; /* Firefox */
-                    -ms-overflow-style: none; /* IE and Edge */
+                    scrollbar-width: none; 
+                    -ms-overflow-style: none; 
                 }}
                 .charts-scroll-wrapper::-webkit-scrollbar {{
-                    display: none; /* Chrome, Safari, Opera */
+                    display: none; 
                 }}
                 .charts-flex {{
                     display: flex;
@@ -836,7 +819,6 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                     padding: 0 24px;
                 }}
                 
-                /* Invisible placeholders keep the layout from shifting when a chart pops out */
                 .chart-placeholder {{
                     scroll-snap-align: center;
                 }}
@@ -858,8 +840,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                     border: 1px solid rgba(255,255,255,0.05);
                     border-radius: 16px;
                     box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-                    touch-action: pan-x pan-y; /* Disables native mobile double-tap zoom to prevent interference */
-                    transition: none; /* Block CSS layout transitions so it doesn't fight Highcharts */
+                    touch-action: pan-x pan-y; 
                 }}
                 
                 /* Smooth Fade Overlay */
@@ -868,23 +849,18 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                     opacity: 0;
                     position: fixed;
                     top: 0; left: 0; width: 100%; height: 100%;
-                    background: rgba(10, 15, 28, 0.5); /* Lighter as parent iframe handles main background blur */
+                    background: rgba(10, 15, 28, 0.85); /* Inner background to dim the app */
                     z-index: 1000;
-                    transition: opacity 0.3s ease, visibility 0.3s ease;
+                    backdrop-filter: blur(5px);
+                    -webkit-backdrop-filter: blur(5px);
+                    transition: opacity 0.4s ease, visibility 0.4s ease;
                 }}
                 #chart-overlay.active {{
                     visibility: visible;
                     opacity: 1;
                 }}
                 
-                /* Expanded Chart Global (Applied to PC and Mobile) */
                 .expanded-chart {{
-                    position: fixed !important;
-                    top: 50% !important;
-                    left: 50% !important;
-                    transform: translate(-50%, -50%) !important;
-                    z-index: 1001 !important;
-                    margin: 0 !important;
                     background: rgba(15, 23, 42, 0.95) !important;
                     border: 1px solid rgba(0, 255, 157, 0.4) !important;
                     box-shadow: 0 10px 40px rgba(0,0,0,0.8) !important;
@@ -920,10 +896,8 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
             </div>
             
             <script>
-                // Format config for Time
                 Highcharts.setOptions({{ global: {{ useUTC: false }} }});
 
-                // Render 3D Pie Chart (FIRST)
                 Highcharts.chart('pie-container', {{
                     chart: {{
                         type: 'pie',
@@ -974,7 +948,6 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                     }}]
                 }});
 
-                // Render Historical Performance Chart (SECOND)
                 Highcharts.chart('history-container', {{
                     chart: {{ 
                         type: 'areaspline', 
@@ -1060,7 +1033,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                     }}]
                 }});
 
-                // --- Inject Parent Fullscreen CSS ---
+                // --- Inject Parent Fullscreen CSS without transitions to avoid jumps ---
                 try {{
                     if (window !== window.parent && window.parent.document) {{
                         if (!window.parent.document.getElementById('chart-fullscreen-css')) {{
@@ -1077,10 +1050,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                                     max-height: 100vh !important;
                                     z-index: 999999 !important;
                                     border: none !important;
-                                    background: rgba(10, 15, 28, 0.85) !important;
-                                    backdrop-filter: blur(5px) !important;
-                                    -webkit-backdrop-filter: blur(5px) !important;
-                                    transition: all 0.3s ease;
+                                    background: transparent !important;
                                 }}
                             `;
                             window.parent.document.head.appendChild(style);
@@ -1088,7 +1058,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                     }}
                 }} catch(e) {{}}
 
-                // --- New Window / Overlay Modal Mechanics ---
+                // --- Smooth Expansion Mechanics ---
                 function toggleExpandChart(chartId) {{
                     const el = document.getElementById(chartId);
                     const overlay = document.getElementById('chart-overlay');
@@ -1104,62 +1074,93 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                         }}
                     }} catch(e) {{}}
                     
-                    // If Already Expanded, Close It
                     if (el.classList.contains('expanded-chart')) {{
+                        // CLOSING
                         el.classList.remove('expanded-chart');
                         overlay.classList.remove('active');
-                        wrapper.style.overflowX = 'auto'; // Restore scroll snapping
+                        wrapper.style.overflowX = 'auto';
                         
-                        // Shrink the iframe back to its original slot immediately
+                        // Clear inline JS styles to restore flex layout instantly
+                        el.style.cssText = ''; 
+                        
+                        // Shrink iframe instantly
                         if (parentIframe) {{
                             parentIframe.classList.remove('fullscreen-mode');
                         }}
                         
-                        // Tell Highcharts to animate perfectly back to the placeholder dimensions
                         const isMobile = window.innerWidth <= 768;
                         const isPie = chartId === 'pie-container';
                         const targetW = isMobile ? window.innerWidth * 0.85 : (isPie ? 350 : 600);
                         const targetH = isMobile ? 320 : 340;
 
                         hc.setSize(targetW, targetH, {{ duration: 350, easing: 'easeOutQuart' }});
-                        
-                        // Clear explicit sizing after animation finishes so CSS handles resizing later
                         setTimeout(() => {{ hc.setSize(null, null, false); }}, 360);
                         return;
                     }}
                     
-                    // Otherwise, Open It
-                    // Collapse any other open charts silently first
+                    // OPENING
+                    
+                    // 1. Close others silently
                     document.querySelectorAll('.expanded-chart').forEach(c => {{
                         c.classList.remove('expanded-chart');
+                        c.style.cssText = '';
                         const otherHc = Highcharts.charts.find(ohc => ohc && ohc.renderTo.id === c.id);
-                        if (otherHc) {{
-                            otherHc.setSize(null, null, false);
-                        }}
+                        if (otherHc) otherHc.setSize(null, null, false);
                     }});
-                    
-                    // Expand iframe to fit entire Streamlit window over the home screen
+
+                    // 2. Measure exactly where the chart is right now on the screen
+                    const chartRect = el.getBoundingClientRect();
+                    let visualTop = chartRect.top;
+                    let visualLeft = chartRect.left;
+
+                    if (parentIframe) {{
+                        const iframeRect = parentIframe.getBoundingClientRect();
+                        visualTop += iframeRect.top;
+                        visualLeft += iframeRect.left;
+                    }}
+
+                    // 3. Pin it exactly to that visual coordinate (locks its position)
+                    el.style.position = 'fixed';
+                    el.style.top = visualTop + 'px';
+                    el.style.left = visualLeft + 'px';
+                    el.style.width = chartRect.width + 'px';
+                    el.style.height = chartRect.height + 'px';
+                    el.style.margin = '0';
+                    el.style.transform = 'none';
+                    el.style.transition = 'none';
+                    el.style.zIndex = '1001';
+
+                    // 4. Make iframe fullscreen instantly (no CSS transition on the iframe)
                     if (parentIframe) {{
                         parentIframe.classList.add('fullscreen-mode');
                     }}
-
+                    overlay.classList.add('active'); // Fade in the dark backdrop inside the iframe
+                    wrapper.style.overflowX = 'visible';
                     el.classList.add('expanded-chart');
-                    overlay.classList.add('active');
-                    wrapper.style.overflowX = 'visible'; // Prevent clipping while expanded
-                    
-                    // Instruct Highcharts to fill the new big space (the 100vw/vh iframe)
-                    setTimeout(() => {{
-                        const screenW = window.innerWidth;
-                        const screenH = window.innerHeight;
-                        
-                        let targetW = screenW * 0.9;
-                        let targetH = screenH * 0.7;
-                        if (targetW > 1000) targetW = 1000;
-                        if (targetH > 700) targetH = 700;
-                        if (targetH < 400) targetH = 400;
 
-                        hc.setSize(targetW, targetH, {{ duration: 350, easing: 'easeOutQuart' }});
-                    }}, 50); // slight delay allowing iframe geometry to resolve
+                    // 5. Force the browser to register the locked initial coordinates before animating
+                    void el.offsetWidth;
+
+                    // 6. Calculate target fullscreen dimensions
+                    const screenW = window.innerWidth;
+                    const screenH = window.innerHeight;
+                    
+                    let targetW = screenW * 0.9;
+                    let targetH = screenH * 0.7;
+                    if (targetW > 1000) targetW = 1000;
+                    if (targetH > 700) targetH = 700;
+                    if (targetH < 400) targetH = 400;
+
+                    // 7. Apply the smooth CSS transition and target destination
+                    el.style.transition = 'all 0.4s cubic-bezier(0.16, 1, 0.3, 1)';
+                    el.style.top = '50%';
+                    el.style.left = '50%';
+                    el.style.width = targetW + 'px';
+                    el.style.height = targetH + 'px';
+                    el.style.transform = 'translate(-50%, -50%)';
+
+                    // Sync Highcharts internal vectors
+                    hc.setSize(targetW, targetH, {{ duration: 400, easing: 'easeOutQuart' }});
                 }}
 
                 function setupDoubleTap(elementId) {{
@@ -1167,13 +1168,11 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                     if (!el) return;
                     let lastTap = 0;
 
-                    // Handle standard double click (PC fallback / some touchpads)
                     el.addEventListener('dblclick', function(e) {{
                         toggleExpandChart(elementId);
                         e.stopPropagation();
                     }});
 
-                    // Handle true touch double tap strictly for mobile
                     el.addEventListener('touchend', function(e) {{
                         const currentTime = new Date().getTime();
                         const tapLength = currentTime - lastTap;
@@ -1189,7 +1188,6 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                 setupDoubleTap('pie-container');
                 setupDoubleTap('history-container');
 
-                // Close expanded chart when tapping the dark background overlay
                 document.getElementById('chart-overlay').addEventListener('click', () => {{
                     document.querySelectorAll('.expanded-chart').forEach(el => {{
                         if (el.classList.contains('expanded-chart')) {{
@@ -1198,8 +1196,6 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                     }});
                 }});
 
-
-                // --- Wheel scrolling for PC (Chart Area) ---
                 const chartScroll = document.getElementById('chartsScrollContainer');
                 if (chartScroll) {{
                     chartScroll.addEventListener('wheel', (evt) => {{
@@ -1210,7 +1206,6 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                     }}, {{ passive: false }});
                 }}
 
-                // Sync privacy mode with Streamlit parent document dynamically
                 setInterval(() => {{
                     try {{
                         const saved = localStorage.getItem('dashboardOpen');
@@ -1223,7 +1218,6 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                             }} else {{
                                 document.body.classList.remove('privacy-mode');
                             }}
-                            // Force redraw on the history Y-Axis labels
                             const hc = Highcharts.charts.find(c => c && c.renderTo.id === 'history-container');
                             if (hc) {{ hc.yAxis[0].isDirty = true; hc.redraw(); }}
                         }}
@@ -1233,7 +1227,6 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
         </body>
         </html>
         """
-        # Height shrunk to 355 to eliminate the gap completely! The script handles expanding perfectly over the entire screen when needed.
         components.html(charts_html, height=355, scrolling=False)
 
         # ================== 3. SUBDUED USDC BANNER ==================
@@ -1354,15 +1347,14 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
             overflow-x: auto;
             padding: 12px 0px 20px 0px;
             margin-bottom: 20px;
-            scroll-snap-type: x mandatory; /* Enable scroll snapping */
+            scroll-snap-type: x mandatory; 
             -webkit-overflow-scrolling: touch;
-            /* Completely hide scrollbars */
-            scrollbar-width: none; /* Firefox */
-            -ms-overflow-style: none; /* IE and Edge */
+            scrollbar-width: none; 
+            -ms-overflow-style: none; 
         }}
         
         .scroll-wrapper::-webkit-scrollbar {{
-            display: none; /* Chrome, Safari, Opera */
+            display: none; 
         }}
 
         .coin-grid {{
@@ -1371,17 +1363,17 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
             flex-wrap: nowrap;
             gap: 24px;
             width: max-content;
-            padding: 0 24px; /* Default desktop padding */
+            padding: 0 24px; 
             background: transparent !important;
             overflow: visible !important;
         }}
         .flip-card {{
-            flex: 0 0 420px; /* Made wider */
+            flex: 0 0 420px; 
             background-color: transparent;
             height: 290px;
             perspective: 1200px;
             cursor: pointer;
-            scroll-snap-align: center; /* Snap to center */
+            scroll-snap-align: center; 
         }}
         .flip-card-inner {{
             position: relative;
@@ -1402,10 +1394,9 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
             border-radius: 18px;
             padding: 14px 18px;
             background: #0f172a;
-            /* Default slight border glow taking the dynamic color */
             box-shadow: 0 8px 24px rgba(0,0,0,0.3);
             border: 2px solid transparent;
-            overflow: hidden; /* Prevent internal scrolling */
+            overflow: hidden; 
         }}
         .flip-card-front {{
             display: flex;
@@ -1416,10 +1407,9 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
             transform: rotateY(180deg);
             display: flex;
             flex-direction: column;
-            padding: 24px 16px 16px 16px; /* Extra top padding for the TV button */
+            padding: 24px 16px 16px 16px; 
         }}
         
-        /* TradingView External Link Button */
         .tv-external-btn {{
             position: absolute;
             top: 10px;
@@ -1436,7 +1426,6 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
         }}
         .tv-external-btn:hover {{ color: #ffffff; }}
         
-        /* Interactive dynamic colored border glow - ONLY applies on PC (fine pointers) */
         @media (hover: hover) and (pointer: fine) {{
             .flip-card:hover .flip-card-front,
             .flip-card:hover .flip-card-back {{
@@ -1445,7 +1434,6 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
             }}
         }}
         
-        /* Touch Hover explicitly triggered by JS on mobile */
         .flip-card.touch-hover .flip-card-front,
         .flip-card.touch-hover .flip-card-back {{
             border-color: var(--border);
@@ -1545,11 +1533,9 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
         }}
         
         @media (max-width: 700px) {{
-            /* Fit phone width perfectly with snapping */
             .flip-card {{ flex: 0 0 85vw; height: 280px; }}
             .coin-grid {{ padding: 0 7.5vw; gap: 16px; }}
             
-            /* Responsive fonts and padding to prevent overflow */
             .flip-card-front, .flip-card-back {{ padding: 12px 10px; }}
             .header-price-row {{ gap: 10px; margin-top: 8px; }}
             .current-value, .stat-value, .change-value {{ font-size: min(3.8vw, 0.95rem); letter-spacing: -0.3px; }}
@@ -1569,11 +1555,9 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
 
 <script>
     (function() {{
-        // Define the close function for global click-away
         function closeAllOpenUI(e) {{
             const isCardClick = e && e.target && typeof e.target.closest === 'function' && e.target.closest('.flip-card');
             
-            // Unflip cards if clicking completely outside
             if (!isCardClick) {{
                 document.querySelectorAll('.flip-card.flipped').forEach(card => {{
                     card.classList.remove('flipped');
@@ -1582,14 +1566,12 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
             }}
         }}
 
-        // Listen inside the iframe
         ['click', 'touchstart'].forEach(evt => {{
             document.addEventListener(evt, (e) => {{
                 closeAllOpenUI(e);
             }}, {{ passive: true }});
         }});
 
-        // --- Privacy Mode Syncing Logic ---
         let lastDashState = null;
         setInterval(() => {{
             try {{
@@ -1598,7 +1580,6 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                 if (dt) {{
                     const isChecked = dt.checked;
                     
-                    // Sync the split markdown CSS toggles
                     if (dtUsdc && dtUsdc.checked !== isChecked) {{
                         dtUsdc.checked = isChecked;
                     }}
@@ -1616,7 +1597,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                 }}
             }} catch(e) {{}}
         }}, 150);
-        // Run once on cold load to enforce local storage memory immediately
+
         try {{
             const dt = window.parent.document.getElementById('dash-toggle');
             const dtUsdc = window.parent.document.getElementById('dash-toggle-usdc');
@@ -1636,7 +1617,6 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
             }}
         }} catch(e) {{}}
 
-        // Listen outside the iframe (Parent Streamlit Document)
         try {{
             ['click', 'touchstart'].forEach(evt => {{
                 window.parent.document.addEventListener(evt, (e) => {{
@@ -1647,21 +1627,16 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
             console.log("Cannot bind to parent document");
         }}
 
-        // --- Wheel scrolling for PC ---
         const scrollContainer = document.getElementById('scrollContainer');
         if (scrollContainer) {{
             scrollContainer.addEventListener('wheel', (evt) => {{
-                // Detect vertical scroll to convert to horizontal
                 if (Math.abs(evt.deltaY) > Math.abs(evt.deltaX)) {{
                     evt.preventDefault();
-                    
-                    // Using a smaller step (200) makes it slower/more controlled on PC
                     scrollContainer.scrollBy({{ left: evt.deltaY > 0 ? 200 : -200, behavior: 'smooth' }});
                 }}
             }}, {{ passive: false }});
         }}
 
-        // --- Live Price Auto Refresh Logic ---
         const usdcHoldings = {usdc_holdings};
         async function updateLivePrices() {{
             const cards = Array.from(document.querySelectorAll('.flip-card'));
@@ -1685,12 +1660,10 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                         price = data[ticker].USD;
                         card.setAttribute('data-current-price', price);
                         
-                        // Update Current Price Display
                         const priceFmt = price < 1 ? price.toFixed(4) : price.toLocaleString('en-US', {{minimumFractionDigits: 2, maximumFractionDigits: 2}});
                         const currentEl = card.querySelector('.current-value');
                         if (currentEl) currentEl.innerText = '$' + priceFmt;
                         
-                        // Recalculate Card PnL & Value
                         const value = holdings * price;
                         const pnl = value - invested;
                         const pnlPct = invested > 0 ? (pnl / invested) * 100 : 0;
@@ -1713,13 +1686,12 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                             pnlPctEl.style.color = color;
                         }}
                         
-                        // Update Live Chart Last Dot dynamically
                         if (window.chartCache && window.chartCache[ticker] && window.chartCache[ticker].chartObj) {{
                             const chart = window.chartCache[ticker].chartObj;
                             const dataLen = chart.data.datasets[0].data.length;
                             if (dataLen > 0) {{
                                 chart.data.datasets[0].data[dataLen - 1] = price;
-                                chart.update('none'); // Update smoothly without animation restart
+                                chart.update('none'); 
                             }}
                         }}
                     }}
@@ -1728,7 +1700,6 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                     totalCoinInvested += invested;
                 }});
                 
-                // Update Parent Streamlit Dashboard seamlessly
                 const totalPortfolioValue = totalCoinValue + usdcHoldings;
                 const totalPnL = totalCoinValue - totalCoinInvested; 
                 const totalInvestedBase = totalPortfolioValue - totalPnL;
@@ -1752,10 +1723,8 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                 console.error('Auto-refresh error:', e);
             }}
         }}
-        // Poll every 10 seconds silently
         setInterval(updateLivePrices, 10000);
 
-        // --- State preservation ---
         function saveFlippedState() {{
             const flippedCards = [];
             document.querySelectorAll('.flip-card').forEach(card => {{
@@ -1859,7 +1828,6 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                 return;
             }}
             
-            // Replace the last item of the history array with the LIVE CURRENT PRICE
             hist.prices[hist.prices.length - 1] = currentPrice;
             const ctx = canvas.getContext('2d');
             if (chartCache[ticker] && chartCache[ticker].chartObj) {{
@@ -1896,7 +1864,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                 }},
                 options: {{
                     responsive: true,
-                    maintainAspectRatio: false, /* allows stretching to fill container */
+                    maintainAspectRatio: false, 
                     plugins: {{
                         legend: {{ display: false }},
                         tooltip: {{ mode: 'index', intersect: false }}
@@ -1932,13 +1900,11 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
             const border = card.getAttribute('data-border');
             card.style.setProperty('--border', border);
             
-            // Trigger load data immediately on script execution to populate the front
             update24hChange(card, ticker);
             
             const front = card.querySelector('.flip-card-front');
             front.addEventListener('click', (e) => {{
                 e.stopPropagation();
-                // Toggle flipped state and touch-hover properly for mobile
                 if (!card.classList.contains('flipped')) {{
                     card.classList.add('flipped');
                     card.classList.add('touch-hover');
@@ -1949,11 +1915,9 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
             }});
             const backDiv = card.querySelector('.flip-card-back');
             backDiv.addEventListener('click', (e) => {{
-                // Tapping anywhere on the back flips the card over
                 card.classList.remove('flipped');
                 card.classList.remove('touch-hover');
             }});
-            // Prevent the external link from triggering a flip
             const extBtn = card.querySelector('.tv-external-btn');
             if (extBtn) {{
                 extBtn.addEventListener('click', (e) => {{
