@@ -1072,7 +1072,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                         }}
                     }} catch(e) {{}}
                     
-                    // PRE-CALCULATE SHARED TARGET SIZES (so open and close agree on coordinates)
+                    // TARGET DIMENSIONS FOR LARGE CHART
                     const screenW = window.innerWidth;
                     const screenH = window.innerHeight;
                     let targetW = screenW * 0.9;
@@ -1081,44 +1081,39 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                     if (targetH > 700) targetH = 700;
                     if (targetH < 400) targetH = 400;
                     
-                    // Target absolute center for the big chart
-                    const targetLeft = (screenW - targetW) / 2;
-                    const targetTop = (screenH - targetH) / 2;
+                    // Coordinates needed to perfectly center the large chart
+                    const centerLeft = (screenW - targetW) / 2;
+                    const centerTop = (screenH - targetH) / 2;
 
                     if (el.classList.contains('expanded-chart')) {{
-                        // --- CLOSING MECHANICS ---
+                        // ==========================================
+                        // CLOSING MECHANICS
+                        // ==========================================
                         wrapper.style.overflowX = 'auto';
                         overlay.classList.remove('active');
                         
-                        // We use the exact stored visual coordinates from when we opened
-                        const invertTop = parseFloat(el.getAttribute('data-flip-top')) || 0;
-                        const invertLeft = parseFloat(el.getAttribute('data-flip-left')) || 0;
-                        const scaleX = parseFloat(el.getAttribute('data-flip-scale-x')) || 1;
-                        const scaleY = parseFloat(el.getAttribute('data-flip-scale-y')) || 1;
+                        // Retrieve the exact pixel math from when we opened
+                        const originTop = parseFloat(el.getAttribute('data-origin-top')) || 0;
+                        const originLeft = parseFloat(el.getAttribute('data-origin-left')) || 0;
+                        const scaleX = parseFloat(el.getAttribute('data-scale-x')) || 1;
+                        const scaleY = parseFloat(el.getAttribute('data-scale-y')) || 1;
 
-                        // Phase 1: Lock to absolute top:0 left:0 and translate to current center position. No transition!
+                        // Phase 1: Lock to absolute top:0 left:0 and translate to current center position. 
                         el.style.position = 'fixed';
                         el.style.top = '0px';
                         el.style.left = '0px';
                         el.style.width = targetW + 'px';
                         el.style.height = targetH + 'px';
-                        el.style.transformOrigin = 'top left';
+                        el.style.transformOrigin = 'center';
                         el.style.transition = 'none';
                         el.style.zIndex = '1001';
                         el.style.margin = '0';
-                        el.style.transform = `translate(${{targetLeft}}px, ${{targetTop}}px) scale(1)`;
+                        el.style.transform = `translate(${{centerLeft}}px, ${{centerTop}}px) scale(1)`;
                         void el.offsetWidth; // Force browser to register this start position
 
-                        // Phase 2: Smooth transition directly to the stored invert (small) coordinates
+                        // Phase 2: Smooth transition directly to the stored original coordinates
                         el.style.transition = 'transform 0.35s cubic-bezier(0.4, 0, 0.2, 1)';
-                        el.style.transform = `translate(${{invertLeft}}px, ${{invertTop}}px) scale(${{scaleX}}, ${{scaleY}})`;
-
-                        // Highcharts internal snaps to small instantly (it's invisible inside the scaled div)
-                        const isMobile = window.innerWidth <= 768;
-                        const isPie = chartId === 'pie-container';
-                        const smallW = isMobile ? window.innerWidth * 0.85 : (isPie ? 350 : 600);
-                        const smallH = isMobile ? 320 : 340;
-                        hc.setSize(smallW, smallH, false);
+                        el.style.transform = `translate(${{originLeft}}px, ${{originTop}}px) scale(${{scaleX}}, ${{scaleY}})`;
 
                         // Phase 3: Cleanup once animation ends
                         setTimeout(() => {{
@@ -1127,13 +1122,23 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                                 parentIframe.classList.remove('fullscreen-mode');
                             }}
                             el.style.cssText = ''; 
-                            hc.setSize(null, null, false); 
+                            
+                            // Highcharts only resizes AFTER the animation finishes so it doesn't flicker
+                            const isMobile = window.innerWidth <= 768;
+                            const isPie = chartId === 'pie-container';
+                            const smallW = isMobile ? window.innerWidth * 0.85 : (isPie ? 350 : 600);
+                            const smallH = isMobile ? 320 : 340;
+                            hc.setSize(smallW, smallH, false);
+                            
+                            setTimeout(() => {{ hc.setSize(null, null, false); }}, 50); // Final clean CSS fit
                         }}, 350);
 
                         return;
                     }}
                     
-                    // --- OPENING MECHANICS ---
+                    // ==========================================
+                    // OPENING MECHANICS
+                    // ==========================================
 
                     // 1. Silent Close Others
                     document.querySelectorAll('.expanded-chart').forEach(c => {{
@@ -1163,11 +1168,18 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                     const scaleX = chartRect.width / targetW;
                     const scaleY = chartRect.height / targetH;
 
-                    // Store current spot so closing logic knows exactly where to return
-                    el.setAttribute('data-flip-top', visualTop);
-                    el.setAttribute('data-flip-left', visualLeft);
-                    el.setAttribute('data-flip-scale-x', scaleX);
-                    el.setAttribute('data-flip-scale-y', scaleY);
+                    // ORIGIN CALCULATION: To make the scaled down "large" container 
+                    // visually sit exactly where the small container was
+                    const origCenterX = visualLeft + (chartRect.width / 2);
+                    const origCenterY = visualTop + (chartRect.height / 2);
+                    const originLeft = origCenterX - (targetW / 2);
+                    const originTop = origCenterY - (targetH / 2);
+
+                    // Store math so closing logic perfectly reverses
+                    el.setAttribute('data-origin-top', originTop);
+                    el.setAttribute('data-origin-left', originLeft);
+                    el.setAttribute('data-scale-x', scaleX);
+                    el.setAttribute('data-scale-y', scaleY);
 
                     // 4. Phase 1: Pin large chart in inverted state (Invisible jump)
                     el.classList.add('expanded-chart');
@@ -1178,16 +1190,16 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                     el.style.height = targetH + 'px';
                     el.style.margin = '0';
                     el.style.zIndex = '1001';
-                    el.style.transformOrigin = 'top left'; 
+                    el.style.transformOrigin = 'center'; 
                     el.style.transition = 'none';
-                    el.style.transform = `translate(${{visualLeft}}px, ${{visualTop}}px) scale(${{scaleX}}, ${{scaleY}})`;
+                    el.style.transform = `translate(${{originLeft}}px, ${{originTop}}px) scale(${{scaleX}}, ${{scaleY}})`;
                     
                     hc.setSize(targetW, targetH, false);
                     void el.offsetWidth; // Force Reflow
 
                     // 5. Phase 2: Smooth CSS transition to target center
                     el.style.transition = 'transform 0.4s cubic-bezier(0.16, 1, 0.3, 1)';
-                    el.style.transform = `translate(${{targetLeft}}px, ${{targetTop}}px) scale(1)`;
+                    el.style.transform = `translate(${{centerLeft}}px, ${{centerTop}}px) scale(1)`;
                 }}
 
                 function setupDoubleTap(elementId) {{
