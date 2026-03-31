@@ -388,7 +388,6 @@ def get_with_retry(url: str, headers: dict, timeout: int = 12, retries: int = 4)
             resp = requests.get(url, headers=headers, timeout=timeout)
             resp.raise_for_status()
             data = resp.json()
-            # If the API hits a rate limit, it still returns HTTP 200 but sets 'Response' to 'Error'. 
             if isinstance(data, dict) and data.get('Response') == 'Error':
                 if attempt == retries - 1:
                     return None
@@ -1058,6 +1057,9 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                 }} catch(e) {{}}
 
                 function toggleExpandChart(chartId) {{
+                    // BLOCK PC COMPLETELY - Only runs on Mobile
+                    if (window.innerWidth > 768) return;
+                
                     const el = document.getElementById(chartId);
                     const overlay = document.getElementById('chart-overlay');
                     const wrapper = document.getElementById('chartsScrollContainer');
@@ -1072,16 +1074,18 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                         }}
                     }} catch(e) {{}}
                     
+                    // GET TRUE SCREEN DIMENSIONS FROM PARENT WINDOW
+                    const screenW = window.parent ? window.parent.innerWidth : window.innerWidth;
+                    const screenH = window.parent ? window.parent.innerHeight : window.innerHeight;
+                    
                     // TARGET DIMENSIONS FOR LARGE CHART
-                    const screenW = window.innerWidth;
-                    const screenH = window.innerHeight;
                     let targetW = screenW * 0.9;
                     let targetH = screenH * 0.7;
                     if (targetW > 1000) targetW = 1000;
                     if (targetH > 700) targetH = 700;
                     if (targetH < 400) targetH = 400;
                     
-                    // Coordinates needed to perfectly center the large chart
+                    // Coordinates needed to perfectly center the large chart via absolute translation
                     const centerLeft = (screenW - targetW) / 2;
                     const centerTop = (screenH - targetH) / 2;
 
@@ -1098,13 +1102,13 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                         const scaleX = parseFloat(el.getAttribute('data-scale-x')) || 1;
                         const scaleY = parseFloat(el.getAttribute('data-scale-y')) || 1;
 
-                        // Phase 1: Lock to absolute top:0 left:0 and translate to current center position. 
+                        // Phase 1: Lock to absolute top:0 left:0 and translate to current center position. No transition!
                         el.style.position = 'fixed';
                         el.style.top = '0px';
                         el.style.left = '0px';
                         el.style.width = targetW + 'px';
                         el.style.height = targetH + 'px';
-                        el.style.transformOrigin = 'center';
+                        el.style.transformOrigin = 'top left';
                         el.style.transition = 'none';
                         el.style.zIndex = '1001';
                         el.style.margin = '0';
@@ -1124,10 +1128,9 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                             el.style.cssText = ''; 
                             
                             // Highcharts only resizes AFTER the animation finishes so it doesn't flicker
-                            const isMobile = window.innerWidth <= 768;
                             const isPie = chartId === 'pie-container';
-                            const smallW = isMobile ? window.innerWidth * 0.85 : (isPie ? 350 : 600);
-                            const smallH = isMobile ? 320 : 340;
+                            const smallW = window.innerWidth * 0.85;
+                            const smallH = 320;
                             hc.setSize(smallW, smallH, false);
                             
                             setTimeout(() => {{ hc.setSize(null, null, false); }}, 50); // Final clean CSS fit
@@ -1168,16 +1171,9 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                     const scaleX = chartRect.width / targetW;
                     const scaleY = chartRect.height / targetH;
 
-                    // ORIGIN CALCULATION: To make the scaled down "large" container 
-                    // visually sit exactly where the small container was
-                    const origCenterX = visualLeft + (chartRect.width / 2);
-                    const origCenterY = visualTop + (chartRect.height / 2);
-                    const originLeft = origCenterX - (targetW / 2);
-                    const originTop = origCenterY - (targetH / 2);
-
-                    // Store math so closing logic perfectly reverses
-                    el.setAttribute('data-origin-top', originTop);
-                    el.setAttribute('data-origin-left', originLeft);
+                    // Store current spot so closing logic knows exactly where to return
+                    el.setAttribute('data-origin-top', visualTop);
+                    el.setAttribute('data-origin-left', visualLeft);
                     el.setAttribute('data-scale-x', scaleX);
                     el.setAttribute('data-scale-y', scaleY);
 
@@ -1190,9 +1186,9 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                     el.style.height = targetH + 'px';
                     el.style.margin = '0';
                     el.style.zIndex = '1001';
-                    el.style.transformOrigin = 'center'; 
+                    el.style.transformOrigin = 'top left'; 
                     el.style.transition = 'none';
-                    el.style.transform = `translate(${{originLeft}}px, ${{originTop}}px) scale(${{scaleX}}, ${{scaleY}})`;
+                    el.style.transform = `translate(${{visualLeft}}px, ${{visualTop}}px) scale(${{scaleX}}, ${{scaleY}})`;
                     
                     hc.setSize(targetW, targetH, false);
                     void el.offsetWidth; // Force Reflow
@@ -1207,10 +1203,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                     if (!el) return;
                     let lastTap = 0;
 
-                    el.addEventListener('dblclick', function(e) {{
-                        toggleExpandChart(elementId);
-                        e.stopPropagation();
-                    }});
+                    // Removed dblclick event listener completely - no more PC firing.
 
                     el.addEventListener('touchend', function(e) {{
                         const currentTime = new Date().getTime();
