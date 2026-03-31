@@ -1296,58 +1296,38 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
 
                     if (el.classList.contains('expanded-chart')) {{
                         // ==========================================
-                        // CLOSING MECHANICS (Seamless settle Fix)
+                        // INSTANT SEAMLESS CLOSE (Kills the "shiver")
                         // ==========================================
                         overlay.classList.remove('active');
-                        
-                        // Re-calculate the current layout position to avoid scroll-shift blinks
-                        const placeholder = el.parentElement;
-                        const targetRect = placeholder.getBoundingClientRect();
-                        let targetTop = targetRect.top;
-                        let targetLeft = targetRect.left;
-                        if (parentIframe) {{
-                            const iframeRect = parentIframe.getBoundingClientRect();
-                            targetTop += iframeRect.top;
-                            targetLeft += iframeRect.left;
-                        }}
-
-                        // Phase 1: Keep it position: fixed, but set its standard visual coordinates. 
-                        // Crossfade the class instantly to lose expanded background while traveling.
                         el.classList.remove('expanded-chart');
-                        el.style.transition = 'transform 0.4s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.4s ease, box-shadow 0.4s ease';
-                        el.style.transform = `translate(${{targetLeft}}px, ${{targetTop}}px) scale(1)`;
-
-                        // Phase 2: Once the visual transition finishes, silently revert CSS layout from fixed to standard flow
-                        const finishClose = (e) => {{
-                            if (e && e.propertyName !== 'transform') return;
-                            el.removeEventListener('transitionend', finishClose);
-                            clearTimeout(el._closeTimeout);
-                            if (parentIframe) parentIframe.classList.remove('fullscreen-mode');
-                            
-                            el.style.transition = 'none';
-                            el.style.cssText = ''; // Full layout revert
-                            
-                            // Prevent layout thrashing: Highcharts Redraw SILENTLY to correct slot dimensions
-                            Highcharts.charts.forEach(c => {{ 
-                                if(c && c.renderTo && el.contains(c.renderTo)) {{
-                                    c.setSize(null, null, false);
-                                }}
-                            }});
-                            
-                            // Reveal siblings smoothly
-                            document.querySelectorAll('.chart-box').forEach(c => {{
-                                c.style.opacity = '1';
-                                c.style.pointerEvents = 'auto';
-                            }});
-                        }};
-                        el.addEventListener('transitionend', finishClose);
-                        el._closeTimeout = setTimeout(() => {{ finishClose(); }}, 450); // Fallback
+                        el.style.transition = 'none';
+                        el.style.cssText = ''; // Hard reset all inline positional styles instantly
+                        
+                        if (parentIframe) parentIframe.classList.remove('fullscreen-mode');
+                        wrapper.style.overflowX = 'auto'; // Restore scroll snapping
+                        
+                        // Force Highcharts to instantly adapt to grid box without animation
+                        Highcharts.charts.forEach(c => {{ 
+                            if(c && c.renderTo && el.contains(c.renderTo)) {{
+                                c.setSize(null, null, false);
+                            }}
+                        }});
+                        
+                        // Fade the rest of the layout back in
+                        document.querySelectorAll('.chart-box').forEach(c => {{
+                            c.style.transition = 'none';
+                            c.style.opacity = '0';
+                            void c.offsetWidth; // Trigger reflow so fade works
+                            c.style.transition = 'opacity 0.25s ease';
+                            c.style.opacity = '1';
+                            c.style.pointerEvents = 'auto';
+                        }});
 
                         return;
                     }}
                     
                     // ==========================================
-                    // OPENING MECHANICS (Retained seamless flow)
+                    // OPENING MECHANICS 
                     // ==========================================
                     
                     // 1. SILENT VANISH: instantly hide siblings to prevent bleeding
@@ -1370,7 +1350,8 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
 
                     if (parentIframe) parentIframe.classList.add('fullscreen-mode');
                     overlay.classList.add('active'); 
-                    
+                    wrapper.style.overflowX = 'visible';
+
                     const origW = chartRect.width;
                     const origH = chartRect.height;
                     
@@ -1386,10 +1367,6 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                     const scaledH = origH * targetScale;
                     const centerLeft = (screenW - scaledW) / 2;
                     const centerTop = (screenH - scaledH) / 2;
-
-                    // Save origins
-                    el.setAttribute('data-orig-top', visualTop);
-                    el.setAttribute('data-orig-left', visualLeft);
 
                     // Phase 1: Lock the chart in its starting spot natively small, no HC Redraw
                     el.style.position = 'fixed';
@@ -1452,7 +1429,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                     }}, {{ passive: false }});
                 }}
 
-                // ---- LIVE UPDATE SCRIPT INJECTION ----
+                // ---- LIVE UPDATE SCRIPT INJECTION FOR MAIN DASHBOARD ----
                 async function updateLivePricesCharts() {{
                     const tickers = Object.keys(coinStats);
                     if (tickers.length === 0) return;
@@ -1514,6 +1491,23 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                         }});
                         
                         const totalPortfolioValue = totalCoinValue + usdcHoldings;
+                        const totalPnL = totalCoinValue - totalCoinInvested; 
+                        const totalInvestedBase = totalPortfolioValue - totalPnL;
+                        const totalPnLPct = totalInvestedBase !== 0 ? (totalPnL / totalInvestedBase) * 100 : 0;
+                        
+                        const dashValStr = '$' + totalPortfolioValue.toLocaleString('en-US', {{minimumFractionDigits: 2, maximumFractionDigits: 2}});
+                        const dashPnlStr = (totalPnL >= 0 ? '▲ $' : '▼ $') + Math.abs(totalPnL).toLocaleString('en-US', {{minimumFractionDigits: 2, maximumFractionDigits: 2}});
+                        const dashPnlPctStr = (totalPnL >= 0 ? '▲ ' : '▼ ') + Math.abs(totalPnLPct).toFixed(2) + '%';
+                        const dashColor = totalPnL >= 0 ? '#00ff9d' : '#ff4d4d';
+                        
+                        const parentDoc = window.parent.document;
+                        const dValue = parentDoc.getElementById('dash-total-value');
+                        const dPnl = parentDoc.getElementById('dash-pnl');
+                        const dPnlPct = parentDoc.getElementById('dash-pnl-pct');
+                        
+                        if (dValue) dValue.innerText = dashValStr;
+                        if (dPnl) {{ dPnl.innerText = dashPnlStr; dPnl.style.color = dashColor; }}
+                        if (dPnlPct) {{ dPnlPct.innerText = dashPnlPctStr; dPnlPct.style.color = dashColor; }}
                         
                         const histChart = Highcharts.charts.find(c => c && c.renderTo && c.renderTo.id === 'history-container');
                         if (histChart && histChart.series[0] && histChart.series[0].points.length > 0) {{
@@ -1975,8 +1969,8 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
             }}, {{ passive: false }});
         }}
 
-        const usdcHoldings = {usdc_holdings};
-        async function updateLivePrices() {{
+        // ---- LIVE UPDATE SCRIPT INJECTION FOR FLIP CARDS ----
+        async function updateLivePricesCards() {{
             const cards = Array.from(document.querySelectorAll('.flip-card'));
             if (cards.length === 0) return;
             const tickers = cards.map(card => card.getAttribute('data-ticker'));
@@ -1986,8 +1980,6 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                 const resp = await fetch(url);
                 const data = await resp.json();
                 
-                let totalCoinValue = 0;
-                let totalCoinInvested = 0;
                 cards.forEach(card => {{
                     const ticker = card.getAttribute('data-ticker');
                     const holdings = parseFloat(card.getAttribute('data-holdings'));
@@ -2033,35 +2025,12 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                             }}
                         }}
                     }}
-                    
-                    totalCoinValue += (holdings * price);
-                    totalCoinInvested += invested;
                 }});
-                
-                const totalPortfolioValue = totalCoinValue + usdcHoldings;
-                const totalPnL = totalCoinValue - totalCoinInvested; 
-                const totalInvestedBase = totalPortfolioValue - totalPnL;
-                const totalPnLPct = totalInvestedBase !== 0 ? (totalPnL / totalInvestedBase) * 100 : 0;
-                
-                const dashValStr = '$' + totalPortfolioValue.toLocaleString('en-US', {{minimumFractionDigits: 2, maximumFractionDigits: 2}});
-                const dashPnlStr = (totalPnL >= 0 ? '▲ $' : '▼ $') + Math.abs(totalPnL).toLocaleString('en-US', {{minimumFractionDigits: 2, maximumFractionDigits: 2}});
-                const dashPnlPctStr = (totalPnL >= 0 ? '▲ ' : '▼ ') + Math.abs(totalPnLPct).toFixed(2) + '%';
-                const dashColor = totalPnL >= 0 ? '#00ff9d' : '#ff4d4d';
-                
-                const parentDoc = window.parent.document;
-                const dValue = parentDoc.getElementById('dash-total-value');
-                const dPnl = parentDoc.getElementById('dash-pnl');
-                const dPnlPct = parentDoc.getElementById('dash-pnl-pct');
-                
-                if (dValue) dValue.innerText = dashValStr;
-                if (dPnl) {{ dPnl.innerText = dashPnlStr; dPnl.style.color = dashColor; }}
-                if (dPnlPct) {{ dPnlPct.innerText = dashPnlPctStr; dPnlPct.style.color = dashColor; }}
-                
             }} catch (e) {{
-                console.error('Auto-refresh error:', e);
+                console.error('Auto-refresh error flipcards:', e);
             }}
         }}
-        setInterval(updateLivePrices, 10000);
+        setInterval(updateLivePricesCards, 10000);
 
         function saveFlippedState() {{
             const flippedCards = [];
