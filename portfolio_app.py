@@ -544,6 +544,7 @@ def build_portfolio_history(crypto_df, fiat_df, last_prices, refresh_key):
         
     allocation_series_js_list = []
     if not common_cols.empty:
+        # Sort coins so biggest holdings are stacked neatly at the bottom
         last_date = date_range[-1]
         coin_values_last_day = {c: (cum_holdings[c].loc[last_date] * prices_df[c].loc[last_date]) for c in common_cols}
         sorted_coins = sorted(coin_values_last_day.keys(), key=lambda c: coin_values_last_day[c], reverse=True)
@@ -586,7 +587,7 @@ def get_ticker_color(ticker: str) -> str:
     ticker = ticker.upper()
     known = {
         'USDC': '#2775ca', 'BTC': '#f7931a', 'ETH': '#627eea',
-        'SOL': '#9b59b6', 'HBAR': '#ffffff', 'XRP': '#ffffff',
+        'SOL': '#9b59b6', 'HBAR': '#ffffff', 'XRP': '#ffffff', # Black logos made white for chart background, as requested.
         'SUI': '#60a5fa', 'LINK': '#1e3a8a', 'BNB': '#f4c430',
         'TRX': '#ff2d55'
     }
@@ -985,7 +986,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                         formatter: function() {{
                             const isPrivacy = document.body.classList.contains('privacy-mode');
                             const val = isPrivacy ? '***' : '$' + Highcharts.numberFormat(this.y, 2);
-                            return `<b>${{this.point.name}}</b><br/>PnL: <b style="color:${{this.y >= 0 ? '#00ff9d' : '#ff4d4d'}}">${{val}}</b>`;
+                            return `<b>${{this.point.name}}</b><br/>PnL: <b style="color:${{this.point.color}}">${{val}}</b>`;
                         }}
                     }},
                     plotOptions: {{ bar: {{ borderRadius: 4, dataLabels: {{ enabled: true, style: {{ color: '#fff', textOutline: 'none', fontWeight: 'bold' }}, formatter: function() {{ return document.body.classList.contains('privacy-mode') ? '***' : '$' + Highcharts.numberFormat(this.y, 0); }} }} }} }},
@@ -999,7 +1000,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                     title: {{ text: 'Asset Allocation', style: {{ color: '#e2e8f0', fontSize: '13px', fontWeight: 'bold' }} }},
                     xAxis: {{ type: 'datetime', labels: {{ style: {{ color: '#94a3b8', fontSize: '10px' }} }}, gridLineColor: 'rgba(255,255,255,0.05)', tickWidth: 0, minorGridLineWidth: 0 }},
                     yAxis: {{ title: {{ text: null }}, labels: {{ formatter: function() {{ return this.value + '%'; }}, style: {{ color: '#94a3b8', fontSize: '10px' }} }}, gridLineColor: 'rgba(255,255,255,0.05)', max: 100 }},
-                    legend: {{ enabled: true, itemStyle: {{ color: '#94a3b8', fontSize: '11px', fontWeight: 'normal' }}, itemHoverStyle: {{ color: '#ffffff' }}, verticalAlign: 'top', y: -5 }},
+                    legend: {{ enabled: false }},
                     tooltip: {{
                         shared: true, backgroundColor: 'rgba(15, 23, 42, 0.95)', style: {{ color: '#fff' }}, borderColor: 'rgba(255,255,255,0.15)',
                         formatter: function() {{
