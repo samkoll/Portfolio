@@ -13,13 +13,99 @@ from concurrent.futures import ThreadPoolExecutor
 # ====================== CONFIG ======================
 st.set_page_config(page_title="Portfolio", layout="wide", page_icon="logo.png", initial_sidebar_state="collapsed")
 
-# ====================== CORE CONTAINERS ======================
-# Defining these immediately ensures they are the exact first 4 children of the main block.
-# This allows the layout enforcer to target them perfectly for horizontal swiping.
-page_home = st.container()
-page_crypto = st.container()
-page_fiat = st.container()
-hidden_scripts = st.container()
+# ====================== GLOBAL CSS ======================
+st.markdown("""
+<style>
+/* HIDE SIDEBAR & DEFAULT STREAMLIT MARGINS */
+[data-testid="stSidebar"] { display: none !important; }
+[data-testid="collapsedControl"] { display: none !important; }
+
+div[data-testid="stMainBlockContainer"] {
+    padding: 0 !important;
+    max-width: 100% !important;
+}
+
+.stApp {
+    background: linear-gradient(180deg, #0f1724 0%, #0a0f1c 100%) !important;
+    overflow: hidden !important;
+}
+
+/* FORCE COLUMNS TO BE HORIZONTAL SWIPEABLE PAGES */
+div[data-testid="stHorizontalBlock"]:has(.page-marker) {
+    display: flex !important;
+    flex-direction: row !important;
+    flex-wrap: nowrap !important;
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
+    scroll-snap-type: x mandatory !important;
+    scroll-behavior: smooth !important;
+    width: 100vw !important;
+    height: 100dvh !important;
+    gap: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    -ms-overflow-style: none; /* IE and Edge */
+    scrollbar-width: none; /* Firefox */
+}
+div[data-testid="stHorizontalBlock"]:has(.page-marker)::-webkit-scrollbar {
+    display: none !important;
+}
+
+div[data-testid="stHorizontalBlock"]:has(.page-marker) > div[data-testid="column"] {
+    flex: 0 0 100vw !important;
+    min-width: 100vw !important;
+    width: 100vw !important;
+    height: 100dvh !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    scroll-snap-align: start !important;
+    padding: 14px !important;
+    padding-bottom: 95px !important; /* Leave space for bottom nav */
+}
+
+/* Dashboard Pullable Drawer Styles */
+.dashboard-wrapper { position: relative; z-index: 10; }
+.glossy-header-label { cursor: pointer; display: block; position: relative; z-index: 3; -webkit-tap-highlight-color: transparent; }
+.home-header { margin-bottom: 0 !important; padding-bottom: 30px !important; }
+.pull-indicator { position: absolute; bottom: 8px; left: 50%; transform: translateX(-50%); color: #64748b; opacity: 0.8; transition: color 0.3s ease; }
+@media (hover: hover) and (pointer: fine) { .glossy-header-label:hover .pull-indicator { color: #cbd5e1; } }
+.pull-indicator .eye-open { display: none; }
+.pull-indicator .eye-closed { display: block; }
+.dashboard-toggle:checked ~ .dashboard-wrapper .glossy-header-label .pull-indicator .eye-open { display: block; }
+.dashboard-toggle:checked ~ .dashboard-wrapper .glossy-header-label .pull-indicator .eye-closed { display: none; }
+.dashboard-toggle:checked ~ .dashboard-wrapper .glossy-header-label .pull-indicator { color: #ffffff; }
+
+.stats-layer { position: relative; z-index: 1; margin-top: -60px !important; transition: margin-top 0.4s cubic-bezier(0.4, 0, 0.2, 1); margin-bottom: 24px; }
+.dashboard-toggle:checked ~ .dashboard-wrapper .stats-layer { margin-top: 14px !important; }
+.stats-layer-inner { display: grid !important; grid-template-columns: repeat(3, 1fr) !important; gap: 14px; width: 100%; }
+
+.dash-value { font-size: clamp(14px, 2.5vw, 24px) !important; font-weight: 700; line-height: 1.05; color: #ffffff; position: absolute; top: 20px; left: 0; width: 100%; text-align: center; margin: 0; transition: opacity 0.3s ease; padding: 0 4px; box-sizing: border-box; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.dashboard-toggle:not(:checked) ~ .dashboard-wrapper .stats-layer .dash-value { opacity: 0; pointer-events: none; }
+.dash-label { font-size: 11px !important; font-weight: 600; letter-spacing: 1.5px; text-transform: uppercase; color: #94a3b8; line-height: 1.2; position: absolute; bottom: 8px; left: 0; width: 100%; text-align: center; }
+
+.glossy-header { position: relative; overflow: hidden; background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); border: 1px solid rgba(255,255,255,0.05); border-radius: 18px; box-shadow: 0 10px 30px rgba(0,0,0,0.4); transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.4s ease, border-color 0.4s ease; padding: 32px 24px; min-height: 130px; font-size: 29px; font-weight: 700; letter-spacing: 1.5px; line-height: 1.1; display: flex; align-items: center; justify-content: center; gap: 16px; width: 100% !important; margin-top: 68px; margin-bottom: 38px; }
+@media (hover: hover) and (pointer: fine) { .glossy-header-label:hover .glossy-header { transform: translateY(-4px) scale(1.01); box-shadow: 0 15px 40px rgba(0, 0, 0, 0.5); border-color: rgba(255, 255, 255, 0.15); } }
+.dashboard-toggle:checked ~ .dashboard-wrapper .glossy-header { transform: translateY(-4px) scale(1.01); box-shadow: 0 15px 40px rgba(0, 0, 0, 0.5); border-color: rgba(255, 255, 255, 0.15); }
+
+.glossy-box { position: relative; overflow: hidden; background: linear-gradient(180deg, #162032 0%, #0f172a 100%); border: 1px solid rgba(255,255,255,0.05); border-radius: 18px; box-shadow: 0 8px 24px rgba(0,0,0,0.4); transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); padding: 28px 30px; text-align: center; flex: 1; min-width: 220px; display: flex; flex-direction: column; justify-content: center; }
+.glossy-box:not(.swapped) > div:first-child { font-size: 12px; font-weight: 600; letter-spacing: 1.5px; text-transform: uppercase; color: #94a3b8; margin-bottom: 6px; line-height: 1.2; }
+.glossy-box:not(.swapped) > div:last-child { font-size: 27px; font-weight: 700; line-height: 1.05; color: #ffffff; }
+.glossy-box.swapped { min-width: 0 !important; height: 80px !important; min-height: 80px !important; max-height: 80px !important; padding: 0; display: block; }
+
+.usdc-banner { position: relative; overflow: hidden; background: rgba(15, 23, 42, 0.5); border: 1px solid rgba(39, 117, 202, 0.2); border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); padding: 10px 20px; width: 90%; max-width: 400px; margin: -15px auto 12px auto !important; display: flex; align-items: center; justify-content: space-between; }
+.usdc-banner-left { display: flex; align-items: center; gap: 12px; }
+.usdc-banner-left img { width: 28px; height: 28px; border-radius: 50%; object-fit: contain; opacity: 0.85; }
+.usdc-banner-title { font-size: 1.05rem; font-weight: 600; color: #e2e8f0; display: flex; align-items: center; gap: 8px; }
+.usdc-banner-subtitle { font-size: 0.75rem; font-weight: 500; color: #64748b; }
+.usdc-banner-amount { font-size: 1.2rem; font-weight: 600; color: #e2e8f0; }
+.dashboard-toggle:not(:checked) ~ .usdc-banner .usdc-banner-amount { font-size: 0 !important; }
+.dashboard-toggle:not(:checked) ~ .usdc-banner .usdc-banner-amount::after { content: '***'; font-size: 1.2rem; color: #e2e8f0; }
+
+button[aria-label="Step Up"], button[aria-label="Step Down"], button[data-testid="stNumberInputStepUp"], button[data-testid="stNumberInputStepDown"] { display: none !important; }
+input[type="number"]::-webkit-inner-spin-button, input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+input[type="number"] { -moz-appearance: textfield; }
+</style>
+""", unsafe_allow_html=True)
 
 # ====================== SVG ICONS ======================
 DASHBOARD_ICON = '''<svg xmlns="http://www.w3.org/2000/svg" width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="#00ff9d" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>'''
@@ -500,274 +586,17 @@ pnl_df = vault['pnl_df']
 usdc_row = df_port[df_port['Ticker'] == 'USDC'].iloc[0] if not df_port[df_port['Ticker'] == 'USDC'].empty else None
 usdc_holdings = usdc_row['Holdings'] if usdc_row is not None else 0
 
-
-# -------------------------------------------------------------------------
-# HIDDEN SCRIPTS: CSS AND LAYOUT ENFORCER
-# -------------------------------------------------------------------------
-with hidden_scripts:
-    # 1. We inject a hidden marker directly into the DOM tree. 
-    # The Javascript below uses this marker to securely find the parent element that holds the 4 containers.
-    st.markdown("<div id='layout-marker' style='display:none;'></div>", unsafe_allow_html=True)
-    
-    st.markdown("""
-    <style>
-    /* HIDE SIDEBAR & DEFAULT STREAMLIT MARGINS */
-    [data-testid="stSidebar"] { display: none !important; }
-    [data-testid="collapsedControl"] { display: none !important; }
-
-    div[data-testid="stMainBlockContainer"] {
-        padding: 0 !important;
-        max-width: 100% !important;
-    }
-    
-    .stApp {
-        background: linear-gradient(180deg, #0f1724 0%, #0a0f1c 100%) !important;
-        overflow: hidden !important;
-    }
-
-    /* GLOBAL APP CSS (Cards, Stats, Headers, Buttons, etc.) */
-    .dashboard-wrapper { position: relative; z-index: 10; }
-    .glossy-header-label { cursor: pointer; display: block; position: relative; z-index: 3; -webkit-tap-highlight-color: transparent; }
-    .home-header { margin-bottom: 0 !important; padding-bottom: 30px !important; }
-    .pull-indicator { position: absolute; bottom: 8px; left: 50%; transform: translateX(-50%); color: #64748b; opacity: 0.8; transition: color 0.3s ease; }
-    @media (hover: hover) and (pointer: fine) { .glossy-header-label:hover .pull-indicator { color: #cbd5e1; } }
-    .pull-indicator .eye-open { display: none; }
-    .pull-indicator .eye-closed { display: block; }
-    .dashboard-toggle:checked ~ .dashboard-wrapper .glossy-header-label .pull-indicator .eye-open { display: block; }
-    .dashboard-toggle:checked ~ .dashboard-wrapper .glossy-header-label .pull-indicator .eye-closed { display: none; }
-    .dashboard-toggle:checked ~ .dashboard-wrapper .glossy-header-label .pull-indicator { color: #ffffff; }
-
-    .stats-layer { position: relative; z-index: 1; margin-top: -60px !important; transition: margin-top 0.4s cubic-bezier(0.4, 0, 0.2, 1); margin-bottom: 24px; }
-    .dashboard-toggle:checked ~ .dashboard-wrapper .stats-layer { margin-top: 14px !important; }
-    .stats-layer-inner { display: grid !important; grid-template-columns: repeat(3, 1fr) !important; gap: 14px; width: 100%; }
-
-    .dash-value { font-size: clamp(14px, 2.5vw, 24px) !important; font-weight: 700; line-height: 1.05; color: #ffffff; position: absolute; top: 20px; left: 0; width: 100%; text-align: center; margin: 0; transition: opacity 0.3s ease; padding: 0 4px; box-sizing: border-box; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .dashboard-toggle:not(:checked) ~ .dashboard-wrapper .stats-layer .dash-value { opacity: 0; pointer-events: none; }
-    .dash-label { font-size: 11px !important; font-weight: 600; letter-spacing: 1.5px; text-transform: uppercase; color: #94a3b8; line-height: 1.2; position: absolute; bottom: 8px; left: 0; width: 100%; text-align: center; }
-
-    .glossy-header { position: relative; overflow: hidden; background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); border: 1px solid rgba(255,255,255,0.05); border-radius: 18px; box-shadow: 0 10px 30px rgba(0,0,0,0.4); transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.4s ease, border-color 0.4s ease; padding: 32px 24px; min-height: 130px; font-size: 29px; font-weight: 700; letter-spacing: 1.5px; line-height: 1.1; display: flex; align-items: center; justify-content: center; gap: 16px; width: 100% !important; margin-top: 68px; margin-bottom: 38px; }
-    @media (hover: hover) and (pointer: fine) { .glossy-header-label:hover .glossy-header { transform: translateY(-4px) scale(1.01); box-shadow: 0 15px 40px rgba(0, 0, 0, 0.5); border-color: rgba(255, 255, 255, 0.15); } }
-    .dashboard-toggle:checked ~ .dashboard-wrapper .glossy-header { transform: translateY(-4px) scale(1.01); box-shadow: 0 15px 40px rgba(0, 0, 0, 0.5); border-color: rgba(255, 255, 255, 0.15); }
-
-    .glossy-box { position: relative; overflow: hidden; background: linear-gradient(180deg, #162032 0%, #0f172a 100%); border: 1px solid rgba(255,255,255,0.05); border-radius: 18px; box-shadow: 0 8px 24px rgba(0,0,0,0.4); transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); padding: 28px 30px; text-align: center; flex: 1; min-width: 220px; display: flex; flex-direction: column; justify-content: center; }
-    .glossy-box:not(.swapped) > div:first-child { font-size: 12px; font-weight: 600; letter-spacing: 1.5px; text-transform: uppercase; color: #94a3b8; margin-bottom: 6px; line-height: 1.2; }
-    .glossy-box:not(.swapped) > div:last-child { font-size: 27px; font-weight: 700; line-height: 1.05; color: #ffffff; }
-    .glossy-box.swapped { min-width: 0 !important; height: 80px !important; min-height: 80px !important; max-height: 80px !important; padding: 0; display: block; }
-
-    .usdc-banner { position: relative; overflow: hidden; background: rgba(15, 23, 42, 0.5); border: 1px solid rgba(39, 117, 202, 0.2); border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); padding: 10px 20px; width: 90%; max-width: 400px; margin: -15px auto 12px auto !important; display: flex; align-items: center; justify-content: space-between; }
-    .usdc-banner-left { display: flex; align-items: center; gap: 12px; }
-    .usdc-banner-left img { width: 28px; height: 28px; border-radius: 50%; object-fit: contain; opacity: 0.85; }
-    .usdc-banner-title { font-size: 1.05rem; font-weight: 600; color: #e2e8f0; display: flex; align-items: center; gap: 8px; }
-    .usdc-banner-subtitle { font-size: 0.75rem; font-weight: 500; color: #64748b; }
-    .usdc-banner-amount { font-size: 1.2rem; font-weight: 600; color: #e2e8f0; }
-    .dashboard-toggle:not(:checked) ~ .usdc-banner .usdc-banner-amount { font-size: 0 !important; }
-    .dashboard-toggle:not(:checked) ~ .usdc-banner .usdc-banner-amount::after { content: '***'; font-size: 1.2rem; color: #e2e8f0; }
-
-    button[aria-label="Step Up"], button[aria-label="Step Down"], button[data-testid="stNumberInputStepUp"], button[data-testid="stNumberInputStepDown"] { display: none !important; }
-    input[type="number"]::-webkit-inner-spin-button, input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
-    input[type="number"] { -moz-appearance: textfield; }
-    </style>
-    """, unsafe_allow_html=True)
-
-    # 2. Layout JS Engine. This securely targets ONLY the wrapper of our 4 containers.
-    # It converts the wrapper into a horizontal swiping container and forces the first 3 pages
-    # to be 100vw side-by-side, leaving their internal elements strictly vertical.
-    js_layout_enforcer = """
-    <script>
-    (function() {
-        const parentDoc = window.parent.document;
-        
-        function enforceLayout() {
-            // Find the invisible marker
-            const marker = parentDoc.getElementById('layout-marker');
-            if (!marker) return;
-            
-            // Step up to the element-container that Streamlit wraps our html component in
-            const elementContainer = marker.closest('.element-container');
-            if (!elementContainer) return;
-            
-            // The parent of that container is the MAIN vertical block that holds ALL our pages
-            const mainVerticalBlock = elementContainer.parentElement;
-            if (!mainVerticalBlock) return;
-
-            // Only apply if we haven't already
-            if (!mainVerticalBlock.classList.contains('horizontal-swipe-main')) {
-                mainVerticalBlock.classList.add('horizontal-swipe-main');
-                
-                // Inject CSS specific ONLY to our isolated swipe wrapper
-                if (!parentDoc.getElementById('swipe-layout-css')) {
-                    const style = parentDoc.createElement('style');
-                    style.id = 'swipe-layout-css';
-                    style.innerHTML = `
-                        .horizontal-swipe-main {
-                            display: flex !important;
-                            flex-direction: row !important;
-                            flex-wrap: nowrap !important;
-                            overflow-x: auto !important;
-                            overflow-y: hidden !important;
-                            scroll-snap-type: x mandatory !important;
-                            scroll-behavior: smooth !important;
-                            width: 100vw !important;
-                            height: 100dvh !important;
-                            gap: 0 !important;
-                            padding: 0 !important;
-                            -ms-overflow-style: none; 
-                            scrollbar-width: none;
-                        }
-                        .horizontal-swipe-main::-webkit-scrollbar { display: none !important; }
-                        
-                        /* Target ONLY the 4 outer Element Containers we strictly defined */
-                        .horizontal-swipe-main > .swipe-page {
-                            flex: 0 0 100vw !important;
-                            width: 100vw !important;
-                            max-width: 100vw !important;
-                            min-width: 100vw !important;
-                            height: 100dvh !important;
-                            overflow-y: auto !important;
-                            overflow-x: hidden !important;
-                            scroll-snap-align: start !important;
-                            background: transparent !important;
-                            margin: 0 !important;
-                            padding: 0 !important;
-                            display: block !important;
-                        }
-                        
-                        /* Pad the inner vertical blocks of our 3 pages to leave room for bottom nav */
-                        .horizontal-swipe-main > .swipe-page > div[data-testid="stVerticalBlock"] {
-                            padding: 14px 14px 100px 14px !important;
-                            min-height: 100dvh !important;
-                            display: flex !important;
-                            flex-direction: column !important;
-                        }
-                    `;
-                    parentDoc.head.appendChild(style);
-                }
-
-                // Add classes to the first 3 children (Home, Crypto, Fiat)
-                const children = mainVerticalBlock.children;
-                if(children.length >= 4) {
-                    children[0].classList.add('swipe-page');
-                    children[1].classList.add('swipe-page');
-                    children[2].classList.add('swipe-page');
-                    // Hide everything else (scripts container)
-                    for(let i=3; i<children.length; i++) {
-                        children[i].style.display = 'none';
-                    }
-                }
-
-                // Restore Streamlit scroll state gracefully after reruns
-                const savedIdx = localStorage.getItem('swipeIdx');
-                if (savedIdx !== null) {
-                    mainVerticalBlock.style.scrollBehavior = 'auto';
-                    mainVerticalBlock.scrollLeft = parseInt(savedIdx) * mainVerticalBlock.clientWidth;
-                    setTimeout(() => { mainVerticalBlock.style.scrollBehavior = 'smooth'; }, 50);
-                }
-
-                // Re-bind Scroll Listener seamlessly
-                mainVerticalBlock.addEventListener('scroll', () => {
-                    const width = mainVerticalBlock.clientWidth;
-                    if(width === 0) return;
-                    const idx = Math.round(mainVerticalBlock.scrollLeft / width);
-                    localStorage.setItem('swipeIdx', idx);
-                    
-                    const navItems = parentDoc.querySelectorAll('#custom-bottom-nav .nav-item');
-                    navItems.forEach((item, i) => {
-                        item.classList.toggle('active', i === idx);
-                    });
-                }, {passive: true});
-            }
-        }
-        
-        // Check frequently (100ms) to beat Streamlit's arbitrary DOM redraws
-        setInterval(enforceLayout, 100);
-
-        function injectNav() {
-            let nav = parentDoc.getElementById('custom-bottom-nav');
-            if (!nav) {
-                // Permanently attach custom navigation to the parent body
-                nav = parentDoc.createElement('div');
-                nav.id = 'custom-bottom-nav';
-                nav.innerHTML = `
-                    <style>
-                    #custom-bottom-nav {
-                        position: fixed;
-                        bottom: 0; left: 0; width: 100vw; height: 75px;
-                        background: rgba(15, 23, 42, 0.95);
-                        backdrop-filter: blur(15px);
-                        -webkit-backdrop-filter: blur(15px);
-                        border-top: 1px solid rgba(255,255,255,0.05);
-                        display: flex; justify-content: space-around; align-items: center;
-                        z-index: 9999999;
-                        padding-bottom: env(safe-area-inset-bottom);
-                        box-shadow: 0 -4px 20px rgba(0,0,0,0.5);
-                    }
-                    .nav-item {
-                        display: flex; flex-direction: column; align-items: center; justify-content: center;
-                        color: #64748b; width: 33.33%; height: 100%; cursor: pointer;
-                        -webkit-tap-highlight-color: transparent; user-select: none;
-                        transition: color 0.3s ease;
-                    }
-                    .nav-item.active { color: #00ff9d; }
-                    .nav-item svg {
-                        width: 24px; height: 24px; margin-bottom: 4px;
-                        stroke: currentColor; fill: none; stroke-width: 2;
-                        stroke-linecap: round; stroke-linejoin: round;
-                        transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-                    }
-                    .nav-item.active svg {
-                        transform: scale(1.15); filter: drop-shadow(0 0 5px rgba(0,255,157,0.4));
-                    }
-                    .nav-item span { font-size: 11px; font-weight: 700; }
-                    </style>
-                    <div class="nav-item active" data-idx="0">
-                        <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
-                        <span>Overview</span>
-                    </div>
-                    <div class="nav-item" data-idx="1">
-                        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M14.5 8.5L9.5 13.5"/><path d="M9.5 8.5L14.5 13.5"/></svg>
-                        <span>Crypto</span>
-                    </div>
-                    <div class="nav-item" data-idx="2">
-                        <svg viewBox="0 0 24 24"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M6 8h12"/><path d="M6 12h12"/><path d="M6 16h12"/></svg>
-                        <span>Fiat</span>
-                    </div>
-                `;
-                parentDoc.body.appendChild(nav);
-
-                // Setup Clicks that execute securely against current main element
-                const navItems = nav.querySelectorAll('.nav-item');
-                navItems.forEach(item => {
-                    item.onclick = (e) => {
-                        e.preventDefault();
-                        const idx = parseInt(item.getAttribute('data-idx'));
-                        const currentMain = parentDoc.querySelector('.horizontal-swipe-main');
-                        if (currentMain) {
-                            currentMain.scrollTo({ left: idx * currentMain.clientWidth, behavior: 'smooth' });
-                        }
-                    };
-                });
-            }
-            
-            // Re-sync active highlighting globally just in case
-            const savedIdx = localStorage.getItem('swipeIdx') || 0;
-            const navItems = nav.querySelectorAll('.nav-item');
-            navItems.forEach((item, i) => {
-                item.classList.toggle('active', i == savedIdx);
-            });
-        }
-        // Background check to verify navigation remains bound securely
-        setInterval(injectNav, 200);
-
-    })();
-    </script>
-    """
-    components.html(js_layout_enforcer, height=0)
-
+# ====================== 3 HORIZONTAL SWIPEABLE COLUMNS ======================
+# Instead of basic containers, we use Streamlit's native columns which are built horizontally.
+col_home, col_crypto, col_fiat = st.columns(3)
 
 # -------------------------------------------------------------------------
 # PAGE 1: OVERVIEW (HOME)
 # -------------------------------------------------------------------------
-with page_home:
+with col_home:
+    # Hidden marker for JS Layout Enforcer to find this specific column block
+    st.markdown("<div id='page-0' class='page-marker'></div>", unsafe_allow_html=True)
+    
     # 1. DASHBOARD OVERVIEW
     value_box_html = f"""
     <input type="checkbox" id="dash-toggle" class="dashboard-toggle" style="display:none;">
@@ -1505,11 +1334,12 @@ with page_home:
     """
     components.html(full_html, height=380, scrolling=False)
 
-
 # -------------------------------------------------------------------------
 # PAGE 2: CRYPTO TRANSACTIONS
 # -------------------------------------------------------------------------
-with page_crypto:
+with col_crypto:
+    st.markdown("<div id='page-1' class='page-marker'></div>", unsafe_allow_html=True)
+    
     glossy_header("Crypto Transactions", CRYPTO_ICON)
 
     st.markdown("""
@@ -1822,7 +1652,9 @@ with page_crypto:
 # -------------------------------------------------------------------------
 # PAGE 3: FIAT TRANSACTIONS
 # -------------------------------------------------------------------------
-with page_fiat:
+with col_fiat:
+    st.markdown("<div id='page-2' class='page-marker'></div>", unsafe_allow_html=True)
+    
     total_czk = pd.to_numeric(st.session_state.fiat_df['CZK'], errors='coerce').fillna(0).sum()
     total_eur = pd.to_numeric(st.session_state.fiat_df['EUR'], errors='coerce').fillna(0).sum()
     total_usdc = pd.to_numeric(st.session_state.fiat_df['USDC'], errors='coerce').fillna(0).sum()
