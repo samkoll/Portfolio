@@ -753,10 +753,10 @@ with st.sidebar:
     ]
     page_order = {key: i for i, (_, key) in enumerate(nav_items)}
 
+    # INJECT THE CURRENT PAGE STATE FOR JAVASCRIPT TO READ
+    st.markdown(f"<div id='current-streamlit-page' data-page='{st.session_state.page}' style='display:none;'></div>", unsafe_allow_html=True)
+
     for label, key in nav_items:
-        # Give buttons active data states so JS can query current page reliably
-        is_active = "true" if st.session_state.page == key else "false"
-        st.markdown(f"<div class='nav-btn-wrapper' data-key='{key}' data-active='{is_active}'>", unsafe_allow_html=True)
         if st.button(label, key=f"nav_{key}", use_container_width=True):
             curr_idx = page_order.get(st.session_state.page, 0)
             new_idx = page_order.get(key, 0)
@@ -771,7 +771,6 @@ with st.sidebar:
             st.session_state.page = key
             st.session_state.ui_version += 1
             st.rerun()
-        st.markdown("</div>", unsafe_allow_html=True)
             
     st.divider()
     if st.button("🔄 Refresh All Prices & Charts", use_container_width=True):
@@ -793,8 +792,8 @@ with st.sidebar:
 js_engine = """
 if (!window.mySwipeEngineLoaded) {
     window.mySwipeEngineLoaded = true;
-    const doc = window.document;
-    const win = window;
+    const doc = window.parent ? window.parent.document : document;
+    const win = window.parent ? window.parent : window;
     
     let touchstartX = 0;
     let touchstartY = 0;
@@ -809,8 +808,8 @@ if (!window.mySwipeEngineLoaded) {
     }
 
     const observer = new MutationObserver(function() {
-        const activeBtn = doc.querySelector('.nav-btn-wrapper[data-active="true"]');
-        const activePage = activeBtn ? activeBtn.getAttribute('data-key') : null;
+        const pageDiv = doc.getElementById('current-streamlit-page');
+        const activePage = pageDiv ? pageDiv.getAttribute('data-page') : null;
         if (activePage && activePage !== window.lastSeenPage) {
             window.lastSeenPage = activePage;
             mainContainer = doc.querySelector('div[data-testid="stMainBlockContainer"]');
@@ -853,8 +852,8 @@ if (!window.mySwipeEngineLoaded) {
         }
 
         if (isHorizontalSwipe) {
-            let activeBtn = doc.querySelector('.nav-btn-wrapper[data-active="true"]');
-            let activePage = activeBtn ? activeBtn.getAttribute('data-key') : 'Home';
+            let pageDiv = doc.getElementById('current-streamlit-page');
+            let activePage = pageDiv ? pageDiv.getAttribute('data-page') : 'Home';
             const pages = ['Home', 'Crypto Transactions', 'Fiat Transactions'];
             let currentIndex = pages.indexOf(activePage);
             
@@ -877,8 +876,8 @@ if (!window.mySwipeEngineLoaded) {
             const deltaX = currentX - touchstartX;
             const threshold = win.innerWidth * 0.20; 
             
-            let activeBtn = doc.querySelector('.nav-btn-wrapper[data-active="true"]');
-            let activePage = activeBtn ? activeBtn.getAttribute('data-key') : 'Home';
+            let pageDiv = doc.getElementById('current-streamlit-page');
+            let activePage = pageDiv ? pageDiv.getAttribute('data-page') : 'Home';
             const pages = ['Home', 'Crypto Transactions', 'Fiat Transactions'];
             let currentIndex = pages.indexOf(activePage);
             
@@ -898,11 +897,17 @@ if (!window.mySwipeEngineLoaded) {
             }
 
             if (targetPage) {
-                const wrappers = doc.querySelectorAll('.nav-btn-wrapper');
-                wrappers.forEach(function(w) {
-                    if (w.getAttribute('data-key') === targetPage) {
-                        const btn = w.querySelector('button');
-                        if (btn) setTimeout(function() { btn.click(); }, 50); 
+                const targetLabels = {
+                    'Home': '🏠 Overview',
+                    'Crypto Transactions': '📊 Crypto Transactions',
+                    'Fiat Transactions': '💰 Fiat Transactions'
+                };
+                const labelToFind = targetLabels[targetPage];
+                const buttons = doc.querySelectorAll('button');
+                
+                buttons.forEach(function(btn) {
+                    if (btn.innerText && btn.innerText.includes(labelToFind)) {
+                        setTimeout(function() { btn.click(); }, 50); 
                     }
                 });
             }
