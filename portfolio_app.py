@@ -58,58 +58,63 @@ div[data-testid="stMainBlockContainer"] {
 }
 .home-header {
     margin-bottom: 0 !important;
-    padding-bottom: 30px !important; /* space for the eye icon */
+    padding-bottom: 30px !important;
+/* space for the eye icon */
 }
 .pull-indicator {
     position: absolute;
     bottom: 8px;
     left: 50%;
     transform: translateX(-50%);
-    color: #64748b;
+color: #64748b;
     opacity: 0.8;
     transition: color 0.3s ease;
 }
 @media (hover: hover) and (pointer: fine) {
     .glossy-header-label:hover .pull-indicator {
         color: #cbd5e1;
-    }
+}
 }
 .pull-indicator .eye-open { display: none; }
 .pull-indicator .eye-closed { display: block; }
 
-.dashboard-toggle:checked ~ .dashboard-wrapper .glossy-header-label .pull-indicator .eye-open { display: block; }
+.dashboard-toggle:checked ~ .dashboard-wrapper .glossy-header-label .pull-indicator .eye-open { display: block;
+}
 .dashboard-toggle:checked ~ .dashboard-wrapper .glossy-header-label .pull-indicator .eye-closed { display: none; }
-.dashboard-toggle:checked ~ .dashboard-wrapper .glossy-header-label .pull-indicator { color: #ffffff; }
+.dashboard-toggle:checked ~ .dashboard-wrapper .glossy-header-label .pull-indicator { color: #ffffff;
+}
 
 .stats-layer {
     position: relative;
     z-index: 1;
     margin-top: -60px !important; 
     transition: margin-top 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-    margin-bottom: 24px;
+margin-bottom: 24px;
 }
 .dashboard-toggle:checked ~ .dashboard-wrapper .stats-layer {
-    margin-top: 14px !important; /* Drops down */
+    margin-top: 14px !important;
+/* Drops down */
 }
 
 /* Force 3 columns globally without wrapping */
 .stats-layer-inner {
     display: grid !important;
-    grid-template-columns: repeat(3, 1fr) !important;
+grid-template-columns: repeat(3, 1fr) !important;
     gap: 14px;
     width: 100%;
 }
 
 /* Tucked Text Fade Out */
 .dash-value {
-    font-size: clamp(14px, 2.5vw, 24px) !important; /* Fluid typography */
+    font-size: clamp(14px, 2.5vw, 24px) !important;
+/* Fluid typography */
     font-weight: 700;
     line-height: 1.05;
     color: #ffffff;
     position: absolute;
     top: 20px;
     left: 0;
-    width: 100%;
+width: 100%;
     text-align: center;
     margin: 0;
     transition: opacity 0.3s ease;
@@ -117,7 +122,7 @@ div[data-testid="stMainBlockContainer"] {
     box-sizing: border-box;
     white-space: nowrap;
     overflow: hidden;
-    text-overflow: ellipsis;
+text-overflow: ellipsis;
 }
 .dashboard-toggle:not(:checked) ~ .dashboard-wrapper .stats-layer .dash-value {
     opacity: 0;
@@ -132,7 +137,7 @@ div[data-testid="stMainBlockContainer"] {
     color: #94a3b8;
     line-height: 1.2;
     position: absolute;
-    bottom: 8px;
+bottom: 8px;
     left: 0;
     width: 100%;
     text-align: center;
@@ -141,15 +146,15 @@ div[data-testid="stMainBlockContainer"] {
 .glossy-header {
     position: relative;
     overflow: hidden;
-    background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
     border: 1px solid rgba(255,255,255,0.05);
     border-radius: 18px;
     box-shadow: 0 10px 30px rgba(0,0,0,0.4);
-    transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.4s ease, border-color 0.4s ease;
+transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.4s ease, border-color 0.4s ease;
     padding: 32px 24px;
     min-height: 130px;
     font-size: 29px;
-    font-weight: 700;
+font-weight: 700;
     letter-spacing: 1.5px;
     line-height: 1.1;
     display: flex;
@@ -158,32 +163,32 @@ div[data-testid="stMainBlockContainer"] {
     gap: 16px;
     width: 100% !important;
     margin-top: 68px;
-    margin-bottom: 38px;
+margin-bottom: 38px;
 }
 
 /* PC Hover and Sync with Dashboard Toggle */
 @media (hover: hover) and (pointer: fine) {
     .glossy-header-label:hover .glossy-header {
         transform: translateY(-4px) scale(1.01);
-        box-shadow: 0 15px 40px rgba(0, 0, 0, 0.5);
+box-shadow: 0 15px 40px rgba(0, 0, 0, 0.5);
         border-color: rgba(255, 255, 255, 0.15);
-    }
+}
 }
 .dashboard-toggle:checked ~ .dashboard-wrapper .glossy-header {
     transform: translateY(-4px) scale(1.01);
     box-shadow: 0 15px 40px rgba(0, 0, 0, 0.5);
-    border-color: rgba(255, 255, 255, 0.15);
+border-color: rgba(255, 255, 255, 0.15);
 }
 
 .glossy-box {
     position: relative;
     overflow: hidden;
     background: linear-gradient(180deg, #162032 0%, #0f172a 100%);
-    border: 1px solid rgba(255,255,255,0.05);
+border: 1px solid rgba(255,255,255,0.05);
     border-radius: 18px;
     box-shadow: 0 8px 24px rgba(0,0,0,0.4);
     transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-    padding: 28px 30px;
+padding: 28px 30px;
     text-align: center;
     flex: 1;
     min-width: 220px;
@@ -199,7 +204,7 @@ div[data-testid="stMainBlockContainer"] {
     text-transform: uppercase;
     color: #94a3b8;
     margin-bottom: 6px;
-    line-height: 1.2;
+line-height: 1.2;
 }
 .glossy-box:not(.swapped) > div:last-child {
     font-size: 27px;
@@ -214,24 +219,25 @@ div[data-testid="stMainBlockContainer"] {
     min-height: 80px !important;
     max-height: 80px !important;
     padding: 0;
-    display: block;
+display: block;
 }
 
 /* Subdued and Smaller USDC Banner */
 .usdc-banner {
     position: relative;
     overflow: hidden;
-    background: rgba(15, 23, 42, 0.5);
+background: rgba(15, 23, 42, 0.5);
     border: 1px solid rgba(39, 117, 202, 0.2);
     border-radius: 12px;
     box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-    padding: 10px 20px;
+padding: 10px 20px;
     width: 90%; 
     max-width: 400px; 
-    margin: -15px auto 12px auto !important; /* Negative top margin to close the gap, slight bottom margin */
+    margin: -15px auto 12px auto !important;
+/* Negative top margin to close the gap, slight bottom margin */
     display: flex;
     align-items: center;
-    justify-content: space-between;
+justify-content: space-between;
 }
 .usdc-banner-left {
     display: flex;
@@ -261,17 +267,18 @@ div[data-testid="stMainBlockContainer"] {
 .usdc-banner-amount {
     font-size: 1.2rem;
     font-weight: 600;
-    color: #e2e8f0;
+color: #e2e8f0;
 }
 
 /* Native CSS Privacy Mode for USDC Banner */
 .dashboard-toggle:not(:checked) ~ .usdc-banner .usdc-banner-amount {
-    font-size: 0 !important; /* Hides text perfectly without shifting layout */
+    font-size: 0 !important;
+/* Hides text perfectly without shifting layout */
 }
 .dashboard-toggle:not(:checked) ~ .usdc-banner .usdc-banner-amount::after {
     content: '***';
     font-size: 1.2rem;
-    color: #e2e8f0;
+color: #e2e8f0;
 }
 
 /* GLOBALLY HIDE NUMBER INPUT STEP BUTTONS (+ / -) */
@@ -388,11 +395,9 @@ def get_with_retry(url: str, headers: dict, timeout: int = 12, retries: int = 4)
             resp = requests.get(url, headers=headers, timeout=timeout)
             resp.raise_for_status()
             data = resp.json()
+            # If CryptoCompare explicitly returned an error (e.g. invalid symbol), exit immediately to prevent massive loading delays
             if isinstance(data, dict) and data.get('Response') == 'Error':
-                if attempt == retries - 1:
-                    return None
-                time.sleep(1.5 ** attempt)
-                continue
+                return None
             return data
         except Exception:
             if attempt == retries - 1:
@@ -402,7 +407,7 @@ def get_with_retry(url: str, headers: dict, timeout: int = 12, retries: int = 4)
 
 # ====================== LIVE PRICE FUNCTION ======================
 @st.cache_data(ttl=15, show_spinner=False)
-def get_all_cryptocompare_prices(tickers, refresh_key=0):
+def get_all_cryptocompare_prices(tickers: tuple, refresh_key=0):
     prices = {"USDC": 1.0}
     symbols = [CRYPTOCOMPARE_SYMBOL_MAP.get(t.upper()) for t in tickers if t.upper() != "USDC"]
     symbols = [s for s in symbols if s]
@@ -439,7 +444,7 @@ def get_all_cryptocompare_prices(tickers, refresh_key=0):
     return prices
 
 @st.cache_data(ttl=3600, show_spinner=False)
-def get_historical_base_prices(tickers, refresh_key=0):
+def get_historical_base_prices(tickers: tuple, refresh_key=0):
     base_prices = {}
     headers = {"User-Agent": "Mozilla/5.0"}
     today = datetime.now()
@@ -460,7 +465,19 @@ def get_historical_base_prices(tickers, refresh_key=0):
                 base_prices[t] = {'7d': p_7d, '30d': p_30d, '90d': p_90d, 'ytd': p_ytd}
     return base_prices
 
+# Independent cached function for pure API fetches, keeps pandas fast calculations uncached
 @st.cache_data(ttl=3600, show_spinner=False)
+def fetch_historical_prices_dict(coins_tuple: tuple, limit: int, refresh_key: int):
+    prices_dict = {}
+    headers = {"User-Agent": "Mozilla/5.0 (compatible; StreamlitPortfolio/1.0)"}
+    for coin in coins_tuple:
+        sym = CRYPTOCOMPARE_SYMBOL_MAP.get(coin.upper(), coin.upper())
+        url = f"https://min-api.cryptocompare.com/data/v2/histoday?fsym={sym}&tsym=USD&limit={limit}"
+        data = get_with_retry(url, headers)
+        if data and 'Data' in data and 'Data' in data['Data']:
+            prices_dict[coin] = {datetime.fromtimestamp(d['time']).date(): d['close'] for d in data['Data']['Data']}
+    return prices_dict
+
 def build_portfolio_history(crypto_df, fiat_df, last_prices, refresh_key):
     if crypto_df.empty and fiat_df.empty: return [], "", pd.DataFrame()
 
@@ -508,19 +525,12 @@ def build_portfolio_history(crypto_df, fiat_df, last_prices, refresh_key):
         cum_holdings = pd.DataFrame(index=date_range)
         coins = []
 
-    prices_dict = {}
-    fetch_coins = set(coins) | {'BTC'}
+    fetch_coins = tuple(sorted(set(coins) | {'BTC'}))
+    days_diff = (today - min_date).days
+    limit = min(2000, days_diff + 5)
     
-    headers = {"User-Agent": "Mozilla/5.0 (compatible; StreamlitPortfolio/1.0)"}
-    for coin in fetch_coins:
-        sym = CRYPTOCOMPARE_SYMBOL_MAP.get(coin.upper(), coin.upper())
-        days_diff = (today - min_date).days
-        limit = min(2000, days_diff + 5)
-        url = f"https://min-api.cryptocompare.com/data/v2/histoday?fsym={sym}&tsym=USD&limit={limit}"
-        
-        data = get_with_retry(url, headers)
-        if data and 'Data' in data and 'Data' in data['Data']:
-            prices_dict[coin] = {datetime.fromtimestamp(d['time']).date(): d['close'] for d in data['Data']['Data']}
+    # Use tightly isolated cached fetch so last_prices variations won't bust the API cache!
+    prices_dict = fetch_historical_prices_dict(fetch_coins, limit, refresh_key)
             
     prices_df = pd.DataFrame(prices_dict)
     if not prices_df.empty:
@@ -539,12 +549,13 @@ def build_portfolio_history(crypto_df, fiat_df, last_prices, refresh_key):
         prices_df.loc[date_range[-1], coin] = live_p
     
     pnl_df = pd.DataFrame()
+    common_cols = cum_holdings.columns.intersection(prices_df.columns)
+    
     if not crypto.empty and not crypto_assets.empty:
         invested_daily = crypto_assets.groupby(['Date', 'Ticker'])['USDC'].sum().unstack(fill_value=0)
         invested_daily = invested_daily.reindex(date_range, fill_value=0).fillna(0)
         cum_invested = invested_daily.cumsum()
         
-        common_cols = cum_holdings.columns.intersection(prices_df.columns)
         pnl_df = (cum_holdings[common_cols] * prices_df[common_cols]) - cum_invested[common_cols]
 
     daily_crypto_value = pd.Series(0.0, index=date_range)
@@ -685,7 +696,8 @@ def calculate_portfolio(crypto_df):
     usdc_holdings = fiat_usdc - crypto_spent
     coin_tickers = [t for t in crypto_df['Ticker'].unique() if t != 'USDC']
     
-    fetch_tickers = list(set(coin_tickers) | {'BTC'})
+    # Forced to tuple to eliminate unstable hashing/cache missing bugs
+    fetch_tickers = tuple(sorted(set(coin_tickers) | {'BTC'}))
     live_prices = get_all_cryptocompare_prices(fetch_tickers, st.session_state.refresh_key)
     base_prices = get_historical_base_prices(fetch_tickers, st.session_state.refresh_key)
 
@@ -926,10 +938,10 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                     scroll-snap-type: x mandatory;
                     -webkit-overflow-scrolling: touch;
                     scrollbar-width: none; 
-                    -ms-overflow-style: none; 
+                    -ms-overflow-style: none;
                 }}
                 .charts-scroll-wrapper::-webkit-scrollbar {{
-                    display: none; 
+                    display: none;
                 }}
                 .charts-flex {{
                     display: flex;
@@ -1024,21 +1036,21 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                 
                 /* Expanded state strictly overrides visuals */
                 .expanded-chart {{
-                    background: rgba(15, 23, 42, 0.98) !important; 
+                    background: rgba(15, 23, 42, 0.98) !important;
                     border: 1px solid rgba(255, 255, 255, 0.08) !important; 
                     box-shadow: 0 15px 50px rgba(0,0,0,0.9) !important;
-                    border-radius: 20px !important; 
+                    border-radius: 20px !important;
                 }}
 
                 @media (max-width: 768px) {{
                     .chart-placeholder {{ 
-                        height: 320px !important; 
+                        height: 320px !important;
                         width: 90vw !important; 
                         flex: 0 0 90vw !important; 
                     }}
                     
                     .charts-flex {{ 
-                        padding: 0 5vw; 
+                        padding: 0 5vw;
                         gap: 16px; 
                     }}
                     
@@ -1121,7 +1133,6 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
             
             <script>
                 Highcharts.setOptions({{ global: {{ useUTC: false }} }});
-
                 // Helper for proper negative dollar signs without messing up Privacy mode
                 function formatMoneyStr(val) {{
                     return val < 0 ? '-$' + Highcharts.numberFormat(Math.abs(val), 2) : '$' + Highcharts.numberFormat(val, 2);
@@ -1166,7 +1177,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                             this.points.forEach(function(point) {{
                                 let val = isPrivacy ? '***' : formatMoneyStr(point.y);
                                 s += '<br/>' + '<span style="color:'+point.series.color+'">\u25CF</span> ' + point.series.name + ': <b style="font-size: 13px;">' + val + '</b>';
-                            }});
+                             }});
                             return s;
                         }}
                     }},
@@ -1176,7 +1187,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                              {{ name: 'BTC Benchmark', type: 'line', data: [{hist_btc_js}], color: '#f7931a', lineWidth: 2, zIndex: 2 }}, 
                              {{ name: 'Net Invested', type: 'line', data: [{hist_inv_js}], color: '#64748b', dashStyle: 'Dash', lineWidth: 2, zIndex: 1 }}]
                 }});
-                
+
                 // Custom Range Logic for History Chart
                 document.querySelectorAll('.hist-controls button').forEach(btn => {{
                     btn.addEventListener('click', (e) => {{
@@ -1238,7 +1249,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                         }}
                     }});
                 }});
-                
+
                 // Chart 6: ROI % Bar Chart
                 Highcharts.chart('roi-container', {{
                     chart: {{ type: 'bar', backgroundColor: 'transparent', marginTop: 15, marginBottom: 25 }},
@@ -1257,7 +1268,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                     credits: {{ enabled: false }},
                     series: [{{ name: 'ROI %', data: [ {roi_data_js} ] }}]
                 }});
-                
+
                 // Chart 7: 24h Change Bar Chart
                 Highcharts.chart('daily-container', {{
                     chart: {{ type: 'bar', backgroundColor: 'transparent', marginTop: 15, marginBottom: 25 }},
@@ -1379,7 +1390,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
 
                         // Instantly remove class so background crossfades cleanly during the travel
                         el.classList.remove('expanded-chart');
-                        
+
                         // Transition smoothly to original slot
                         el.style.transition = 'transform 0.4s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.4s ease, box-shadow 0.4s ease';
                         el.style.transform = `translate(${{origLeft}}px, ${{origTop}}px) scale(1)`;
@@ -1421,6 +1432,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                     const chartRect = el.getBoundingClientRect();
                     let visualTop = chartRect.top;
                     let visualLeft = chartRect.left;
+
                     if (parentIframe) {{
                         const iframeRect = parentIframe.getBoundingClientRect();
                         visualTop += iframeRect.top;
@@ -1659,11 +1671,11 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
             scroll-snap-type: x mandatory; 
             -webkit-overflow-scrolling: touch;
             scrollbar-width: none; 
-            -ms-overflow-style: none; 
+            -ms-overflow-style: none;
         }}
         
         .scroll-wrapper::-webkit-scrollbar {{
-            display: none; 
+            display: none;
         }}
 
         .coin-grid {{
@@ -1677,12 +1689,12 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
             overflow: visible !important;
         }}
         .flip-card {{
-            flex: 0 0 420px; 
+            flex: 0 0 420px;
             background-color: transparent;
             height: 320px;
             perspective: 1200px;
             cursor: pointer;
-            scroll-snap-align: center; 
+            scroll-snap-align: center;
         }}
         .flip-card-inner {{
             position: relative;
@@ -1914,7 +1926,6 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                 const dtUsdc = window.parent.document.getElementById('dash-toggle-usdc');
                 if (dt) {{
                     const isChecked = dt.checked;
-                    
                     if (dtUsdc && dtUsdc.checked !== isChecked) {{
                         dtUsdc.checked = isChecked;
                     }}
@@ -1932,7 +1943,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                 }}
             }} catch(e) {{}}
         }}, 150);
-
+        
         try {{
             const dt = window.parent.document.getElementById('dash-toggle');
             const dtUsdc = window.parent.document.getElementById('dash-toggle-usdc');
@@ -1999,7 +2010,6 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                 
                 let totalCoinValue = 0;
                 let totalCoinInvested = 0;
-                
                 // Keep track of diffs to update charts smoothly
                 let tickerValues = {{}};
                 let tickerDiffs = {{}};
@@ -2041,6 +2051,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                             
                             const valEl = card.querySelector('.total-value');
                             if (valEl) valEl.innerText = valStr;
+                            
                             const pnlEl = card.querySelector('.card-pnl');
                             if (pnlEl) {{
                                 pnlEl.innerText = pnlStr;
@@ -2092,7 +2103,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                 }});
                 
                 const totalPortfolioValue = totalCoinValue + usdcHoldings;
-                const totalPnL = totalCoinValue - totalCoinInvested; 
+                const totalPnL = totalCoinValue - totalCoinInvested;
                 const totalInvestedBase = totalPortfolioValue - totalPnL;
                 const totalPnLPct = totalInvestedBase !== 0 ? (totalPnL / totalInvestedBase) * 100 : 0;
                 
@@ -2132,12 +2143,12 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                         const dailyChart = HC.charts.find(c => c && c.renderTo.id === 'daily-container');
                         const allocChart = HC.charts.find(c => c && c.renderTo.id === 'allocation-container');
                         const invValChart = HC.charts.find(c => c && c.renderTo.id === 'inv-val-container');
-
+                        
                         // 1. Pie Chart
                         if (pieChart && pieChart.series[0]) {{
                             pieChart.series[0].points.forEach(point => {{
                                 if (tickerValues[point.name] !== undefined) {{
-                                    point.update({{y: tickerValues[point.name]}}, false);
+                                     point.update({{y: tickerValues[point.name]}}, false);
                                 }}
                             }});
                             pieChart.redraw(true);
@@ -2160,12 +2171,13 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                                     point.update({{y: point.y + tickerDiffs[point.name]}}, false);
                                 }}
                             }});
+                            
                             if (typeof hcWin.pnlDataMap !== 'undefined') {{
                                 Object.keys(hcWin.pnlDataMap).forEach(key => {{
                                     hcWin.pnlDataMap[key].forEach(pt => {{
-                                        if (tickerDiffs[pt.name] !== undefined) {{
+                                         if (tickerDiffs[pt.name] !== undefined) {{
                                             pt.y += tickerDiffs[pt.name];
-                                        }}
+                                         }}
                                     }});
                                 }});
                             }}
@@ -2174,17 +2186,17 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                         
                         // 4. ROI Chart
                         if (roiChart && roiChart.series[0]) {{
-                            roiChart.series[0].points.forEach(point => {{
+                             roiChart.series[0].points.forEach(point => {{
                                 if (tickerRoi[point.name] !== undefined) {{
                                     point.update({{y: tickerRoi[point.name]}}, false);
-                                }}
+                                 }}
                             }});
                             roiChart.redraw(true);
                         }}
                         
                         // 5. Daily 24h Chart
                         if (dailyChart && dailyChart.series[0]) {{
-                            dailyChart.series[0].points.forEach(point => {{
+                             dailyChart.series[0].points.forEach(point => {{
                                 if (ticker24h[point.name] !== undefined) {{
                                     const val = ticker24h[point.name];
                                     const color = val >= 0 ? 'rgba(0, 255, 157, 0.65)' : 'rgba(255, 77, 77, 0.65)'; 
@@ -2197,12 +2209,12 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                         // 6. Asset Allocation Chart
                         if (allocChart) {{
                             allocChart.series.forEach(s => {{
-                                if (tickerValues[s.name] !== undefined) {{
+                                 if (tickerValues[s.name] !== undefined) {{
                                     const points = s.points;
                                     if (points && points.length > 0) {{
                                         const lastPoint = points[points.length - 1];
                                         lastPoint.update({{y: tickerValues[s.name]}}, false);
-                                    }}
+                                     }}
                                 }}
                             }});
                             allocChart.redraw(true);
@@ -2211,10 +2223,10 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                         // 7. Invested vs Value Chart (Series 1 is 'Current Value')
                         if (invValChart && invValChart.series[1]) {{
                             invValChart.series[1].points.forEach(point => {{
-                                if (tickerValues[point.name] !== undefined) {{
+                                 if (tickerValues[point.name] !== undefined) {{
                                     point.update({{y: tickerValues[point.name]}}, false);
                                 }}
-                            }});
+                             }});
                             invValChart.redraw(true);
                         }}
                     }}
@@ -2227,7 +2239,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
             }}
         }}
         setInterval(updateLivePrices, 10000);
-
+        
         function saveFlippedState() {{
             const flippedCards = [];
             document.querySelectorAll('.flip-card').forEach(card => {{
@@ -2252,7 +2264,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                     const avgPrice = parseFloat(card.getAttribute('data-avg-price'));
                     const chartColor = card.getAttribute('data-chart-color');
                     if (!chartCache[ticker] || !chartCache[ticker].chartObj) {{
-                        renderChart(card, ticker, currentPrice, avgPrice, chartColor);
+                         renderChart(card, ticker, currentPrice, avgPrice, chartColor);
                     }}
                 }}
             }});
@@ -2293,7 +2305,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                         const color = change >= 0 ? '#00ff9d' : '#ff4d4d';
                         changeSpan.innerHTML = `<span style="color:${{color}};">${{sign}} ${{Math.abs(change).toFixed(2)}}%</span>`;
                     }} else if (changeSpan) {{
-                        changeSpan.innerHTML = `N/A`;
+                         changeSpan.innerHTML = `N/A`;
                     }}
                 }});
                 
@@ -2314,10 +2326,10 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                         if (dailyC && dailyC.series[0]) {{
                             dailyC.series[0].points.forEach(pt => {{
                                 if (init24h[pt.name] !== undefined) {{
-                                    const val = init24h[pt.name];
+                                     const val = init24h[pt.name];
                                     pt.update({{y: val, color: val >= 0 ? 'rgba(0, 255, 157, 0.65)' : 'rgba(255, 77, 77, 0.65)'}}, false);
                                 }}
-                            }});
+                             }});
                             dailyC.redraw();
                         }}
                     }}
@@ -2404,7 +2416,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                     labels: hist.labels,
                     datasets: datasets
                 }},
-                options: {{
+                 options: {{
                     responsive: true,
                     maintainAspectRatio: false, 
                     plugins: {{
@@ -2412,11 +2424,11 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                         tooltip: {{ mode: 'index', intersect: false }}
                     }},
                     scales: {{
-                        x: {{ ticks: {{ color: '#ccc', maxRotation: 45, autoSkip: true, maxTicksLimit: 6 }}, grid: {{ color: 'rgba(255,255,255,0.1)' }} }},
+                         x: {{ ticks: {{ color: '#ccc', maxRotation: 45, autoSkip: true, maxTicksLimit: 6 }}, grid: {{ color: 'rgba(255,255,255,0.1)' }} }},
                         y: {{ position: 'right', ticks: {{ color: '#ccc' }}, grid: {{ color: 'rgba(255,255,255,0.1)' }} }}
                     }}
                 }}
-            }});
+             }});
             chartCache[ticker] = {{ chartObj: newChart, data: hist }};
             if (loadingDiv) loadingDiv.style.display = 'none';
         }}
@@ -2451,11 +2463,13 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                     }}
                 }}
             }});
+            
             const backDiv = card.querySelector('.flip-card-back');
             backDiv.addEventListener('click', (e) => {{
                 card.classList.remove('flipped');
                 card.classList.remove('touch-hover');
             }});
+            
             const extBtn = card.querySelector('.tv-external-btn');
             if (extBtn) {{
                 extBtn.addEventListener('click', (e) => {{
@@ -2466,8 +2480,8 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
         
         // Initial call to sync 24h change values immediately on load
         updateLivePrices();
-        
         restoreFlippedState();
+        
         if (window.oldRefreshKey && window.oldRefreshKey !== refreshKey) {{
             for (let key in chartCache) {{
                 if (chartCache[key].chartObj) chartCache[key].chartObj.destroy();
@@ -2562,8 +2576,10 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
             align-items: center !important;
             height: 100% !important;
         }
-        div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label:hover { background: rgba(255,255,255,0.05) !important; }
-        div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label > div:first-child { display: none !important; } 
+        div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label:hover { background: rgba(255,255,255,0.05) !important;
+        }
+        div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label > div:first-child { display: none !important;
+        } 
         div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label p {
             font-weight: bold !important;
             font-size: 1.05rem !important; color: #94a3b8 !important; margin: 0 !important; padding: 0 !important; white-space: nowrap !important; line-height: 1 !important;
@@ -2575,7 +2591,8 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
             border-color: #00ff9d !important;
         }
         div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label:has(input:checked):first-child p,
-        div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label[aria-checked="true"]:first-child p { color: #00ff9d !important; }
+        div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label[aria-checked="true"]:first-child p { color: #00ff9d !important;
+        }
         
         /* Active Sell */
         div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label:has(input:checked):last-child,
@@ -2584,7 +2601,8 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
             border-color: #ff4d4d !important;
         }
         div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label:has(input:checked):last-child p,
-        div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label[aria-checked="true"]:last-child p { color: #ff4d4d !important; }
+        div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label[aria-checked="true"]:last-child p { color: #ff4d4d !important;
+        }
 
         /* 3. RIGHT ALIGNED SUBMIT BUTTON */
         div[data-testid="stForm"]:has(.add-tx-card) .stButton {
@@ -2617,7 +2635,8 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
             position: relative;
             z-index: 2;
         }
-        div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row) > div { padding: 0 !important; } 
+        div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row) > div { padding: 0 !important;
+        } 
         
         div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row) div[data-testid="stButton"] button {
             background: rgba(255,255,255,0.05) !important;
@@ -2632,7 +2651,8 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
         }
 
         /* 5. SMOOTH EDIT ROLLOUT */
-        @keyframes rollDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes rollDown { from { opacity: 0;
+            transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
         div[data-testid="stForm"]:has(.edit-rollout) {
             animation: rollDown 0.3s ease forwards !important;
             background: rgba(0,0,0,0.2) !important;
@@ -2685,9 +2705,12 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
            7. MOBILE OVERRIDES (IRONCLAD)
            ============================================================== */
         @media (max-width: 768px) {
-            .stApp { padding-top: 72px !important; }
-            .glossy-header { margin-top: 48px !important; margin-bottom: 24px !important; padding: 20px 16px !important; font-size: 22px !important; min-height: 90px; }
-            .home-header { margin-bottom: 0 !important; }
+            .stApp { padding-top: 72px !important;
+            }
+            .glossy-header { margin-top: 48px !important; margin-bottom: 24px !important;
+            padding: 20px 16px !important; font-size: 22px !important; min-height: 90px; }
+            .home-header { margin-bottom: 0 !important;
+            }
             
             /* Fix Add Form Mobile Grid */
             /* Force all horizontal blocks inside the form to flex explicitly */
@@ -2704,7 +2727,8 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                 width: calc(50% - 12px) !important;
                 flex: 1 1 calc(50% - 12px) !important;
             }
-            div[data-testid="stForm"]:has(.add-tx-card) input { padding: 6px !important; font-size: 0.95rem !important; }
+            div[data-testid="stForm"]:has(.add-tx-card) input { padding: 6px !important;
+            font-size: 0.95rem !important; }
             
             /* The 2-column action row -> map to the 50/50 split below inputs (Switch left, Button right) */
             div[data-testid="stForm"]:has(.add-tx-card) div[data-testid="stHorizontalBlock"]:has(> div[data-testid="column"]:nth-child(2):last-child) > div[data-testid="column"] {
@@ -2738,34 +2762,55 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                 padding: 0 !important; width: auto !important; flex-shrink: 1 !important;
             }
             /* Exact layout for the 5 strict columns to prevent ANY dropping/wrapping */
-            div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row) > div > div[data-testid="stVerticalBlock"] > div[data-testid="stHorizontalBlock"] > div[data-testid="column"]:nth-child(1) { flex: 0 0 35px !important; width: 35px !important; } /* Logo */
-            div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row) > div > div[data-testid="stVerticalBlock"] > div[data-testid="stHorizontalBlock"] > div[data-testid="column"]:nth-child(2) { flex: 1 1 auto !important; overflow: hidden !important; text-align: left; } /* Ticker */
-            div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row) > div > div[data-testid="stVerticalBlock"] > div[data-testid="stHorizontalBlock"] > div[data-testid="column"]:nth-child(3) { flex: 1.5 1 auto !important; overflow: hidden !important; text-align: center; } /* Amounts */
-            div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row) > div > div[data-testid="stVerticalBlock"] > div[data-testid="stHorizontalBlock"] > div[data-testid="column"]:nth-child(4) { flex: 0 0 36px !important; width: 36px !important; } /* Edit */
-            div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row) > div > div[data-testid="stVerticalBlock"] > div[data-testid="stHorizontalBlock"] > div[data-testid="column"]:nth-child(5) { flex: 0 0 36px !important; width: 36px !important; } /* Delete */
+            div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row) > div > div[data-testid="stVerticalBlock"] > div[data-testid="stHorizontalBlock"] > div[data-testid="column"]:nth-child(1) { flex: 0 0 35px !important;
+            width: 35px !important; } /* Logo */
+            div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row) > div > div[data-testid="stVerticalBlock"] > div[data-testid="stHorizontalBlock"] > div[data-testid="column"]:nth-child(2) { flex: 1 1 auto !important;
+            overflow: hidden !important; text-align: left; } /* Ticker */
+            div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row) > div > div[data-testid="stVerticalBlock"] > div[data-testid="stHorizontalBlock"] > div[data-testid="column"]:nth-child(3) { flex: 1.5 1 auto !important;
+            overflow: hidden !important; text-align: center; } /* Amounts */
+            div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row) > div > div[data-testid="stVerticalBlock"] > div[data-testid="stHorizontalBlock"] > div[data-testid="column"]:nth-child(4) { flex: 0 0 36px !important;
+            width: 36px !important; } /* Edit */
+            div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row) > div > div[data-testid="stVerticalBlock"] > div[data-testid="stHorizontalBlock"] > div[data-testid="column"]:nth-child(5) { flex: 0 0 36px !important;
+            width: 36px !important; } /* Delete */
             
             div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row) div[data-testid="stButton"] button {
-                width: 30px !important; height: 30px !important; font-size: 0.9rem !important; margin: 0 auto !important;
+                width: 30px !important;
+                height: 30px !important; font-size: 0.9rem !important; margin: 0 auto !important;
             }
             
-            .mobile-logo { width: 32px !important; height: 32px !important; margin-top: 0 !important; }
-            .mobile-tx-ticker { font-size: 0.95rem !important; margin-left: 2px !important;}
-            .mobile-tx-amount { font-size: 0.95rem !important; white-space: nowrap !important; }
-            .mobile-tx-sub { font-size: 0.7rem !important; white-space: nowrap !important; margin-left: 2px !important;}
+            .mobile-logo { width: 32px !important;
+            height: 32px !important; margin-top: 0 !important; }
+            .mobile-tx-ticker { font-size: 0.95rem !important;
+            margin-left: 2px !important;}
+            .mobile-tx-amount { font-size: 0.95rem !important;
+            white-space: nowrap !important; }
+            .mobile-tx-sub { font-size: 0.7rem !important;
+            white-space: nowrap !important; margin-left: 2px !important;}
             
             /* Dashboard Mobile Stats Override Fix */
-            .stats-layer-inner { gap: 6px !important; }
-            .stats-layer { margin-top: -60px !important; margin-bottom: 18px; } 
-            .glossy-box.swapped { height: 80px !important; min-height: 80px !important; max-height: 80px !important; padding: 0 !important; min-width: 0 !important; }
-            .dash-value { font-size: clamp(11px, 3.5vw, 15px) !important; top: 24px !important; } 
-            .dash-label { font-size: clamp(8px, 2.5vw, 10px) !important; bottom: 8px !important; white-space: nowrap !important; letter-spacing: 0.5px !important; }
+            .stats-layer-inner { gap: 6px !important;
+            }
+            .stats-layer { margin-top: -60px !important; margin-bottom: 18px;
+            } 
+            .glossy-box.swapped { height: 80px !important;
+            min-height: 80px !important; max-height: 80px !important; padding: 0 !important; min-width: 0 !important;
+            }
+            .dash-value { font-size: clamp(11px, 3.5vw, 15px) !important;
+            top: 24px !important; } 
+            .dash-label { font-size: clamp(8px, 2.5vw, 10px) !important;
+            bottom: 8px !important; white-space: nowrap !important; letter-spacing: 0.5px !important; }
             
             /* Restyled Subdued USDC Banner Mobile */
-            .usdc-banner { padding: 8px 14px; width: 92%; margin: -12px auto 12px auto !important; }
-            .usdc-banner-left img { width: 24px; height: 24px; }
-            .usdc-banner-title { font-size: 0.95rem; }
-            .usdc-banner-subtitle { font-size: 0.7rem; }
-            .usdc-banner-amount { font-size: 1.1rem; }
+            .usdc-banner { padding: 8px 14px;
+            width: 92%; margin: -12px auto 12px auto !important; }
+            .usdc-banner-left img { width: 24px;
+            height: 24px; }
+            .usdc-banner-title { font-size: 0.95rem;
+            }
+            .usdc-banner-subtitle { font-size: 0.7rem;
+            }
+            .usdc-banner-amount { font-size: 1.1rem;
+            }
         }
         </style>
         """, unsafe_allow_html=True)
