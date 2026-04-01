@@ -15,7 +15,7 @@ st.set_page_config(page_title="Portfolio", layout="wide", page_icon="logo.png", 
 
 # ====================== CORE CONTAINERS ======================
 # Defining these immediately ensures they are the exact first 4 children of the main block.
-# This allows the JS layout enforcer to target them perfectly for horizontal swiping.
+# This allows the layout enforcer to target them perfectly for horizontal swiping.
 page_home = st.container()
 page_crypto = st.container()
 page_fiat = st.container()
@@ -505,6 +505,10 @@ usdc_holdings = usdc_row['Holdings'] if usdc_row is not None else 0
 # HIDDEN SCRIPTS: CSS AND LAYOUT ENFORCER
 # -------------------------------------------------------------------------
 with hidden_scripts:
+    # 1. We inject a hidden marker directly into the DOM tree. 
+    # The Javascript below uses this marker to securely find the parent element that holds the 4 containers.
+    st.markdown("<div id='layout-marker' style='display:none;'></div>", unsafe_allow_html=True)
+    
     st.markdown("""
     <style>
     /* HIDE SIDEBAR & DEFAULT STREAMLIT MARGINS */
@@ -521,264 +525,74 @@ with hidden_scripts:
         overflow: hidden !important;
     }
 
-    /* Dashboard Pullable Drawer Styles */
-    .dashboard-wrapper {
-        position: relative;
-        z-index: 10;
-    }
-    .glossy-header-label {
-        cursor: pointer;
-        display: block;
-        position: relative;
-        z-index: 3;
-        -webkit-tap-highlight-color: transparent;
-    }
-    .home-header {
-        margin-bottom: 0 !important;
-        padding-bottom: 30px !important;
-    }
-    .pull-indicator {
-        position: absolute;
-        bottom: 8px;
-        left: 50%;
-        transform: translateX(-50%);
-        color: #64748b;
-        opacity: 0.8;
-        transition: color 0.3s ease;
-    }
-    @media (hover: hover) and (pointer: fine) {
-        .glossy-header-label:hover .pull-indicator {
-            color: #cbd5e1;
-        }
-    }
+    /* GLOBAL APP CSS (Cards, Stats, Headers, Buttons, etc.) */
+    .dashboard-wrapper { position: relative; z-index: 10; }
+    .glossy-header-label { cursor: pointer; display: block; position: relative; z-index: 3; -webkit-tap-highlight-color: transparent; }
+    .home-header { margin-bottom: 0 !important; padding-bottom: 30px !important; }
+    .pull-indicator { position: absolute; bottom: 8px; left: 50%; transform: translateX(-50%); color: #64748b; opacity: 0.8; transition: color 0.3s ease; }
+    @media (hover: hover) and (pointer: fine) { .glossy-header-label:hover .pull-indicator { color: #cbd5e1; } }
     .pull-indicator .eye-open { display: none; }
     .pull-indicator .eye-closed { display: block; }
-
     .dashboard-toggle:checked ~ .dashboard-wrapper .glossy-header-label .pull-indicator .eye-open { display: block; }
     .dashboard-toggle:checked ~ .dashboard-wrapper .glossy-header-label .pull-indicator .eye-closed { display: none; }
     .dashboard-toggle:checked ~ .dashboard-wrapper .glossy-header-label .pull-indicator { color: #ffffff; }
 
-    .stats-layer {
-        position: relative;
-        z-index: 1;
-        margin-top: -60px !important; 
-        transition: margin-top 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-        margin-bottom: 24px;
-    }
-    .dashboard-toggle:checked ~ .dashboard-wrapper .stats-layer {
-        margin-top: 14px !important;
-    }
+    .stats-layer { position: relative; z-index: 1; margin-top: -60px !important; transition: margin-top 0.4s cubic-bezier(0.4, 0, 0.2, 1); margin-bottom: 24px; }
+    .dashboard-toggle:checked ~ .dashboard-wrapper .stats-layer { margin-top: 14px !important; }
+    .stats-layer-inner { display: grid !important; grid-template-columns: repeat(3, 1fr) !important; gap: 14px; width: 100%; }
 
-    /* Force 3 columns globally without wrapping */
-    .stats-layer-inner {
-        display: grid !important;
-        grid-template-columns: repeat(3, 1fr) !important;
-        gap: 14px;
-        width: 100%;
-    }
+    .dash-value { font-size: clamp(14px, 2.5vw, 24px) !important; font-weight: 700; line-height: 1.05; color: #ffffff; position: absolute; top: 20px; left: 0; width: 100%; text-align: center; margin: 0; transition: opacity 0.3s ease; padding: 0 4px; box-sizing: border-box; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .dashboard-toggle:not(:checked) ~ .dashboard-wrapper .stats-layer .dash-value { opacity: 0; pointer-events: none; }
+    .dash-label { font-size: 11px !important; font-weight: 600; letter-spacing: 1.5px; text-transform: uppercase; color: #94a3b8; line-height: 1.2; position: absolute; bottom: 8px; left: 0; width: 100%; text-align: center; }
 
-    /* Tucked Text Fade Out */
-    .dash-value {
-        font-size: clamp(14px, 2.5vw, 24px) !important;
-        font-weight: 700;
-        line-height: 1.05;
-        color: #ffffff;
-        position: absolute;
-        top: 20px;
-        left: 0;
-        width: 100%;
-        text-align: center;
-        margin: 0;
-        transition: opacity 0.3s ease;
-        padding: 0 4px;
-        box-sizing: border-box;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-    }
-    .dashboard-toggle:not(:checked) ~ .dashboard-wrapper .stats-layer .dash-value {
-        opacity: 0;
-        pointer-events: none;
-    }
+    .glossy-header { position: relative; overflow: hidden; background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); border: 1px solid rgba(255,255,255,0.05); border-radius: 18px; box-shadow: 0 10px 30px rgba(0,0,0,0.4); transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.4s ease, border-color 0.4s ease; padding: 32px 24px; min-height: 130px; font-size: 29px; font-weight: 700; letter-spacing: 1.5px; line-height: 1.1; display: flex; align-items: center; justify-content: center; gap: 16px; width: 100% !important; margin-top: 68px; margin-bottom: 38px; }
+    @media (hover: hover) and (pointer: fine) { .glossy-header-label:hover .glossy-header { transform: translateY(-4px) scale(1.01); box-shadow: 0 15px 40px rgba(0, 0, 0, 0.5); border-color: rgba(255, 255, 255, 0.15); } }
+    .dashboard-toggle:checked ~ .dashboard-wrapper .glossy-header { transform: translateY(-4px) scale(1.01); box-shadow: 0 15px 40px rgba(0, 0, 0, 0.5); border-color: rgba(255, 255, 255, 0.15); }
 
-    .dash-label {
-        font-size: 11px !important;
-        font-weight: 600;
-        letter-spacing: 1.5px;
-        text-transform: uppercase;
-        color: #94a3b8;
-        line-height: 1.2;
-        position: absolute;
-        bottom: 8px;
-        left: 0;
-        width: 100%;
-        text-align: center;
-    }
+    .glossy-box { position: relative; overflow: hidden; background: linear-gradient(180deg, #162032 0%, #0f172a 100%); border: 1px solid rgba(255,255,255,0.05); border-radius: 18px; box-shadow: 0 8px 24px rgba(0,0,0,0.4); transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); padding: 28px 30px; text-align: center; flex: 1; min-width: 220px; display: flex; flex-direction: column; justify-content: center; }
+    .glossy-box:not(.swapped) > div:first-child { font-size: 12px; font-weight: 600; letter-spacing: 1.5px; text-transform: uppercase; color: #94a3b8; margin-bottom: 6px; line-height: 1.2; }
+    .glossy-box:not(.swapped) > div:last-child { font-size: 27px; font-weight: 700; line-height: 1.05; color: #ffffff; }
+    .glossy-box.swapped { min-width: 0 !important; height: 80px !important; min-height: 80px !important; max-height: 80px !important; padding: 0; display: block; }
 
-    .glossy-header {
-        position: relative;
-        overflow: hidden;
-        background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
-        border: 1px solid rgba(255,255,255,0.05);
-        border-radius: 18px;
-        box-shadow: 0 10px 30px rgba(0,0,0,0.4);
-        transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.4s ease, border-color 0.4s ease;
-        padding: 32px 24px;
-        min-height: 130px;
-        font-size: 29px;
-        font-weight: 700;
-        letter-spacing: 1.5px;
-        line-height: 1.1;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 16px;
-        width: 100% !important;
-        margin-top: 68px;
-        margin-bottom: 38px;
-    }
+    .usdc-banner { position: relative; overflow: hidden; background: rgba(15, 23, 42, 0.5); border: 1px solid rgba(39, 117, 202, 0.2); border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); padding: 10px 20px; width: 90%; max-width: 400px; margin: -15px auto 12px auto !important; display: flex; align-items: center; justify-content: space-between; }
+    .usdc-banner-left { display: flex; align-items: center; gap: 12px; }
+    .usdc-banner-left img { width: 28px; height: 28px; border-radius: 50%; object-fit: contain; opacity: 0.85; }
+    .usdc-banner-title { font-size: 1.05rem; font-weight: 600; color: #e2e8f0; display: flex; align-items: center; gap: 8px; }
+    .usdc-banner-subtitle { font-size: 0.75rem; font-weight: 500; color: #64748b; }
+    .usdc-banner-amount { font-size: 1.2rem; font-weight: 600; color: #e2e8f0; }
+    .dashboard-toggle:not(:checked) ~ .usdc-banner .usdc-banner-amount { font-size: 0 !important; }
+    .dashboard-toggle:not(:checked) ~ .usdc-banner .usdc-banner-amount::after { content: '***'; font-size: 1.2rem; color: #e2e8f0; }
 
-    /* PC Hover and Sync with Dashboard Toggle */
-    @media (hover: hover) and (pointer: fine) {
-        .glossy-header-label:hover .glossy-header {
-            transform: translateY(-4px) scale(1.01);
-            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.5);
-            border-color: rgba(255, 255, 255, 0.15);
-        }
-    }
-    .dashboard-toggle:checked ~ .dashboard-wrapper .glossy-header {
-        transform: translateY(-4px) scale(1.01);
-        box-shadow: 0 15px 40px rgba(0, 0, 0, 0.5);
-        border-color: rgba(255, 255, 255, 0.15);
-    }
-
-    .glossy-box {
-        position: relative;
-        overflow: hidden;
-        background: linear-gradient(180deg, #162032 0%, #0f172a 100%);
-        border: 1px solid rgba(255,255,255,0.05);
-        border-radius: 18px;
-        box-shadow: 0 8px 24px rgba(0,0,0,0.4);
-        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-        padding: 28px 30px;
-        text-align: center;
-        flex: 1;
-        min-width: 220px;
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-    }
-
-    .glossy-box:not(.swapped) > div:first-child {
-        font-size: 12px;
-        font-weight: 600;
-        letter-spacing: 1.5px;
-        text-transform: uppercase;
-        color: #94a3b8;
-        margin-bottom: 6px;
-        line-height: 1.2;
-    }
-    .glossy-box:not(.swapped) > div:last-child {
-        font-size: 27px;
-        font-weight: 700;
-        line-height: 1.05;
-        color: #ffffff;
-    }
-
-    .glossy-box.swapped {
-        min-width: 0 !important;
-        height: 80px !important;
-        min-height: 80px !important;
-        max-height: 80px !important;
-        padding: 0;
-        display: block;
-    }
-
-    /* Subdued and Smaller USDC Banner */
-    .usdc-banner {
-        position: relative;
-        overflow: hidden;
-        background: rgba(15, 23, 42, 0.5);
-        border: 1px solid rgba(39, 117, 202, 0.2);
-        border-radius: 12px;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-        padding: 10px 20px;
-        width: 90%; 
-        max-width: 400px; 
-        margin: -15px auto 12px auto !important;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-    }
-    .usdc-banner-left {
-        display: flex;
-        align-items: center;
-        gap: 12px;
-    }
-    .usdc-banner-left img {
-        width: 28px;
-        height: 28px;
-        border-radius: 50%;
-        object-fit: contain;
-        opacity: 0.85;
-    }
-    .usdc-banner-title {
-        font-size: 1.05rem;
-        font-weight: 600;
-        color: #e2e8f0;
-        display: flex;
-        align-items: center;
-        gap: 8px;
-    }
-    .usdc-banner-subtitle {
-        font-size: 0.75rem;
-        font-weight: 500;
-        color: #64748b;
-    }
-    .usdc-banner-amount {
-        font-size: 1.2rem;
-        font-weight: 600;
-        color: #e2e8f0;
-    }
-
-    /* Native CSS Privacy Mode for USDC Banner */
-    .dashboard-toggle:not(:checked) ~ .usdc-banner .usdc-banner-amount {
-        font-size: 0 !important;
-    }
-    .dashboard-toggle:not(:checked) ~ .usdc-banner .usdc-banner-amount::after {
-        content: '***';
-        font-size: 1.2rem;
-        color: #e2e8f0;
-    }
-
-    /* GLOBALLY HIDE NUMBER INPUT STEP BUTTONS (+ / -) */
-    button[aria-label="Step Up"],
-    button[aria-label="Step Down"],
-    button[data-testid="stNumberInputStepUp"],
-    button[data-testid="stNumberInputStepDown"] {
-        display: none !important;
-    }
-    input[type="number"]::-webkit-inner-spin-button, 
-    input[type="number"]::-webkit-outer-spin-button { 
-        -webkit-appearance: none; 
-        margin: 0; 
-    }
-    input[type="number"] {
-        -moz-appearance: textfield;
-    }
+    button[aria-label="Step Up"], button[aria-label="Step Down"], button[data-testid="stNumberInputStepUp"], button[data-testid="stNumberInputStepDown"] { display: none !important; }
+    input[type="number"]::-webkit-inner-spin-button, input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+    input[type="number"] { -moz-appearance: textfield; }
     </style>
     """, unsafe_allow_html=True)
 
-    # We define the JS that safely limits the layout altering strictly to the outermost parent
+    # 2. Layout JS Engine. This securely targets ONLY the wrapper of our 4 containers.
+    # It converts the wrapper into a horizontal swiping container and forces the first 3 pages
+    # to be 100vw side-by-side, leaving their internal elements strictly vertical.
     js_layout_enforcer = """
     <script>
     (function() {
         const parentDoc = window.parent.document;
         
         function enforceLayout() {
-            const mainBlock = parentDoc.querySelector('[data-testid="stMainBlockContainer"] > div > [data-testid="stVerticalBlock"]');
-            if (mainBlock && !mainBlock.classList.contains('horizontal-swipe-main')) {
-                mainBlock.classList.add('horizontal-swipe-main');
+            // Find the invisible marker
+            const marker = parentDoc.getElementById('layout-marker');
+            if (!marker) return;
+            
+            // Step up to the element-container that Streamlit wraps our html component in
+            const elementContainer = marker.closest('.element-container');
+            if (!elementContainer) return;
+            
+            // The parent of that container is the MAIN vertical block that holds ALL our pages
+            const mainVerticalBlock = elementContainer.parentElement;
+            if (!mainVerticalBlock) return;
+
+            // Only apply if we haven't already
+            if (!mainVerticalBlock.classList.contains('horizontal-swipe-main')) {
+                mainVerticalBlock.classList.add('horizontal-swipe-main');
                 
                 // Inject CSS specific ONLY to our isolated swipe wrapper
                 if (!parentDoc.getElementById('swipe-layout-css')) {
@@ -803,45 +617,57 @@ with hidden_scripts:
                         .horizontal-swipe-main::-webkit-scrollbar { display: none !important; }
                         
                         /* Target ONLY the 4 outer Element Containers we strictly defined */
-                        .horizontal-swipe-main > .element-container {
+                        .horizontal-swipe-main > .swipe-page {
                             flex: 0 0 100vw !important;
                             width: 100vw !important;
                             max-width: 100vw !important;
+                            min-width: 100vw !important;
                             height: 100dvh !important;
                             overflow-y: auto !important;
                             overflow-x: hidden !important;
                             scroll-snap-align: start !important;
                             background: transparent !important;
-                        }
-                        
-                        /* Visually destroy the 4th container holding this script */
-                        .horizontal-swipe-main > .element-container:nth-child(4) {
-                            display: none !important;
+                            margin: 0 !important;
+                            padding: 0 !important;
+                            display: block !important;
                         }
                         
                         /* Pad the inner vertical blocks of our 3 pages to leave room for bottom nav */
-                        .horizontal-swipe-main > .element-container > div[data-testid="stVerticalBlock"] {
-                            padding: 14px !important;
-                            padding-bottom: 95px !important;
+                        .horizontal-swipe-main > .swipe-page > div[data-testid="stVerticalBlock"] {
+                            padding: 14px 14px 100px 14px !important;
                             min-height: 100dvh !important;
+                            display: flex !important;
+                            flex-direction: column !important;
                         }
                     `;
                     parentDoc.head.appendChild(style);
                 }
 
+                // Add classes to the first 3 children (Home, Crypto, Fiat)
+                const children = mainVerticalBlock.children;
+                if(children.length >= 4) {
+                    children[0].classList.add('swipe-page');
+                    children[1].classList.add('swipe-page');
+                    children[2].classList.add('swipe-page');
+                    // Hide everything else (scripts container)
+                    for(let i=3; i<children.length; i++) {
+                        children[i].style.display = 'none';
+                    }
+                }
+
                 // Restore Streamlit scroll state gracefully after reruns
                 const savedIdx = localStorage.getItem('swipeIdx');
                 if (savedIdx !== null) {
-                    mainBlock.style.scrollBehavior = 'auto';
-                    mainBlock.scrollLeft = parseInt(savedIdx) * mainBlock.clientWidth;
-                    setTimeout(() => { mainBlock.style.scrollBehavior = 'smooth'; }, 50);
+                    mainVerticalBlock.style.scrollBehavior = 'auto';
+                    mainVerticalBlock.scrollLeft = parseInt(savedIdx) * mainVerticalBlock.clientWidth;
+                    setTimeout(() => { mainVerticalBlock.style.scrollBehavior = 'smooth'; }, 50);
                 }
 
                 // Re-bind Scroll Listener seamlessly
-                mainBlock.addEventListener('scroll', () => {
-                    const width = mainBlock.clientWidth;
+                mainVerticalBlock.addEventListener('scroll', () => {
+                    const width = mainVerticalBlock.clientWidth;
                     if(width === 0) return;
-                    const idx = Math.round(mainBlock.scrollLeft / width);
+                    const idx = Math.round(mainVerticalBlock.scrollLeft / width);
                     localStorage.setItem('swipeIdx', idx);
                     
                     const navItems = parentDoc.querySelectorAll('#custom-bottom-nav .nav-item');
@@ -852,8 +678,8 @@ with hidden_scripts:
             }
         }
         
-        // Check frequently (200ms) to beat Streamlit's arbitrary DOM redraws
-        setInterval(enforceLayout, 200);
+        // Check frequently (100ms) to beat Streamlit's arbitrary DOM redraws
+        setInterval(enforceLayout, 100);
 
         function injectNav() {
             let nav = parentDoc.getElementById('custom-bottom-nav');
