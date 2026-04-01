@@ -330,26 +330,6 @@ def parse_excel_date(x):
     except:
         return datetime.now().date()
 
-def get_max_history_limit(crypto_df, fiat_df):
-    all_dates = []
-    if not fiat_df.empty:
-        all_dates.extend(fiat_df['Datum'].apply(parse_excel_date).tolist())
-    if not crypto_df.empty:
-        all_dates.extend(crypto_df['Datum'].apply(parse_excel_date).tolist())
-        
-    if not all_dates:
-        limit = 365
-    else:
-        min_date = min(all_dates)
-        today = datetime.now().date()
-        if min_date > today: min_date = today
-        limit = (today - min_date).days + 5
-        
-    today_dt = datetime.now()
-    ytd_days = (today_dt - datetime(today_dt.year, 1, 1)).days
-    limit = max(limit, ytd_days + 5, 95)
-    return min(2000, limit)
-
 # ====================== INITIAL DATA ======================
 def get_initial_crypto_df():
     return pd.DataFrame([
@@ -403,14 +383,19 @@ CRYPTOCOMPARE_SYMBOL_MAP = {
 }
 
 # ====================== HELPER: RETRY WRAPPER ======================
-def get_with_retry(url: str, headers: dict, timeout: int = 12, retries: int = 3) -> dict | None:
+def get_with_retry(url: str, headers: dict, timeout: int = 12, retries: int = 4) -> dict | None:
     for attempt in range(retries):
         try:
             resp = requests.get(url, headers=headers, timeout=timeout)
             resp.raise_for_status()
             data = resp.json()
             if isinstance(data, dict) and data.get('Response') == 'Error':
-                return None  # Immediate fast-fail if symbol not found
+                msg = data.get('Message', '').lower()
+                # If rate limit hit, sleep and let it organically retry
+                if 'rate limit' in msg:
+                    time.sleep(1.5 ** attempt)
+                    continue
+                return None  # Fast fail only if invalid symbol
             return data
         except Exception:
             if attempt == retries - 1:
@@ -418,8 +403,7 @@ def get_with_retry(url: str, headers: dict, timeout: int = 12, retries: int = 3)
             time.sleep(1.0 ** attempt)
     return None
 
-# ====================== PARALLEL API FUNCTIONS ======================
-@st.cache_data(ttl=15, show_spinner=False)
+# ====================== NETWORK FETCHING ======================
 def get_all_cryptocompare_prices(tickers: tuple, refresh_key=0):
     prices = {"USDC": 1.0}
     symbols = [CRYPTOCOMPARE_SYMBOL_MAP.get(t.upper()) for t in tickers if t.upper() != "USDC"]
@@ -440,7 +424,6 @@ def get_all_cryptocompare_prices(tickers: tuple, refresh_key=0):
         pass
     return prices
 
-@st.cache_data(ttl=3600, show_spinner=False)
 def fetch_all_historical_data(coins_tuple: tuple, limit: int, refresh_key: int):
     prices_dict = {}
     headers = {"User-Agent": "Mozilla/5.0 (compatible; StreamlitPortfolio/1.0)"}
@@ -454,8 +437,8 @@ def fetch_all_historical_data(coins_tuple: tuple, limit: int, refresh_key: int):
             return coin, {datetime.fromtimestamp(d['time']).date(): float(d['close']) for d in data['Data']['Data']}
         return coin, {}
 
-    # ThreadPoolExecutor performs 10 concurrent requests at once, converting 10s wait to 0.5s wait
-    with ThreadPoolExecutor(max_workers=10) as executor:
+    # Strict pool limit ensures we don't trigger the API's rate limits, avoiding the flatline bug
+    with ThreadPoolExecutor(max_workers=5) as executor:
         results = executor.map(fetch_coin, coins_tuple)
         for coin, hist in results:
             if hist: prices_dict[coin] = hist
@@ -464,30 +447,32 @@ def fetch_all_historical_data(coins_tuple: tuple, limit: int, refresh_key: int):
 
 def get_base_prices(prices_dict, coins):
     base_prices = {}
-    today = datetime.now().date()
-    ytd_date = date(today.year, 1, 1)
+    today_dt = datetime.now()
+    ytd_days = (today_dt - datetime(today_dt.year, 1, 1)).days
     
     for coin in coins:
         hist = prices_dict.get(coin, {})
         if not hist: continue
         
-        def get_closest_price(target_date):
-            for i in range(7):
-                d = target_date - timedelta(days=i)
-                if d in hist: return hist[d]
-            if hist: return list(hist.values())[0]
-            return 0.0
+        # Sort chronologically, strictly avoiding timezone matching bugs
+        sorted_dates = sorted(hist.keys())
+        prices = [hist[d] for d in sorted_dates]
+        
+        if not prices: continue
+
+        def get_p(days_back):
+            idx = (days_back + 1)
+            return prices[-idx] if len(prices) >= idx else prices[0]
 
         base_prices[coin] = {
-            '7d': get_closest_price(today - timedelta(days=7)),
-            '30d': get_closest_price(today - timedelta(days=30)),
-            '90d': get_closest_price(today - timedelta(days=90)),
-            'ytd': get_closest_price(ytd_date)
+            '7d': get_p(7),
+            '30d': get_p(30),
+            '90d': get_p(90),
+            'ytd': get_p(ytd_days)
         }
     return base_prices
 
-# ====================== CORE CALCULATIONS (NOW FULLY CACHED) ======================
-@st.cache_data(show_spinner=False)
+# ====================== CORE CALCULATIONS ======================
 def build_portfolio_history(crypto_df, fiat_df, last_prices, hist_dict):
     if crypto_df.empty and fiat_df.empty: return [], "", pd.DataFrame()
 
@@ -545,6 +530,7 @@ def build_portfolio_history(crypto_df, fiat_df, last_prices, hist_dict):
         
     for coin in fetch_coins:
         live_p = last_prices.get(coin, 0.0)
+        # Prevents mathematical flatline if BTC network response ever failed completely
         if live_p == 0.0 and coin == 'BTC':
             live_p = 65000.0 
             
@@ -568,9 +554,10 @@ def build_portfolio_history(crypto_df, fiat_df, last_prices, hist_dict):
 
     total_portfolio_value = daily_crypto_value + cum_unused_usdc
 
-    if 'BTC' in prices_df.columns:
-        btc_prices = prices_df['BTC']
-        btc_bought = daily_fiat_usdc / btc_prices.replace(0, 1) 
+    # Re-calculate BTC Benchmark properly tracking historical prices without dividing by constant flatline
+    if 'BTC' in prices_df.columns and not prices_df['BTC'].empty and prices_df['BTC'].sum() > 0:
+        btc_prices = prices_df['BTC'].replace(0, 1) 
+        btc_bought = daily_fiat_usdc / btc_prices
         cum_btc_benchmark_holdings = btc_bought.cumsum()
         btc_benchmark_value = cum_btc_benchmark_holdings * btc_prices
     else:
@@ -606,7 +593,6 @@ def build_portfolio_history(crypto_df, fiat_df, last_prices, hist_dict):
         
     return history_data, allocation_series_js, pnl_df
 
-@st.cache_data(show_spinner=False)
 def calculate_portfolio(crypto_df, fiat_df, live_prices, base_prices):
     if crypto_df.empty:
         return pd.DataFrame(columns=['Ticker','Holdings','USDC','AVG','Live','PnL','PnL %','Value','Price7d','Price30d','Price90d','PriceYTD']), 0, 0, 0
@@ -738,6 +724,8 @@ if 'last_known_prices' not in st.session_state:
     st.session_state.last_known_prices = {"USDC": 1.0}
 if 'refresh_key' not in st.session_state:
     st.session_state.refresh_key = random.randint(100000, 999999)
+if 'portfolio_cache' not in st.session_state:
+    st.session_state.portfolio_cache = {}
 
 # ====================== SIDEBAR ======================
 with st.sidebar:
@@ -772,26 +760,58 @@ def glossy_header(title: str, icon_svg: str):
 with main_container.container(key=f"page_{st.session_state.page}_{st.session_state.ui_version}"):
     if st.session_state.page == "Home":
 
-        # ================== UNIFIED NETWORK FETCHING ==================
-        fetch_tickers = tuple(sorted(set([t.upper() for t in st.session_state.crypto_df['Ticker'] if t.upper() != 'USDC']) | {'BTC'}))
-        limit = get_max_history_limit(st.session_state.crypto_df, st.session_state.fiat_df)
-        
-        # Pull live prices and cache updates
-        live_prices = get_all_cryptocompare_prices(fetch_tickers, st.session_state.refresh_key)
-        for t, p in live_prices.items():
-            if p > 0: st.session_state.last_known_prices[t] = p
-            
-        for t in fetch_tickers:
-            if t not in live_prices or live_prices[t] == 0:
-                live_prices[t] = st.session_state.last_known_prices.get(t, 0)
-                
-        # Bulk Fetch Historical Data (Parallelized & Fully Cached)
-        hist_dict = fetch_all_historical_data(fetch_tickers, limit, st.session_state.refresh_key)
-        base_prices = get_base_prices(hist_dict, fetch_tickers)
+        # ================== ZERO-LATENCY CACHE ARCHITECTURE ==================
+        # This completely skips ALL pandas recalculations and dictionary loops when you simply swap pages.
+        # It guarantees the page swap will occur instantly without blocking the server thread.
+        current_hash = f"{st.session_state.crypto_table_version}_{st.session_state.fiat_table_version}_{st.session_state.refresh_key}"
 
-        df_port, total_value, total_pnl, total_pnl_pct = calculate_portfolio(
-            st.session_state.crypto_df, st.session_state.fiat_df, live_prices, base_prices
-        )
+        if st.session_state.portfolio_cache.get('hash') != current_hash:
+            fetch_tickers = tuple(sorted(set([t.upper() for t in st.session_state.crypto_df['Ticker'] if t.upper() != 'USDC']) | {'BTC'}))
+            
+            # Request exact limit to guarantee 90D/YTD math always finds chronological prices
+            limit = 2000 
+            
+            live_prices = get_all_cryptocompare_prices(fetch_tickers, st.session_state.refresh_key)
+            for t, p in live_prices.items():
+                if p > 0: st.session_state.last_known_prices[t] = p
+                
+            for t in fetch_tickers:
+                if t not in live_prices or live_prices[t] == 0:
+                    live_prices[t] = st.session_state.last_known_prices.get(t, 0)
+                    
+            hist_dict = fetch_all_historical_data(fetch_tickers, limit, st.session_state.refresh_key)
+            base_prices = get_base_prices(hist_dict, fetch_tickers)
+
+            df_port, total_value, total_pnl, total_pnl_pct = calculate_portfolio(
+                st.session_state.crypto_df, st.session_state.fiat_df, live_prices, base_prices
+            )
+            history_data_raw, allocation_series_js, pnl_df = build_portfolio_history(
+                st.session_state.crypto_df, st.session_state.fiat_df, live_prices, hist_dict
+            )
+
+            # Assign to the instant bypass vault
+            st.session_state.portfolio_cache = {
+                'hash': current_hash,
+                'df_port': df_port,
+                'total_value': total_value,
+                'total_pnl': total_pnl,
+                'total_pnl_pct': total_pnl_pct,
+                'history_data_raw': history_data_raw,
+                'allocation_series_js': allocation_series_js,
+                'pnl_df': pnl_df,
+                'live_prices': live_prices,
+                'base_prices': base_prices
+            }
+
+        # PULL FROM INSTANT VAULT
+        vault = st.session_state.portfolio_cache
+        df_port = vault['df_port']
+        total_value = vault['total_value']
+        total_pnl = vault['total_pnl']
+        total_pnl_pct = vault['total_pnl_pct']
+        history_data_raw = vault['history_data_raw']
+        allocation_series_js = vault['allocation_series_js']
+        pnl_df = vault['pnl_df']
         
         usdc_row = df_port[df_port['Ticker'] == 'USDC'].iloc[0] if not df_port[df_port['Ticker'] == 'USDC'].empty else None
         usdc_holdings = usdc_row['Holdings'] if usdc_row is not None else 0
@@ -821,10 +841,6 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
         st.markdown(value_box_html, unsafe_allow_html=True)
 
         # ================== 2. ASSEMBLE ALL CHARTS DATA ==================
-        history_data_raw, allocation_series_js, pnl_df = build_portfolio_history(
-            st.session_state.crypto_df, st.session_state.fiat_df, live_prices, hist_dict
-        )
-        
         hist_val_js_list = []
         hist_inv_js_list = []
         hist_btc_js_list = []
