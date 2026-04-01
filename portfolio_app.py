@@ -16,6 +16,19 @@ st.set_page_config(page_title="Portfolio", layout="wide", page_icon="logo.png")
 # ====================== GLOBAL CSS ======================
 st.markdown("""
 <style>
+html, body, .stApp {
+    overflow-x: hidden !important;
+}
+
+@keyframes slideInFromRight {
+    0% { transform: translateX(30vw); opacity: 0; }
+    100% { transform: translateX(0); opacity: 1; }
+}
+@keyframes slideInFromLeft {
+    0% { transform: translateX(-30vw); opacity: 0; }
+    100% { transform: translateX(0); opacity: 1; }
+}
+
 .stApp {
     background: linear-gradient(180deg, #0f1724 0%, #0a0f1c 100%) !important;
 }
@@ -78,9 +91,11 @@ div[data-testid="stMainBlockContainer"] {
 .pull-indicator .eye-open { display: none; }
 .pull-indicator .eye-closed { display: block; }
 
-.dashboard-toggle:checked ~ .dashboard-wrapper .glossy-header-label .pull-indicator .eye-open { display: block; }
+.dashboard-toggle:checked ~ .dashboard-wrapper .glossy-header-label .pull-indicator .eye-open { display: block;
+}
 .dashboard-toggle:checked ~ .dashboard-wrapper .glossy-header-label .pull-indicator .eye-closed { display: none; }
-.dashboard-toggle:checked ~ .dashboard-wrapper .glossy-header-label .pull-indicator { color: #ffffff; }
+.dashboard-toggle:checked ~ .dashboard-wrapper .glossy-header-label .pull-indicator { color: #ffffff;
+}
 
 .stats-layer {
     position: relative;
@@ -720,6 +735,8 @@ if 'ui_version' not in st.session_state:
     st.session_state.ui_version = 0
 if 'page' not in st.session_state:
     st.session_state.page = "Home"
+if 'page_anim_dir' not in st.session_state:
+    st.session_state.page_anim_dir = 'none'
 if 'last_known_prices' not in st.session_state:
     st.session_state.last_known_prices = {"USDC": 1.0}
 if 'refresh_key' not in st.session_state:
@@ -734,11 +751,24 @@ with st.sidebar:
         ("📊 Crypto Transactions", "Crypto Transactions"),
         ("💰 Fiat Transactions", "Fiat Transactions")
     ]
+    page_order = {key: i for i, (_, key) in enumerate(nav_items)}
+
     for label, key in nav_items:
         if st.button(label, key=f"nav_{key}", use_container_width=True):
+            curr_idx = page_order.get(st.session_state.page, 0)
+            new_idx = page_order.get(key, 0)
+
+            if new_idx > curr_idx:
+                st.session_state.page_anim_dir = 'slide-in-from-right'
+            elif new_idx < curr_idx:
+                st.session_state.page_anim_dir = 'slide-in-from-left'
+            else:
+                st.session_state.page_anim_dir = 'none'
+
             st.session_state.page = key
             st.session_state.ui_version += 1
             st.rerun()
+            
     st.divider()
     if st.button("🔄 Refresh All Prices & Charts", use_container_width=True):
         st.session_state.refresh_key = random.randint(100000, 999999)
@@ -758,6 +788,19 @@ def glossy_header(title: str, icon_svg: str):
     st.markdown(html, unsafe_allow_html=True)
 
 with main_container.container(key=f"page_{st.session_state.page}_{st.session_state.ui_version}"):
+
+    # --- DYNAMIC ANIMATION INJECTION ---
+    anim_css = ""
+    if st.session_state.page_anim_dir == 'slide-in-from-right':
+        anim_css = "div[data-testid='stMainBlockContainer'] { animation: slideInFromRight 0.5s cubic-bezier(0.25, 1, 0.5, 1) forwards; }"
+    elif st.session_state.page_anim_dir == 'slide-in-from-left':
+        anim_css = "div[data-testid='stMainBlockContainer'] { animation: slideInFromLeft 0.5s cubic-bezier(0.25, 1, 0.5, 1) forwards; }"
+
+    if anim_css:
+        st.markdown(f"<style>{anim_css}</style>", unsafe_allow_html=True)
+        st.session_state.page_anim_dir = 'none'
+    # -----------------------------------
+
     if st.session_state.page == "Home":
 
         # ================== ZERO-LATENCY CACHE ARCHITECTURE ==================
@@ -1188,7 +1231,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                     credits: {{ enabled: false }},
                     series: [{{ name: 'Holdings', data: [{pie_data_js}] }}]
                 }});
-
+                
                 // Chart 2: History Area (Using Highstock)
                 Highcharts.stockChart('history-container', {{
                     chart: {{ type: 'areaspline', backgroundColor: 'transparent', marginTop: 25, marginBottom: 35 }}, 
@@ -1207,7 +1250,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                             this.points.forEach(function(point) {{
                                 let val = isPrivacy ? '***' : formatMoneyStr(point.y);
                                 s += '<br/>' + '<span style="color:'+point.series.color+'">\u25CF</span> ' + point.series.name + ': <b style="font-size: 13px;">' + val + '</b>';
-                             }});
+                            }});
                             return s;
                         }}
                     }},
@@ -1217,7 +1260,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                              {{ name: 'BTC Benchmark', type: 'line', data: [{hist_btc_js}], color: '#f7931a', lineWidth: 2, zIndex: 2 }}, 
                              {{ name: 'Net Invested', type: 'line', data: [{hist_inv_js}], color: '#64748b', dashStyle: 'Dash', lineWidth: 2, zIndex: 1 }}]
                 }});
-
+                
                 // Custom Range Logic for History Chart
                 document.querySelectorAll('.hist-controls button').forEach(btn => {{
                     btn.addEventListener('click', (e) => {{
@@ -1266,7 +1309,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                     credits: {{ enabled: false }},
                     series: [{{ name: 'PnL', data: window.pnlDataMap['all'] }}]
                 }});
-
+                
                 document.querySelectorAll('.pnl-controls button').forEach(btn => {{
                     btn.addEventListener('click', (e) => {{
                         e.stopPropagation(); 
@@ -1279,7 +1322,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                         }}
                     }});
                 }});
-
+                
                 // Chart 6: ROI % Bar Chart
                 Highcharts.chart('roi-container', {{
                     chart: {{ type: 'bar', backgroundColor: 'transparent', marginTop: 15, marginBottom: 25 }},
@@ -1298,7 +1341,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                     credits: {{ enabled: false }},
                     series: [{{ name: 'ROI %', data: [ {roi_data_js} ] }}]
                 }});
-
+                
                 // Chart 7: 24h Change Bar Chart
                 Highcharts.chart('daily-container', {{
                     chart: {{ type: 'bar', backgroundColor: 'transparent', marginTop: 15, marginBottom: 25 }},
@@ -1318,7 +1361,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                     credits: {{ enabled: false }},
                     series: [{{ name: '24h Change', data: [ {daily_data_js} ] }}]
                 }});
-
+                
                 // Chart 4: Portfolio Allocation (Stacked Area -> smooth areaspline)
                 Highcharts.chart('allocation-container', {{
                     chart: {{ type: 'areaspline', backgroundColor: 'transparent', marginTop: 45, marginBottom: 35 }},
@@ -1367,7 +1410,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                         {{ name: 'Current Value', data: [{val_data_js}] }}
                     ]
                 }});
-
+                
                 try {{
                     if (window !== window.parent && window.parent.document) {{
                         if (!window.parent.document.getElementById('chart-fullscreen-css')) {{
@@ -1408,7 +1451,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                     
                     const screenW = window.parent ? window.parent.innerWidth : window.innerWidth;
                     const screenH = window.parent ? window.parent.innerHeight : window.innerHeight;
-
+                    
                     if (el.classList.contains('expanded-chart')) {{
                         // ==========================================
                         // CLOSING MECHANICS 
@@ -1417,10 +1460,10 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                         
                         const origTop = parseFloat(el.getAttribute('data-orig-top')) || 0;
                         const origLeft = parseFloat(el.getAttribute('data-orig-left')) || 0;
-
+                        
                         // Instantly remove class so background crossfades cleanly during the travel
                         el.classList.remove('expanded-chart');
-
+                        
                         // Transition smoothly to original slot
                         el.style.transition = 'transform 0.4s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.4s ease, box-shadow 0.4s ease';
                         el.style.transform = `translate(${{origLeft}}px, ${{origTop}}px) scale(1)`;
@@ -1458,11 +1501,11 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                             c.style.pointerEvents = 'none';
                         }}
                     }});
-
+                    
                     const chartRect = el.getBoundingClientRect();
                     let visualTop = chartRect.top;
                     let visualLeft = chartRect.left;
-
+                    
                     if (parentIframe) {{
                         const iframeRect = parentIframe.getBoundingClientRect();
                         visualTop += iframeRect.top;
@@ -1545,7 +1588,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                         }}
                     }});
                 }});
-
+                
                 const chartScroll = document.getElementById('chartsScrollContainer');
                 if (chartScroll) {{
                     chartScroll.addEventListener('wheel', (evt) => {{
@@ -1973,7 +2016,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                 }}
             }} catch(e) {{}}
         }}, 150);
-        
+
         try {{
             const dt = window.parent.document.getElementById('dash-toggle');
             const dtUsdc = window.parent.document.getElementById('dash-toggle-usdc');
@@ -2148,8 +2191,10 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                 const dPnlPct = parentDoc.getElementById('dash-pnl-pct');
                 
                 if (dValue) dValue.innerText = dashValStr;
-                if (dPnl) {{ dPnl.innerText = dashPnlStr; dPnl.style.color = dashColor; }}
-                if (dPnlPct) {{ dPnlPct.innerText = dashPnlPctStr; dPnlPct.style.color = dashColor; }}
+                if (dPnl) {{ dPnl.innerText = dashPnlStr;
+                dPnl.style.color = dashColor; }}
+                if (dPnlPct) {{ dPnlPct.innerText = dashPnlPctStr;
+                dPnlPct.style.color = dashColor; }}
 
                 // ==========================================
                 // DYNAMICALLY UPDATE HIGHCHARTS (SYNCED)
@@ -2178,7 +2223,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                         if (pieChart && pieChart.series[0]) {{
                             pieChart.series[0].points.forEach(point => {{
                                 if (tickerValues[point.name] !== undefined) {{
-                                     point.update({{y: tickerValues[point.name]}}, false);
+                                    point.update({{y: tickerValues[point.name]}}, false);
                                 }}
                             }});
                             pieChart.redraw(true);
@@ -2201,13 +2246,12 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                                     point.update({{y: point.y + tickerDiffs[point.name]}}, false);
                                 }}
                             }});
-                            
                             if (typeof hcWin.pnlDataMap !== 'undefined') {{
                                 Object.keys(hcWin.pnlDataMap).forEach(key => {{
                                     hcWin.pnlDataMap[key].forEach(pt => {{
-                                         if (tickerDiffs[pt.name] !== undefined) {{
+                                        if (tickerDiffs[pt.name] !== undefined) {{
                                             pt.y += tickerDiffs[pt.name];
-                                         }}
+                                        }}
                                     }});
                                 }});
                             }}
@@ -2216,17 +2260,17 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                         
                         // 4. ROI Chart
                         if (roiChart && roiChart.series[0]) {{
-                             roiChart.series[0].points.forEach(point => {{
+                            roiChart.series[0].points.forEach(point => {{
                                 if (tickerRoi[point.name] !== undefined) {{
                                     point.update({{y: tickerRoi[point.name]}}, false);
-                                 }}
+                                }}
                             }});
                             roiChart.redraw(true);
                         }}
                         
                         // 5. Daily 24h Chart
                         if (dailyChart && dailyChart.series[0]) {{
-                             dailyChart.series[0].points.forEach(point => {{
+                            dailyChart.series[0].points.forEach(point => {{
                                 if (ticker24h[point.name] !== undefined) {{
                                     const val = ticker24h[point.name];
                                     const color = val >= 0 ? 'rgba(0, 255, 157, 0.65)' : 'rgba(255, 77, 77, 0.65)'; 
@@ -2239,12 +2283,12 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                         // 6. Asset Allocation Chart
                         if (allocChart) {{
                             allocChart.series.forEach(s => {{
-                                 if (tickerValues[s.name] !== undefined) {{
+                                if (tickerValues[s.name] !== undefined) {{
                                     const points = s.points;
                                     if (points && points.length > 0) {{
                                         const lastPoint = points[points.length - 1];
                                         lastPoint.update({{y: tickerValues[s.name]}}, false);
-                                     }}
+                                    }}
                                 }}
                             }});
                             allocChart.redraw(true);
@@ -2253,11 +2297,11 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                         // 7. Invested vs Value Chart (Series 1 is 'Current Value')
                         if (invValChart && invValChart.series[1]) {{
                             invValChart.series[1].points.forEach(point => {{
-                                 if (tickerValues[point.name] !== undefined) {{
+                                if (tickerValues[point.name] !== undefined) {{
                                     point.update({{y: tickerValues[point.name]}}, false);
                                 }}
                              }});
-                            invValChart.redraw(true);
+                             invValChart.redraw(true);
                         }}
                     }}
                 }} catch (e) {{
@@ -2294,7 +2338,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                     const avgPrice = parseFloat(card.getAttribute('data-avg-price'));
                     const chartColor = card.getAttribute('data-chart-color');
                     if (!chartCache[ticker] || !chartCache[ticker].chartObj) {{
-                         renderChart(card, ticker, currentPrice, avgPrice, chartColor);
+                        renderChart(card, ticker, currentPrice, avgPrice, chartColor);
                     }}
                 }}
             }});
@@ -2335,7 +2379,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                         const color = change >= 0 ? '#00ff9d' : '#ff4d4d';
                         changeSpan.innerHTML = `<span style="color:${{color}};">${{sign}} ${{Math.abs(change).toFixed(2)}}%</span>`;
                     }} else if (changeSpan) {{
-                         changeSpan.innerHTML = `N/A`;
+                        changeSpan.innerHTML = `N/A`;
                     }}
                 }});
                 
@@ -2356,10 +2400,10 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                         if (dailyC && dailyC.series[0]) {{
                             dailyC.series[0].points.forEach(pt => {{
                                 if (init24h[pt.name] !== undefined) {{
-                                     const val = init24h[pt.name];
+                                    const val = init24h[pt.name];
                                     pt.update({{y: val, color: val >= 0 ? 'rgba(0, 255, 157, 0.65)' : 'rgba(255, 77, 77, 0.65)'}}, false);
                                 }}
-                             }});
+                            }});
                             dailyC.redraw();
                         }}
                     }}
@@ -2406,6 +2450,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                 return;
             }}
             if (loadingDiv) loadingDiv.style.display = 'block';
+            
             const hist = await fetchHistoricalData(ticker);
             if (!hist || hist.prices.length === 0) {{
                 if (loadingDiv) loadingDiv.innerText = 'Failed to load chart data';
@@ -2440,13 +2485,14 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                     type: 'line'
                 }}
             ];
+            
             const newChart = new Chart(ctx, {{
                 type: 'line',
                 data: {{
                     labels: hist.labels,
                     datasets: datasets
                 }},
-                 options: {{
+                options: {{
                     responsive: true,
                     maintainAspectRatio: false, 
                     plugins: {{
@@ -2454,11 +2500,11 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                         tooltip: {{ mode: 'index', intersect: false }}
                     }},
                     scales: {{
-                         x: {{ ticks: {{ color: '#ccc', maxRotation: 45, autoSkip: true, maxTicksLimit: 6 }}, grid: {{ color: 'rgba(255,255,255,0.1)' }} }},
+                        x: {{ ticks: {{ color: '#ccc', maxRotation: 45, autoSkip: true, maxTicksLimit: 6 }}, grid: {{ color: 'rgba(255,255,255,0.1)' }} }},
                         y: {{ position: 'right', ticks: {{ color: '#ccc' }}, grid: {{ color: 'rgba(255,255,255,0.1)' }} }}
                     }}
                 }}
-             }});
+            }});
             chartCache[ticker] = {{ chartObj: newChart, data: hist }};
             if (loadingDiv) loadingDiv.style.display = 'none';
         }}
@@ -2469,6 +2515,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
             const avgPrice = parseFloat(card.getAttribute('data-avg-price'));
             const chartColor = card.getAttribute('data-chart-color');
             const border = card.getAttribute('data-border');
+            
             card.style.setProperty('--border', border);
             
             // We initialize the calculated static metrics here so they appear instantly 
