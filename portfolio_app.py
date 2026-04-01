@@ -829,7 +829,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                 lines = []
                 for ticker, val in series.items():
                     c = get_ticker_color(ticker)
-                    lines.append(f"{{ name: '{ticker}', y: {val}, color: 'transparent', borderColor: '{c}' }}")
+                    lines.append(f"{{ name: '{ticker}', y: {val}, color: '{c}A6' }}")
                 return ",\n".join(lines)
 
             pnl_all = pnl_df_active.iloc[-1]
@@ -860,7 +860,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
         for _, r in df_iv.iterrows():
             c = get_ticker_color(r['Ticker'])
             val = r['Value'] if pd.notna(r['Value']) else 0
-            val_data_points.append(f"{{ y: {val}, color: 'transparent', borderColor: '{c}' }}")
+            val_data_points.append(f"{{ y: {val}, color: '{c}A6' }}")
         val_data_js = ",".join(val_data_points)
         
         # Chart 6: ROI % Bar Data
@@ -871,14 +871,14 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
             val = r['PnL %']
             if pd.notna(val):
                 c = get_ticker_color(t)
-                roi_data_js_lines.append(f"{{ name: '{t}', y: {val}, color: 'transparent', borderColor: '{c}' }}")
+                roi_data_js_lines.append(f"{{ name: '{t}', y: {val}, color: '{c}A6' }}")
         roi_data_js = ",\n".join(roi_data_js_lines)
 
         # Chart 7: 24h Change Placeholder Data
         daily_data_js_lines = []
         for _, r in df_port[df_port['Ticker'] != 'USDC'].iterrows():
             t = r['Ticker']
-            daily_data_js_lines.append(f"{{ name: '{t}', y: 0, color: 'transparent', borderColor: '#64748b' }}")
+            daily_data_js_lines.append(f"{{ name: '{t}', y: 0, color: 'rgba(100, 116, 139, 0.65)' }}")
         daily_data_js = ",\n".join(daily_data_js_lines)
 
         charts_html = f"""
@@ -1200,10 +1200,10 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                         formatter: function() {{
                             const isPrivacy = document.body.classList.contains('privacy-mode');
                             const val = isPrivacy ? '***' : formatMoneyStr(this.y);
-                            return `<b>${{this.point.name}}</b><br/>PnL: <b style="color:${{this.point.borderColor}}">${{val}}</b>`;
+                            return `<b>${{this.point.name}}</b><br/>PnL: <b style="color:${{this.point.color}}">${{val}}</b>`;
                         }}
                     }},
-                    plotOptions: {{ bar: {{ borderRadius: 4, borderWidth: 2, pointPadding: 0.1, groupPadding: 0.1, maxPointWidth: 35, dataLabels: {{ enabled: true, inside: false, crop: false, overflow: 'allow', style: {{ color: '#fff', textOutline: '2px #0f172a', fontWeight: 'bold', fontSize: '11px' }}, formatter: function() {{ return document.body.classList.contains('privacy-mode') ? '***' : formatMoneyStr(this.y); }} }} }} }},
+                    plotOptions: {{ bar: {{ borderRadius: 4, borderWidth: 0, pointPadding: 0.1, groupPadding: 0.1, maxPointWidth: 35, shadow: {{ color: 'rgba(0,0,0,0.3)', offsetX: 1, offsetY: 2, width: 4 }}, dataLabels: {{ enabled: true, inside: false, crop: false, overflow: 'allow', style: {{ color: '#fff', textOutline: '2px #0f172a', fontWeight: 'bold', fontSize: '11px' }}, formatter: function() {{ return document.body.classList.contains('privacy-mode') ? '***' : formatMoneyStr(this.y); }} }} }} }},
                     credits: {{ enabled: false }},
                     series: [{{ name: 'PnL', data: pnlDataMap['all'] }}]
                 }});
@@ -1232,10 +1232,10 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                         backgroundColor: 'rgba(15, 23, 42, 0.95)', style: {{ color: '#fff' }}, borderColor: 'rgba(255,255,255,0.15)',
                         formatter: function() {{
                             const val = Highcharts.numberFormat(this.y, 2) + '%';
-                            return `<b>${{this.point.name}}</b><br/>ROI: <b style="color:${{this.point.borderColor}}">${{val}}</b>`;
+                            return `<b>${{this.point.name}}</b><br/>ROI: <b style="color:${{this.point.color}}">${{val}}</b>`;
                         }}
                     }},
-                    plotOptions: {{ bar: {{ borderRadius: 4, borderWidth: 2, pointPadding: 0.1, groupPadding: 0.1, maxPointWidth: 35, dataLabels: {{ enabled: true, inside: false, crop: false, overflow: 'allow', style: {{ color: '#fff', textOutline: '2px #0f172a', fontWeight: 'bold', fontSize: '11px' }}, formatter: function() {{ return Highcharts.numberFormat(this.y, 2) + '%'; }} }} }} }},
+                    plotOptions: {{ bar: {{ borderRadius: 4, borderWidth: 0, pointPadding: 0.1, groupPadding: 0.1, maxPointWidth: 35, shadow: {{ color: 'rgba(0,0,0,0.3)', offsetX: 1, offsetY: 2, width: 4 }}, dataLabels: {{ enabled: true, inside: false, crop: false, overflow: 'allow', style: {{ color: '#fff', textOutline: '2px #0f172a', fontWeight: 'bold', fontSize: '11px' }}, formatter: function() {{ return Highcharts.numberFormat(this.y, 2) + '%'; }} }} }} }},
                     credits: {{ enabled: false }},
                     series: [{{ name: 'ROI %', data: [ {roi_data_js} ] }}]
                 }});
@@ -1252,10 +1252,10 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                         formatter: function() {{
                             const val = Highcharts.numberFormat(Math.abs(this.y), 2) + '%';
                             const sign = this.y >= 0 ? '▲ ' : '▼ ';
-                            return `<b>${{this.point.name}}</b><br/>24h Change: <b style="color:${{this.point.borderColor}}">${{sign}}${{val}}</b>`;
+                            return `<b>${{this.point.name}}</b><br/>24h Change: <b style="color:${{this.point.color}}">${{sign}}${{val}}</b>`;
                         }}
                     }},
-                    plotOptions: {{ bar: {{ borderRadius: 4, borderWidth: 2, pointPadding: 0.1, groupPadding: 0.1, maxPointWidth: 35, dataLabels: {{ enabled: true, inside: false, crop: false, overflow: 'allow', style: {{ color: '#fff', textOutline: '2px #0f172a', fontWeight: 'bold', fontSize: '11px' }}, formatter: function() {{ return (this.y >= 0 ? '+' : '') + Highcharts.numberFormat(this.y, 2) + '%'; }} }} }} }},
+                    plotOptions: {{ bar: {{ borderRadius: 4, borderWidth: 0, pointPadding: 0.1, groupPadding: 0.1, maxPointWidth: 35, shadow: {{ color: 'rgba(0,0,0,0.3)', offsetX: 1, offsetY: 2, width: 4 }}, dataLabels: {{ enabled: true, inside: false, crop: false, overflow: 'allow', style: {{ color: '#fff', textOutline: '2px #0f172a', fontWeight: 'bold', fontSize: '11px' }}, formatter: function() {{ return (this.y >= 0 ? '+' : '') + Highcharts.numberFormat(this.y, 2) + '%'; }} }} }} }},
                     credits: {{ enabled: false }},
                     series: [{{ name: '24h Change', data: [ {daily_data_js} ] }}]
                 }});
@@ -1296,15 +1296,15 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                             const isPrivacy = document.body.classList.contains('privacy-mode');
                             this.points.forEach(function(point) {{
                                 let val = isPrivacy ? '***' : formatMoneyStr(point.y);
-                                s += '<br/>' + '<span style="color:'+ (point.series.name==='Invested' ? point.borderColor : point.borderColor) +'">\u25CF</span> ' + point.series.name + ': <b>' + val + '</b>';
+                                s += '<br/>' + '<span style="color:'+ point.color +'">\u25CF</span> ' + point.series.name + ': <b>' + val + '</b>';
                             }});
                             return s;
                         }}
                     }},
-                    plotOptions: {{ column: {{ borderRadius: 4, borderWidth: 2, maxPointWidth: 40, dataLabels: {{ enabled: true, inside: false, crop: false, overflow: 'allow', style: {{ color: '#fff', textOutline: '2px #0f172a', fontWeight: 'bold', fontSize: '11px' }}, formatter: function() {{ return document.body.classList.contains('privacy-mode') ? '***' : formatMoneyStr(this.y); }} }} }} }},
+                    plotOptions: {{ column: {{ borderRadius: 4, borderWidth: 0, maxPointWidth: 40, shadow: {{ color: 'rgba(0,0,0,0.3)', offsetX: 1, offsetY: 2, width: 4 }} }} }},
                     credits: {{ enabled: false }},
                     series: [
-                        {{ name: 'Invested', data: [{inv_data_js}], color: 'transparent', borderColor: '#64748b' }},
+                        {{ name: 'Invested', data: [{inv_data_js}], color: 'rgba(100, 116, 139, 0.65)' }},
                         {{ name: 'Current Value', data: [{val_data_js}] }}
                     ]
                 }});
@@ -2117,8 +2117,8 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                             dailyChart.series[0].points.forEach(point => {{
                                 if (ticker24h[point.name] !== undefined) {{
                                     const val = ticker24h[point.name];
-                                    const color = val >= 0 ? '#00ff9d' : '#ff4d4d'; 
-                                    point.update({{y: val, color: 'transparent', borderColor: color}}, false);
+                                    const color = val >= 0 ? 'rgba(0, 255, 157, 0.65)' : 'rgba(255, 77, 77, 0.65)'; 
+                                    point.update({{y: val, color: color}}, false);
                                 }}
                             }});
                             dailyChart.redraw(true);
@@ -2247,7 +2247,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                             dailyC.series[0].points.forEach(pt => {{
                                 if (init24h[pt.name] !== undefined) {{
                                     const val = init24h[pt.name];
-                                    pt.update({{y: val, color: 'transparent', borderColor: val >= 0 ? '#00ff9d' : '#ff4d4d'}}, false);
+                                    pt.update({{y: val, color: val >= 0 ? 'rgba(0, 255, 157, 0.65)' : 'rgba(255, 77, 77, 0.65)'}}, false);
                                 }}
                             }});
                             dailyC.redraw();
