@@ -13,16 +13,19 @@ from concurrent.futures import ThreadPoolExecutor
 # ====================== CONFIG ======================
 st.set_page_config(page_title="Portfolio", layout="wide", page_icon="logo.png", initial_sidebar_state="collapsed")
 
-# ====================== GLOBAL CSS ======================
+# ====================== GLOBAL CSS & LAYOUT ENGINE ======================
 st.markdown("""
 <style>
 /* HIDE SIDEBAR & DEFAULT STREAMLIT MARGINS */
 [data-testid="stSidebar"] { display: none !important; }
 [data-testid="collapsedControl"] { display: none !important; }
 
-div[data-testid="stMainBlockContainer"] {
-    padding: 0 !important;
-    max-width: 100% !important;
+/* Lock the main app body to prevent background scrolling */
+html, body {
+    overflow: hidden !important;
+    position: fixed;
+    width: 100%;
+    height: 100%;
 }
 
 .stApp {
@@ -30,8 +33,16 @@ div[data-testid="stMainBlockContainer"] {
     overflow: hidden !important;
 }
 
-/* FORCE COLUMNS TO BE HORIZONTAL SWIPEABLE PAGES */
-div[data-testid="stHorizontalBlock"]:has(.page-marker) {
+[data-testid="stMainBlockContainer"] {
+    padding: 0 !important;
+    max-width: 100% !important;
+}
+
+/* =====================================================================
+   THE SWIPE LAYOUT ENGINE 
+   We strictly target ONLY the top-level horizontal block containing our pages
+   ===================================================================== */
+[data-testid="stHorizontalBlock"]:has(.main-swipe-page) {
     display: flex !important;
     flex-direction: row !important;
     flex-wrap: nowrap !important;
@@ -44,26 +55,37 @@ div[data-testid="stHorizontalBlock"]:has(.page-marker) {
     gap: 0 !important;
     margin: 0 !important;
     padding: 0 !important;
-    -ms-overflow-style: none; /* IE and Edge */
-    scrollbar-width: none; /* Firefox */
+    -ms-overflow-style: none; 
+    scrollbar-width: none; 
 }
-div[data-testid="stHorizontalBlock"]:has(.page-marker)::-webkit-scrollbar {
+[data-testid="stHorizontalBlock"]:has(.main-swipe-page)::-webkit-scrollbar {
     display: none !important;
 }
 
-div[data-testid="stHorizontalBlock"]:has(.page-marker) > div[data-testid="column"] {
+/* Isolate each page for independent vertical scrolling and perfect 100vw fit */
+[data-testid="stHorizontalBlock"]:has(.main-swipe-page) > [data-testid="column"] {
     flex: 0 0 100vw !important;
     min-width: 100vw !important;
+    max-width: 100vw !important;
     width: 100vw !important;
     height: 100dvh !important;
     overflow-y: auto !important;
     overflow-x: hidden !important;
     scroll-snap-align: start !important;
-    padding: 14px !important;
-    padding-bottom: 95px !important; /* Leave space for bottom nav */
+    box-sizing: border-box !important; /* CRITICAL: Keeps padding inside the 100vw to prevent edge bleeding */
+    padding: 14px 14px 95px 14px !important; /* 95px bottom padding ensures content clears the Nav Bar */
+    margin: 0 !important;
+    -ms-overflow-style: none; 
+    scrollbar-width: none; 
+}
+[data-testid="stHorizontalBlock"]:has(.main-swipe-page) > [data-testid="column"]::-webkit-scrollbar {
+    display: none !important;
 }
 
-/* Dashboard Pullable Drawer Styles */
+
+/* =====================================================================
+   APP VISUAL STYLES
+   ===================================================================== */
 .dashboard-wrapper { position: relative; z-index: 10; }
 .glossy-header-label { cursor: pointer; display: block; position: relative; z-index: 3; -webkit-tap-highlight-color: transparent; }
 .home-header { margin-bottom: 0 !important; padding-bottom: 30px !important; }
@@ -104,6 +126,60 @@ div[data-testid="stHorizontalBlock"]:has(.page-marker) > div[data-testid="column
 button[aria-label="Step Up"], button[aria-label="Step Down"], button[data-testid="stNumberInputStepUp"], button[data-testid="stNumberInputStepDown"] { display: none !important; }
 input[type="number"]::-webkit-inner-spin-button, input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
 input[type="number"] { -moz-appearance: textfield; }
+
+/* Sticky Nav Styles */
+#sticky-app-nav {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100vw;
+    height: 75px;
+    background: rgba(15, 23, 42, 0.98);
+    backdrop-filter: blur(15px);
+    -webkit-backdrop-filter: blur(15px);
+    border-top: 1px solid rgba(255,255,255,0.08);
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    z-index: 999999;
+    padding-bottom: env(safe-area-inset-bottom);
+    box-shadow: 0 -4px 20px rgba(0,0,0,0.5);
+}
+.nav-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    color: #64748b;
+    width: 33.33%;
+    height: 100%;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    -webkit-tap-highlight-color: transparent;
+    user-select: none;
+}
+.nav-item:hover { color: #94a3b8; }
+.nav-item.active { color: #00ff9d; }
+.nav-item svg {
+    width: 24px;
+    height: 24px;
+    margin-bottom: 4px;
+    stroke: currentColor;
+    fill: none;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+.nav-item.active svg {
+    transform: scale(1.15);
+    filter: drop-shadow(0 0 5px rgba(0,255,157,0.4));
+}
+.nav-item span {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+}
 </style>
 """, unsafe_allow_html=True)
 
@@ -586,16 +662,15 @@ pnl_df = vault['pnl_df']
 usdc_row = df_port[df_port['Ticker'] == 'USDC'].iloc[0] if not df_port[df_port['Ticker'] == 'USDC'].empty else None
 usdc_holdings = usdc_row['Holdings'] if usdc_row is not None else 0
 
-# ====================== 3 HORIZONTAL SWIPEABLE COLUMNS ======================
-# Instead of basic containers, we use Streamlit's native columns which are built horizontally.
+# ====================== 3 NATIVE HORIZONTAL PAGES ======================
 col_home, col_crypto, col_fiat = st.columns(3)
 
 # -------------------------------------------------------------------------
 # PAGE 1: OVERVIEW (HOME)
 # -------------------------------------------------------------------------
 with col_home:
-    # Hidden marker for JS Layout Enforcer to find this specific column block
-    st.markdown("<div id='page-0' class='page-marker'></div>", unsafe_allow_html=True)
+    # CRITICAL: This invisible marker tells our CSS exactly which block to turn into a horizontal swipe view
+    st.markdown("<div class='main-swipe-page'></div>", unsafe_allow_html=True)
     
     # 1. DASHBOARD OVERVIEW
     value_box_html = f"""
@@ -1334,12 +1409,11 @@ with col_home:
     """
     components.html(full_html, height=380, scrolling=False)
 
+
 # -------------------------------------------------------------------------
 # PAGE 2: CRYPTO TRANSACTIONS
 # -------------------------------------------------------------------------
 with col_crypto:
-    st.markdown("<div id='page-1' class='page-marker'></div>", unsafe_allow_html=True)
-    
     glossy_header("Crypto Transactions", CRYPTO_ICON)
 
     st.markdown("""
@@ -1653,8 +1727,6 @@ with col_crypto:
 # PAGE 3: FIAT TRANSACTIONS
 # -------------------------------------------------------------------------
 with col_fiat:
-    st.markdown("<div id='page-2' class='page-marker'></div>", unsafe_allow_html=True)
-    
     total_czk = pd.to_numeric(st.session_state.fiat_df['CZK'], errors='coerce').fillna(0).sum()
     total_eur = pd.to_numeric(st.session_state.fiat_df['EUR'], errors='coerce').fillna(0).sum()
     total_usdc = pd.to_numeric(st.session_state.fiat_df['USDC'], errors='coerce').fillna(0).sum()
@@ -1765,3 +1837,62 @@ with col_fiat:
             st.session_state.fiat_table_version += 1
             st.session_state.ui_version += 1
             st.rerun()
+
+# -------------------------------------------------------------------------
+# PERSISTENT NAVIGATION BAR & EVENT BINDING
+# -------------------------------------------------------------------------
+# We render the HTML purely inside Streamlit so it is fully part of the DOM and never disappears.
+st.markdown("""
+<div id="sticky-app-nav">
+    <div class="nav-item active" data-idx="0">
+        <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+        <span>Overview</span>
+    </div>
+    <div class="nav-item" data-idx="1">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M14.5 8.5L9.5 13.5"/><path d="M9.5 8.5L14.5 13.5"/></svg>
+        <span>Crypto</span>
+    </div>
+    <div class="nav-item" data-idx="2">
+        <svg viewBox="0 0 24 24"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M6 8h12"/><path d="M6 12h12"/><path d="M6 16h12"/></svg>
+        <span>Fiat</span>
+    </div>
+</div>
+""", unsafe_allow_html=True)
+
+# A tiny script that continuously ensures the buttons are clickable and the highlight syncs
+# This targets the natively rendered Python component above.
+nav_binder_js = """
+<script>
+(function() {
+    setInterval(() => {
+        // Find the scroller and the navigation items we just rendered
+        const parentDoc = window.parent.document;
+        const scroller = parentDoc.querySelector('[data-testid="stHorizontalBlock"]:has(.main-swipe-page)');
+        const navItems = parentDoc.querySelectorAll('#sticky-app-nav .nav-item');
+        
+        if (!scroller || navItems.length === 0) return;
+        
+        // 1. Bind Click Events securely
+        navItems.forEach(item => {
+            if (item.dataset.bound !== "true") {
+                item.dataset.bound = "true";
+                item.addEventListener('click', () => {
+                    const idx = parseInt(item.getAttribute('data-idx'));
+                    scroller.scrollTo({ left: idx * scroller.clientWidth, behavior: 'smooth' });
+                });
+            }
+        });
+        
+        // 2. Sync Active Class to Scroll Position
+        const width = scroller.clientWidth;
+        if (width > 0) {
+            const idx = Math.round(scroller.scrollLeft / width);
+            navItems.forEach((item, i) => {
+                item.classList.toggle('active', i === idx);
+            });
+        }
+    }, 100);
+})();
+</script>
+"""
+components.html(nav_binder_js, height=0)
