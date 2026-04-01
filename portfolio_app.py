@@ -13,14 +13,14 @@ from concurrent.futures import ThreadPoolExecutor
 # ====================== CONFIG ======================
 st.set_page_config(page_title="Portfolio", layout="wide", page_icon="logo.png", initial_sidebar_state="collapsed")
 
-# ====================== GLOBAL CSS & LAYOUT ENGINE ======================
+# ====================== GLOBAL CSS & LAYOUT STRIPPING ======================
 st.markdown("""
 <style>
 /* HIDE SIDEBAR & DEFAULT STREAMLIT MARGINS */
 [data-testid="stSidebar"] { display: none !important; }
 [data-testid="collapsedControl"] { display: none !important; }
 
-/* Lock the main app body to prevent background scrolling */
+/* Lock the main app body to prevent background scrolling completely */
 html, body {
     overflow: hidden !important;
     position: fixed;
@@ -33,7 +33,7 @@ html, body {
     overflow: hidden !important;
 }
 
-[data-testid="stMainBlockContainer"] {
+div[data-testid="stMainBlockContainer"] {
     padding: 0 !important;
     max-width: 100vw !important;
     width: 100vw !important;
@@ -41,58 +41,7 @@ html, body {
 }
 
 /* =====================================================================
-   THE SWIPE LAYOUT ENGINE 
-   We strictly target ONLY the top-level horizontal block containing our pages
-   ===================================================================== */
-[data-testid="stHorizontalBlock"]:has(.main-swipe-page) {
-    display: flex !important;
-    flex-direction: row !important;
-    flex-wrap: nowrap !important;
-    overflow-x: auto !important;
-    overflow-y: hidden !important;
-    scroll-snap-type: x mandatory !important; /* Enforces snapping */
-    -webkit-overflow-scrolling: touch !important; /* Smooth momentum scrolling on iOS */
-    width: 100vw !important;
-    height: 100dvh !important;
-    gap: 0 !important; /* CRITICAL: Removes Streamlit's default column gap that caused bleeding */
-    margin: 0 !important;
-    padding: 0 !important;
-    -ms-overflow-style: none; 
-    scrollbar-width: none; 
-}
-[data-testid="stHorizontalBlock"]:has(.main-swipe-page)::-webkit-scrollbar {
-    display: none !important;
-}
-
-/* Isolate each page for independent vertical scrolling and perfect 100vw fit */
-[data-testid="stHorizontalBlock"]:has(.main-swipe-page) > [data-testid="column"] {
-    flex: 0 0 100vw !important;
-    min-width: 100vw !important;
-    max-width: 100vw !important;
-    width: 100vw !important;
-    height: 100dvh !important;
-    overflow-y: auto !important; /* Pages scroll vertically independently */
-    overflow-x: hidden !important;
-    scroll-snap-align: start !important; /* CRITICAL: Forces page to snap perfectly into view */
-    scroll-snap-stop: always !important;
-    box-sizing: border-box !important; 
-    padding: 0 !important; /* Remove outer padding to keep width exact */
-    margin: 0 !important;
-}
-[data-testid="stHorizontalBlock"]:has(.main-swipe-page) > [data-testid="column"]::-webkit-scrollbar {
-    display: none !important;
-}
-
-/* Add padding to the INNER block so the 100vw width isn't distorted */
-[data-testid="stHorizontalBlock"]:has(.main-swipe-page) > [data-testid="column"] > div[data-testid="stVerticalBlock"] {
-    padding: 14px 14px 95px 14px !important; /* 95px bottom padding ensures content clears the Nav Bar */
-    min-height: 100%;
-    width: 100% !important;
-    box-sizing: border-box !important;
-}
-
-/* =====================================================================
-   APP VISUAL STYLES
+   APP VISUAL STYLES (Cards, Headers, Stats)
    ===================================================================== */
 .dashboard-wrapper { position: relative; z-index: 10; }
 .glossy-header-label { cursor: pointer; display: block; position: relative; z-index: 3; -webkit-tap-highlight-color: transparent; }
@@ -136,113 +85,6 @@ input[type="number"]::-webkit-inner-spin-button, input[type="number"]::-webkit-o
 input[type="number"] { -moz-appearance: textfield; }
 </style>
 """, unsafe_allow_html=True)
-
-# ====================== PERSISTENT NAVIGATION BAR INJECTION ======================
-# This script injects the navigation bar into the absolute root (body) of the app,
-# ensuring it stays pinned to the screen and never scrolls away with the pages.
-nav_injection_js = """
-<script>
-(function() {
-    function injectAndBindNav() {
-        const doc = window.parent.document;
-        
-        // 1. INJECT THE NAV BAR TO THE BODY IF IT DOESN'T EXIST
-        let nav = doc.getElementById('fixed-app-nav');
-        if (!nav) {
-            nav = doc.createElement('div');
-            nav.id = 'fixed-app-nav';
-            nav.innerHTML = `
-                <style>
-                #fixed-app-nav {
-                    position: fixed;
-                    bottom: 0; left: 0; width: 100vw; height: 75px;
-                    background: rgba(15, 23, 42, 0.98);
-                    backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px);
-                    border-top: 1px solid rgba(255,255,255,0.08);
-                    display: flex; justify-content: space-around; align-items: center;
-                    z-index: 9999999; /* Highest priority */
-                    padding-bottom: env(safe-area-inset-bottom);
-                    box-shadow: 0 -4px 20px rgba(0,0,0,0.5);
-                }
-                .nav-item {
-                    display: flex; flex-direction: column; align-items: center; justify-content: center;
-                    color: #64748b; width: 33.33%; height: 100%; cursor: pointer;
-                    -webkit-tap-highlight-color: transparent; user-select: none;
-                    transition: color 0.3s ease;
-                }
-                .nav-item.active { color: #00ff9d; }
-                .nav-item svg {
-                    width: 24px; height: 24px; margin-bottom: 4px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-                }
-                .nav-item.active svg { transform: scale(1.15); filter: drop-shadow(0 0 5px rgba(0,255,157,0.4)); }
-                .nav-item span { font-size: 11px; font-weight: 700; letter-spacing: 0.5px; }
-                </style>
-                <div class="nav-item active" data-idx="0">
-                    <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
-                    <span>Overview</span>
-                </div>
-                <div class="nav-item" data-idx="1">
-                    <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M14.5 8.5L9.5 13.5"/><path d="M9.5 8.5L14.5 13.5"/></svg>
-                    <span>Crypto</span>
-                </div>
-                <div class="nav-item" data-idx="2">
-                    <svg viewBox="0 0 24 24"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M6 8h12"/><path d="M6 12h12"/><path d="M6 16h12"/></svg>
-                    <span>Fiat</span>
-                </div>
-            `;
-            doc.body.appendChild(nav); // Attach securely to the entire document body
-        }
-
-        // 2. BIND CLICK AND SWIPE EVENTS
-        const scroller = doc.querySelector('[data-testid="stHorizontalBlock"]:has(.main-swipe-page)');
-        if (scroller) {
-            const items = nav.querySelectorAll('.nav-item');
-            
-            // Handle Navigation Button Clicks
-            items.forEach(btn => {
-                if (btn.dataset.bound !== "true") {
-                    btn.dataset.bound = "true";
-                    btn.addEventListener('click', (e) => {
-                        e.preventDefault();
-                        const idx = parseInt(btn.getAttribute('data-idx'));
-                        // Smoothly scroll horizontally to the selected page
-                        scroller.scrollTo({ left: idx * scroller.clientWidth, behavior: 'smooth' });
-                    });
-                }
-            });
-
-            // Handle Screen Swiping (Updates Active Icon)
-            if (scroller.dataset.bound !== "true") {
-                scroller.dataset.bound = "true";
-                
-                // Restore previous position on reload
-                const savedIdx = localStorage.getItem('swipeIdx') || 0;
-                scroller.style.scrollBehavior = 'auto'; // Disable smooth to jump instantly
-                scroller.scrollLeft = savedIdx * scroller.clientWidth;
-                setTimeout(() => { scroller.style.scrollBehavior = 'smooth'; }, 50);
-
-                // Listen for physical swiping
-                scroller.addEventListener('scroll', () => {
-                    const width = scroller.clientWidth;
-                    if(width === 0) return;
-                    const idx = Math.round(scroller.scrollLeft / width);
-                    localStorage.setItem('swipeIdx', idx);
-                    
-                    items.forEach((item, i) => {
-                        item.classList.toggle('active', i === idx);
-                    });
-                }, {passive: true});
-            }
-        }
-    }
-    
-    // Check repeatedly to ensure Streamlit's dynamic DOM doesn't destroy our bindings
-    setInterval(injectAndBindNav, 200);
-})();
-</script>
-"""
-components.html(nav_injection_js, height=0)
-
 
 # ====================== SVG ICONS ======================
 DASHBOARD_ICON = '''<svg xmlns="http://www.w3.org/2000/svg" width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="#00ff9d" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>'''
@@ -723,15 +565,187 @@ pnl_df = vault['pnl_df']
 usdc_row = df_port[df_port['Ticker'] == 'USDC'].iloc[0] if not df_port[df_port['Ticker'] == 'USDC'].empty else None
 usdc_holdings = usdc_row['Holdings'] if usdc_row is not None else 0
 
-# ====================== 3 NATIVE HORIZONTAL PAGES ======================
-col_home, col_crypto, col_fiat = st.columns(3)
+# ====================== THE 3 INDEPENDENT PAGES ======================
+# Create 3 columns. We use a hidden marker in the first one to teach CSS how to find them.
+page_home, page_crypto, page_fiat = st.columns(3)
+
+# -------------------------------------------------------------------------
+# HIDDEN JS: LAYOUT RE-WIRING AND NATIVE NAVIGATION
+# -------------------------------------------------------------------------
+# This script fundamentally alters Streamlit's wrapper for the 3 columns above,
+# turning them into isolated, 100vw, vertically scrolling swipe-pages.
+js_injector = """
+<script>
+(function() {
+    function enforceAppLayout() {
+        const doc = window.parent.document;
+        
+        // 1. Find the hidden page-marker to locate our 3 columns
+        const marker = doc.getElementById('page-home-marker');
+        if (!marker) return;
+        
+        // 2. Navigate up to the top horizontal block that holds the 3 columns
+        const colContainer = marker.closest('[data-testid="column"]');
+        if (!colContainer) return;
+        const mainTrack = colContainer.parentElement;
+        
+        // 3. Force the parent track to act as a strict horizontal swiping container
+        if (!mainTrack.classList.contains('horizontal-swipe-track')) {
+            mainTrack.classList.add('horizontal-swipe-track');
+            
+            // Inject structural CSS for the exact track and its children
+            if (!doc.getElementById('swipe-layout-styles')) {
+                const style = doc.createElement('style');
+                style.id = 'swipe-layout-styles';
+                style.innerHTML = `
+                    .horizontal-swipe-track {
+                        display: flex !important;
+                        flex-direction: row !important;
+                        flex-wrap: nowrap !important;
+                        width: 100vw !important;
+                        height: 100dvh !important;
+                        overflow-x: auto !important;
+                        overflow-y: hidden !important;
+                        scroll-snap-type: x mandatory !important;
+                        -webkit-overflow-scrolling: touch !important;
+                        scroll-behavior: smooth !important;
+                        gap: 0 !important; /* Overrides Streamlit 1rem gap */
+                        margin: 0 !important;
+                        padding: 0 !important;
+                        -ms-overflow-style: none;
+                        scrollbar-width: none;
+                    }
+                    .horizontal-swipe-track::-webkit-scrollbar { display: none !important; }
+                    
+                    /* Make all 3 children isolated 100vw scrolling pages */
+                    .horizontal-swipe-track > [data-testid="column"] {
+                        flex: 0 0 100vw !important;
+                        min-width: 100vw !important;
+                        max-width: 100vw !important;
+                        width: 100vw !important;
+                        height: 100dvh !important;
+                        overflow-y: auto !important; /* Independent vertical scrolling */
+                        overflow-x: hidden !important;
+                        scroll-snap-align: start !important;
+                        scroll-snap-stop: always !important; /* Snapping lock */
+                        box-sizing: border-box !important;
+                        padding: 0 !important;
+                        margin: 0 !important;
+                        background: transparent !important;
+                    }
+                    .horizontal-swipe-track > [data-testid="column"]::-webkit-scrollbar { display: none !important; }
+                    
+                    /* The inner block handles the actual padding safely inside the 100vw */
+                    .horizontal-swipe-track > [data-testid="column"] > [data-testid="stVerticalBlock"] {
+                        padding: 14px 14px 95px 14px !important; /* 95px clears nav bar */
+                        min-height: 100%;
+                        width: 100% !important;
+                        box-sizing: border-box !important;
+                    }
+                `;
+                doc.head.appendChild(style);
+            }
+            
+            // Restore scroll position after a rerun
+            const savedIdx = localStorage.getItem('swipeIdx') || 0;
+            mainTrack.style.scrollBehavior = 'auto'; // Disable smooth to jump instantly
+            mainTrack.scrollLeft = savedIdx * mainTrack.clientWidth;
+            setTimeout(() => { mainTrack.style.scrollBehavior = 'smooth'; }, 50);
+            
+            // Sync Navigation on scroll
+            mainTrack.addEventListener('scroll', () => {
+                const width = mainTrack.clientWidth;
+                if(width === 0) return;
+                const idx = Math.round(mainTrack.scrollLeft / width);
+                localStorage.setItem('swipeIdx', idx);
+                
+                const navItems = doc.querySelectorAll('#fixed-app-nav .nav-item');
+                navItems.forEach((item, i) => {
+                    item.classList.toggle('active', i === idx);
+                });
+            }, {passive: true});
+        }
+        
+        // 4. Inject Navigation Bar directly to body (never disappears)
+        let nav = doc.getElementById('fixed-app-nav');
+        if (!nav) {
+            nav = doc.createElement('div');
+            nav.id = 'fixed-app-nav';
+            nav.innerHTML = `
+                <style>
+                #fixed-app-nav {
+                    position: fixed;
+                    bottom: 0; left: 0; width: 100vw; height: 75px;
+                    background: rgba(15, 23, 42, 0.98);
+                    backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px);
+                    border-top: 1px solid rgba(255,255,255,0.08);
+                    display: flex; justify-content: space-around; align-items: center;
+                    z-index: 9999999;
+                    padding-bottom: env(safe-area-inset-bottom);
+                    box-shadow: 0 -4px 20px rgba(0,0,0,0.5);
+                }
+                .nav-item {
+                    display: flex; flex-direction: column; align-items: center; justify-content: center;
+                    color: #64748b; width: 33.33%; height: 100%; cursor: pointer;
+                    -webkit-tap-highlight-color: transparent; user-select: none;
+                    transition: color 0.3s ease;
+                }
+                .nav-item.active { color: #00ff9d; }
+                .nav-item svg { width: 24px; height: 24px; margin-bottom: 4px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+                .nav-item.active svg { transform: scale(1.15); filter: drop-shadow(0 0 5px rgba(0,255,157,0.4)); }
+                .nav-item span { font-size: 11px; font-weight: 700; letter-spacing: 0.5px; }
+                </style>
+                <div class="nav-item active" data-idx="0">
+                    <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+                    <span>Overview</span>
+                </div>
+                <div class="nav-item" data-idx="1">
+                    <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M14.5 8.5L9.5 13.5"/><path d="M9.5 8.5L14.5 13.5"/></svg>
+                    <span>Crypto</span>
+                </div>
+                <div class="nav-item" data-idx="2">
+                    <svg viewBox="0 0 24 24"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M6 8h12"/><path d="M6 12h12"/><path d="M6 16h12"/></svg>
+                    <span>Fiat</span>
+                </div>
+            `;
+            doc.body.appendChild(nav);
+        }
+        
+        // Ensure nav clicks work 
+        const items = nav.querySelectorAll('.nav-item');
+        items.forEach(btn => {
+            if (btn.dataset.bound !== "true") {
+                btn.dataset.bound = "true";
+                btn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    const targetTrack = doc.querySelector('.horizontal-swipe-track');
+                    if (targetTrack) {
+                        const idx = parseInt(btn.getAttribute('data-idx'));
+                        targetTrack.scrollTo({ left: idx * targetTrack.clientWidth, behavior: 'smooth' });
+                    }
+                });
+            }
+        });
+        
+        // Sync active state on load
+        const savedIdx = localStorage.getItem('swipeIdx') || 0;
+        items.forEach((item, i) => { item.classList.toggle('active', i == savedIdx); });
+    }
+    
+    // Check repeatedly to ensure Streamlit doesn't overwrite our DOM
+    setInterval(enforceAppLayout, 100);
+})();
+</script>
+"""
+components.html(js_injector, height=0)
+
 
 # -------------------------------------------------------------------------
 # PAGE 1: OVERVIEW (HOME)
 # -------------------------------------------------------------------------
-with col_home:
-    # CRITICAL: This invisible marker tells our CSS exactly which block to turn into a horizontal swipe view
-    st.markdown("<div class='main-swipe-page'></div>", unsafe_allow_html=True)
+with page_home:
+    # HIDDEN MARKER FOR CSS/JS ENGINE
+    st.markdown("<div id='page-home-marker'></div>", unsafe_allow_html=True)
     
     # 1. DASHBOARD OVERVIEW
     value_box_html = f"""
@@ -1474,7 +1488,7 @@ with col_home:
 # -------------------------------------------------------------------------
 # PAGE 2: CRYPTO TRANSACTIONS
 # -------------------------------------------------------------------------
-with col_crypto:
+with page_crypto:
     glossy_header("Crypto Transactions", CRYPTO_ICON)
 
     st.markdown("""
@@ -1786,7 +1800,7 @@ with col_crypto:
 # -------------------------------------------------------------------------
 # PAGE 3: FIAT TRANSACTIONS
 # -------------------------------------------------------------------------
-with col_fiat:
+with page_fiat:
     total_czk = pd.to_numeric(st.session_state.fiat_df['CZK'], errors='coerce').fillna(0).sum()
     total_eur = pd.to_numeric(st.session_state.fiat_df['EUR'], errors='coerce').fillna(0).sum()
     total_usdc = pd.to_numeric(st.session_state.fiat_df['USDC'], errors='coerce').fillna(0).sum()
@@ -1833,4 +1847,67 @@ with col_fiat:
                 with cols[6]:
                     if st.session_state.get(f'confirm_del_fiat_{i}'):
                         if st.button("✅", key=f"yes_fiat_{i}"):
-                            st.session_state.fiat_df = st.session_state.fiat_
+                            st.session_state.fiat_df = st.session_state.fiat_df.drop(i).reset_index(drop=True)
+                            save_fiat(st.session_state.fiat_df)
+                            st.session_state.fiat_table_version += 1
+                            st.session_state.ui_version += 1
+                            st.session_state[f'confirm_del_fiat_{i}'] = False
+                            st.rerun()
+                    else:
+                        if st.button("🗑️", key=f"del_{i}_{st.session_state.fiat_table_version}_{st.session_state.ui_version}"):
+                            st.session_state[f'confirm_del_fiat_{i}'] = True
+                            st.rerun()
+                with cols[7]:
+                    if st.button("✏️", key=f"edit_{i}_{st.session_state.fiat_table_version}_{st.session_state.ui_version}"):
+                        st.session_state.editing_row = i
+                        st.rerun()
+
+    if 'editing_row' in st.session_state:
+        edit_idx = st.session_state.editing_row
+        row = st.session_state.fiat_df.loc[edit_idx]
+        st.markdown("**Edit row**")
+        with st.form("edit_fiat_row"):
+            col_a, col_b = st.columns(2)
+            with col_a:
+                new_date = st.date_input("Date", value=datetime(1899, 12, 30) + timedelta(days=int(row['Datum'])))
+                new_datum = date_to_excel_serial(new_date)
+            with col_b:
+                new_czk = st.number_input("CZK", value=float(row['CZK']), step=0.01)
+            new_eur = st.number_input("EUR", value=float(row['EUR']), step=0.01)
+            new_fee = st.number_input("Fee", value=float(row['Fee']), step=0.01)
+            new_usdc = st.number_input("USDC", value=float(row['USDC']), step=0.01)
+            new_czk_eur = round(new_czk / new_eur, 5) if new_eur > 0 else 0.0
+            col_save, col_cancel = st.columns(2)
+            with col_save:
+                if st.form_submit_button("💾 Save Changes"):
+                    st.session_state.fiat_df.loc[edit_idx] = {"Datum": new_datum, "CZK": new_czk, "EUR": new_eur, "Fee": new_fee, "CZK/EUR": new_czk_eur, "USDC": new_usdc, "NI": row.get('NI', ""), "GG": row.get('GG', ""), "ER": row.get('ER', "")}
+                    save_fiat(st.session_state.fiat_df)
+                    del st.session_state.editing_row
+                    st.session_state.fiat_table_version += 1
+                    st.session_state.ui_version += 1
+                    st.success("✅ Row updated!")
+                    st.rerun()
+            with col_cancel:
+                if st.form_submit_button("❌ Cancel"):
+                    del st.session_state.editing_row
+                    st.rerun()
+
+    st.subheader("➕ Add New Fiat Entry")
+    with st.form("add_fiat"):
+        col1, col2 = st.columns(2)
+        with col1:
+            selected_date = st.date_input("Date", value=date(2026, 3, 25))
+            datum = date_to_excel_serial(selected_date)
+        with col2:
+            czk = st.number_input("CZK", value=1000.0, step=0.01)
+        eur = st.number_input("EUR", value=40.0, step=0.01)
+        fee = st.number_input("Fee", value=1.0, step=0.01)
+        usdc = st.number_input("USDC", value=44.67, step=0.01)
+        czk_eur = round(czk / eur, 5) if eur > 0 else 0.0
+        if st.form_submit_button("➕ Add Entry"):
+            new_row = pd.DataFrame([{"Datum": datum, "CZK": czk, "EUR": eur, "Fee": fee, "CZK/EUR": czk_eur, "USDC": usdc, "NI": "", "GG": "", "ER": ""}])
+            st.session_state.fiat_df = pd.concat([st.session_state.fiat_df, new_row], ignore_index=True)
+            save_fiat(st.session_state.fiat_df)
+            st.session_state.fiat_table_version += 1
+            st.session_state.ui_version += 1
+            st.rerun()
