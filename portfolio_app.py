@@ -49,15 +49,14 @@ div[data-testid="stMainBlockContainer"] {
 /* ---------------------------------------------------
    NATIVE APP NAVIGATION BAR & TAB HIDING
 --------------------------------------------------- */
-/* Safely target ONLY the header container by checking if it contains the tab buttons */
-div[data-testid="stTabs"] > div:has(button[data-baseweb="tab"]) {
-    display: none !important;
+div[data-testid="stTabs"] > div[role="tablist"],
+div[data-testid="stTabs"] > div[data-baseweb="tab-list"] {
+    display: none !important; /* Completely hide native tabs across Streamlit versions */
     height: 0px !important;
     margin: 0px !important;
     padding: 0px !important;
 }
-div[data-testid="stTabs"] > div[data-baseweb="tab-panel"],
-div[data-testid="stTabs"] > div[role="tabpanel"] {
+div[data-testid="stTabs"] > div[data-baseweb="tab-panel"] {
     padding-bottom: 20px !important; 
 }
 
@@ -2667,20 +2666,6 @@ with tab_home:
 </html>
 """
     components.html(full_html, height=380, scrolling=False)
-    
-    # Overview specific settings / actions placed nicely at the bottom
-    st.divider()
-    action_col1, action_col2 = st.columns(2)
-    with action_col1:
-        if st.button("🔄 Refresh All Prices & Charts", use_container_width=True):
-            st.session_state.refresh_key = random.randint(100000, 999999)
-            st.session_state.ui_version += 1
-            st.success("✅ Prices & charts refreshed!")
-            st.rerun()
-    with action_col2:
-        data = {"crypto": json.loads(st.session_state.crypto_df.to_json(orient="records")),
-                "fiat": json.loads(st.session_state.fiat_df.to_json(orient="records"))}
-        st.download_button("💾 Download Backup", json.dumps(data, indent=2), "portfolio_backup.json", "application/json", use_container_width=True)
 
 with tab_crypto:
     glossy_header("Crypto Transactions", CRYPTO_ICON)
