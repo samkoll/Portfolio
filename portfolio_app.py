@@ -829,7 +829,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                 lines = []
                 for ticker, val in series.items():
                     c = get_ticker_color(ticker)
-                    lines.append(f"{{ name: '{ticker}', y: {val}, color: 'transparent', borderColor: '{c}A6' }}")
+                    lines.append(f"{{ name: '{ticker}', y: {val}, color: '{c}A6' }}")
                 return ",\n".join(lines)
 
             pnl_all = pnl_df_active.iloc[-1]
@@ -852,17 +852,16 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
 
         # Chart 5: Invested vs Current Value Data
         df_iv = df_port[df_port['Ticker'] != 'USDC'].sort_values(by='Value', ascending=False)
-        inv_data_points = []
+        inv_val_categories_list = [str(r['Ticker']) for _, r in df_iv.iterrows()]
+        inv_val_categories_js = json.dumps(inv_val_categories_list)
+        inv_data_js = ",".join([str(r['USDC'] if pd.notna(r['USDC']) else 0) for _, r in df_iv.iterrows()])
+        
         val_data_points = []
         for _, r in df_iv.iterrows():
-            t = str(r['Ticker'])
-            c = get_ticker_color(t)
-            inv = float(r['USDC']) if pd.notna(r['USDC']) else 0.0
-            val = float(r['Value']) if pd.notna(r['Value']) else 0.0
-            inv_data_points.append(f"{{ name: '{t}', y: {inv}, color: 'transparent', borderColor: '#64748b' }}")
-            val_data_points.append(f"{{ name: '{t}', y: {val}, color: 'transparent', borderColor: '{c}A6' }}")
-        inv_data_js = ",\n".join(inv_data_points)
-        val_data_js = ",\n".join(val_data_points)
+            c = get_ticker_color(r['Ticker'])
+            val = r['Value'] if pd.notna(r['Value']) else 0
+            val_data_points.append(f"{{ y: {val}, color: '{c}A6' }}")
+        val_data_js = ",".join(val_data_points)
         
         # Chart 6: ROI % Bar Data
         df_roi = df_port[df_port['Ticker'] != 'USDC'].sort_values(by='PnL %', ascending=False)
@@ -872,14 +871,14 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
             val = r['PnL %']
             if pd.notna(val):
                 c = get_ticker_color(t)
-                roi_data_js_lines.append(f"{{ name: '{t}', y: {val}, color: 'transparent', borderColor: '{c}A6' }}")
+                roi_data_js_lines.append(f"{{ name: '{t}', y: {val}, color: '{c}A6' }}")
         roi_data_js = ",\n".join(roi_data_js_lines)
 
         # Chart 7: 24h Change Placeholder Data
         daily_data_js_lines = []
         for _, r in df_port[df_port['Ticker'] != 'USDC'].iterrows():
             t = r['Ticker']
-            daily_data_js_lines.append(f"{{ name: '{t}', y: 0, color: 'transparent', borderColor: '#64748b' }}")
+            daily_data_js_lines.append(f"{{ name: '{t}', y: 0, color: 'rgba(100, 116, 139, 0.65)' }}")
         daily_data_js = ",\n".join(daily_data_js_lines)
 
         charts_html = f"""
@@ -1194,17 +1193,17 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                     chart: {{ type: 'bar', backgroundColor: 'transparent', marginTop: 15, marginBottom: 25 }},
                     title: {{ text: null }},
                     xAxis: {{ type: 'category', labels: {{ style: {{ color: '#94a3b8', fontWeight: 'bold' }} }}, gridLineColor: 'rgba(255,255,255,0.05)', tickWidth: 0, lineWidth: 0 }},
-                    yAxis: {{ title: {{ text: null }}, labels: {{ enabled: false }}, gridLineColor: 'rgba(255,255,255,0.05)', minPadding: 0.25, maxPadding: 0.25 }},
+                    yAxis: {{ title: {{ text: null }}, labels: {{ enabled: false }}, gridLineColor: 'rgba(255,255,255,0.05)', minPadding: 0.15, maxPadding: 0.15 }},
                     legend: {{ enabled: false }},
                     tooltip: {{
                         backgroundColor: 'rgba(15, 23, 42, 0.95)', style: {{ color: '#fff' }}, borderColor: 'rgba(255,255,255,0.15)',
                         formatter: function() {{
                             const isPrivacy = document.body.classList.contains('privacy-mode');
                             const val = isPrivacy ? '***' : formatMoneyStr(this.y);
-                            return `<b>${{this.point.name}}</b><br/>PnL: <b style="color:${{this.point.borderColor}}">${{val}}</b>`;
+                            return `<b>${{this.point.name}}</b><br/>PnL: <b style="color:${{this.point.color}}">${{val}}</b>`;
                         }}
                     }},
-                    plotOptions: {{ bar: {{ borderRadius: 4, borderWidth: 2, pointPadding: 0.1, groupPadding: 0.1, maxPointWidth: 35, dataLabels: {{ enabled: true, inside: false, crop: false, overflow: 'allow', style: {{ color: '#fff', textOutline: '2px #0f172a', fontWeight: 'bold', fontSize: '11px' }}, formatter: function() {{ return document.body.classList.contains('privacy-mode') ? '***' : formatMoneyStr(this.y); }} }} }} }},
+                    plotOptions: {{ bar: {{ borderRadius: 4, borderWidth: 0, pointPadding: 0.1, groupPadding: 0.1, maxPointWidth: 35, shadow: {{ color: 'rgba(0,0,0,0.3)', offsetX: 1, offsetY: 2, width: 4 }}, dataLabels: {{ enabled: true, inside: false, crop: false, overflow: 'allow', style: {{ color: '#fff', textOutline: '2px #0f172a', fontWeight: 'bold', fontSize: '11px' }}, formatter: function() {{ return document.body.classList.contains('privacy-mode') ? '***' : formatMoneyStr(this.y); }} }} }} }},
                     credits: {{ enabled: false }},
                     series: [{{ name: 'PnL', data: pnlDataMap['all'] }}]
                 }});
@@ -1227,16 +1226,16 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                     chart: {{ type: 'bar', backgroundColor: 'transparent', marginTop: 15, marginBottom: 25 }},
                     title: {{ text: null }},
                     xAxis: {{ type: 'category', labels: {{ style: {{ color: '#94a3b8', fontWeight: 'bold' }} }}, gridLineColor: 'rgba(255,255,255,0.05)', tickWidth: 0, lineWidth: 0 }},
-                    yAxis: {{ title: {{ text: null }}, labels: {{ enabled: false }}, gridLineColor: 'rgba(255,255,255,0.05)', minPadding: 0.25, maxPadding: 0.25 }},
+                    yAxis: {{ title: {{ text: null }}, labels: {{ enabled: false }}, gridLineColor: 'rgba(255,255,255,0.05)', minPadding: 0.15, maxPadding: 0.15 }},
                     legend: {{ enabled: false }},
                     tooltip: {{
                         backgroundColor: 'rgba(15, 23, 42, 0.95)', style: {{ color: '#fff' }}, borderColor: 'rgba(255,255,255,0.15)',
                         formatter: function() {{
                             const val = Highcharts.numberFormat(this.y, 2) + '%';
-                            return `<b>${{this.point.name}}</b><br/>ROI: <b style="color:${{this.point.borderColor}}">${{val}}</b>`;
+                            return `<b>${{this.point.name}}</b><br/>ROI: <b style="color:${{this.point.color}}">${{val}}</b>`;
                         }}
                     }},
-                    plotOptions: {{ bar: {{ borderRadius: 4, borderWidth: 2, pointPadding: 0.1, groupPadding: 0.1, maxPointWidth: 35, dataLabels: {{ enabled: true, inside: false, crop: false, overflow: 'allow', style: {{ color: '#fff', textOutline: '2px #0f172a', fontWeight: 'bold', fontSize: '11px' }}, formatter: function() {{ return Highcharts.numberFormat(this.y, 2) + '%'; }} }} }} }},
+                    plotOptions: {{ bar: {{ borderRadius: 4, borderWidth: 0, pointPadding: 0.1, groupPadding: 0.1, maxPointWidth: 35, shadow: {{ color: 'rgba(0,0,0,0.3)', offsetX: 1, offsetY: 2, width: 4 }}, dataLabels: {{ enabled: true, inside: false, crop: false, overflow: 'allow', style: {{ color: '#fff', textOutline: '2px #0f172a', fontWeight: 'bold', fontSize: '11px' }}, formatter: function() {{ return Highcharts.numberFormat(this.y, 2) + '%'; }} }} }} }},
                     credits: {{ enabled: false }},
                     series: [{{ name: 'ROI %', data: [ {roi_data_js} ] }}]
                 }});
@@ -1246,17 +1245,17 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                     chart: {{ type: 'bar', backgroundColor: 'transparent', marginTop: 15, marginBottom: 25 }},
                     title: {{ text: null }},
                     xAxis: {{ type: 'category', labels: {{ style: {{ color: '#94a3b8', fontWeight: 'bold' }} }}, gridLineColor: 'rgba(255,255,255,0.05)', tickWidth: 0, lineWidth: 0 }},
-                    yAxis: {{ title: {{ text: null }}, labels: {{ enabled: false }}, gridLineColor: 'rgba(255,255,255,0.05)', minPadding: 0.25, maxPadding: 0.25 }},
+                    yAxis: {{ title: {{ text: null }}, labels: {{ enabled: false }}, gridLineColor: 'rgba(255,255,255,0.05)', minPadding: 0.15, maxPadding: 0.15 }},
                     legend: {{ enabled: false }},
                     tooltip: {{
                         backgroundColor: 'rgba(15, 23, 42, 0.95)', style: {{ color: '#fff' }}, borderColor: 'rgba(255,255,255,0.15)',
                         formatter: function() {{
                             const val = Highcharts.numberFormat(Math.abs(this.y), 2) + '%';
                             const sign = this.y >= 0 ? '▲ ' : '▼ ';
-                            return `<b>${{this.point.name}}</b><br/>24h Change: <b style="color:${{this.point.borderColor}}">${{sign}}${{val}}</b>`;
+                            return `<b>${{this.point.name}}</b><br/>24h Change: <b style="color:${{this.point.color}}">${{sign}}${{val}}</b>`;
                         }}
                     }},
-                    plotOptions: {{ bar: {{ borderRadius: 4, borderWidth: 2, pointPadding: 0.1, groupPadding: 0.1, maxPointWidth: 35, dataLabels: {{ enabled: true, inside: false, crop: false, overflow: 'allow', style: {{ color: '#fff', textOutline: '2px #0f172a', fontWeight: 'bold', fontSize: '11px' }}, formatter: function() {{ return (this.y >= 0 ? '+' : '') + Highcharts.numberFormat(this.y, 2) + '%'; }} }} }} }},
+                    plotOptions: {{ bar: {{ borderRadius: 4, borderWidth: 0, pointPadding: 0.1, groupPadding: 0.1, maxPointWidth: 35, shadow: {{ color: 'rgba(0,0,0,0.3)', offsetX: 1, offsetY: 2, width: 4 }}, dataLabels: {{ enabled: true, inside: false, crop: false, overflow: 'allow', style: {{ color: '#fff', textOutline: '2px #0f172a', fontWeight: 'bold', fontSize: '11px' }}, formatter: function() {{ return (this.y >= 0 ? '+' : '') + Highcharts.numberFormat(this.y, 2) + '%'; }} }} }} }},
                     credits: {{ enabled: false }},
                     series: [{{ name: '24h Change', data: [ {daily_data_js} ] }}]
                 }});
@@ -1287,8 +1286,8 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                 Highcharts.chart('inv-val-container', {{
                     chart: {{ type: 'column', backgroundColor: 'transparent', marginTop: 45, marginBottom: 35 }},
                     title: {{ text: 'Invested vs Current Value', align: 'left', x: 8, y: 24, style: {{ color: '#e2e8f0', fontSize: '13px', fontWeight: 'bold' }} }},
-                    xAxis: {{ type: 'category', labels: {{ style: {{ color: '#94a3b8', fontWeight: 'bold', fontSize: '10px' }} }}, gridLineColor: 'rgba(255,255,255,0.05)', tickWidth: 0 }},
-                    yAxis: {{ title: {{ text: null }}, labels: {{ style: {{ color: '#94a3b8', fontSize: '10px' }}, formatter: function() {{ return document.body.classList.contains('privacy-mode') ? '***' : formatAxisMoneyStr(this.value); }} }}, gridLineColor: 'rgba(255,255,255,0.05)', minPadding: 0.15, maxPadding: 0.15 }},
+                    xAxis: {{ categories: {inv_val_categories_js}, labels: {{ style: {{ color: '#94a3b8', fontWeight: 'bold', fontSize: '10px' }} }}, gridLineColor: 'rgba(255,255,255,0.05)', tickWidth: 0 }},
+                    yAxis: {{ title: {{ text: null }}, labels: {{ style: {{ color: '#94a3b8', fontSize: '10px' }}, formatter: function() {{ return document.body.classList.contains('privacy-mode') ? '***' : formatAxisMoneyStr(this.value); }} }}, gridLineColor: 'rgba(255,255,255,0.05)' }},
                     legend: {{ enabled: false }},
                     tooltip: {{
                         shared: true, backgroundColor: 'rgba(15, 23, 42, 0.95)', style: {{ color: '#fff' }}, borderColor: 'rgba(255,255,255,0.15)',
@@ -1297,15 +1296,15 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                             const isPrivacy = document.body.classList.contains('privacy-mode');
                             this.points.forEach(function(point) {{
                                 let val = isPrivacy ? '***' : formatMoneyStr(point.y);
-                                s += '<br/>' + '<span style="color:'+ point.borderColor +'">\u25CF</span> ' + point.series.name + ': <b>' + val + '</b>';
+                                s += '<br/>' + '<span style="color:'+ point.color +'">\u25CF</span> ' + point.series.name + ': <b>' + val + '</b>';
                             }});
                             return s;
                         }}
                     }},
-                    plotOptions: {{ column: {{ borderRadius: 4, borderWidth: 2, maxPointWidth: 40, dataLabels: {{ enabled: true, inside: false, crop: false, overflow: 'allow', style: {{ color: '#fff', textOutline: '2px #0f172a', fontWeight: 'bold', fontSize: '11px' }}, formatter: function() {{ return document.body.classList.contains('privacy-mode') ? '***' : formatMoneyStr(this.y); }} }} }} }},
+                    plotOptions: {{ column: {{ borderRadius: 4, borderWidth: 0, maxPointWidth: 40, shadow: {{ color: 'rgba(0,0,0,0.3)', offsetX: 1, offsetY: 2, width: 4 }} }} }},
                     credits: {{ enabled: false }},
                     series: [
-                        {{ name: 'Invested', data: [{inv_data_js}], color: 'transparent', borderColor: '#64748b' }},
+                        {{ name: 'Invested', data: [{inv_data_js}], color: 'rgba(100, 116, 139, 0.65)' }},
                         {{ name: 'Current Value', data: [{val_data_js}] }}
                     ]
                 }});
@@ -2099,17 +2098,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                                     point.update({{y: point.y + tickerDiffs[point.name]}}, false);
                                 }}
                             }});
-                            
-                            // Update the background data map so toggling timeframes preserves live data
-                            if (typeof pnlDataMap !== 'undefined') {{
-                                Object.keys(pnlDataMap).forEach(key => {{
-                                    pnlDataMap[key].forEach(pt => {{
-                                        if (tickerDiffs[pt.name] !== undefined) {{
-                                            pt.y += tickerDiffs[pt.name];
-                                        }}
-                                    }});
-                                }});
-                            }}
+                            // Note: pnlDataMap is scoped to the other iframe, but Highcharts series state is safe
                             pnlChart.redraw(true);
                         }}
                         
@@ -2129,7 +2118,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                                 if (ticker24h[point.name] !== undefined) {{
                                     const val = ticker24h[point.name];
                                     const color = val >= 0 ? 'rgba(0, 255, 157, 0.65)' : 'rgba(255, 77, 77, 0.65)'; 
-                                    point.update({{y: val, color: 'transparent', borderColor: val >= 0 ? '#00ff9d' : '#ff4d4d'}}, false);
+                                    point.update({{y: val, color: color}}, false);
                                 }}
                             }});
                             dailyChart.redraw(true);
@@ -2151,9 +2140,11 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
 
                         // 7. Invested vs Value Chart (Series 1 is 'Current Value')
                         if (invValChart && invValChart.series[1]) {{
-                            invValChart.series[1].points.forEach(point => {{
-                                if (tickerValues[point.name] !== undefined) {{
-                                    point.update({{y: tickerValues[point.name]}}, false);
+                            const categories = invValChart.xAxis[0].categories;
+                            invValChart.series[1].points.forEach((point, index) => {{
+                                const ticker = categories[index];
+                                if (tickerValues[ticker] !== undefined) {{
+                                    point.update({{y: tickerValues[ticker]}}, false);
                                 }}
                             }});
                             invValChart.redraw(true);
@@ -2256,7 +2247,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                             dailyC.series[0].points.forEach(pt => {{
                                 if (init24h[pt.name] !== undefined) {{
                                     const val = init24h[pt.name];
-                                    pt.update({{y: val, color: 'transparent', borderColor: val >= 0 ? '#00ff9d' : '#ff4d4d'}}, false);
+                                    pt.update({{y: val, color: val >= 0 ? 'rgba(0, 255, 157, 0.65)' : 'rgba(255, 77, 77, 0.65)'}}, false);
                                 }}
                             }});
                             dailyC.redraw();
