@@ -15,7 +15,6 @@ import streamlit.components.v1 as components
 st.set_page_config(page_title="Portfolio", layout="wide", page_icon="📊")
 
 # ====================== SAFE MATH SANITIZER ======================
-# Absolutely prevents NaNs from corrupting arrays and crashing charts
 def safe_float(val):
     try:
         f = float(val)
@@ -32,192 +31,8 @@ EYE_OPEN = '<svg class="eye-open" xmlns="http://www.w3.org/2000/svg" width="16" 
 EXTERNAL_LINK_ICON = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>'
 TV_ICON = '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="14" viewBox="0 0 28 21" fill="currentColor"><path d="M12 21H8V3h4v18zm1.5-6h3.5l3.5-4.5V21h-7v-6zM28 21h-4l-6.5-9L21 6l7 10v5z"/></svg>'
 
-# ====================== SESSION STATE INITIALIZATION ======================
-if 'crypto_df' not in st.session_state: st.session_state.crypto_df = pd.DataFrame()
-if 'fiat_df' not in st.session_state: st.session_state.fiat_df = pd.DataFrame()
-if 'crypto_table_version' not in st.session_state: st.session_state.crypto_table_version = 0
-if 'fiat_table_version' not in st.session_state: st.session_state.fiat_table_version = 0
-if 'ui_version' not in st.session_state: st.session_state.ui_version = 0
-if 'page' not in st.session_state: st.session_state.page = "Home"
-if 'page_anim_dir' not in st.session_state: st.session_state.page_anim_dir = "none"
-if 'last_known_prices' not in st.session_state: st.session_state.last_known_prices = {"USDC": 1.0}
-if 'refresh_key' not in st.session_state: st.session_state.refresh_key = random.randint(100000, 999999)
-if 'portfolio_cache' not in st.session_state: st.session_state.portfolio_cache = {}
-
 def glossy_header(title: str, icon_svg: str):
     st.markdown(f'<div class="glossy-header">{icon_svg}<span style="margin-left:12px;">{title}</span></div>', unsafe_allow_html=True)
-
-# ====================== HIDDEN STEALTH ROUTING ======================
-# This physically renders the buttons but completely hides them visually from the screen.
-# JavaScript searches for the exact text (e.g. "Nav_Crypto") and clicks them instantly.
-st.markdown("<div id='hidden-nav-routing' style='position: fixed; top: -10000px; left: -10000px; width: 1px; height: 1px; overflow: hidden; z-index: -10;'>", unsafe_allow_html=True)
-curr_idx = ["Home", "Crypto Transactions", "Fiat Transactions"].index(st.session_state.page) if st.session_state.page in ["Home", "Crypto Transactions", "Fiat Transactions"] else 0
-
-if st.button("Nav_Home", key="btn_home_hidden"):
-    st.session_state.page_anim_dir = "slide-in-left"
-    st.session_state.page = "Home"
-    st.rerun()
-if st.button("Nav_Crypto", key="btn_crypto_hidden"):
-    st.session_state.page_anim_dir = "slide-in-right" if curr_idx < 1 else "slide-in-left"
-    st.session_state.page = "Crypto Transactions"
-    st.rerun()
-if st.button("Nav_Fiat", key="btn_fiat_hidden"):
-    st.session_state.page_anim_dir = "slide-in-right"
-    st.session_state.page = "Fiat Transactions"
-    st.rerun()
-st.markdown("</div>", unsafe_allow_html=True)
-
-# ====================== GLOBAL CSS STYLES & ANIMATIONS ======================
-anim_css = ""
-if st.session_state.page_anim_dir == 'slide-in-right':
-    anim_css = "div[data-testid='stMainBlockContainer'] { animation: slideInFromRight 0.3s cubic-bezier(0.25, 1, 0.5, 1) forwards; }"
-elif st.session_state.page_anim_dir == 'slide-in-left':
-    anim_css = "div[data-testid='stMainBlockContainer'] { animation: slideInFromLeft 0.3s cubic-bezier(0.25, 1, 0.5, 1) forwards; }"
-st.session_state.page_anim_dir = 'none' 
-
-st.markdown(f"""
-<style>
-/* Animations */
-@keyframes slideInFromRight {{ 0% {{ transform: translateX(50vw); opacity: 0; }} 100% {{ transform: translateX(0); opacity: 1; }} }}
-@keyframes slideInFromLeft {{ 0% {{ transform: translateX(-50vw); opacity: 0; }} 100% {{ transform: translateX(0); opacity: 1; }} }}
-
-/* Hide Native Sidebar */
-[data-testid="stSidebar"], [data-testid="collapsedControl"], header[data-testid="stHeader"], footer {{ display: none !important; }}
-
-html, body, .stApp {{ overflow-x: hidden !important; background: linear-gradient(180deg, #0f1724 0%, #0a0f1c 100%) !important; }}
-div[data-testid="stMainBlockContainer"] {{
-    padding-left: 14px !important; padding-right: 14px !important; padding-top: 14px !important; padding-bottom: 90px !important;
-    max-width: 100% !important;
-}}
-{anim_css}
-@media (min-width: 1200px) {{ div[data-testid="stMainBlockContainer"] {{ padding-left: 18px !important; padding-right: 18px !important; }} }}
-@media (max-width: 768px) {{ div[data-testid="stMainBlockContainer"] {{ padding-left: 8px !important; padding-right: 8px !important; }} }}
-
-/* BOTTOM NAVIGATION PILL */
-.bottom-nav-pill {{
-    position: fixed; bottom: 25px; left: 50%; transform: translateX(-50%); width: 85%; max-width: 380px; height: 65px;
-    background: rgba(15, 23, 42, 0.95); backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px);
-    border-radius: 35px; border: 1px solid rgba(255,255,255,0.1); display: flex; justify-content: space-evenly; align-items: center;
-    z-index: 999998; box-shadow: 0 10px 30px rgba(0,0,0,0.6);
-}}
-.nav-item {{
-    display: flex; flex-direction: column; align-items: center; justify-content: center;
-    color: #64748b; font-size: 11px; font-weight: 600; cursor: pointer; flex: 1; height: 100%; transition: color 0.3s ease;
-    -webkit-tap-highlight-color: transparent;
-}}
-.nav-item.active {{ color: #00ff9d; }}
-.nav-item svg {{ width: 22px; height: 22px; margin-bottom: 4px; stroke: currentColor; fill: none; transition: transform 0.2s ease; }}
-.nav-item.active svg {{ transform: translateY(-2px); filter: drop-shadow(0 0 4px rgba(0,255,157,0.4)); }}
-
-/* Dashboard Overview Styles */
-.dashboard-wrapper {{ position: relative; z-index: 10; }}
-.glossy-header-label {{ cursor: pointer; display: block; position: relative; z-index: 3; -webkit-tap-highlight-color: transparent; }}
-.home-header {{ margin-bottom: 0 !important; padding-bottom: 30px !important; }}
-.pull-indicator {{ position: absolute; bottom: 8px; left: 50%; transform: translateX(-50%); color: #64748b; opacity: 0.8; transition: color 0.3s ease; }}
-.pull-indicator .eye-open {{ display: none; }}
-.pull-indicator .eye-closed {{ display: block; }}
-.dashboard-toggle:checked ~ .dashboard-wrapper .glossy-header-label .pull-indicator .eye-open {{ display: block; }}
-.dashboard-toggle:checked ~ .dashboard-wrapper .glossy-header-label .pull-indicator .eye-closed {{ display: none; }}
-.dashboard-toggle:checked ~ .dashboard-wrapper .glossy-header-label .pull-indicator {{ color: #ffffff; }}
-
-.stats-layer {{ position: relative; z-index: 1; margin-top: -60px !important; transition: margin-top 0.4s cubic-bezier(0.4, 0, 0.2, 1); margin-bottom: 24px; }}
-.dashboard-toggle:checked ~ .dashboard-wrapper .stats-layer {{ margin-top: 14px !important; }}
-.stats-layer-inner {{ display: grid !important; grid-template-columns: repeat(3, 1fr) !important; gap: 14px; width: 100%; }}
-.dash-value {{ font-size: clamp(14px, 2.5vw, 24px) !important; font-weight: 700; line-height: 1.05; color: #ffffff; position: absolute; top: 20px; left: 0; width: 100%; text-align: center; margin: 0; transition: opacity 0.3s ease; padding: 0 4px; box-sizing: border-box; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }}
-.dashboard-toggle:not(:checked) ~ .dashboard-wrapper .stats-layer .dash-value {{ opacity: 0; pointer-events: none; }}
-.dash-label {{ font-size: 11px !important; font-weight: 600; letter-spacing: 1.5px; text-transform: uppercase; color: #94a3b8; line-height: 1.2; position: absolute; bottom: 8px; left: 0; width: 100%; text-align: center; }}
-
-.glossy-header {{ position: relative; overflow: hidden; background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); border: 1px solid rgba(255,255,255,0.05); border-radius: 18px; box-shadow: 0 10px 30px rgba(0,0,0,0.4); transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.4s ease, border-color 0.4s ease; padding: 32px 24px; min-height: 130px; font-size: 29px; font-weight: 700; letter-spacing: 1.5px; line-height: 1.1; display: flex; align-items: center; justify-content: center; gap: 16px; width: 100% !important; margin-bottom: 38px; }}
-.glossy-box {{ position: relative; overflow: hidden; background: linear-gradient(180deg, #162032 0%, #0f172a 100%); border: 1px solid rgba(255,255,255,0.05); border-radius: 18px; box-shadow: 0 8px 24px rgba(0,0,0,0.4); padding: 28px 30px; text-align: center; flex: 1; min-width: 220px; display: flex; flex-direction: column; justify-content: center; }}
-.glossy-box:not(.swapped) > div:first-child {{ font-size: 12px; font-weight: 600; letter-spacing: 1.5px; text-transform: uppercase; color: #94a3b8; margin-bottom: 6px; line-height: 1.2; }}
-.glossy-box:not(.swapped) > div:last-child {{ font-size: 27px; font-weight: 700; line-height: 1.05; color: #ffffff; }}
-.glossy-box.swapped {{ min-width: 0 !important; height: 80px !important; min-height: 80px !important; max-height: 80px !important; padding: 0; display: block; }}
-
-.usdc-banner {{ position: relative; overflow: hidden; background: rgba(15, 23, 42, 0.5); border: 1px solid rgba(39, 117, 202, 0.2); border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); padding: 10px 20px; width: 90%; max-width: 400px; margin: -15px auto 12px auto !important; display: flex; align-items: center; justify-content: space-between; }}
-.usdc-banner-left {{ display: flex; align-items: center; gap: 12px; }}
-.usdc-banner-left img {{ width: 28px; height: 28px; border-radius: 50%; object-fit: contain; opacity: 0.85; }}
-.usdc-banner-title {{ font-size: 1.05rem; font-weight: 600; color: #e2e8f0; display: flex; align-items: center; gap: 8px; }}
-.usdc-banner-subtitle {{ font-size: 0.75rem; font-weight: 500; color: #64748b; }}
-.usdc-banner-amount {{ font-size: 1.2rem; font-weight: 600; color: #e2e8f0; }}
-.dashboard-toggle:not(:checked) ~ .usdc-banner .usdc-banner-amount {{ font-size: 0 !important; }}
-.dashboard-toggle:not(:checked) ~ .usdc-banner .usdc-banner-amount::after {{ content: '***'; font-size: 1.2rem; color: #e2e8f0; }}
-
-input[type="number"]::-webkit-inner-spin-button, input[type="number"]::-webkit-outer-spin-button {{ -webkit-appearance: none; margin: 0; }}
-input[type="number"] {{ -moz-appearance: textfield; }}
-
-@media (max-width: 768px) {{
-    .glossy-header {{ margin-top: 24px !important; margin-bottom: 24px !important; padding: 20px 16px !important; font-size: 22px !important; min-height: 90px; }}
-    .stats-layer-inner {{ gap: 6px !important; }}
-    .dash-value {{ font-size: clamp(11px, 3.5vw, 15px) !important; top: 24px !important; }} 
-    .dash-label {{ font-size: clamp(8px, 2.5vw, 10px) !important; bottom: 8px !important; white-space: nowrap !important; letter-spacing: 0.5px !important; }}
-    .usdc-banner {{ padding: 8px 14px; width: 92%; margin-bottom: 24px !important; }}
-    .usdc-banner-amount {{ font-size: 1.1rem; }}
-}}
-</style>
-""", unsafe_allow_html=True)
-
-# ====================== RENDER BOTTOM NAV BAR ======================
-st.markdown(f"""
-<div class="bottom-nav-pill">
-    <div class="nav-item {'active' if st.session_state.page == 'Home' else ''}" onclick="window.parent.navTo('Nav_Home')">
-        {DASHBOARD_ICON}<span>Overview</span>
-    </div>
-    <div class="nav-item {'active' if st.session_state.page == 'Crypto Transactions' else ''}" onclick="window.parent.navTo('Nav_Crypto')">
-        {CRYPTO_ICON}<span>Crypto</span>
-    </div>
-    <div class="nav-item {'active' if st.session_state.page == 'Fiat Transactions' else ''}" onclick="window.parent.navTo('Nav_Fiat')">
-        {FIAT_ICON}<span>Fiat</span>
-    </div>
-</div>
-""", unsafe_allow_html=True)
-
-# ====================== GLOBAL SWIPE & ROUTING ENGINE ======================
-js_engine = f"""
-if (!window.swipeListenerActive) {{
-    window.swipeListenerActive = true;
-    const doc = window.parent.document;
-    
-    // Finds and clicks the hidden Streamlit buttons based on exact inner text
-    window.parent.navTo = function(btnKey) {{
-        const container = doc.getElementById('hidden-nav-routing');
-        if (!container) return;
-        const btns = Array.from(container.querySelectorAll('button p'));
-        const target = btns.find(p => p.textContent && p.textContent.includes(btnKey));
-        if (target) target.parentElement.click();
-    }};
-    
-    let tsX = 0, tsY = 0;
-    doc.addEventListener('touchstart', e => {{
-        if (e.touches.length > 1) return;
-        const t = e.target;
-        if (t.closest('.charts-scroll-wrapper') || t.closest('.scroll-wrapper') || t.tagName === 'CANVAS') return;
-        tsX = e.touches[0].clientX; tsY = e.touches[0].clientY;
-    }}, {{passive: true}});
-
-    doc.addEventListener('touchend', e => {{
-        if (e.changedTouches.length > 1) return;
-        const t = e.target;
-        if (t.closest('.charts-scroll-wrapper') || t.closest('.scroll-wrapper') || t.tagName === 'CANVAS') return;
-        
-        const dX = tsX - e.changedTouches[0].clientX;
-        const dY = tsY - e.changedTouches[0].clientY;
-        
-        // Strict horizontal gesture filter
-        if (Math.abs(dX) > 60 && Math.abs(dX) > Math.abs(dY) * 1.5) {{
-            const current = "{st.session_state.page}";
-            if (dX > 0) {{ 
-                if (current === 'Home') window.parent.navTo('Nav_Crypto');
-                else if (current === 'Crypto Transactions') window.parent.navTo('Nav_Fiat');
-            }} else {{ 
-                if (current === 'Fiat Transactions') window.parent.navTo('Nav_Crypto');
-                else if (current === 'Crypto Transactions') window.parent.navTo('Nav_Home');
-            }}
-        }}
-    }}, {{passive: true}});
-}}
-"""
-encoded_js = json.dumps(js_engine)
-components.html(f"<script>(function() {{ const doc = window.parent.document; if (!doc.getElementById('global-swipe-script')) {{ const script = doc.createElement('script'); script.id = 'global-swipe-script'; script.textContent = {encoded_js}; doc.head.appendChild(script); }} }})();</script>", height=0, width=0)
 
 # ====================== DATA PREPARATION ENGINE ======================
 DATA_DIR = Path("data")
@@ -256,19 +71,206 @@ def get_initial_fiat_df():
     ])
 
 def load_or_init_crypto():
-    if CRYPTO_JSON.exists(): return pd.read_json(CRYPTO_JSON)
-    df = get_initial_crypto_df(); save_crypto(df); return df
+    if CRYPTO_JSON.exists(): 
+        df = pd.read_json(CRYPTO_JSON)
+        if not df.empty: return df
+    df = get_initial_crypto_df()
+    save_crypto(df)
+    return df
 
 def load_or_init_fiat():
-    if FIAT_JSON.exists(): return pd.read_json(FIAT_JSON)
-    df = get_initial_fiat_df(); save_fiat(df); return df
+    if FIAT_JSON.exists(): 
+        df = pd.read_json(FIAT_JSON)
+        if not df.empty: return df
+    df = get_initial_fiat_df()
+    save_fiat(df)
+    return df
 
 def save_crypto(df): df.to_json(CRYPTO_JSON, orient="records", indent=2)
 def save_fiat(df): df.to_json(FIAT_JSON, orient="records", indent=2)
 
-if st.session_state.crypto_df.empty: st.session_state.crypto_df = load_or_init_crypto()
-if st.session_state.fiat_df.empty: st.session_state.fiat_df = load_or_init_fiat()
+# ====================== SESSION STATE INITIALIZATION ======================
+if 'crypto_df' not in st.session_state: st.session_state.crypto_df = load_or_init_crypto()
+if 'fiat_df' not in st.session_state: st.session_state.fiat_df = load_or_init_fiat()
+if 'crypto_table_version' not in st.session_state: st.session_state.crypto_table_version = 0
+if 'fiat_table_version' not in st.session_state: st.session_state.fiat_table_version = 0
+if 'ui_version' not in st.session_state: st.session_state.ui_version = 0
+if 'page' not in st.session_state: st.session_state.page = "Home"
+if 'page_anim_dir' not in st.session_state: st.session_state.page_anim_dir = "none"
+if 'last_known_prices' not in st.session_state: st.session_state.last_known_prices = {"USDC": 1.0}
+if 'refresh_key' not in st.session_state: st.session_state.refresh_key = random.randint(100000, 999999)
+if 'portfolio_cache' not in st.session_state: st.session_state.portfolio_cache = {}
 
+
+# ====================== HIDDEN STEALTH ROUTING ======================
+# Buttons placed in the sidebar. The CSS will push the sidebar far off-screen, keeping it in the DOM but invisible.
+with st.sidebar:
+    curr_idx = ["Home", "Crypto Transactions", "Fiat Transactions"].index(st.session_state.page) if st.session_state.page in ["Home", "Crypto Transactions", "Fiat Transactions"] else 0
+    
+    if st.button("Nav_Home", key="btn_home_hidden"):
+        st.session_state.page_anim_dir = "slide-in-left"
+        st.session_state.page = "Home"
+        st.rerun()
+    if st.button("Nav_Crypto", key="btn_crypto_hidden"):
+        st.session_state.page_anim_dir = "slide-in-right" if curr_idx < 1 else "slide-in-left"
+        st.session_state.page = "Crypto Transactions"
+        st.rerun()
+    if st.button("Nav_Fiat", key="btn_fiat_hidden"):
+        st.session_state.page_anim_dir = "slide-in-right"
+        st.session_state.page = "Fiat Transactions"
+        st.rerun()
+
+# ====================== GLOBAL CSS STYLES & ANIMATIONS ======================
+anim_css = ""
+if st.session_state.page_anim_dir == 'slide-in-right':
+    anim_css = "div[data-testid='stMainBlockContainer'] { animation: slideInFromRight 0.35s cubic-bezier(0.25, 1, 0.5, 1) forwards; }"
+elif st.session_state.page_anim_dir == 'slide-in-left':
+    anim_css = "div[data-testid='stMainBlockContainer'] { animation: slideInFromLeft 0.35s cubic-bezier(0.25, 1, 0.5, 1) forwards; }"
+st.session_state.page_anim_dir = 'none' 
+
+st.markdown(f"""
+<style>
+/* Animations */
+@keyframes slideInFromRight {{ 0% {{ transform: translateX(50vw); opacity: 0; }} 100% {{ transform: translateX(0); opacity: 1; }} }}
+@keyframes slideInFromLeft {{ 0% {{ transform: translateX(-50vw); opacity: 0; }} 100% {{ transform: translateX(0); opacity: 1; }} }}
+
+/* HIDDEN NATIVE ROUTING: Sidebar is pushed infinitely left so it remains clickable by JS */
+[data-testid="stSidebar"] {{ position: fixed !important; left: -9999px !important; width: 0 !important; visibility: visible !important; }}
+[data-testid="collapsedControl"], header[data-testid="stHeader"], footer {{ display: none !important; }}
+
+html, body, .stApp {{ overflow-x: hidden !important; background: linear-gradient(180deg, #0f1724 0%, #0a0f1c 100%) !important; }}
+div[data-testid="stMainBlockContainer"] {{
+    padding-left: 14px !important; padding-right: 14px !important; padding-top: 14px !important; padding-bottom: 90px !important;
+    max-width: 100% !important;
+}}
+{anim_css}
+@media (min-width: 1200px) {{ div[data-testid="stMainBlockContainer"] {{ padding-left: 18px !important; padding-right: 18px !important; }} }}
+@media (max-width: 768px) {{ div[data-testid="stMainBlockContainer"] {{ padding-left: 8px !important; padding-right: 8px !important; }} }}
+
+/* BOTTOM NAVIGATION PILL */
+.bottom-nav-pill {{
+    position: fixed; bottom: 25px; left: 50%; transform: translateX(-50%); width: 85%; max-width: 380px; height: 65px;
+    background: rgba(15, 23, 42, 0.95); backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px);
+    border-radius: 35px; border: 1px solid rgba(255,255,255,0.1); display: flex; justify-content: space-evenly; align-items: center;
+    z-index: 999998; box-shadow: 0 10px 30px rgba(0,0,0,0.6);
+}}
+.nav-item {{
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    color: #64748b; font-size: 11px; font-weight: 600; cursor: pointer; flex: 1; height: 100%; transition: color 0.3s ease;
+    -webkit-tap-highlight-color: transparent;
+}}
+.nav-item.active {{ color: #00ff9d; }}
+.nav-item svg {{ width: 22px; height: 22px; margin-bottom: 4px; stroke: currentColor; fill: none; transition: transform 0.2s ease; }}
+.nav-item.active svg {{ transform: translateY(-2px); filter: drop-shadow(0 0 4px rgba(0,255,157,0.4)); }}
+
+/* Global UI Elements */
+.dashboard-wrapper {{ position: relative; z-index: 10; }}
+.glossy-header-label {{ cursor: pointer; display: block; position: relative; z-index: 3; -webkit-tap-highlight-color: transparent; }}
+.home-header {{ margin-bottom: 0 !important; padding-bottom: 30px !important; }}
+.pull-indicator {{ position: absolute; bottom: 8px; left: 50%; transform: translateX(-50%); color: #64748b; opacity: 0.8; transition: color 0.3s ease; }}
+.pull-indicator .eye-open {{ display: none; }}
+.pull-indicator .eye-closed {{ display: block; }}
+.dashboard-toggle:checked ~ .dashboard-wrapper .glossy-header-label .pull-indicator .eye-open {{ display: block; }}
+.dashboard-toggle:checked ~ .dashboard-wrapper .glossy-header-label .pull-indicator .eye-closed {{ display: none; }}
+.dashboard-toggle:checked ~ .dashboard-wrapper .glossy-header-label .pull-indicator {{ color: #ffffff; }}
+
+.stats-layer {{ position: relative; z-index: 1; margin-top: -60px !important; transition: margin-top 0.4s cubic-bezier(0.4, 0, 0.2, 1); margin-bottom: 24px; }}
+.dashboard-toggle:checked ~ .dashboard-wrapper .stats-layer {{ margin-top: 14px !important; }}
+.stats-layer-inner {{ display: grid !important; grid-template-columns: repeat(3, 1fr) !important; gap: 14px; width: 100%; }}
+.dash-value {{ font-size: clamp(14px, 2.5vw, 24px) !important; font-weight: 700; line-height: 1.05; color: #ffffff; position: absolute; top: 20px; left: 0; width: 100%; text-align: center; margin: 0; transition: opacity 0.3s ease; padding: 0 4px; box-sizing: border-box; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }}
+.dashboard-toggle:not(:checked) ~ .dashboard-wrapper .stats-layer .dash-value {{ opacity: 0; pointer-events: none; }}
+.dash-label {{ font-size: 11px !important; font-weight: 600; letter-spacing: 1.5px; text-transform: uppercase; color: #94a3b8; line-height: 1.2; position: absolute; bottom: 8px; left: 0; width: 100%; text-align: center; }}
+
+.glossy-header {{ position: relative; overflow: hidden; background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); border: 1px solid rgba(255,255,255,0.05); border-radius: 18px; box-shadow: 0 10px 30px rgba(0,0,0,0.4); transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.4s ease, border-color 0.4s ease; padding: 32px 24px; min-height: 130px; font-size: 29px; font-weight: 700; letter-spacing: 1.5px; line-height: 1.1; display: flex; align-items: center; justify-content: center; gap: 16px; width: 100% !important; margin-bottom: 38px; }}
+.glossy-box {{ position: relative; overflow: hidden; background: linear-gradient(180deg, #162032 0%, #0f172a 100%); border: 1px solid rgba(255,255,255,0.05); border-radius: 18px; box-shadow: 0 8px 24px rgba(0,0,0,0.4); padding: 28px 30px; text-align: center; flex: 1; min-width: 220px; display: flex; flex-direction: column; justify-content: center; }}
+.glossy-box:not(.swapped) > div:first-child {{ font-size: 12px; font-weight: 600; letter-spacing: 1.5px; text-transform: uppercase; color: #94a3b8; margin-bottom: 6px; line-height: 1.2; }}
+.glossy-box:not(.swapped) > div:last-child {{ font-size: 27px; font-weight: 700; line-height: 1.05; color: #ffffff; }}
+.glossy-box.swapped {{ min-width: 0 !important; height: 80px !important; min-height: 80px !important; max-height: 80px !important; padding: 0; display: block; }}
+
+.usdc-banner {{ position: relative; overflow: hidden; background: rgba(15, 23, 42, 0.5); border: 1px solid rgba(39, 117, 202, 0.2); border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); padding: 10px 20px; width: 90%; max-width: 400px; margin: -15px auto 12px auto !important; display: flex; align-items: center; justify-content: space-between; }}
+.usdc-banner-left {{ display: flex; align-items: center; gap: 12px; }}
+.usdc-banner-left img {{ width: 28px; height: 28px; border-radius: 50%; object-fit: contain; opacity: 0.85; }}
+.usdc-banner-title {{ font-size: 1.05rem; font-weight: 600; color: #e2e8f0; display: flex; align-items: center; gap: 8px; }}
+.usdc-banner-subtitle {{ font-size: 0.75rem; font-weight: 500; color: #64748b; }}
+.usdc-banner-amount {{ font-size: 1.2rem; font-weight: 600; color: #e2e8f0; }}
+.dashboard-toggle:not(:checked) ~ .usdc-banner .usdc-banner-amount {{ font-size: 0 !important; }}
+.dashboard-toggle:not(:checked) ~ .usdc-banner .usdc-banner-amount::after {{ content: '***'; font-size: 1.2rem; color: #e2e8f0; }}
+
+input[type="number"]::-webkit-inner-spin-button, input[type="number"]::-webkit-outer-spin-button {{ -webkit-appearance: none; margin: 0; }}
+input[type="number"] {{ -moz-appearance: textfield; }}
+
+@media (max-width: 768px) {{
+    .glossy-header {{ min-height: 90px; font-size: 22px; padding: 20px 16px; margin-bottom: 24px; margin-top: 20px; }}
+    .stats-layer-inner {{ gap: 6px !important; }}
+    .dash-value {{ font-size: clamp(11px, 3.5vw, 15px) !important; top: 24px !important; }} 
+    .dash-label {{ font-size: clamp(8px, 2.5vw, 10px) !important; bottom: 8px !important; white-space: nowrap !important; letter-spacing: 0.5px !important; }}
+    .usdc-banner {{ padding: 8px 14px; width: 92%; margin-bottom: 24px !important; }}
+    .usdc-banner-amount {{ font-size: 1.1rem; }}
+}}
+</style>
+""", unsafe_allow_html=True)
+
+# ====================== RENDER BOTTOM NAV BAR ======================
+st.markdown(f"""
+<div class="bottom-nav-pill">
+    <div class="nav-item {'active' if st.session_state.page == 'Home' else ''}" onclick="window.parent.navTo('Nav_Home')">
+        {DASHBOARD_ICON}<span>Overview</span>
+    </div>
+    <div class="nav-item {'active' if st.session_state.page == 'Crypto Transactions' else ''}" onclick="window.parent.navTo('Nav_Crypto')">
+        {CRYPTO_ICON}<span>Crypto</span>
+    </div>
+    <div class="nav-item {'active' if st.session_state.page == 'Fiat Transactions' else ''}" onclick="window.parent.navTo('Nav_Fiat')">
+        {FIAT_ICON}<span>Fiat</span>
+    </div>
+</div>
+""", unsafe_allow_html=True)
+
+# ====================== GLOBAL SWIPE & ROUTING ENGINE ======================
+# Uses textContent to locate the hidden Streamlit buttons and physically click them via Javascript
+js_engine = f"""
+if (!window.swipeListenerActive) {{
+    window.swipeListenerActive = true;
+    const doc = window.parent.document;
+    
+    window.parent.navTo = function(btnKey) {{
+        const btns = Array.from(doc.querySelectorAll('[data-testid="stSidebar"] button p'));
+        const target = btns.find(p => p.textContent && p.textContent.includes(btnKey));
+        if (target) target.parentElement.click();
+    }};
+    
+    let tsX = 0, tsY = 0;
+    doc.addEventListener('touchstart', e => {{
+        if (e.touches.length > 1) return;
+        const t = e.target;
+        if (t.closest('.charts-scroll-wrapper') || t.closest('.scroll-wrapper') || t.tagName === 'CANVAS') return;
+        tsX = e.touches[0].clientX; tsY = e.touches[0].clientY;
+    }}, {{passive: true}});
+
+    doc.addEventListener('touchend', e => {{
+        if (e.changedTouches.length > 1) return;
+        const t = e.target;
+        if (t.closest('.charts-scroll-wrapper') || t.closest('.scroll-wrapper') || t.tagName === 'CANVAS') return;
+        
+        const dX = tsX - e.changedTouches[0].clientX;
+        const dY = tsY - e.changedTouches[0].clientY;
+        
+        if (Math.abs(dX) > 60 && Math.abs(dX) > Math.abs(dY) * 1.5) {{
+            const current = "{st.session_state.page}";
+            if (dX > 0) {{ 
+                if (current === 'Home') window.parent.navTo('Nav_Crypto');
+                else if (current === 'Crypto Transactions') window.parent.navTo('Nav_Fiat');
+            }} else {{ 
+                if (current === 'Fiat Transactions') window.parent.navTo('Nav_Crypto');
+                else if (current === 'Crypto Transactions') window.parent.navTo('Nav_Home');
+            }}
+        }}
+    }}, {{passive: true}});
+}}
+"""
+encoded_js = json.dumps(js_engine)
+components.html(f"<script>(function() {{ const doc = window.parent.document; if (!doc.getElementById('global-swipe-script')) {{ const script = doc.createElement('script'); script.id = 'global-swipe-script'; script.textContent = {encoded_js}; doc.head.appendChild(script); }} }})();</script>", height=0, width=0)
+
+# ====================== DATA CALCULATION ENGINE ======================
 CRYPTOCOMPARE_SYMBOL_MAP = {'BTC': 'BTC', 'ETH': 'ETH', 'SOL': 'SOL', 'HBAR': 'HBAR', 'XRP': 'XRP', 'BNB': 'BNB', 'TRX': 'TRX', 'LINK': 'LINK', 'SUI': 'SUI', 'USDC': 'USDC'}
 
 def get_with_retry(url: str, headers: dict, timeout: int = 12, retries: int = 4) -> dict | None:
@@ -298,7 +300,7 @@ def get_all_cryptocompare_prices(tickers: tuple, refresh_key=0):
             for sym, price_data in data.items():
                 if isinstance(price_data, dict) and "USD" in price_data:
                     ticker = next((k for k, v in CRYPTOCOMPARE_SYMBOL_MAP.items() if v == sym), None)
-                    if ticker: prices[ticker] = float(price_data["USD"])
+                    if ticker: prices[ticker] = safe_float(price_data["USD"])
     except: pass
     return prices
 
@@ -307,9 +309,9 @@ def fetch_all_historical_data(coins_tuple: tuple, limit: int, refresh_key: int):
     def fetch_coin(coin):
         if coin.upper() == "USDC": return coin, {}
         sym = CRYPTOCOMPARE_SYMBOL_MAP.get(coin.upper(), coin.upper())
-        data = get_with_retry(f"https://min-api.cryptocompare.com/data/v2/histoday?fsym={sym}&tsym=USD&limit={limit}", {"User-Agent": "Mozilla/5.0"})
+        data = get_with_retry(f"https://min-api.cryptocompare.com/data/v2/histoday?fsym={sym}&tsym=USD&limit={limit}", {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"})
         if data and 'Data' in data and 'Data' in data['Data']:
-            return coin, {datetime.fromtimestamp(d['time']).date(): float(d['close']) for d in data['Data']['Data']}
+            return coin, {datetime.fromtimestamp(d['time']).date(): safe_float(d['close']) for d in data['Data']['Data']}
         return coin, {}
     with ThreadPoolExecutor(max_workers=5) as executor:
         for coin, hist in executor.map(fetch_coin, coins_tuple):
@@ -325,7 +327,7 @@ def get_base_prices(prices_dict, coins):
         prices = [hist[d] for d in sorted(hist.keys())]
         if not prices: continue
         def get_p(days_back): return prices[-(days_back + 1)] if len(prices) > days_back else prices[0]
-        base_prices[coin] = {'7d': get_p(7), '30d': get_p(30), '90d': get_p(90), 'ytd': get_p(ytd_days)}
+        base_prices[coin] = {'7d': safe_float(get_p(7)), '30d': safe_float(get_p(30)), '90d': safe_float(get_p(90)), 'ytd': safe_float(get_p(ytd_days))}
     return base_prices
 
 def build_portfolio_history(crypto_df, fiat_df, last_prices, hist_dict):
@@ -347,20 +349,20 @@ def build_portfolio_history(crypto_df, fiat_df, last_prices, hist_dict):
     if min_date > today: min_date = today
     date_range = pd.date_range(start=min_date, end=today).date
 
-    cum_fiat_usdc = daily_fiat_usdc.reindex(date_range, fill_value=0).cumsum()
-    cum_crypto_spent = daily_crypto_spent.reindex(date_range, fill_value=0).cumsum()
+    cum_fiat_usdc = daily_fiat_usdc.reindex(date_range, fill_value=0.0).cumsum()
+    cum_crypto_spent = daily_crypto_spent.reindex(date_range, fill_value=0.0).cumsum()
     cum_unused_usdc = cum_fiat_usdc - cum_crypto_spent
 
     if not crypto.empty:
         crypto_assets = crypto[crypto['Ticker'].str.upper() != 'USDC']
         if not crypto_assets.empty:
             crypto_assets['Date'] = crypto_assets['Datum'].apply(parse_excel_date)
-            cum_holdings = crypto_assets.groupby(['Date', 'Ticker'])['Amount'].sum().unstack(fill_value=0).reindex(date_range, fill_value=0).fillna(0).cumsum()
+            cum_holdings = crypto_assets.groupby(['Date', 'Ticker'])['Amount'].sum().unstack(fill_value=0.0).reindex(date_range, fill_value=0.0).fillna(0.0).cumsum()
             coins = crypto_assets['Ticker'].unique()
         else: cum_holdings, coins = pd.DataFrame(index=date_range), []
     else: cum_holdings, coins = pd.DataFrame(index=date_range), []
 
-    prices_df = pd.DataFrame(hist_dict).reindex(date_range).ffill().bfill().fillna(0) if hist_dict else pd.DataFrame(index=date_range)
+    prices_df = pd.DataFrame(hist_dict).reindex(date_range).ffill().bfill().fillna(0.0) if hist_dict else pd.DataFrame(index=date_range)
     for coin in tuple(sorted(set(coins) | {'BTC'})):
         live_p = last_prices.get(coin, 0.0)
         if live_p == 0.0 and coin == 'BTC': live_p = 65000.0 
@@ -371,7 +373,7 @@ def build_portfolio_history(crypto_df, fiat_df, last_prices, hist_dict):
     common_cols = cum_holdings.columns.intersection(prices_df.columns)
     
     if not crypto.empty and not crypto_assets.empty:
-        invested_daily = crypto_assets.groupby(['Date', 'Ticker'])['USDC'].sum().unstack(fill_value=0).reindex(date_range, fill_value=0).fillna(0).cumsum()
+        invested_daily = crypto_assets.groupby(['Date', 'Ticker'])['USDC'].sum().unstack(fill_value=0.0).reindex(date_range, fill_value=0.0).fillna(0.0).cumsum()
         pnl_df = (cum_holdings[common_cols] * prices_df[common_cols]) - invested_daily[common_cols]
 
     daily_crypto_value = (cum_holdings[common_cols] * prices_df[common_cols]).sum(axis=1) if not common_cols.empty else pd.Series(0.0, index=date_range)
@@ -379,7 +381,7 @@ def build_portfolio_history(crypto_df, fiat_df, last_prices, hist_dict):
 
     btc_benchmark_value = pd.Series(0.0, index=date_range)
     if 'BTC' in prices_df.columns and not prices_df['BTC'].empty:
-        btc_prices = prices_df['BTC'].replace(0, 1.0).fillna(1.0)
+        btc_prices = prices_df['BTC'].replace(0.0, 1.0).fillna(1.0)
         btc_bought_daily = daily_fiat_usdc.reindex(date_range, fill_value=0.0) / btc_prices
         btc_benchmark_value = btc_bought_daily.cumsum() * btc_prices
 
@@ -445,7 +447,6 @@ def format_holdings(val, ticker=None): return f"{float(val):,.6f}".replace(',', 
 def format_percent(val): return f"{float(val):.2f}%" if not pd.isna(val) else ""
 def format_price(val): return f"{float(val):.4f}" if abs(float(val)) < 1 else f"{float(val):,.2f}" if not pd.isna(val) else ""
 
-
 # ================== ZERO-LATENCY CACHE ARCHITECTURE ==================
 current_hash = f"{st.session_state.crypto_table_version}_{st.session_state.fiat_table_version}_{st.session_state.refresh_key}"
 
@@ -476,8 +477,9 @@ history_data_raw, allocation_series_js, pnl_df = vault['history_data_raw'], vaul
 usdc_row = df_port[df_port['Ticker'] == 'USDC'].iloc[0] if not df_port[df_port['Ticker'] == 'USDC'].empty else None
 usdc_holdings = usdc_row['Holdings'] if usdc_row is not None else 0
 
-# ====================== PAGE 1: HOME ======================
+# ====================== PAGE ROUTING ======================
 if st.session_state.page == "Home":
+    
     value_box_html = f"""
     <input type="checkbox" id="dash-toggle" class="dashboard-toggle" style="display:none;">
     <div class="dashboard-wrapper">
@@ -526,6 +528,7 @@ if st.session_state.page == "Home":
     roi_data_js = ",\n".join([f"{{ name: '{r['Ticker']}', y: {safe_float(r['PnL %'])}, color: '{get_ticker_color(r['Ticker'])}99' }}" for _, r in df_port[df_port['Ticker'] != 'USDC'].sort_values(by='PnL %', ascending=False).iterrows() if pd.notna(r['PnL %'])])
     daily_data_js = ",\n".join([f"{{ name: '{r['Ticker']}', y: 0, color: '#64748b99' }}" for _, r in df_port[df_port['Ticker'] != 'USDC'].iterrows()])
 
+    # Perfectly un-minified HTML with rock-solid Python injection points
     data_script = f"""
     <script>
         window.pnlDataMap = {{
@@ -578,9 +581,8 @@ if st.session_state.page == "Home":
             #chart-overlay { visibility: hidden; opacity: 0; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(10, 15, 28, 0.85); z-index: 1000; backdrop-filter: blur(5px); -webkit-backdrop-filter: blur(5px); transition: opacity 0.4s ease, visibility 0.4s ease; }
             #chart-overlay.active { visibility: visible; opacity: 1; }
             
-            /* Native Horizontal Width Expansion - Restored to the 3k line version! */
-            .expanded-chart { width: 90vw !important; flex: 0 0 90vw !important; max-width: 100vw; }
-            .expanded-chart .chart-box { background: rgba(15, 23, 42, 0.98) !important; border: 1px solid rgba(255, 255, 255, 0.15) !important; box-shadow: 0 15px 40px rgba(0,0,0,0.5) !important; }
+            /* CSS Jailbreak - Restored exactly from backup */
+            .expanded-chart { background: rgba(15, 23, 42, 0.98) !important; border: 1px solid rgba(255, 255, 255, 0.08) !important; box-shadow: 0 15px 50px rgba(0,0,0,0.9) !important; border-radius: 20px !important; }
 
             @media (max-width: 768px) { 
                 .chart-placeholder { height: 320px !important; width: 90vw !important; flex: 0 0 90vw !important; } 
@@ -590,6 +592,7 @@ if st.session_state.page == "Home":
         </style>
     </head>
     <body>
+        <div id="chart-overlay"></div>
         <div class="charts-scroll-wrapper" id="chartsScrollContainer">
             <div class="charts-flex">
                 <div class="chart-placeholder" data-type="pie" id="pie-wrapper"><div id="pie-container" class="chart-box"></div></div>
@@ -730,22 +733,135 @@ if st.session_state.page == "Home":
                 });
             } catch(e) {}
             
-            // Restored the PERFECT horizontal flex-expansion for Double Tap!
+            // Re-instated EXACT Fullscreen double-tap logic from backup!
+            try {
+                if (window !== window.parent && window.parent.document) {
+                    if (!window.parent.document.getElementById('chart-fullscreen-css')) {
+                        const style = window.parent.document.createElement('style');
+                        style.id = 'chart-fullscreen-css';
+                        style.innerHTML = `
+                            iframe.fullscreen-mode {
+                                position: fixed !important;
+                                top: 0 !important;
+                                left: 0 !important;
+                                width: 100vw !important;
+                                height: 100vh !important;
+                                max-width: 100vw !important;
+                                max-height: 100vh !important;
+                                z-index: 999999 !important;
+                                border: none !important;
+                                background: transparent !important;
+                            }
+                        `;
+                        window.parent.document.head.appendChild(style);
+                    }
+                }
+            } catch(e) {}
+
             function toggleExpandChart(wrapperId) {
+                // BLOCK PC COMPLETELY - Only runs on Mobile
+                if (window.innerWidth > 768) return;
+            
                 const el = document.getElementById(wrapperId);
+                const overlay = document.getElementById('chart-overlay');
+                const wrapper = document.getElementById('chartsScrollContainer');
+
+                let parentIframe = null;
+                try {
+                    const iframes = window.parent.document.querySelectorAll('iframe');
+                    for (let ifr of iframes) { if (ifr.contentWindow === window) parentIframe = ifr; }
+                } catch(e) {}
+                
+                const screenW = window.parent ? window.parent.innerWidth : window.innerWidth;
+                const screenH = window.parent ? window.parent.innerHeight : window.innerHeight;
                 
                 if (el.classList.contains('expanded-chart')) {
+                    // CLOSING MECHANICS 
+                    overlay.classList.remove('active');
+                    
+                    const origTop = parseFloat(el.getAttribute('data-orig-top')) || 0;
+                    const origLeft = parseFloat(el.getAttribute('data-orig-left')) || 0;
+                    
                     el.classList.remove('expanded-chart');
-                } else {
-                    document.querySelectorAll('.expanded-chart').forEach(c => c.classList.remove('expanded-chart'));
-                    el.classList.add('expanded-chart');
-                    setTimeout(() => { el.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' }); }, 50);
+                    
+                    el.style.transition = 'transform 0.4s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.4s ease, box-shadow 0.4s ease';
+                    el.style.transform = `translate(${origLeft}px, ${origTop}px) scale(1)`;
+
+                    const finishClose = (e) => {
+                        if (e && e.propertyName !== 'transform') return;
+                        el.removeEventListener('transitionend', finishClose);
+                        clearTimeout(el._closeTimeout);
+                        if (parentIframe) parentIframe.classList.remove('fullscreen-mode');
+                        el.style.cssText = ''; 
+                        wrapper.style.overflowX = 'auto'; // Restore scroll snapping
+                        
+                        document.querySelectorAll('.chart-box').forEach(c => {
+                            c.style.opacity = '1';
+                            c.style.pointerEvents = 'auto';
+                        });
+                    };
+                    el.addEventListener('transitionend', finishClose);
+                    el._closeTimeout = setTimeout(() => { finishClose(); }, 450); 
+                    return;
                 }
                 
-                setTimeout(() => {
-                    const hc = Highcharts.charts.find(c => c && c.renderTo.id === el.id.replace('-wrapper', '-container').replace('-placeholder', '-container'));
-                    if (hc) { hc.setSize(null, null); hc.reflow(); }
-                }, 300);
+                // OPENING MECHANICS 
+                document.querySelectorAll('.chart-box').forEach(c => {
+                    if (c.id !== wrapperId) {
+                        c.style.transition = 'opacity 0.15s ease';
+                        c.style.opacity = '0';
+                        c.style.pointerEvents = 'none';
+                    }
+                });
+                
+                const chartRect = el.getBoundingClientRect();
+                let visualTop = chartRect.top;
+                let visualLeft = chartRect.left;
+                
+                if (parentIframe) {
+                    const iframeRect = parentIframe.getBoundingClientRect();
+                    visualTop += iframeRect.top;
+                    visualLeft += iframeRect.left;
+                }
+
+                if (parentIframe) parentIframe.classList.add('fullscreen-mode');
+                overlay.classList.add('active'); 
+                wrapper.style.overflowX = 'visible';
+
+                const origW = chartRect.width;
+                const origH = chartRect.height;
+                
+                let targetW = screenW * 0.95;
+                let targetH = screenH * 0.70;
+                
+                const maxScaleX = targetW / origW;
+                const maxScaleY = targetH / origH;
+                const targetScale = Math.min(maxScaleX, maxScaleY);
+                
+                const scaledW = origW * targetScale;
+                const scaledH = origH * targetScale;
+                const centerLeft = (screenW - scaledW) / 2;
+                const centerTop = (screenH - scaledH) / 2;
+
+                el.setAttribute('data-orig-top', visualTop);
+                el.setAttribute('data-orig-left', visualLeft);
+
+                el.style.position = 'fixed';
+                el.style.top = '0px';
+                el.style.left = '0px';
+                el.style.width = origW + 'px';
+                el.style.height = origH + 'px';
+                el.style.margin = '0';
+                el.style.zIndex = '1001';
+                el.style.transformOrigin = 'top left'; 
+                el.style.transition = 'none';
+                el.style.transform = `translate(${visualLeft}px, ${visualTop}px) scale(1)`;
+                
+                void el.offsetWidth;
+
+                el.classList.add('expanded-chart');
+                el.style.transition = 'transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.4s ease, box-shadow 0.4s ease';
+                el.style.transform = `translate(${centerLeft}px, ${centerTop}px) scale(${targetScale})`;
             }
 
             function setupDoubleTap(elementId) {
@@ -766,7 +882,13 @@ if st.session_state.page == "Home":
             setupDoubleTap('pie-wrapper'); setupDoubleTap('history-wrapper'); setupDoubleTap('pnl-wrapper'); 
             setupDoubleTap('roi-wrapper'); setupDoubleTap('daily-wrapper'); setupDoubleTap('alloc-wrapper'); setupDoubleTap('inv-wrapper');
             
-            // Restored PC mouse wheel horizontal scrolling
+            document.getElementById('chart-overlay').addEventListener('click', () => {
+                document.querySelectorAll('.expanded-chart').forEach(el => {
+                    if (el.classList.contains('expanded-chart')) toggleExpandChart(el.id);
+                });
+            });
+            
+            // Allow PC users to scroll charts horizontally
             const chartScroll = document.getElementById('chartsScrollContainer');
             if (chartScroll) {
                 chartScroll.addEventListener('wheel', (evt) => {
@@ -972,7 +1094,6 @@ if st.session_state.page == "Home":
                     const data = await resp.json();
                     
                     let totalCoinValue = 0; let totalCoinInvested = 0;
-                    let tickerValues = {{}}; let tickerDiffs = {{}}; let tickerRoi = {{}}; let ticker24h = {{}};
                     
                     cards.forEach(card => {{
                         const ticker = card.getAttribute('data-ticker');
@@ -985,21 +1106,16 @@ if st.session_state.page == "Home":
                         if (data.RAW && data.RAW[sym] && data.RAW[sym].USD) {{
                             const newPrice = data.RAW[sym].USD.PRICE;
                             if (newPrice !== undefined) {{
-                                const oldVal = holdings * price;
                                 price = newPrice;
                                 card.setAttribute('data-current-price', price);
                                 
                                 const value = holdings * price;
-                                tickerValues[ticker] = value;
-                                tickerDiffs[ticker] = value - oldVal;
-                                
                                 const priceFmt = price < 1 ? price.toFixed(4) : price.toLocaleString('en-US', {{minimumFractionDigits: 2, maximumFractionDigits: 2}});
                                 const currentEl = card.querySelector('.current-value');
                                 if (currentEl) currentEl.innerText = '$' + priceFmt;
                                 
                                 const pnl = value - invested;
                                 const pnlPct = invested > 0 ? (pnl / invested) * 100 : 0;
-                                tickerRoi[ticker] = pnlPct;
                                 
                                 const valStr = '$' + value.toLocaleString('en-US', {{minimumFractionDigits: 2, maximumFractionDigits: 2}});
                                 const pnlStr = (pnl >= 0 ? '▲ $' : '▼ $') + Math.abs(pnl).toLocaleString('en-US', {{minimumFractionDigits: 2, maximumFractionDigits: 2}});
@@ -1031,7 +1147,6 @@ if st.session_state.page == "Home":
                             }}
                             if (changeSpan && data.RAW[sym].USD.CHANGEPCT24HOUR !== undefined) {{
                                 const change = data.RAW[sym].USD.CHANGEPCT24HOUR;
-                                ticker24h[ticker] = change;
                                 const sign = change >= 0 ? '▲' : '▼';
                                 const color = change >= 0 ? '#00ff9d' : '#ff4d4d';
                                 changeSpan.innerHTML = `<span style="color:${{color}};">${{sign}} ${{Math.abs(change).toFixed(2)}}%</span>`;
@@ -1135,16 +1250,6 @@ if st.session_state.page == "Home":
             const border = card.getAttribute('data-border');
             card.style.setProperty('--border', border);
             
-            const p7d = parseFloat(card.getAttribute('data-price-7d'));
-            const p30d = parseFloat(card.getAttribute('data-price-30d'));
-            const p90d = parseFloat(card.getAttribute('data-price-90d'));
-            const pytd = parseFloat(card.getAttribute('data-price-ytd'));
-            
-            updateMetricUI(card, ticker, '7d', p7d, currentPrice);
-            updateMetricUI(card, ticker, '30d', p30d, currentPrice);
-            updateMetricUI(card, ticker, '90d', p90d, currentPrice);
-            updateMetricUI(card, ticker, 'ytd', pytd, currentPrice);
-            
             const front = card.querySelector('.flip-card-front');
             front.addEventListener('click', (e) => {{
                 e.stopPropagation();
@@ -1170,6 +1275,178 @@ if st.session_state.page == "Home":
     </html>
     """
     components.html(full_html, height=380, scrolling=False)
+
+# ================== PAGE 2: CRYPTO ==================
+elif st.session_state.page == "Crypto Transactions":
+    glossy_header("Crypto Transactions", CRYPTO_ICON)
+
+    st.markdown("""
+    <style>
+    div[data-testid="stForm"]:has(.add-tx-card) { background: #0f172a !important; border: 1px solid rgba(255,255,255,0.05) !important; border-radius: 16px !important; padding: 24px !important; box-shadow: 0 4px 15px rgba(0,0,0,0.3) !important; margin-bottom: 24px !important; }
+    div[data-testid="stForm"]:has(.add-tx-card) label { font-size: 0.85rem !important; color: #94a3b8 !important; padding-bottom: 2px !important; }
+    div[data-testid="stForm"]:has(.add-tx-card) .stTextInput input, div[data-testid="stForm"]:has(.add-tx-card) .stNumberInput input, div[data-testid="stForm"]:has(.add-tx-card) .stDateInput input { background: rgba(255,255,255,0.03) !important; border: 1px solid rgba(255,255,255,0.1) !important; color: #fff !important; border-radius: 8px !important; margin-bottom: 0px !important; }
+    div[data-testid="stForm"]:has(.add-tx-card) div[data-testid="stHorizontalBlock"]:has(> div[data-testid="column"]:nth-child(4)) { display: flex !important; gap: 12px !important; }
+    div[data-testid="stForm"]:has(.add-tx-card) div[data-testid="stHorizontalBlock"]:has(> div[data-testid="column"]:nth-child(2):last-child) { display: flex !important; flex-direction: row !important; justify-content: space-between !important; align-items: center !important; margin-top: 12px !important; gap: 12px !important; }
+    div[data-testid="stForm"]:has(.add-tx-card) div[data-testid="stHorizontalBlock"]:has(> div[data-testid="column"]:nth-child(2):last-child) > div[data-testid="column"]:nth-child(1) { flex: 0 0 auto !important; width: auto !important; }
+    div[data-testid="stForm"]:has(.add-tx-card) div[data-testid="stHorizontalBlock"]:has(> div[data-testid="column"]:nth-child(2):last-child) > div[data-testid="column"]:nth-child(2) { flex: 1 1 auto !important; width: auto !important; }
+    div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] { background: rgba(0,0,0,0.3) !important; padding: 6px !important; border-radius: 12px !important; display: flex !important; flex-direction: row !important; gap: 8px !important; align-items: center !important; margin: 0 !important; height: 48px !important; border: 1px solid rgba(255,255,255,0.05) !important; min-width: 200px !important; }
+    div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label { margin: 0 !important; cursor: pointer !important; padding: 0 !important; border-radius: 8px !important; border: 1px solid transparent !important; transition: all 0.3s ease !important; background: transparent !important; flex: 1 !important; display: flex !important; justify-content: center !important; align-items: center !important; height: 100% !important; }
+    div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label:hover { background: rgba(255,255,255,0.05) !important; }
+    div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label > div:first-child { display: none !important; } 
+    div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label p { font-weight: bold !important; font-size: 1.05rem !important; color: #94a3b8 !important; margin: 0 !important; padding: 0 !important; white-space: nowrap !important; line-height: 1 !important; }
+    div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label:has(input:checked):first-child, div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label[aria-checked="true"]:first-child { background: rgba(0, 255, 157, 0.15) !important; border-color: #00ff9d !important; }
+    div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label:has(input:checked):first-child p, div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label[aria-checked="true"]:first-child p { color: #00ff9d !important; }
+    div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label:has(input:checked):last-child, div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label[aria-checked="true"]:last-child { background: rgba(255, 77, 77, 0.15) !important; border-color: #ff4d4d !important; }
+    div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label:has(input:checked):last-child p, div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label[aria-checked="true"]:last-child p { color: #ff4d4d !important; }
+    div[data-testid="stForm"]:has(.add-tx-card) .stButton { display: flex !important; justify-content: flex-end !important; align-items: center !important; margin: 0 !important; padding: 0 !important; width: 100% !important; }
+    div[data-testid="stForm"]:has(.add-tx-card) .stButton > button { background: #1e2a44 !important; color: #e0e0e0 !important; padding: 0 24px !important; border-radius: 10px !important; font-size: 1.05rem !important; font-weight: 700 !important; box-shadow: 0 4px 15px rgba(0,0,0,0.25) !important; transition: all 0.3s ease !important; border: none !important; margin: 0 !important; width: auto !important; height: 48px !important; min-height: 48px !important; }
+    div[data-testid="stForm"]:has(.add-tx-card) .stButton > button:hover { transform: translateY(-2px) !important; box-shadow: 0 8px 20px rgba(255, 255, 255, 0.2) !important; color: white !important; }
+    div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row) { background: #0f172a !important; border: 1px solid rgba(255,255,255,0.05) !important; border-radius: 12px !important; padding: 12px 16px !important; margin-bottom: 12px !important; position: relative; z-index: 2; }
+    div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row) > div { padding: 0 !important; } 
+    div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row) div[data-testid="stButton"] button { background: rgba(255,255,255,0.05) !important; border-radius: 8px !important; border: none !important; height: 40px !important; width: 40px !important; display: flex !important; align-items: center !important; justify-content: center !important; padding: 0 !important; margin: 0 auto !important; font-size: 1.2rem !important; transition: all 0.2s !important; }
+    div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row) div[data-testid="stButton"] button:hover { background: rgba(255,255,255,0.15) !important; transform: scale(1.05) !important; }
+    @keyframes rollDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+    div[data-testid="stForm"]:has(.edit-rollout) { animation: rollDown 0.3s ease forwards !important; background: rgba(0,0,0,0.2) !important; border-left: 3px solid #00ff9d !important; border-radius: 0 0 12px 12px !important; border-top: none !important; border-right: none !important; border-bottom: none !important; padding: 16px !important; margin-top: -24px !important; margin-bottom: 20px !important; position: relative; z-index: 1; box-shadow: inset 0 4px 10px rgba(0,0,0,0.15) !important; }
+    div[data-testid="stVerticalBlockBorderWrapper"]:has(.del-warn) { border-color: rgba(255, 77, 77, 0.3) !important; background: rgba(15, 23, 42, 0.95) !important; border-radius: 12px !important; padding: 16px !important; text-align: center !important; margin-bottom: 12px !important; box-shadow: 0 4px 20px rgba(0,0,0,0.4) !important; }
+    div[data-testid="stVerticalBlockBorderWrapper"]:has(.del-warn) .stButton > button { border-radius: 8px !important; font-weight: 600 !important; transition: all 0.2s !important; width: 100% !important; margin-top: 8px !important; padding: 6px 12px !important; }
+    div[data-testid="stVerticalBlockBorderWrapper"]:has(.del-warn) div[data-testid="column"]:nth-child(1) .stButton > button { background: rgba(255, 77, 77, 0.1) !important; color: #ff4d4d !important; border: 1px solid rgba(255, 77, 77, 0.3) !important; }
+    div[data-testid="stVerticalBlockBorderWrapper"]:has(.del-warn) div[data-testid="column"]:nth-child(1) .stButton > button:hover { background: #ff4d4d !important; color: white !important; }
+    div[data-testid="stVerticalBlockBorderWrapper"]:has(.del-warn) div[data-testid="column"]:nth-child(2) .stButton > button { background: rgba(255, 255, 255, 0.05) !important; color: #cbd5e1 !important; border: 1px solid rgba(255, 255, 255, 0.1) !important; }
+    div[data-testid="stVerticalBlockBorderWrapper"]:has(.del-warn) div[data-testid="column"]:nth-child(2) .stButton > button:hover { background: rgba(255, 255, 255, 0.15) !important; color: white !important; }
+
+    @media (max-width: 768px) {
+        div[data-testid="stForm"]:has(.add-tx-card) div[data-testid="stHorizontalBlock"] { display: flex !important; flex-direction: row !important; flex-wrap: wrap !important; gap: 12px !important; }
+        div[data-testid="stForm"]:has(.add-tx-card) div[data-testid="stHorizontalBlock"]:has(> div[data-testid="column"]:nth-child(4)) > div[data-testid="column"] { min-width: calc(50% - 12px) !important; width: calc(50% - 12px) !important; flex: 1 1 calc(50% - 12px) !important; }
+        div[data-testid="stForm"]:has(.add-tx-card) input { padding: 6px !important; font-size: 0.95rem !important; }
+        div[data-testid="stForm"]:has(.add-tx-card) div[data-testid="stHorizontalBlock"]:has(> div[data-testid="column"]:nth-child(2):last-child) > div[data-testid="column"] { min-width: calc(50% - 12px) !important; width: calc(50% - 12px) !important; flex: 1 1 calc(50% - 12px) !important; }
+        div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] { min-width: 0 !important; width: 100% !important; }
+        div[data-testid="stForm"]:has(.add-tx-card) .stButton { display: flex !important; justify-content: flex-end !important; width: 100% !important; }
+        div[data-testid="stForm"]:has(.add-tx-card) .stButton > button { width: 100% !important; max-width: 120px !important; padding: 0 16px !important; }
+        div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row) > div > div[data-testid="stVerticalBlock"] > div[data-testid="stHorizontalBlock"] { display: flex !important; flex-direction: row !important; flex-wrap: nowrap !important; align-items: center !important; overflow: hidden !important; gap: 2px !important; }
+        div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row) div[data-testid="column"] { min-width: 0 !important; padding: 0 !important; width: auto !important; flex-shrink: 1 !important; }
+        div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row) > div > div[data-testid="stVerticalBlock"] > div[data-testid="stHorizontalBlock"] > div[data-testid="column"]:nth-child(1) { flex: 0 0 35px !important; width: 35px !important; }
+        div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row) > div > div[data-testid="stVerticalBlock"] > div[data-testid="stHorizontalBlock"] > div[data-testid="column"]:nth-child(2) { flex: 1 1 auto !important; overflow: hidden !important; text-align: left; }
+        div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row) > div > div[data-testid="stVerticalBlock"] > div[data-testid="stHorizontalBlock"] > div[data-testid="column"]:nth-child(3) { flex: 1.5 1 auto !important; overflow: hidden !important; text-align: center; }
+        div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row) > div > div[data-testid="stVerticalBlock"] > div[data-testid="stHorizontalBlock"] > div[data-testid="column"]:nth-child(4) { flex: 0 0 36px !important; width: 36px !important; }
+        div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row) > div > div[data-testid="stVerticalBlock"] > div[data-testid="stHorizontalBlock"] > div[data-testid="column"]:nth-child(5) { flex: 0 0 36px !important; width: 36px !important; }
+        div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row) div[data-testid="stButton"] button { width: 30px !important; height: 30px !important; font-size: 0.9rem !important; margin: 0 auto !important; }
+        .mobile-logo { width: 32px !important; height: 32px !important; margin-top: 0 !important; }
+        .mobile-tx-ticker { font-size: 0.95rem !important; margin-left: 2px !important;}
+        .mobile-tx-amount { font-size: 0.95rem !important; white-space: nowrap !important; }
+        .mobile-tx-sub { font-size: 0.7rem !important; white-space: nowrap !important; margin-left: 2px !important;}
+    }
+    </style>
+    """, unsafe_allow_html=True)
+
+    with st.form("add_crypto", border=False):
+        st.markdown("<div class='add-tx-card'></div><h3 style='text-align: center; color: white; margin-top: 0px; margin-bottom: 10px;'>New Transaction</h3>", unsafe_allow_html=True)
+        
+        r1c1, r1c2, r1c3, r1c4 = st.columns(4)
+        with r1c1: selected_date = st.date_input("Date", value=date(2026, 3, 25))
+        with r1c2: ticker = st.text_input("Ticker", value="BTC").upper().strip()
+        with r1c3: usdc = st.number_input("USDC Amount", value=15.0, step=0.01)
+        with r1c4: amount = st.number_input("Coin Amount", value=0.1, step=0.000001, format="%.8f")
+        
+        action_col1, action_col2 = st.columns(2)
+        with action_col1: tx_type = st.radio("Type", ["Buy", "Sell"], horizontal=True, label_visibility="collapsed")
+        with action_col2: submitted = st.form_submit_button("+ Add")
+        
+        if submitted and ticker:
+            final_usdc = usdc if tx_type == "Buy" else -usdc
+            final_amount = amount if tx_type == "Buy" else -amount
+            price = round(usdc / amount, 8) if amount > 0 else 0.0
+            new_row = pd.DataFrame([{"Datum": date_to_excel_serial(selected_date), "USDC": final_usdc, "Ticker": ticker, "Amount": final_amount, "Price": price}])
+            st.session_state.crypto_df = pd.concat([st.session_state.crypto_df, new_row], ignore_index=True)
+            save_crypto(st.session_state.crypto_df)
+            st.session_state.crypto_table_version += 1
+            st.session_state.ui_version += 1
+            st.success(f"✅ Executed {tx_type}: {amount} {ticker}")
+            st.rerun()
+
+    df_display = st.session_state.crypto_df.copy()
+    df_display['orig_idx'] = df_display.index
+    df_display = df_display.dropna(how='all').sort_values(by='Datum', ascending=False)
+
+    st.markdown("<h4 style='color: white; margin-top: 20px; margin-bottom: 15px;'>Transaction History</h4>", unsafe_allow_html=True)
+    
+    with st.container(height=550, border=False):
+        for i, r in df_display.iterrows():
+            orig_idx = r['orig_idx']
+            logo_url = get_ticker_logo(r['Ticker'])
+            amount = float(r['Amount']) if pd.notna(r['Amount']) else 0.0
+            usdc = float(r['USDC']) if pd.notna(r['USDC']) else 0.0
+            is_buy = amount >= 0
+            abs_amount, abs_usdc = abs(amount), abs(usdc)
+            price = abs_usdc / abs_amount if abs_amount > 0 else 0
+            
+            sign, color = ("+", "#00ff9d") if is_buy else ("-", "#ff4d4d")
+            action_text = "Spent" if is_buy else "Received"
+            invested_formatted, amount_formatted, price_formatted = format_money(abs_usdc), format_holdings(abs_amount, r['Ticker']), format_price(price)
+            date_str = format_datum(r['Datum'])
+
+            if st.session_state.get('confirm_delete_crypto') == orig_idx:
+                with st.container(border=True):
+                    st.markdown("<div class='del-warn'></div><h4 style='color: #ff4d4d; margin-top: 0; margin-bottom: 5px; font-size: 1.1rem; font-weight: 600;'>Delete this transaction?</h4>", unsafe_allow_html=True)
+                    c_yes, c_no = st.columns(2)
+                    with c_yes:
+                        if st.button("Delete", key=f"yes_del_{orig_idx}", use_container_width=True):
+                            st.session_state.crypto_df = st.session_state.crypto_df.drop(orig_idx).reset_index(drop=True)
+                            save_crypto(st.session_state.crypto_df)
+                            st.session_state['confirm_delete_crypto'] = None
+                            st.session_state.crypto_table_version += 1
+                            st.session_state.ui_version += 1
+                            st.rerun()
+                    with c_no:
+                        if st.button("Cancel", key=f"no_del_{orig_idx}", use_container_width=True):
+                            st.session_state['confirm_delete_crypto'] = None
+                            st.rerun()
+            else:
+                with st.container(border=True):
+                    st.markdown("<div class='tx-row'></div>", unsafe_allow_html=True)
+                    col_logo, col_ticker, col_vals, col_edit, col_del = st.columns([0.5, 2, 2.5, 0.5, 0.5])
+                    with col_logo: st.markdown(f"<img src='{logo_url}' class='mobile-logo' style='width:42px;height:42px;border-radius:50%;object-fit:contain;margin-top:6px;' onerror=\"this.src='https://via.placeholder.com/42/1e2a44/ffffff?text={r['Ticker'][0]}';\">", unsafe_allow_html=True)
+                    with col_ticker: st.markdown(f"""<div style="line-height: 1.2; margin-top: 6px; overflow: hidden; text-overflow: ellipsis;"><div class="mobile-tx-ticker" style="font-weight: 700; font-size: 1.15rem; color: #ffffff; white-space: nowrap;">{r['Ticker']}</div><div class="mobile-tx-sub" style="font-size: 0.85rem; color: #94a3b8; white-space: nowrap;">{date_str}</div></div>""", unsafe_allow_html=True)
+                    with col_vals: st.markdown(f"""<div style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; margin-top: 6px;"><div class="mobile-tx-amount" style="font-weight: 700; font-size: 1.15rem; color: {color}; white-space: nowrap;">{sign}{amount_formatted}</div><div class="mobile-tx-sub" style="font-size: 0.85rem; color: #cbd5e1; white-space: nowrap;">{action_text}: {invested_formatted} @ ${price_formatted}</div></div>""", unsafe_allow_html=True)
+                    with col_edit:
+                        if st.button("✏️", key=f"edit_btn_{orig_idx}"):
+                            st.session_state['edit_crypto_row'] = None if st.session_state.get('edit_crypto_row') == orig_idx else orig_idx
+                            st.rerun()
+                    with col_del:
+                        if st.button("🗑️", key=f"del_btn_{orig_idx}"):
+                            st.session_state['confirm_delete_crypto'] = orig_idx
+                            st.rerun()
+
+                if st.session_state.get('edit_crypto_row') == orig_idx:
+                    with st.form(f"edit_crypto_form_{orig_idx}", border=False):
+                        st.markdown("<div class='edit-rollout form-compact-marker'></div><h4 style='color: #00ff9d; margin-top: 0px; margin-bottom: 15px;'>✏️ Edit Row Details</h4>", unsafe_allow_html=True)
+                        
+                        e_r1c1, e_r1c2 = st.columns(2)
+                        with e_r1c1: new_date = st.date_input("Date", value=datetime(1899, 12, 30) + timedelta(days=int(r['Datum'])))
+                        with e_r1c2: new_ticker = st.text_input("Ticker", value=r['Ticker']).upper().strip()
+                        
+                        e_r2c1, e_r2c2 = st.columns(2)
+                        with e_r2c1: new_usdc = st.number_input("USDC Amount", value=float(abs(r['USDC'])), step=0.01)
+                        with e_r2c2: new_amount = st.number_input("Coin Amount", value=float(abs(r['Amount'])), step=0.000001, format="%.8f")
+                        
+                        tx_type_edit = st.radio("Type", ["Buy", "Sell"], horizontal=True, index=0 if is_buy else 1, label_visibility="collapsed")
+                        
+                        e_save, e_cancel = st.columns(2)
+                        with e_save: 
+                            if st.form_submit_button("💾 Save Changes"):
+                                final_usdc = new_usdc if tx_type_edit == "Buy" else -new_usdc
+                                final_amount = new_amount if tx_type_edit == "Buy" else -new_amount
+                                new_price = round(new_usdc / new_amount, 8) if new_amount > 0 else 0.0
+                                st.session_state.crypto_df.loc[orig_idx] = {"Datum": date_to_excel_serial(new_date), "USDC": final_usdc, "Ticker": new_ticker, "Amount": final_amount, "Price": new_price}
+                                save_crypto(st.session_state.crypto_df)
+                                st.session_state['edit_crypto_row'] = None
+                                st.session_state.crypto_table_version += 1
+                                st.session_state.ui_version += 1
+                                st.success("✅ Transaction updated!")
+                                st.rerun()
+                        with e_cancel:
+                            if st.form_submit_button("❌ Cancel"):
+                                st.session_state['edit_crypto_row'] = None
+                                st.rerun()
 
 # ================== PAGE 3: FIAT ==================
 elif st.session_state.page == "Fiat Transactions":
