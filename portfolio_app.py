@@ -11,129 +11,288 @@ import random
 from concurrent.futures import ThreadPoolExecutor
 
 # ====================== CONFIG ======================
-st.set_page_config(page_title="Portfolio", layout="wide", page_icon="logo.png", initial_sidebar_state="collapsed")
+st.set_page_config(page_title="Portfolio", layout="wide", page_icon="logo.png")
 
-PAGES = ["Home", "Crypto Transactions", "Fiat Transactions"]
-if 'page' not in st.session_state:
-    st.session_state.page = "Home"
-if 'slide_dir' not in st.session_state:
-    st.session_state.slide_dir = "none"
-
-# ====================== GLOBAL CSS & ANIMATIONS ======================
-slide_anim = "none"
-if st.session_state.slide_dir == "left":
-    slide_anim = "slideLeft 0.35s cubic-bezier(0.2, 0.8, 0.2, 1) forwards"
-elif st.session_state.slide_dir == "right":
-    slide_anim = "slideRight 0.35s cubic-bezier(0.2, 0.8, 0.2, 1) forwards"
-
-st.markdown(f"""
+# ====================== GLOBAL CSS ======================
+st.markdown("""
 <style>
-/* HIDE DEFAULT STREAMLIT CHROME COMPLETELY */
-[data-testid="collapsedControl"] {{ display: none !important; }}
-section[data-testid="stSidebar"] {{ display: none !important; }}
-header[data-testid="stHeader"] {{ display: none !important; }}
-
-/* PAGE SLIDE ANIMATIONS */
-@keyframes slideLeft {{
-    0% {{ transform: translateX(100vw); opacity: 0; }}
-    100% {{ transform: translateX(0); opacity: 1; }}
-}}
-@keyframes slideRight {{
-    0% {{ transform: translateX(-100vw); opacity: 0; }}
-    100% {{ transform: translateX(0); opacity: 1; }}
-}}
-
-div[data-testid="stMainBlockContainer"] {{
-    animation: {slide_anim};
-    padding-bottom: 95px !important; /* Space for bottom nav */
-}}
-
-.stApp {{
+.stApp {
     background: linear-gradient(180deg, #0f1724 0%, #0a0f1c 100%) !important;
-}}
+}
 .main .block-container,
 .stMain .block-container,
-div[data-testid="stMainBlockContainer"] {{
+div[data-testid="stMainBlockContainer"] {
     padding-left: 14px !important;
     padding-right: 14px !important;
     padding-top: 0px !important;
     max-width: 100% !important;
-}}
-@media (min-width: 1200px) {{
+}
+@media (min-width: 1200px) {
     .main .block-container,
-    div[data-testid="stMainBlockContainer"] {{
+    div[data-testid="stMainBlockContainer"] {
         padding-left: 18px !important;
         padding-right: 18px !important;
-    }}
-}}
-@media (max-width: 768px) {{
+    }
+}
+@media (max-width: 768px) {
     .main .block-container,
-    div[data-testid="stMainBlockContainer"] {{
+    div[data-testid="stMainBlockContainer"] {
         padding-left: 8px !important;
         padding-right: 8px !important;
-    }}
-}}
-.main, .block-container, .stMain {{
+    }
+}
+.main, .block-container, .stMain {
     padding-top: 0px !important;
-}}
+}
 
 /* Dashboard Pullable Drawer Styles */
-.dashboard-wrapper {{ position: relative; z-index: 10; }}
-.glossy-header-label {{ cursor: pointer; display: block; position: relative; z-index: 3; -webkit-tap-highlight-color: transparent; }}
-.home-header {{ margin-bottom: 0 !important; padding-bottom: 30px !important; }}
-.pull-indicator {{ position: absolute; bottom: 8px; left: 50%; transform: translateX(-50%); color: #64748b; opacity: 0.8; transition: color 0.3s ease; }}
-@media (hover: hover) and (pointer: fine) {{ .glossy-header-label:hover .pull-indicator {{ color: #cbd5e1; }} }}
-.pull-indicator .eye-open {{ display: none; }}
-.pull-indicator .eye-closed {{ display: block; }}
-.dashboard-toggle:checked ~ .dashboard-wrapper .glossy-header-label .pull-indicator .eye-open {{ display: block; }}
-.dashboard-toggle:checked ~ .dashboard-wrapper .glossy-header-label .pull-indicator .eye-closed {{ display: none; }}
-.dashboard-toggle:checked ~ .dashboard-wrapper .glossy-header-label .pull-indicator {{ color: #ffffff; }}
+.dashboard-wrapper {
+    position: relative;
+    z-index: 10;
+}
+.glossy-header-label {
+    cursor: pointer;
+    display: block;
+    position: relative;
+    z-index: 3;
+    -webkit-tap-highlight-color: transparent;
+}
+.home-header {
+    margin-bottom: 0 !important;
+    padding-bottom: 30px !important;
+}
+.pull-indicator {
+    position: absolute;
+    bottom: 8px;
+    left: 50%;
+    transform: translateX(-50%);
+    color: #64748b;
+    opacity: 0.8;
+    transition: color 0.3s ease;
+}
+@media (hover: hover) and (pointer: fine) {
+    .glossy-header-label:hover .pull-indicator {
+        color: #cbd5e1;
+    }
+}
+.pull-indicator .eye-open { display: none; }
+.pull-indicator .eye-closed { display: block; }
 
-.stats-layer {{ position: relative; z-index: 1; margin-top: -60px !important; transition: margin-top 0.4s cubic-bezier(0.4, 0, 0.2, 1); margin-bottom: 24px; }}
-.dashboard-toggle:checked ~ .dashboard-wrapper .stats-layer {{ margin-top: 14px !important; }}
+.dashboard-toggle:checked ~ .dashboard-wrapper .glossy-header-label .pull-indicator .eye-open { display: block; }
+.dashboard-toggle:checked ~ .dashboard-wrapper .glossy-header-label .pull-indicator .eye-closed { display: none; }
+.dashboard-toggle:checked ~ .dashboard-wrapper .glossy-header-label .pull-indicator { color: #ffffff; }
+
+.stats-layer {
+    position: relative;
+    z-index: 1;
+    margin-top: -60px !important; 
+    transition: margin-top 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    margin-bottom: 24px;
+}
+.dashboard-toggle:checked ~ .dashboard-wrapper .stats-layer {
+    margin-top: 14px !important;
+}
 
 /* Force 3 columns globally without wrapping */
-.stats-layer-inner {{ display: grid !important; grid-template-columns: repeat(3, 1fr) !important; gap: 14px; width: 100%; }}
+.stats-layer-inner {
+    display: grid !important;
+    grid-template-columns: repeat(3, 1fr) !important;
+    gap: 14px;
+    width: 100%;
+}
 
 /* Tucked Text Fade Out */
-.dash-value {{ font-size: clamp(14px, 2.5vw, 24px) !important; font-weight: 700; line-height: 1.05; color: #ffffff; position: absolute; top: 20px; left: 0; width: 100%; text-align: center; margin: 0; transition: opacity 0.3s ease; padding: 0 4px; box-sizing: border-box; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }}
-.dashboard-toggle:not(:checked) ~ .dashboard-wrapper .stats-layer .dash-value {{ opacity: 0; pointer-events: none; }}
+.dash-value {
+    font-size: clamp(14px, 2.5vw, 24px) !important;
+    font-weight: 700;
+    line-height: 1.05;
+    color: #ffffff;
+    position: absolute;
+    top: 20px;
+    left: 0;
+    width: 100%;
+    text-align: center;
+    margin: 0;
+    transition: opacity 0.3s ease;
+    padding: 0 4px;
+    box-sizing: border-box;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.dashboard-toggle:not(:checked) ~ .dashboard-wrapper .stats-layer .dash-value {
+    opacity: 0;
+    pointer-events: none;
+}
 
-.dash-label {{ font-size: 11px !important; font-weight: 600; letter-spacing: 1.5px; text-transform: uppercase; color: #94a3b8; line-height: 1.2; position: absolute; bottom: 8px; left: 0; width: 100%; text-align: center; }}
+.dash-label {
+    font-size: 11px !important;
+    font-weight: 600;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: #94a3b8;
+    line-height: 1.2;
+    position: absolute;
+    bottom: 8px;
+    left: 0;
+    width: 100%;
+    text-align: center;
+}
 
-.glossy-header {{ position: relative; overflow: hidden; background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); border: 1px solid rgba(255,255,255,0.05); border-radius: 18px; box-shadow: 0 10px 30px rgba(0,0,0,0.4); transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.4s ease, border-color 0.4s ease; padding: 32px 24px; min-height: 130px; font-size: 29px; font-weight: 700; letter-spacing: 1.5px; line-height: 1.1; display: flex; align-items: center; justify-content: center; gap: 16px; width: 100% !important; margin-top: 68px; margin-bottom: 38px; }}
+.glossy-header {
+    position: relative;
+    overflow: hidden;
+    background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+    border: 1px solid rgba(255,255,255,0.05);
+    border-radius: 18px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.4);
+    transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.4s ease, border-color 0.4s ease;
+    padding: 32px 24px;
+    min-height: 130px;
+    font-size: 29px;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    line-height: 1.1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    width: 100% !important;
+    margin-top: 68px;
+    margin-bottom: 38px;
+}
 
-@media (hover: hover) and (pointer: fine) {{ .glossy-header-label:hover .glossy-header {{ transform: translateY(-4px) scale(1.01); box-shadow: 0 15px 40px rgba(0, 0, 0, 0.5); border-color: rgba(255, 255, 255, 0.15); }} }}
-.dashboard-toggle:checked ~ .dashboard-wrapper .glossy-header {{ transform: translateY(-4px) scale(1.01); box-shadow: 0 15px 40px rgba(0, 0, 0, 0.5); border-color: rgba(255, 255, 255, 0.15); }}
+/* PC Hover and Sync with Dashboard Toggle */
+@media (hover: hover) and (pointer: fine) {
+    .glossy-header-label:hover .glossy-header {
+        transform: translateY(-4px) scale(1.01);
+        box-shadow: 0 15px 40px rgba(0, 0, 0, 0.5);
+        border-color: rgba(255, 255, 255, 0.15);
+    }
+}
+.dashboard-toggle:checked ~ .dashboard-wrapper .glossy-header {
+    transform: translateY(-4px) scale(1.01);
+    box-shadow: 0 15px 40px rgba(0, 0, 0, 0.5);
+    border-color: rgba(255, 255, 255, 0.15);
+}
 
-.glossy-box {{ position: relative; overflow: hidden; background: linear-gradient(180deg, #162032 0%, #0f172a 100%); border: 1px solid rgba(255,255,255,0.05); border-radius: 18px; box-shadow: 0 8px 24px rgba(0,0,0,0.4); transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); padding: 28px 30px; text-align: center; flex: 1; min-width: 220px; display: flex; flex-direction: column; justify-content: center; }}
+.glossy-box {
+    position: relative;
+    overflow: hidden;
+    background: linear-gradient(180deg, #162032 0%, #0f172a 100%);
+    border: 1px solid rgba(255,255,255,0.05);
+    border-radius: 18px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    padding: 28px 30px;
+    text-align: center;
+    flex: 1;
+    min-width: 220px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
 
-.glossy-box:not(.swapped) > div:first-child {{ font-size: 12px; font-weight: 600; letter-spacing: 1.5px; text-transform: uppercase; color: #94a3b8; margin-bottom: 6px; line-height: 1.2; }}
-.glossy-box:not(.swapped) > div:last-child {{ font-size: 27px; font-weight: 700; line-height: 1.05; color: #ffffff; }}
+.glossy-box:not(.swapped) > div:first-child {
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: #94a3b8;
+    margin-bottom: 6px;
+    line-height: 1.2;
+}
+.glossy-box:not(.swapped) > div:last-child {
+    font-size: 27px;
+    font-weight: 700;
+    line-height: 1.05;
+    color: #ffffff;
+}
 
-.glossy-box.swapped {{ min-width: 0 !important; height: 80px !important; min-height: 80px !important; max-height: 80px !important; padding: 0; display: block; }}
+.glossy-box.swapped {
+    min-width: 0 !important;
+    height: 80px !important;
+    min-height: 80px !important;
+    max-height: 80px !important;
+    padding: 0;
+    display: block;
+}
 
 /* Subdued and Smaller USDC Banner */
-.usdc-banner {{ position: relative; overflow: hidden; background: rgba(15, 23, 42, 0.5); border: 1px solid rgba(39, 117, 202, 0.2); border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); padding: 10px 20px; width: 90%; max-width: 400px; margin: -15px auto 12px auto !important; display: flex; align-items: center; justify-content: space-between; }}
-.usdc-banner-left {{ display: flex; align-items: center; gap: 12px; }}
-.usdc-banner-left img {{ width: 28px; height: 28px; border-radius: 50%; object-fit: contain; opacity: 0.85; }}
-.usdc-banner-title {{ font-size: 1.05rem; font-weight: 600; color: #e2e8f0; display: flex; align-items: center; gap: 8px; }}
-.usdc-banner-subtitle {{ font-size: 0.75rem; font-weight: 500; color: #64748b; }}
-.usdc-banner-amount {{ font-size: 1.2rem; font-weight: 600; color: #e2e8f0; }}
+.usdc-banner {
+    position: relative;
+    overflow: hidden;
+    background: rgba(15, 23, 42, 0.5);
+    border: 1px solid rgba(39, 117, 202, 0.2);
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    padding: 10px 20px;
+    width: 90%; 
+    max-width: 400px; 
+    margin: -15px auto 12px auto !important;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+.usdc-banner-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+.usdc-banner-left img {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    object-fit: contain;
+    opacity: 0.85;
+}
+.usdc-banner-title {
+    font-size: 1.05rem;
+    font-weight: 600;
+    color: #e2e8f0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.usdc-banner-subtitle {
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: #64748b;
+}
+.usdc-banner-amount {
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: #e2e8f0;
+}
 
 /* Native CSS Privacy Mode for USDC Banner */
-.dashboard-toggle:not(:checked) ~ .usdc-banner .usdc-banner-amount {{ font-size: 0 !important; }}
-.dashboard-toggle:not(:checked) ~ .usdc-banner .usdc-banner-amount::after {{ content: '***'; font-size: 1.2rem; color: #e2e8f0; }}
+.dashboard-toggle:not(:checked) ~ .usdc-banner .usdc-banner-amount {
+    font-size: 0 !important;
+}
+.dashboard-toggle:not(:checked) ~ .usdc-banner .usdc-banner-amount::after {
+    content: '***';
+    font-size: 1.2rem;
+    color: #e2e8f0;
+}
 
 /* GLOBALLY HIDE NUMBER INPUT STEP BUTTONS (+ / -) */
-button[aria-label="Step Up"], button[aria-label="Step Down"], button[data-testid="stNumberInputStepUp"], button[data-testid="stNumberInputStepDown"] {{ display: none !important; }}
-input[type="number"]::-webkit-inner-spin-button, input[type="number"]::-webkit-outer-spin-button {{ -webkit-appearance: none; margin: 0; }}
-input[type="number"] {{ -moz-appearance: textfield; }}
+button[aria-label="Step Up"],
+button[aria-label="Step Down"],
+button[data-testid="stNumberInputStepUp"],
+button[data-testid="stNumberInputStepDown"] {
+    display: none !important;
+}
+input[type="number"]::-webkit-inner-spin-button, 
+input[type="number"]::-webkit-outer-spin-button { 
+    -webkit-appearance: none; 
+    margin: 0; 
+}
+input[type="number"] {
+    -moz-appearance: textfield;
+}
+
 </style>
 """, unsafe_allow_html=True)
-
-# Instantly reset slide animation state so it doesn't trigger on internal interactions
-st.session_state.slide_dir = "none"
 
 # ====================== SVG ICONS ======================
 DASHBOARD_ICON = '''<svg xmlns="http://www.w3.org/2000/svg" width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="#00ff9d" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>'''
@@ -151,7 +310,8 @@ FIAT_JSON = DATA_DIR / "fiat_transactions.json"
 
 # ====================== DATE HELPERS ======================
 def format_datum(datum_val):
-    if pd.isna(datum_val) or datum_val == "": return ""
+    if pd.isna(datum_val) or datum_val == "":
+        return ""
     try:
         excel_base = datetime(1899, 12, 30)
         date_obj = excel_base + timedelta(days=int(float(datum_val)))
@@ -169,23 +329,6 @@ def parse_excel_date(x):
         return (datetime(1899, 12, 30) + timedelta(days=int(float(x)))).date()
     except:
         return datetime.now().date()
-
-def get_max_history_limit(crypto_df, fiat_df):
-    all_dates = []
-    if not fiat_df.empty: all_dates.extend(fiat_df['Datum'].apply(parse_excel_date).tolist())
-    if not crypto_df.empty: all_dates.extend(crypto_df['Datum'].apply(parse_excel_date).tolist())
-        
-    if not all_dates: limit = 365
-    else:
-        min_date = min(all_dates)
-        today = datetime.now().date()
-        if min_date > today: min_date = today
-        limit = (today - min_date).days + 5
-        
-    today_dt = datetime.now()
-    ytd_days = (today_dt - datetime(today_dt.year, 1, 1)).days
-    limit = max(limit, ytd_days + 5, 95)
-    return min(2000, limit)
 
 # ====================== INITIAL DATA ======================
 def get_initial_crypto_df():
@@ -213,19 +356,24 @@ def get_initial_fiat_df():
 
 # ====================== LOAD / SAVE ======================
 def load_or_init_crypto():
-    if CRYPTO_JSON.exists(): return pd.read_json(CRYPTO_JSON)
+    if CRYPTO_JSON.exists():
+        return pd.read_json(CRYPTO_JSON)
     df = get_initial_crypto_df()
     save_crypto(df)
     return df
 
 def load_or_init_fiat():
-    if FIAT_JSON.exists(): return pd.read_json(FIAT_JSON)
+    if FIAT_JSON.exists():
+        return pd.read_json(FIAT_JSON)
     df = get_initial_fiat_df()
     save_fiat(df)
     return df
 
-def save_crypto(df): df.to_json(CRYPTO_JSON, orient="records", indent=2)
-def save_fiat(df): df.to_json(FIAT_JSON, orient="records", indent=2)
+def save_crypto(df):
+    df.to_json(CRYPTO_JSON, orient="records", indent=2)
+
+def save_fiat(df):
+    df.to_json(FIAT_JSON, orient="records", indent=2)
 
 # ====================== CRYPTOCOMPARE MAPPING ======================
 CRYPTOCOMPARE_SYMBOL_MAP = {
@@ -243,13 +391,15 @@ def get_with_retry(url: str, headers: dict, timeout: int = 12, retries: int = 4)
             data = resp.json()
             if isinstance(data, dict) and data.get('Response') == 'Error':
                 msg = data.get('Message', '').lower()
+                # If rate limit hit, sleep and let it organically retry
                 if 'rate limit' in msg:
                     time.sleep(1.5 ** attempt)
                     continue
-                return None
+                return None  # Fast fail only if invalid symbol
             return data
         except Exception:
-            if attempt == retries - 1: return None
+            if attempt == retries - 1:
+                return None
             time.sleep(1.0 ** attempt)
     return None
 
@@ -287,10 +437,12 @@ def fetch_all_historical_data(coins_tuple: tuple, limit: int, refresh_key: int):
             return coin, {datetime.fromtimestamp(d['time']).date(): float(d['close']) for d in data['Data']['Data']}
         return coin, {}
 
+    # Strict pool limit ensures we don't trigger the API's rate limits, avoiding the flatline bug
     with ThreadPoolExecutor(max_workers=5) as executor:
         results = executor.map(fetch_coin, coins_tuple)
         for coin, hist in results:
             if hist: prices_dict[coin] = hist
+                
     return prices_dict
 
 def get_base_prices(prices_dict, coins):
@@ -302,8 +454,10 @@ def get_base_prices(prices_dict, coins):
         hist = prices_dict.get(coin, {})
         if not hist: continue
         
+        # Sort chronologically, strictly avoiding timezone matching bugs
         sorted_dates = sorted(hist.keys())
         prices = [hist[d] for d in sorted_dates]
+        
         if not prices: continue
 
         def get_p(days_back):
@@ -376,6 +530,7 @@ def build_portfolio_history(crypto_df, fiat_df, last_prices, hist_dict):
         
     for coin in fetch_coins:
         live_p = last_prices.get(coin, 0.0)
+        # Prevents mathematical flatline if BTC network response ever failed completely
         if live_p == 0.0 and coin == 'BTC':
             live_p = 65000.0 
             
@@ -399,6 +554,7 @@ def build_portfolio_history(crypto_df, fiat_df, last_prices, hist_dict):
 
     total_portfolio_value = daily_crypto_value + cum_unused_usdc
 
+    # Re-calculate BTC Benchmark properly tracking historical prices without dividing by constant flatline
     if 'BTC' in prices_df.columns and not prices_df['BTC'].empty and prices_df['BTC'].sum() > 0:
         btc_prices = prices_df['BTC'].replace(0, 1) 
         btc_bought = daily_fiat_usdc / btc_prices
@@ -485,7 +641,8 @@ def get_ticker_logo(ticker: str) -> str:
         'BNB': 'https://assets.coingecko.com/coins/images/825/small/binance-coin-logo.png',
         'TRX': 'https://assets.coingecko.com/coins/images/1094/small/tron-logo.png',
     }
-    if ticker in known: return known[ticker]
+    if ticker in known:
+        return known[ticker]
     return f"https://cryptologos.cc/logos/{ticker.lower()}-logo.png"
 
 def get_ticker_color(ticker: str) -> str:
@@ -496,9 +653,12 @@ def get_ticker_color(ticker: str) -> str:
         'SUI': '#60a5fa', 'LINK': '#1e3a8a', 'BNB': '#f4c430',
         'TRX': '#ff2d55'
     }
-    if ticker in known: return known[ticker]
+    if ticker in known:
+        return known[ticker]
+    
     c = f"#{hashlib.md5(ticker.encode()).hexdigest()[:6]}"
-    if c == '#000000': return '#ffffff'
+    if c == '#000000': 
+        return '#ffffff'
     return c
 
 def get_chart_color(ticker: str) -> str:
@@ -522,7 +682,8 @@ def format_holdings(val, ticker=None):
     try:
         val = float(val)
         if pd.isna(val): return ""
-        if ticker == "BTC": return f"{val:,.6f}".replace(',', '.')
+        if ticker == "BTC":
+            return f"{val:,.6f}".replace(',', '.')
         return f"{val:,.4f}".replace(',', '.')
     except:
         return str(val)
@@ -539,20 +700,55 @@ def format_price(val):
     try:
         val = float(val)
         if pd.isna(val): return ""
-        if abs(val) < 1: return f"{val:.4f}"
-        return f"{val:,.2f}"
+        if abs(val) < 1:
+            return f"{val:.4f}"
+        else:
+            return f"{val:,.2f}"
     except:
         return str(val)
 
 # ====================== SESSION STATE ======================
-if 'crypto_df' not in st.session_state: st.session_state.crypto_df = load_or_init_crypto()
-if 'fiat_df' not in st.session_state: st.session_state.fiat_df = load_or_init_fiat()
-if 'crypto_table_version' not in st.session_state: st.session_state.crypto_table_version = 0
-if 'fiat_table_version' not in st.session_state: st.session_state.fiat_table_version = 0
-if 'ui_version' not in st.session_state: st.session_state.ui_version = 0
-if 'last_known_prices' not in st.session_state: st.session_state.last_known_prices = {"USDC": 1.0}
-if 'refresh_key' not in st.session_state: st.session_state.refresh_key = random.randint(100000, 999999)
-if 'portfolio_cache' not in st.session_state: st.session_state.portfolio_cache = {}
+if 'crypto_df' not in st.session_state:
+    st.session_state.crypto_df = load_or_init_crypto()
+if 'fiat_df' not in st.session_state:
+    st.session_state.fiat_df = load_or_init_fiat()
+if 'crypto_table_version' not in st.session_state:
+    st.session_state.crypto_table_version = 0
+if 'fiat_table_version' not in st.session_state:
+    st.session_state.fiat_table_version = 0
+if 'ui_version' not in st.session_state:
+    st.session_state.ui_version = 0
+if 'page' not in st.session_state:
+    st.session_state.page = "Home"
+if 'last_known_prices' not in st.session_state:
+    st.session_state.last_known_prices = {"USDC": 1.0}
+if 'refresh_key' not in st.session_state:
+    st.session_state.refresh_key = random.randint(100000, 999999)
+if 'portfolio_cache' not in st.session_state:
+    st.session_state.portfolio_cache = {}
+
+# ====================== SIDEBAR ======================
+with st.sidebar:
+    nav_items = [
+        ("🏠 Overview", "Home"),
+        ("📊 Crypto Transactions", "Crypto Transactions"),
+        ("💰 Fiat Transactions", "Fiat Transactions")
+    ]
+    for label, key in nav_items:
+        if st.button(label, key=f"nav_{key}", use_container_width=True):
+            st.session_state.page = key
+            st.session_state.ui_version += 1
+            st.rerun()
+    st.divider()
+    if st.button("🔄 Refresh All Prices & Charts", use_container_width=True):
+        st.session_state.refresh_key = random.randint(100000, 999999)
+        st.session_state.ui_version += 1
+        st.success("✅ Prices & charts refreshed!")
+        st.rerun()
+    if st.button("💾 Download Backup", use_container_width=True):
+        data = {"crypto": json.loads(st.session_state.crypto_df.to_json(orient="records")),
+                "fiat": json.loads(st.session_state.fiat_df.to_json(orient="records"))}
+        st.download_button("Download JSON", json.dumps(data, indent=2), "portfolio_backup.json", "application/json")
 
 # ====================== MAIN CONTENT ======================
 main_container = st.empty()
@@ -565,10 +761,14 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
     if st.session_state.page == "Home":
 
         # ================== ZERO-LATENCY CACHE ARCHITECTURE ==================
+        # This completely skips ALL pandas recalculations and dictionary loops when you simply swap pages.
+        # It guarantees the page swap will occur instantly without blocking the server thread.
         current_hash = f"{st.session_state.crypto_table_version}_{st.session_state.fiat_table_version}_{st.session_state.refresh_key}"
 
         if st.session_state.portfolio_cache.get('hash') != current_hash:
             fetch_tickers = tuple(sorted(set([t.upper() for t in st.session_state.crypto_df['Ticker'] if t.upper() != 'USDC']) | {'BTC'}))
+            
+            # Request exact limit to guarantee 90D/YTD math always finds chronological prices
             limit = 2000 
             
             live_prices = get_all_cryptocompare_prices(fetch_tickers, st.session_state.refresh_key)
@@ -589,6 +789,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                 st.session_state.crypto_df, st.session_state.fiat_df, live_prices, hist_dict
             )
 
+            # Assign to the instant bypass vault
             st.session_state.portfolio_cache = {
                 'hash': current_hash,
                 'df_port': df_port,
@@ -602,6 +803,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                 'base_prices': base_prices
             }
 
+        # PULL FROM INSTANT VAULT
         vault = st.session_state.portfolio_cache
         df_port = vault['df_port']
         total_value = vault['total_value']
@@ -2324,19 +2526,6 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
 """
         components.html(full_html, height=380, scrolling=False)
 
-        st.markdown("<hr style='border-color: rgba(255,255,255,0.1); margin-top: 40px;'>", unsafe_allow_html=True)
-        with st.expander("⚙️ System Settings & Backup"):
-            sc1, sc2 = st.columns(2)
-            with sc1:
-                if st.button("🔄 Refresh All Prices", use_container_width=True):
-                    st.session_state.refresh_key = random.randint(100000, 999999)
-                    st.session_state.ui_version += 1
-                    st.rerun()
-            with sc2:
-                data = {"crypto": json.loads(st.session_state.crypto_df.to_json(orient="records")),
-                        "fiat": json.loads(st.session_state.fiat_df.to_json(orient="records"))}
-                st.download_button("💾 Download Backup", json.dumps(data, indent=2), "portfolio_backup.json", "application/json", use_container_width=True)
-
     # ====================== CRYPTO TRANSACTIONS ======================
     elif st.session_state.page == "Crypto Transactions":
         glossy_header("Crypto Transactions", CRYPTO_ICON)
@@ -2546,9 +2735,9 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
            7. MOBILE OVERRIDES (IRONCLAD)
            ============================================================== */
         @media (max-width: 768px) {
-            .stApp { padding-top: 50px !important;
+            .stApp { padding-top: 72px !important;
             }
-            .glossy-header { margin-top: 24px !important; margin-bottom: 24px !important;
+            .glossy-header { margin-top: 48px !important; margin-bottom: 24px !important;
             padding: 20px 16px !important; font-size: 22px !important; min-height: 90px; }
             .home-header { margin-bottom: 0 !important;
             }
@@ -2922,145 +3111,3 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                 st.session_state.fiat_table_version += 1
                 st.session_state.ui_version += 1
                 st.rerun()
-
-
-# ====================== BOTTOM NAVIGATION COMPONENT ======================
-def render_bottom_nav(current_page):
-    nav_html = f"""
-    <!DOCTYPE html>
-    <html>
-    <head>
-    <style>
-        body {{ margin: 0; padding: 0; font-family: system-ui, sans-serif; background: transparent; }}
-        .bottom-nav {{
-            display: flex; justify-content: space-around; align-items: center;
-            height: 100%; width: 100%;
-            background: rgba(15, 23, 42, 0.95);
-            backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px);
-            border-top: 1px solid rgba(255,255,255,0.08);
-            padding-bottom: env(safe-area-inset-bottom);
-            box-shadow: 0 -4px 30px rgba(0,0,0,0.5);
-        }}
-        .nav-item {{
-            flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
-            color: #64748b; font-size: 11px; font-weight: 600; text-transform: uppercase; cursor: pointer;
-            height: 100%; transition: all 0.3s;
-            -webkit-tap-highlight-color: transparent;
-        }}
-        .nav-item.active {{ color: #00ff9d; }}
-        .nav-item svg {{ width: 24px; height: 24px; margin-bottom: 4px; transition: transform 0.2s; }}
-        .nav-item.active svg {{ transform: translateY(-2px) scale(1.1); filter: drop-shadow(0 2px 6px rgba(0,255,157,0.4)); }}
-    </style>
-    </head>
-    <body>
-        <div class="bottom-nav">
-            <div class="nav-item {'active' if current_page == 'Home' else ''}" onclick="nav('Nav_Home')">
-                {DASHBOARD_ICON.replace('stroke="#00ff9d"', 'stroke="currentColor"')}
-                <span>Overview</span>
-            </div>
-            <div class="nav-item {'active' if current_page == 'Crypto Transactions' else ''}" onclick="nav('Nav_Crypto')">
-                {CRYPTO_ICON.replace('stroke="#00ff9d"', 'stroke="currentColor"')}
-                <span>Crypto</span>
-            </div>
-            <div class="nav-item {'active' if current_page == 'Fiat Transactions' else ''}" onclick="nav('Nav_Fiat')">
-                {FIAT_ICON.replace('stroke="#00ff9d"', 'stroke="currentColor"')}
-                <span>Fiat</span>
-            </div>
-        </div>
-        <script>
-            const iframe = window.frameElement;
-            if(iframe) {{
-                iframe.style.position = 'fixed';
-                iframe.style.bottom = '0';
-                iframe.style.left = '0';
-                iframe.style.width = '100vw';
-                iframe.style.height = 'calc(70px + env(safe-area-inset-bottom))';
-                iframe.style.zIndex = '999999';
-                iframe.style.border = 'none';
-                iframe.style.background = 'transparent';
-                
-                const stElem = iframe.closest('.element-container');
-                if(stElem) stElem.style.marginBottom = '0';
-            }}
-
-            function nav(target) {{
-                const buttons = window.parent.document.querySelectorAll('div[data-testid="stButton"] button');
-                for (let btn of buttons) {{
-                    if (btn.innerText === target) {{
-                        btn.click();
-                        break;
-                    }}
-                }}
-            }}
-
-            const parentDoc = window.parent.document;
-            if(!parentDoc.swipelistener_attached) {{
-                let startX = 0; let startY = 0;
-                parentDoc.addEventListener('touchstart', e => {{
-                    startX = e.touches[0].clientX;
-                    startY = e.touches[0].clientY;
-                }}, {{passive: true}});
-                
-                parentDoc.addEventListener('touchend', e => {{
-                    let endX = e.changedTouches[0].clientX;
-                    let endY = e.changedTouches[0].clientY;
-                    let diffX = startX - endX;
-                    let diffY = startY - endY;
-                    
-                    if (Math.abs(diffX) > Math.abs(diffY) * 1.5 && Math.abs(diffX) > 60) {{
-                        const target = e.target;
-                        if(target.tagName.toLowerCase() === 'canvas' || 
-                           target.closest('.highcharts-container') || 
-                           target.closest('.charts-scroll-wrapper') || 
-                           target.closest('.scroll-wrapper') || 
-                           target.closest('.flip-card')) {{
-                            return;
-                        }}
-                        if (diffX > 0) {{ nav('Nav_Next'); }} else {{ nav('Nav_Prev'); }}
-                    }}
-                }}, {{passive: true}});
-                parentDoc.swipelistener_attached = true;
-            }}
-
-            setTimeout(() => {{
-                window.parent.document.querySelectorAll('div[data-testid="stButton"] button').forEach(b => {{
-                    if(b.innerText.startsWith('Nav_')) {{
-                        const wrapper = b.closest('.element-container');
-                        if(wrapper) wrapper.style.display = 'none';
-                    }}
-                }});
-            }}, 0);
-        </script>
-    </body>
-    </html>
-    """
-    components.html(nav_html, height=0)
-
-render_bottom_nav(st.session_state.page)
-
-# ====================== HIDDEN ROUTING BUTTONS ======================
-# These are instantly hidden by the JS above, but serve as the bridge between JS Swipes and Python state
-for p in PAGES:
-    if st.button(f"Nav_{p}", key=f"btn_{p}"):
-        old_idx = PAGES.index(st.session_state.page)
-        new_idx = PAGES.index(p)
-        st.session_state.slide_dir = "left" if new_idx > old_idx else "right"
-        st.session_state.page = p
-        st.session_state.ui_version += 1
-        st.rerun()
-
-if st.button("Nav_Next", key="btn_next"):
-    idx = PAGES.index(st.session_state.page)
-    if idx < len(PAGES) - 1:
-        st.session_state.page = PAGES[idx + 1]
-        st.session_state.slide_dir = "left"
-        st.session_state.ui_version += 1
-        st.rerun()
-
-if st.button("Nav_Prev", key="btn_prev"):
-    idx = PAGES.index(st.session_state.page)
-    if idx > 0:
-        st.session_state.page = PAGES[idx - 1]
-        st.session_state.slide_dir = "right"
-        st.session_state.ui_version += 1
-        st.rerun()
