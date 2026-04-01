@@ -21,11 +21,11 @@ html, body, .stApp {
 }
 
 @keyframes slideInFromRight {
-    0% { transform: translateX(30vw); opacity: 0; }
+    0% { transform: translateX(100vw); opacity: 1; }
     100% { transform: translateX(0); opacity: 1; }
 }
 @keyframes slideInFromLeft {
-    0% { transform: translateX(-30vw); opacity: 0; }
+    0% { transform: translateX(-100vw); opacity: 1; }
     100% { transform: translateX(0); opacity: 1; }
 }
 
@@ -783,8 +783,8 @@ with st.sidebar:
                 "fiat": json.loads(st.session_state.fiat_df.to_json(orient="records"))}
         st.download_button("Download JSON", json.dumps(data, indent=2), "portfolio_backup.json", "application/json")
 
-# ====================== GLOBAL SWIPE LISTENER ======================
-# This JS snippet tracks your finger across the whole screen and triggers the next/prev page slide.
+# ====================== GLOBAL DRAG & SWIPE LISTENER ======================
+# This physically drags the page with your finger and bounces or switches when you let go.
 swipe_js = f"""
 <script>
 (function() {{
@@ -796,57 +796,112 @@ swipe_js = f"""
     doc.body.appendChild(scriptTag);
 
     let touchstartX = 0;
-    let touchendX = 0;
     let touchstartY = 0;
-    let touchendY = 0;
+    let isDragging = false;
+    let isHorizontalSwipe = null;
+    let mainContainer = null;
+    
+    // Prevent interference with charts and internal scroll boxes
+    function isIgnoredTarget(target) {{
+        if (!target || !target.closest) return false;
+        return target.closest('.charts-scroll-wrapper') || target.closest('.scroll-wrapper');
+    }}
 
     doc.addEventListener('touchstart', e => {{
-        touchstartX = e.changedTouches[0].screenX;
-        touchstartY = e.changedTouches[0].screenY;
+        // Get fresh reference every touch in case Streamlit rebuilt the DOM
+        mainContainer = doc.querySelector('div[data-testid="stMainBlockContainer"]');
+        
+        if (e.touches.length > 1 || isIgnoredTarget(e.target) || !mainContainer) return;
+        
+        touchstartX = e.touches[0].clientX;
+        touchstartY = e.touches[0].clientY;
+        isDragging = true;
+        isHorizontalSwipe = null;
+        
+        // Remove transitions so the page instantly sticks to your finger
+        mainContainer.style.transition = 'none';
+    }}, {{passive: true}});
+
+    doc.addEventListener('touchmove', e => {{
+        if (!isDragging || !mainContainer) return;
+        
+        const currentX = e.touches[0].clientX;
+        const currentY = e.touches[0].clientY;
+        const deltaX = currentX - touchstartX;
+        const deltaY = currentY - touchstartY;
+
+        // Determine direction on first significant move
+        if (isHorizontalSwipe === null) {{
+            if (Math.abs(deltaX) > 10 && Math.abs(deltaX) > Math.abs(deltaY)) {{
+                isHorizontalSwipe = true;
+            }} else if (Math.abs(deltaY) > 10) {{
+                isHorizontalSwipe = false;
+            }}
+        }}
+
+        if (isHorizontalSwipe) {{
+            const currentPage = "{st.session_state.page}";
+            const pages = ["Home", "Crypto Transactions", "Fiat Transactions"];
+            let currentIndex = pages.indexOf(currentPage);
+            
+            let actualDelta = deltaX;
+            
+            // Add rubber-banding resistance if trying to swipe past the first/last page
+            if ((actualDelta > 0 && currentIndex === 0) || 
+                (actualDelta < 0 && currentIndex === pages.length - 1)) {{
+                actualDelta = actualDelta * 0.25; // High resistance bounce
+            }}
+            
+            // Apply physical drag to the screen
+            mainContainer.style.transform = `translateX(${{actualDelta}}px)`;
+        }}
     }}, {{passive: true}});
 
     doc.addEventListener('touchend', e => {{
-        touchendX = e.changedTouches[0].screenX;
-        touchendY = e.changedTouches[0].screenY;
+        if (!isDragging || !mainContainer) return;
+        isDragging = false;
         
-        // Ensure they aren't just scrolling up and down
-        if (Math.abs(touchendY - touchstartY) > 100) return;
+        const currentX = e.changedTouches[0].clientX;
+        const deltaX = currentX - touchstartX;
+        
+        if (isHorizontalSwipe) {{
+            // Restore smooth transition for snapping or flying out
+            mainContainer.style.transition = 'transform 0.3s ease-out';
+            
+            const threshold = window.innerWidth * 0.22; // Must swipe 22% of screen width to trigger
+            
+            const currentPage = "{st.session_state.page}";
+            const pages = ["Home", "Crypto Transactions", "Fiat Transactions"];
+            let currentIndex = pages.indexOf(currentPage);
+            
+            let targetPage = null;
+            
+            if (deltaX < -threshold && currentIndex < pages.length - 1) {{
+                // Swiped Left -> Load Next Page
+                targetPage = pages[currentIndex + 1];
+                mainContainer.style.transform = `translateX(-100vw)`;
+            }} else if (deltaX > threshold && currentIndex > 0) {{
+                // Swiped Right -> Load Prev Page
+                targetPage = pages[currentIndex - 1];
+                mainContainer.style.transform = `translateX(100vw)`;
+            }} else {{
+                // Didn't swipe far enough, or swiped past edge -> snap back to center
+                mainContainer.style.transform = `translateX(0)`;
+            }}
 
-        // Ensure they aren't swiping horizontally inside the highcharts/cards scroll areas
-        if (e.target.closest('.charts-scroll-wrapper') || e.target.closest('.scroll-wrapper')) return;
-
-        checkDirection();
+            if (targetPage) {{
+                // Trigger Streamlit load
+                const wrappers = doc.querySelectorAll('.nav-btn-wrapper');
+                wrappers.forEach(w => {{
+                    if (w.getAttribute('data-key') === targetPage) {{
+                        const btn = w.querySelector('button');
+                        // Small delay ensures the visual fly-out starts smoothly before Python blocks the thread
+                        if (btn) setTimeout(() => btn.click(), 40); 
+                    }}
+                }});
+            }}
+        }}
     }}, {{passive: true}});
-
-    function checkDirection() {{
-        const threshold = 120; // Needs a definitive, long swipe
-        const swipeLeft = touchstartX - touchendX > threshold;
-        const swipeRight = touchendX - touchstartX > threshold;
-        
-        if (!swipeLeft && !swipeRight) return;
-
-        const currentPage = "{st.session_state.page}";
-        const pages = ["Home", "Crypto Transactions", "Fiat Transactions"];
-        let currentIndex = pages.indexOf(currentPage);
-        
-        let targetPage = null;
-        if (swipeLeft && currentIndex < pages.length - 1) {{
-            targetPage = pages[currentIndex + 1];
-        }} else if (swipeRight && currentIndex > 0) {{
-            targetPage = pages[currentIndex - 1];
-        }}
-
-        if (targetPage) {{
-            // Find the hidden wrapper we injected in Python sidebar and click the button inside
-            const wrappers = doc.querySelectorAll('.nav-btn-wrapper');
-            wrappers.forEach(w => {{
-                if (w.getAttribute('data-key') === targetPage) {{
-                    const btn = w.querySelector('button');
-                    if (btn) btn.click();
-                }}
-            }});
-        }}
-    }}
 }})();
 </script>
 """
