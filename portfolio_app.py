@@ -11,7 +11,7 @@ import random
 from concurrent.futures import ThreadPoolExecutor
 
 # ====================== CONFIG ======================
-st.set_page_config(page_title="Portfolio", layout="wide", page_icon="logo.png")
+st.set_page_config(page_title="Portfolio", layout="wide", page_icon="📊")
 
 # ====================== GLOBAL CSS & SWIPE ANIMATIONS ======================
 st.markdown("""
@@ -790,132 +790,110 @@ swipe_js = """
 (function() {
     const doc = window.parent.document;
     
-    // Inject permanently into parent head so it never dies on Streamlit reruns
     if (!doc.getElementById('global-swipe-script')) {
         const script = doc.createElement('script');
         script.id = 'global-swipe-script';
-        script.innerHTML = `
-            let touchstartX = 0;
-            let touchstartY = 0;
-            let isDragging = false;
-            let isHorizontalSwipe = null;
-            let mainContainer = null;
-            window.lastSeenPage = null;
-
-            function isIgnoredTarget(target) {
-                if (!target || !target.closest) return false;
-                return target.closest('.charts-scroll-wrapper') || target.closest('.scroll-wrapper');
-            }
-
-            // Immediately snaps container back to center the exact millisecond Streamlit loads the new page
-            const observer = new MutationObserver(() => {
-                const activeBtn = document.querySelector('.nav-btn-wrapper[data-active="true"]');
-                const activePage = activeBtn ? activeBtn.getAttribute('data-key') : null;
-                if (activePage && activePage !== window.lastSeenPage) {
-                    window.lastSeenPage = activePage;
-                    mainContainer = document.querySelector('div[data-testid="stMainBlockContainer"]');
-                    if (mainContainer) {
-                        mainContainer.style.transform = '';
-                        mainContainer.style.transition = '';
-                    }
-                }
-            });
-            observer.observe(document.body, { childList: true, subtree: true });
-
-            document.addEventListener('touchstart', e => {
-                mainContainer = document.querySelector('div[data-testid="stMainBlockContainer"]');
-                if (e.touches.length > 1 || isIgnoredTarget(e.target) || !mainContainer) return;
-                
-                touchstartX = e.touches[0].clientX;
-                touchstartY = e.touches[0].clientY;
-                isDragging = true;
-                isHorizontalSwipe = null;
-                
-                mainContainer.style.animation = 'none';
-                mainContainer.style.transition = 'none';
-            }, {passive: true});
-
-            document.addEventListener('touchmove', e => {
-                if (!isDragging || !mainContainer) return;
-                
-                const currentX = e.touches[0].clientX;
-                const currentY = e.touches[0].clientY;
-                const deltaX = currentX - touchstartX;
-                const deltaY = currentY - touchstartY;
-
-                if (isHorizontalSwipe === null) {
-                    if (Math.abs(deltaX) > 10 && Math.abs(deltaX) > Math.abs(deltaY)) {
-                        isHorizontalSwipe = true;
-                    } else if (Math.abs(deltaY) > 10) {
-                        isHorizontalSwipe = false;
-                        isDragging = false;
-                    }
-                }
-
-                if (isHorizontalSwipe) {
-                    let activeBtn = document.querySelector('.nav-btn-wrapper[data-active="true"]');
-                    let activePage = activeBtn ? activeBtn.getAttribute('data-key') : "Home";
-                    const pages = ["Home", "Crypto Transactions", "Fiat Transactions"];
-                    let currentIndex = pages.indexOf(activePage);
-                    
-                    let actualDelta = deltaX;
-                    if ((actualDelta > 0 && currentIndex === 0) || 
-                        (actualDelta < 0 && currentIndex === pages.length - 1)) {
-                        actualDelta = actualDelta * 0.25; 
-                    }
-                    
-                    mainContainer.style.transform = \`translateX(${actualDelta}px)\`;
-                }
-            }, {passive: true});
-
-            document.addEventListener('touchend', e => {
-                if (!isDragging || !mainContainer || isHorizontalSwipe === false) return;
-                isDragging = false;
-                
-                if (isHorizontalSwipe) {
-                    const currentX = e.changedTouches[0].clientX;
-                    const deltaX = currentX - touchstartX;
-                    const threshold = window.innerWidth * 0.20; 
-                    
-                    let activeBtn = document.querySelector('.nav-btn-wrapper[data-active="true"]');
-                    let activePage = activeBtn ? activeBtn.getAttribute('data-key') : "Home";
-                    const pages = ["Home", "Crypto Transactions", "Fiat Transactions"];
-                    let currentIndex = pages.indexOf(activePage);
-                    
-                    let targetPage = null;
-                    
-                    if (deltaX < -threshold && currentIndex < pages.length - 1) {
-                        targetPage = pages[currentIndex + 1];
-                        mainContainer.style.transition = 'transform 0.25s ease-out';
-                        mainContainer.style.transform = \`translateX(-100vw)\`;
-                    } else if (deltaX > threshold && currentIndex > 0) {
-                        targetPage = pages[currentIndex - 1];
-                        mainContainer.style.transition = 'transform 0.25s ease-out';
-                        mainContainer.style.transform = \`translateX(100vw)\`;
-                    } else {
-                        mainContainer.style.transition = 'transform 0.3s ease-out';
-                        mainContainer.style.transform = \`translateX(0)\`;
-                    }
-
-                    if (targetPage) {
-                        const wrappers = document.querySelectorAll('.nav-btn-wrapper');
-                        wrappers.forEach(w => {
-                            if (w.getAttribute('data-key') === targetPage) {
-                                const btn = w.querySelector('button');
-                                if (btn) setTimeout(() => btn.click(), 50); 
-                            }
-                        });
-                    }
-                }
-                isHorizontalSwipe = null;
-            }, {passive: true});
-        `;
+        script.innerHTML = "let touchstartX = 0;" +
+            "let touchstartY = 0;" +
+            "let isDragging = false;" +
+            "let isHorizontalSwipe = null;" +
+            "let mainContainer = null;" +
+            "window.lastSeenPage = null;" +
+            "function isIgnoredTarget(target) {" +
+            "    if (!target || !target.closest) return false;" +
+            "    return target.closest('.charts-scroll-wrapper') || target.closest('.scroll-wrapper');" +
+            "}" +
+            "const observer = new MutationObserver(() => {" +
+            "    const activeBtn = document.querySelector('.nav-btn-wrapper[data-active=\"true\"]');" +
+            "    const activePage = activeBtn ? activeBtn.getAttribute('data-key') : null;" +
+            "    if (activePage && activePage !== window.lastSeenPage) {" +
+            "        window.lastSeenPage = activePage;" +
+            "        mainContainer = document.querySelector('div[data-testid=\"stMainBlockContainer\"]');" +
+            "        if (mainContainer) {" +
+            "            mainContainer.style.transform = '';" +
+            "            mainContainer.style.transition = '';" +
+            "        }" +
+            "    }" +
+            "});" +
+            "observer.observe(document.body, { childList: true, subtree: true });" +
+            "document.addEventListener('touchstart', e => {" +
+            "    mainContainer = document.querySelector('div[data-testid=\"stMainBlockContainer\"]');" +
+            "    if (e.touches.length > 1 || isIgnoredTarget(e.target) || !mainContainer) return;" +
+            "    touchstartX = e.touches[0].clientX;" +
+            "    touchstartY = e.touches[0].clientY;" +
+            "    isDragging = true;" +
+            "    isHorizontalSwipe = null;" +
+            "    mainContainer.style.animation = 'none';" +
+            "    mainContainer.style.transition = 'none';" +
+            "}, {passive: true});" +
+            "document.addEventListener('touchmove', e => {" +
+            "    if (!isDragging || !mainContainer) return;" +
+            "    const currentX = e.touches[0].clientX;" +
+            "    const currentY = e.touches[0].clientY;" +
+            "    const deltaX = currentX - touchstartX;" +
+            "    const deltaY = currentY - touchstartY;" +
+            "    if (isHorizontalSwipe === null) {" +
+            "        if (Math.abs(deltaX) > 10 && Math.abs(deltaX) > Math.abs(deltaY)) {" +
+            "            isHorizontalSwipe = true;" +
+            "        } else if (Math.abs(deltaY) > 10) {" +
+            "            isHorizontalSwipe = false;" +
+            "            isDragging = false;" +
+            "        }" +
+            "    }" +
+            "    if (isHorizontalSwipe) {" +
+            "        let activeBtn = document.querySelector('.nav-btn-wrapper[data-active=\"true\"]');" +
+            "        let activePage = activeBtn ? activeBtn.getAttribute('data-key') : 'Home';" +
+            "        const pages = ['Home', 'Crypto Transactions', 'Fiat Transactions'];" +
+            "        let currentIndex = pages.indexOf(activePage);" +
+            "        let actualDelta = deltaX;" +
+            "        if ((actualDelta > 0 && currentIndex === 0) || (actualDelta < 0 && currentIndex === pages.length - 1)) {" +
+            "            actualDelta = actualDelta * 0.25;" +
+            "        }" +
+            "        mainContainer.style.transform = 'translateX(' + actualDelta + 'px)';" +
+            "    }" +
+            "}, {passive: true});" +
+            "document.addEventListener('touchend', e => {" +
+            "    if (!isDragging || !mainContainer || isHorizontalSwipe === false) return;" +
+            "    isDragging = false;" +
+            "    if (isHorizontalSwipe) {" +
+            "        const currentX = e.changedTouches[0].clientX;" +
+            "        const deltaX = currentX - touchstartX;" +
+            "        const threshold = window.innerWidth * 0.20;" +
+            "        let activeBtn = document.querySelector('.nav-btn-wrapper[data-active=\"true\"]');" +
+            "        let activePage = activeBtn ? activeBtn.getAttribute('data-key') : 'Home';" +
+            "        const pages = ['Home', 'Crypto Transactions', 'Fiat Transactions'];" +
+            "        let currentIndex = pages.indexOf(activePage);" +
+            "        let targetPage = null;" +
+            "        if (deltaX < -threshold && currentIndex < pages.length - 1) {" +
+            "            targetPage = pages[currentIndex + 1];" +
+            "            mainContainer.style.transition = 'transform 0.25s ease-out';" +
+            "            mainContainer.style.transform = 'translateX(-100vw)';" +
+            "        } else if (deltaX > threshold && currentIndex > 0) {" +
+            "            targetPage = pages[currentIndex - 1];" +
+            "            mainContainer.style.transition = 'transform 0.25s ease-out';" +
+            "            mainContainer.style.transform = 'translateX(100vw)';" +
+            "        } else {" +
+            "            mainContainer.style.transition = 'transform 0.3s ease-out';" +
+            "            mainContainer.style.transform = 'translateX(0)';" +
+            "        }" +
+            "        if (targetPage) {" +
+            "            const wrappers = document.querySelectorAll('.nav-btn-wrapper');" +
+            "            wrappers.forEach(w => {" +
+            "                if (w.getAttribute('data-key') === targetPage) {" +
+            "                    const btn = w.querySelector('button');" +
+            "                    if (btn) setTimeout(() => btn.click(), 50);" +
+            "                }" +
+            "            });" +
+            "        }" +
+            "    }" +
+            "    isHorizontalSwipe = null;" +
+            "}, {passive: true});";
         doc.head.appendChild(script);
     }
 })();
 </script>
 """
-components.html(swipe_js, height=0, width=0)
+st.markdown(swipe_js, unsafe_allow_html=True)
 
 # ====================== MAIN CONTENT ======================
 main_container = st.empty()
