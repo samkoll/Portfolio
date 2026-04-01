@@ -785,6 +785,11 @@ if 'refresh_key' not in st.session_state:
 if 'portfolio_cache' not in st.session_state:
     st.session_state.portfolio_cache = {}
 
+# RESTORED MISSING FUNCTION HERE
+def glossy_header(title: str, icon_svg: str):
+    html = f"""<div class="glossy-header">{icon_svg}<span style="margin-left:12px;">{title}</span></div>"""
+    st.markdown(html, unsafe_allow_html=True)
+
 # ====================== APP NAVIGATION DOCK ======================
 st.markdown(f"""
 <div id="bottom-nav-bar">
