@@ -1679,7 +1679,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
         .flip-card {{
             flex: 0 0 420px; 
             background-color: transparent;
-            height: 310px;
+            height: 320px;
             perspective: 1200px;
             cursor: pointer;
             scroll-snap-align: center; 
@@ -1865,7 +1865,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
         }}
         
         @media (max-width: 700px) {{
-            .flip-card {{ flex: 0 0 85vw; height: 300px; }}
+            .flip-card {{ flex: 0 0 85vw; height: 305px; }}
             .coin-grid {{ padding: 0 7.5vw; gap: 16px; }}
             
             .flip-card-front, .flip-card-back {{ padding: 12px 10px; }}
@@ -2480,7 +2480,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
 </body>
 </html>
 """
-        components.html(full_html, height=370, scrolling=False)
+        components.html(full_html, height=380, scrolling=False)
 
     # ====================== CRYPTO TRANSACTIONS ======================
     elif st.session_state.page == "Crypto Transactions":
