@@ -735,17 +735,7 @@ if 'refresh_key' not in st.session_state:
 
 # ====================== SIDEBAR ======================
 with st.sidebar:
-    nav_items = [
-        ("🏠 Overview", "Home"),
-        ("📊 Crypto Transactions", "Crypto Transactions"),
-        ("💰 Fiat Transactions", "Fiat Transactions")
-    ]
-    for label, key in nav_items:
-        if st.button(label, key=f"nav_{key}", use_container_width=True):
-            st.session_state.page = key
-            st.session_state.ui_version += 1
-            st.rerun()
-    st.divider()
+    st.markdown("### Settings & Actions")
     if st.button("🔄 Refresh All Prices & Charts", use_container_width=True):
         st.session_state.refresh_key = random.randint(100000, 999999)
         st.session_state.ui_version += 1
@@ -3036,3 +3026,89 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                 st.session_state.fiat_table_version += 1
                 st.session_state.ui_version += 1
                 st.rerun()
+
+# ====================== BOTTOM NAVIGATION BAR ======================
+st.markdown('<div style="height: 90px;"></div>', unsafe_allow_html=True) # Spacer so content isn't covered
+
+with st.container():
+    st.markdown('<div class="bottom-nav-marker" style="display:none;"></div>', unsafe_allow_html=True)
+    nav_cols = st.columns(3)
+    
+    with nav_cols[0]:
+        if st.button("🏠 Overview", use_container_width=True):
+            st.session_state.page = "Home"
+            st.session_state.ui_version += 1
+            st.rerun()
+            
+    with nav_cols[1]:
+        if st.button("📊 Crypto", use_container_width=True):
+            st.session_state.page = "Crypto Transactions"
+            st.session_state.ui_version += 1
+            st.rerun()
+            
+    with nav_cols[2]:
+        if st.button("💰 Fiat", use_container_width=True):
+            st.session_state.page = "Fiat Transactions"
+            st.session_state.ui_version += 1
+            st.rerun()
+
+# Dynamically highlight the active page
+active_index = {"Home": 1, "Crypto Transactions": 2, "Fiat Transactions": 3}.get(st.session_state.page, 1)
+
+st.markdown(f"""
+<style>
+/* Pin the next block right after our marker to the bottom */
+div.element-container:has(.bottom-nav-marker) + div[data-testid="stHorizontalBlock"] {{
+    position: fixed !important;
+    bottom: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    background: rgba(15, 23, 42, 0.98) !important;
+    backdrop-filter: blur(10px) !important;
+    -webkit-backdrop-filter: blur(10px) !important;
+    border-top: 1px solid rgba(255, 255, 255, 0.05) !important;
+    padding: 10px 10px max(10px, env(safe-area-inset-bottom)) 10px !important;
+    z-index: 99999 !important;
+    margin: 0 !important;
+    box-shadow: 0 -5px 20px rgba(0,0,0,0.5) !important;
+    gap: 0 !important;
+}}
+
+/* Base Styling for Bottom Nav Buttons */
+div.element-container:has(.bottom-nav-marker) + div[data-testid="stHorizontalBlock"] button {{
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    padding: 10px 4px !important;
+    height: auto !important;
+    margin: 0 !important;
+    border-radius: 12px !important;
+    transition: all 0.2s ease !important;
+}}
+
+div.element-container:has(.bottom-nav-marker) + div[data-testid="stHorizontalBlock"] button p {{
+    color: #64748b !important;
+    font-size: clamp(11px, 3.5vw, 15px) !important;
+    font-weight: 600 !important;
+    margin: 0 !important;
+    transition: color 0.2s ease !important;
+}}
+
+div.element-container:has(.bottom-nav-marker) + div[data-testid="stHorizontalBlock"] button:hover {{
+    background: rgba(255,255,255,0.05) !important;
+}}
+
+div.element-container:has(.bottom-nav-marker) + div[data-testid="stHorizontalBlock"] button:hover p {{
+    color: #cbd5e1 !important;
+}}
+
+/* HIGHLIGHT ACTIVE STATE DYNAMICALLY */
+div.element-container:has(.bottom-nav-marker) + div[data-testid="stHorizontalBlock"] div[data-testid="column"]:nth-child({active_index}) button {{
+    background: rgba(0, 255, 157, 0.1) !important;
+}}
+
+div.element-container:has(.bottom-nav-marker) + div[data-testid="stHorizontalBlock"] div[data-testid="column"]:nth-child({active_index}) button p {{
+    color: #00ff9d !important;
+}}
+</style>
+""", unsafe_allow_html=True)
