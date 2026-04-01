@@ -11,8 +11,16 @@ from concurrent.futures import ThreadPoolExecutor
 import streamlit.components.v1 as components
 
 # ====================== CONFIG ======================
-# Using an emoji instead of a file prevents silent background crashing
 st.set_page_config(page_title="Portfolio", layout="wide", page_icon="📊")
+
+# ====================== SVG ICONS (DEFINED FIRST TO PREVENT ERRORS) ======================
+DASHBOARD_ICON = '''<svg xmlns="http://www.w3.org/2000/svg" width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="#00ff9d" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>'''
+CRYPTO_ICON = '''<svg xmlns="http://www.w3.org/2000/svg" width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="#00ff9d" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M14.5 8.5L9.5 13.5"/><path d="M9.5 8.5L14.5 13.5"/></svg>'''
+FIAT_ICON = '''<svg xmlns="http://www.w3.org/2000/svg" width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="#00ff9d" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M6 8h12"/><path d="M6 12h12"/><path d="M6 16h12"/></svg>'''
+EYE_CLOSED = '''<svg class="eye-closed" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>'''
+EYE_OPEN = '''<svg class="eye-open" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>'''
+EXTERNAL_LINK_ICON = '''<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>'''
+TV_ICON = '''<svg xmlns="http://www.w3.org/2000/svg" width="18" height="14" viewBox="0 0 28 21" fill="currentColor"><path d="M12 21H8V3h4v18zm1.5-6h3.5l3.5-4.5V21h-7v-6zM28 21h-4l-6.5-9L21 6l7 10v5z"/></svg>'''
 
 # ====================== SESSION STATE INITIALIZATION ======================
 if 'crypto_df' not in st.session_state: st.session_state.crypto_df = pd.DataFrame()
@@ -26,8 +34,11 @@ if 'last_known_prices' not in st.session_state: st.session_state.last_known_pric
 if 'refresh_key' not in st.session_state: st.session_state.refresh_key = random.randint(100000, 999999)
 if 'portfolio_cache' not in st.session_state: st.session_state.portfolio_cache = {}
 
+def glossy_header(title: str, icon_svg: str):
+    html = f"""<div class="glossy-header">{icon_svg}<span style="margin-left:12px;">{title}</span></div>"""
+    st.markdown(html, unsafe_allow_html=True)
+
 # ====================== HIDDEN ROUTING CONTROLS ======================
-# These native buttons are hidden but handle the safe Python routing when the JS clicks them
 with st.sidebar:
     nav_items = ["Home", "Crypto", "Fiat"]
     curr_idx = nav_items.index(st.session_state.page) if st.session_state.page in nav_items else 0
@@ -46,12 +57,11 @@ with st.sidebar:
         st.rerun()
 
 # ====================== GLOBAL ENGINE (BOTTOM NAV + SWIPING) ======================
-# Bypasses Streamlit DOM interference entirely to render the bottom nav and global touch logic
 js_engine = f"""
-<script>
-(function() {{
-    const doc = window.parent.document;
-    const win = window.parent;
+if (!window.mySwipeEngineLoaded) {{
+    window.mySwipeEngineLoaded = true;
+    const doc = window.parent ? window.parent.document : document;
+    const win = window.parent ? window.parent : window;
     
     if (!doc.getElementById('custom-bottom-nav-styles')) {{
         const style = doc.createElement('style');
@@ -128,10 +138,10 @@ js_engine = f"""
             
             if (Math.abs(dX) > 60 && Math.abs(dX) > Math.abs(dY)) {{
                 const current = "{st.session_state.page}";
-                if (dX > 0) {{ // Swipe Left (Finger moves left -> Go to Next)
+                if (dX > 0) {{ // Swipe Left -> Go to Next
                     if (current === "Home") win.clickStreamlitNav("Nav_Crypto");
                     else if (current === "Crypto") win.clickStreamlitNav("Nav_Fiat");
-                }} else {{ // Swipe Right (Finger moves right -> Go to Prev)
+                }} else {{ // Swipe Right -> Go to Prev
                     if (current === "Fiat") win.clickStreamlitNav("Nav_Crypto");
                     else if (current === "Crypto") win.clickStreamlitNav("Nav_Home");
                 }}
@@ -144,10 +154,24 @@ js_engine = f"""
     allItems.forEach(el => el.classList.remove('active'));
     const activeItem = doc.getElementById('nav-item-{st.session_state.page}');
     if (activeItem) activeItem.classList.add('active');
+}}
+"""
+encoded_js = json.dumps(js_engine)
+
+swipe_injector = f"""
+<script>
+(function() {{
+    const doc = window.parent.document;
+    if (!doc.getElementById('global-swipe-script')) {{
+        const script = doc.createElement('script');
+        script.id = 'global-swipe-script';
+        script.textContent = {encoded_js};
+        doc.head.appendChild(script);
+    }}
 }})();
 </script>
 """
-components.html(js_engine, height=0, width=0)
+components.html(swipe_injector, height=0, width=0)
 
 # ====================== GLOBAL CSS ANIMATIONS ======================
 anim_css = ""
@@ -420,7 +444,7 @@ def format_money(val): return f"${float(val):,.2f}" if float(val) >= 0 else f"-$
 def format_holdings(val, ticker=None): return f"{float(val):,.6f}".replace(',', '.') if ticker == "BTC" else f"{float(val):,.4f}".replace(',', '.') if not pd.isna(val) else ""
 def format_percent(val): return f"{float(val):.2f}%" if not pd.isna(val) else ""
 def format_price(val): return f"{float(val):.4f}" if abs(float(val)) < 1 else f"{float(val):,.2f}" if not pd.isna(val) else ""
-def glossy_header(title: str, icon_svg: str): st.markdown(f"""<div class="glossy-header">{icon_svg}<span style="margin-left:12px;">{title}</span></div>""", unsafe_allow_html=True)
+
 
 # ================== ZERO-LATENCY CACHE ARCHITECTURE ==================
 current_hash = f"{st.session_state.crypto_table_version}_{st.session_state.fiat_table_version}_{st.session_state.refresh_key}"
@@ -679,7 +703,10 @@ if st.session_state.page == "Home":
                     tooltip: {{ shared: true, backgroundColor: 'rgba(15, 23, 42, 0.95)', style: {{ color: '#fff' }}, borderColor: 'rgba(255,255,255,0.15)', formatter: function() {{ let s = '<b style="font-size: 13px;">' + this.points[0].key + '</b>'; const isPrivacy = document.body.classList.contains('privacy-mode'); this.points.forEach(function(point) {{ let val = isPrivacy ? '***' : formatMoneyStr(point.y); s += '<br/>' + '<span style="color:'+ point.color +'">\u25CF</span> ' + point.series.name + ': <b>' + val + '</b>'; }}); return s; }} }},
                     plotOptions: {{ column: {{ borderRadius: 4, borderWidth: 0, maxPointWidth: 40, dataLabels: {{ enabled: true, inside: false, crop: false, overflow: 'allow', style: {{ color: '#fff', textOutline: '2px #0f172a', fontWeight: 'bold', fontSize: '11px' }}, formatter: function() {{ return document.body.classList.contains('privacy-mode') ? '***' : formatMoneyStr(this.y); }} }} }} }},
                     credits: {{ enabled: false }},
-                    series: [ {{ name: 'Invested', data: [{inv_data_js}] }}, {{ name: 'Current Value', data: [{val_data_js}] }} ]
+                    series: [
+                        {{ name: 'Invested', data: [{inv_data_js}] }},
+                        {{ name: 'Current Value', data: [{val_data_js}] }}
+                    ]
                 }});
             }} catch(e) {{ console.error('InvVal fail:', e); }}
             
