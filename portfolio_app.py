@@ -25,6 +25,7 @@ div[data-testid="stMainBlockContainer"] {
     padding-left: 14px !important;
     padding-right: 14px !important;
     padding-top: 0px !important;
+    padding-bottom: 90px !important; /* Added to clear bottom nav dock */
     max-width: 100% !important;
 }
 @media (min-width: 1200px) {
@@ -43,6 +44,65 @@ div[data-testid="stMainBlockContainer"] {
 }
 .main, .block-container, .stMain {
     padding-top: 0px !important;
+}
+
+/* ---------------------------------------------------
+   NATIVE APP NAVIGATION BAR & TAB HIDING
+--------------------------------------------------- */
+div[data-testid="stTabs"] > div[role="tablist"] {
+    display: none !important; /* Completely hide native tabs */
+}
+div[data-testid="stTabs"] > div[data-baseweb="tab-panel"] {
+    padding-bottom: 20px !important; 
+}
+
+#bottom-nav-bar {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100vw;
+    height: 75px;
+    background: rgba(15, 23, 42, 0.95);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border-top: 1px solid rgba(255,255,255,0.05);
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    z-index: 999999;
+    padding-bottom: env(safe-area-inset-bottom);
+}
+.nav-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    color: #64748b;
+    text-decoration: none;
+    flex: 1;
+    height: 100%;
+    cursor: pointer;
+    transition: color 0.3s ease;
+    -webkit-tap-highlight-color: transparent;
+}
+.nav-item.active {
+    color: #00ff9d;
+}
+.nav-icon {
+    width: 24px;
+    height: 24px;
+    margin-bottom: 4px;
+}
+.nav-icon svg {
+    width: 100%;
+    height: 100%;
+    stroke: currentColor;
+    fill: none;
+}
+.nav-label {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
 }
 
 /* Dashboard Pullable Drawer Styles */
@@ -718,8 +778,6 @@ if 'fiat_table_version' not in st.session_state:
     st.session_state.fiat_table_version = 0
 if 'ui_version' not in st.session_state:
     st.session_state.ui_version = 0
-if 'page' not in st.session_state:
-    st.session_state.page = "Home"
 if 'last_known_prices' not in st.session_state:
     st.session_state.last_known_prices = {"USDC": 1.0}
 if 'refresh_key' not in st.session_state:
@@ -727,97 +785,170 @@ if 'refresh_key' not in st.session_state:
 if 'portfolio_cache' not in st.session_state:
     st.session_state.portfolio_cache = {}
 
-# ====================== SIDEBAR ======================
-with st.sidebar:
-    nav_items = [
-        ("🏠 Overview", "Home"),
-        ("📊 Crypto Transactions", "Crypto Transactions"),
-        ("💰 Fiat Transactions", "Fiat Transactions")
-    ]
-    for label, key in nav_items:
-        if st.button(label, key=f"nav_{key}", use_container_width=True):
-            st.session_state.page = key
-            st.session_state.ui_version += 1
-            st.rerun()
-    st.divider()
-    if st.button("🔄 Refresh All Prices & Charts", use_container_width=True):
-        st.session_state.refresh_key = random.randint(100000, 999999)
-        st.session_state.ui_version += 1
-        st.success("✅ Prices & charts refreshed!")
-        st.rerun()
-    if st.button("💾 Download Backup", use_container_width=True):
-        data = {"crypto": json.loads(st.session_state.crypto_df.to_json(orient="records")),
-                "fiat": json.loads(st.session_state.fiat_df.to_json(orient="records"))}
-        st.download_button("Download JSON", json.dumps(data, indent=2), "portfolio_backup.json", "application/json")
+# ====================== APP NAVIGATION DOCK ======================
+st.markdown(f"""
+<div id="bottom-nav-bar">
+    <div class="nav-item active" id="nav-item-0">
+        <div class="nav-icon">{DASHBOARD_ICON}</div>
+        <div class="nav-label">Overview</div>
+    </div>
+    <div class="nav-item" id="nav-item-1">
+        <div class="nav-icon">{CRYPTO_ICON}</div>
+        <div class="nav-label">Crypto</div>
+    </div>
+    <div class="nav-item" id="nav-item-2">
+        <div class="nav-icon">{FIAT_ICON}</div>
+        <div class="nav-label">Fiat</div>
+    </div>
+</div>
+""", unsafe_allow_html=True)
 
-# ====================== MAIN CONTENT ======================
-main_container = st.empty()
-
-def glossy_header(title: str, icon_svg: str):
-    html = f"""<div class="glossy-header">{icon_svg}<span style="margin-left:12px;">{title}</span></div>"""
-    st.markdown(html, unsafe_allow_html=True)
-
-with main_container.container(key=f"page_{st.session_state.page}_{st.session_state.ui_version}"):
-    if st.session_state.page == "Home":
-
-        # ================== ZERO-LATENCY CACHE ARCHITECTURE ==================
-        # This completely skips ALL pandas recalculations and dictionary loops when you simply swap pages.
-        # It guarantees the page swap will occur instantly without blocking the server thread.
-        current_hash = f"{st.session_state.crypto_table_version}_{st.session_state.fiat_table_version}_{st.session_state.refresh_key}"
-
-        if st.session_state.portfolio_cache.get('hash') != current_hash:
-            fetch_tickers = tuple(sorted(set([t.upper() for t in st.session_state.crypto_df['Ticker'] if t.upper() != 'USDC']) | {'BTC'}))
-            
-            # Request exact limit to guarantee 90D/YTD math always finds chronological prices
-            limit = 2000 
-            
-            live_prices = get_all_cryptocompare_prices(fetch_tickers, st.session_state.refresh_key)
-            for t, p in live_prices.items():
-                if p > 0: st.session_state.last_known_prices[t] = p
-                
-            for t in fetch_tickers:
-                if t not in live_prices or live_prices[t] == 0:
-                    live_prices[t] = st.session_state.last_known_prices.get(t, 0)
-                    
-            hist_dict = fetch_all_historical_data(fetch_tickers, limit, st.session_state.refresh_key)
-            base_prices = get_base_prices(hist_dict, fetch_tickers)
-
-            df_port, total_value, total_pnl, total_pnl_pct = calculate_portfolio(
-                st.session_state.crypto_df, st.session_state.fiat_df, live_prices, base_prices
-            )
-            history_data_raw, allocation_series_js, pnl_df = build_portfolio_history(
-                st.session_state.crypto_df, st.session_state.fiat_df, live_prices, hist_dict
-            )
-
-            # Assign to the instant bypass vault
-            st.session_state.portfolio_cache = {
-                'hash': current_hash,
-                'df_port': df_port,
-                'total_value': total_value,
-                'total_pnl': total_pnl,
-                'total_pnl_pct': total_pnl_pct,
-                'history_data_raw': history_data_raw,
-                'allocation_series_js': allocation_series_js,
-                'pnl_df': pnl_df,
-                'live_prices': live_prices,
-                'base_prices': base_prices
-            }
-
-        # PULL FROM INSTANT VAULT
-        vault = st.session_state.portfolio_cache
-        df_port = vault['df_port']
-        total_value = vault['total_value']
-        total_pnl = vault['total_pnl']
-        total_pnl_pct = vault['total_pnl_pct']
-        history_data_raw = vault['history_data_raw']
-        allocation_series_js = vault['allocation_series_js']
-        pnl_df = vault['pnl_df']
+# Inject JS router and swipe handler
+components.html("""
+    <script>
+    (function() {
+        const parentDoc = window.parent.document;
         
-        usdc_row = df_port[df_port['Ticker'] == 'USDC'].iloc[0] if not df_port[df_port['Ticker'] == 'USDC'].empty else None
-        usdc_holdings = usdc_row['Holdings'] if usdc_row is not None else 0
+        function switchTab(index) {
+            const tabs = parentDoc.querySelectorAll('button[data-baseweb="tab"]');
+            if (tabs && tabs.length > index) {
+                tabs[index].click();
+            }
+            updateActiveNav(index);
+        }
 
-        # ================== 1. DASHBOARD OVERVIEW ==================
-        value_box_html = f"""
+        function updateActiveNav(index) {
+            const navItems = parentDoc.querySelectorAll('.nav-item');
+            navItems.forEach(item => item.classList.remove('active'));
+            const activeItem = parentDoc.getElementById('nav-item-' + index);
+            if (activeItem) activeItem.classList.add('active');
+        }
+
+        // Bind click handlers to the dock icons
+        const n0 = parentDoc.getElementById('nav-item-0');
+        const n1 = parentDoc.getElementById('nav-item-1');
+        const n2 = parentDoc.getElementById('nav-item-2');
+        
+        if(n0) n0.addEventListener('click', () => switchTab(0));
+        if(n1) n1.addEventListener('click', () => switchTab(1));
+        if(n2) n2.addEventListener('click', () => switchTab(2));
+
+        // Swipe logic
+        let startX = 0, startY = 0, endX = 0, endY = 0;
+        
+        parentDoc.addEventListener('touchstart', e => {
+            startX = e.changedTouches[0].screenX;
+            startY = e.changedTouches[0].screenY;
+        }, {passive: true});
+
+        parentDoc.addEventListener('touchend', e => {
+            endX = e.changedTouches[0].screenX;
+            endY = e.changedTouches[0].screenY;
+            
+            // Allow interaction with horizontal scrolls (flip cards, charts) without jumping pages
+            const xDiff = Math.abs(endX - startX);
+            const yDiff = Math.abs(endY - startY);
+            
+            // Only register if it's a significant horizontal swipe
+            if (xDiff > yDiff && xDiff > 80) {
+                // Prevent swiping pages when inside horizontal scroll containers
+                const isScrollable = e.target.closest('.scroll-wrapper') || e.target.closest('.charts-scroll-wrapper') || e.target.closest('canvas');
+                if(isScrollable) return;
+
+                let currentTab = 0;
+                const tabs = parentDoc.querySelectorAll('button[data-baseweb="tab"]');
+                tabs.forEach((t, i) => {
+                    if(t.getAttribute('aria-selected') === 'true') {
+                        currentTab = i;
+                    }
+                });
+
+                if (endX < startX && currentTab < 2) { // Swipe Left (Next tab)
+                    switchTab(currentTab + 1);
+                }
+                if (endX > startX && currentTab > 0) { // Swipe Right (Prev tab)
+                    switchTab(currentTab - 1);
+                }
+            }
+        }, {passive: true});
+        
+        // Sync initial active state after load/rerun
+        setTimeout(() => {
+            let currentTab = 0;
+            const tabs = parentDoc.querySelectorAll('button[data-baseweb="tab"]');
+            if(tabs) {
+                tabs.forEach((t, i) => {
+                    if(t.getAttribute('aria-selected') === 'true') currentTab = i;
+                });
+                updateActiveNav(currentTab);
+            }
+        }, 500);
+
+    })();
+    </script>
+""", height=0, width=0)
+
+# ====================== MAIN CONTENT TABS ======================
+tab_home, tab_crypto, tab_fiat = st.tabs(["Overview", "Crypto", "Fiat"])
+
+with tab_home:
+
+    # ================== ZERO-LATENCY CACHE ARCHITECTURE ==================
+    current_hash = f"{st.session_state.crypto_table_version}_{st.session_state.fiat_table_version}_{st.session_state.refresh_key}"
+
+    if st.session_state.portfolio_cache.get('hash') != current_hash:
+        fetch_tickers = tuple(sorted(set([t.upper() for t in st.session_state.crypto_df['Ticker'] if t.upper() != 'USDC']) | {'BTC'}))
+        
+        # Request exact limit to guarantee 90D/YTD math always finds chronological prices
+        limit = 2000 
+        
+        live_prices = get_all_cryptocompare_prices(fetch_tickers, st.session_state.refresh_key)
+        for t, p in live_prices.items():
+            if p > 0: st.session_state.last_known_prices[t] = p
+            
+        for t in fetch_tickers:
+            if t not in live_prices or live_prices[t] == 0:
+                live_prices[t] = st.session_state.last_known_prices.get(t, 0)
+                
+        hist_dict = fetch_all_historical_data(fetch_tickers, limit, st.session_state.refresh_key)
+        base_prices = get_base_prices(hist_dict, fetch_tickers)
+
+        df_port, total_value, total_pnl, total_pnl_pct = calculate_portfolio(
+            st.session_state.crypto_df, st.session_state.fiat_df, live_prices, base_prices
+        )
+        history_data_raw, allocation_series_js, pnl_df = build_portfolio_history(
+            st.session_state.crypto_df, st.session_state.fiat_df, live_prices, hist_dict
+        )
+
+        # Assign to the instant bypass vault
+        st.session_state.portfolio_cache = {
+            'hash': current_hash,
+            'df_port': df_port,
+            'total_value': total_value,
+            'total_pnl': total_pnl,
+            'total_pnl_pct': total_pnl_pct,
+            'history_data_raw': history_data_raw,
+            'allocation_series_js': allocation_series_js,
+            'pnl_df': pnl_df,
+            'live_prices': live_prices,
+            'base_prices': base_prices
+        }
+
+    # PULL FROM INSTANT VAULT
+    vault = st.session_state.portfolio_cache
+    df_port = vault['df_port']
+    total_value = vault['total_value']
+    total_pnl = vault['total_pnl']
+    total_pnl_pct = vault['total_pnl_pct']
+    history_data_raw = vault['history_data_raw']
+    allocation_series_js = vault['allocation_series_js']
+    pnl_df = vault['pnl_df']
+    
+    usdc_row = df_port[df_port['Ticker'] == 'USDC'].iloc[0] if not df_port[df_port['Ticker'] == 'USDC'].empty else None
+    usdc_holdings = usdc_row['Holdings'] if usdc_row is not None else 0
+
+    # ================== 1. DASHBOARD OVERVIEW ==================
+    value_box_html = f"""
 <input type="checkbox" id="dash-toggle" class="dashboard-toggle" style="display:none;">
 <div class="dashboard-wrapper">
 <label for="dash-toggle" class="glossy-header-label">
@@ -838,751 +969,751 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
 </div>
 </div>
 """
-        st.markdown(value_box_html, unsafe_allow_html=True)
+    st.markdown(value_box_html, unsafe_allow_html=True)
 
-        # ================== 2. ASSEMBLE ALL CHARTS DATA ==================
-        hist_val_js_list = []
-        hist_inv_js_list = []
-        hist_btc_js_list = []
+    # ================== 2. ASSEMBLE ALL CHARTS DATA ==================
+    hist_val_js_list = []
+    hist_inv_js_list = []
+    hist_btc_js_list = []
+    
+    if history_data_raw:
+        today_ts = int(datetime.combine(datetime.now().date(), datetime.min.time()).timestamp()) * 1000
+        fiat_usdc_total = pd.to_numeric(st.session_state.fiat_df['USDC'], errors='coerce').fillna(0).sum()
         
-        if history_data_raw:
-            today_ts = int(datetime.combine(datetime.now().date(), datetime.min.time()).timestamp()) * 1000
-            fiat_usdc_total = pd.to_numeric(st.session_state.fiat_df['USDC'], errors='coerce').fillna(0).sum()
+        for idx, d in enumerate(history_data_raw):
+            ts = d['time']
+            val = d['value']
+            inv = d['invested']
+            btc = d['btc']
             
-            for idx, d in enumerate(history_data_raw):
-                ts = d['time']
-                val = d['value']
-                inv = d['invested']
-                btc = d['btc']
-                
-                if idx == len(history_data_raw) - 1 and ts == today_ts:
-                    val = float(total_value)
-                    inv = float(fiat_usdc_total)
-                
-                hist_val_js_list.append(f"[{ts}, {val}]")
-                hist_inv_js_list.append(f"[{ts}, {inv}]")
-                hist_btc_js_list.append(f"[{ts}, {btc}]")
-                
-            hist_val_js = ",\n".join(hist_val_js_list)
-            hist_inv_js = ",\n".join(hist_inv_js_list)
-            hist_btc_js = ",\n".join(hist_btc_js_list)
-        else:
-            hist_val_js, hist_inv_js, hist_btc_js = "", "", ""
-
-        # Chart 1: Pie Data
-        pie_data_js_lines = []
-        for _, r in df_port.iterrows():
-            ticker = r['Ticker']
-            if ticker == 'USDC':
-                continue
-            val = r['Value']
-            if pd.notna(val) and val > 0:
-                chart_color = get_ticker_color(ticker)
-                pie_data_js_lines.append(f"{{ name: '{ticker}', y: {val}, color: '{chart_color}' }}")
-        pie_data_js = ",\n".join(pie_data_js_lines)
-
-        # Chart 3: PnL Bar Data with Timeframes
-        pnl_data_js_dict = {'all': '', '1y': '', '30d': '', '7d': '', '1d': ''}
-        if not pnl_df.empty:
-            active_tickers = [t for t in df_port['Ticker'] if t != 'USDC']
-            valid_cols = [c for c in active_tickers if c in pnl_df.columns]
-            pnl_df_active = pnl_df[valid_cols] if valid_cols else pnl_df
-
-            def format_pnl_js(series):
-                series = series.dropna().sort_values(ascending=True)
-                lines = []
-                for ticker, val in series.items():
-                    c = get_ticker_color(ticker)
-                    lines.append(f"{{ name: '{ticker}', y: {val}, color: '{c}99' }}")
-                return ",\n".join(lines)
-
-            pnl_all = pnl_df_active.iloc[-1]
+            if idx == len(history_data_raw) - 1 and ts == today_ts:
+                val = float(total_value)
+                inv = float(fiat_usdc_total)
             
-            idx_1d = -2 if len(pnl_df_active) >= 2 else 0
-            idx_7d = -8 if len(pnl_df_active) >= 8 else 0
-            idx_30d = -31 if len(pnl_df_active) >= 31 else 0
-            idx_1y = -365 if len(pnl_df_active) >= 365 else 0
+            hist_val_js_list.append(f"[{ts}, {val}]")
+            hist_inv_js_list.append(f"[{ts}, {inv}]")
+            hist_btc_js_list.append(f"[{ts}, {btc}]")
+            
+        hist_val_js = ",\n".join(hist_val_js_list)
+        hist_inv_js = ",\n".join(hist_inv_js_list)
+        hist_btc_js = ",\n".join(hist_btc_js_list)
+    else:
+        hist_val_js, hist_inv_js, hist_btc_js = "", "", ""
 
-            pnl_1d = pnl_all - pnl_df_active.iloc[idx_1d]
-            pnl_7d = pnl_all - pnl_df_active.iloc[idx_7d]
-            pnl_30d = pnl_all - pnl_df_active.iloc[idx_30d]
-            pnl_1y = pnl_all - pnl_df_active.iloc[idx_1y]
+    # Chart 1: Pie Data
+    pie_data_js_lines = []
+    for _, r in df_port.iterrows():
+        ticker = r['Ticker']
+        if ticker == 'USDC':
+            continue
+        val = r['Value']
+        if pd.notna(val) and val > 0:
+            chart_color = get_ticker_color(ticker)
+            pie_data_js_lines.append(f"{{ name: '{ticker}', y: {val}, color: '{chart_color}' }}")
+    pie_data_js = ",\n".join(pie_data_js_lines)
 
-            pnl_data_js_dict['all'] = format_pnl_js(pnl_all)
-            pnl_data_js_dict['1d'] = format_pnl_js(pnl_1d)
-            pnl_data_js_dict['7d'] = format_pnl_js(pnl_7d)
-            pnl_data_js_dict['30d'] = format_pnl_js(pnl_30d)
-            pnl_data_js_dict['1y'] = format_pnl_js(pnl_1y)
+    # Chart 3: PnL Bar Data with Timeframes
+    pnl_data_js_dict = {'all': '', '1y': '', '30d': '', '7d': '', '1d': ''}
+    if not pnl_df.empty:
+        active_tickers = [t for t in df_port['Ticker'] if t != 'USDC']
+        valid_cols = [c for c in active_tickers if c in pnl_df.columns]
+        pnl_df_active = pnl_df[valid_cols] if valid_cols else pnl_df
 
-        # Chart 5: Invested vs Current Value Data
-        df_iv = df_port[df_port['Ticker'] != 'USDC'].sort_values(by='Value', ascending=False)
-        inv_val_categories_list = [str(r['Ticker']) for _, r in df_iv.iterrows()]
-        inv_val_categories_js = json.dumps(inv_val_categories_list)
+        def format_pnl_js(series):
+            series = series.dropna().sort_values(ascending=True)
+            lines = []
+            for ticker, val in series.items():
+                c = get_ticker_color(ticker)
+                lines.append(f"{{ name: '{ticker}', y: {val}, color: '{c}99' }}")
+            return ",\n".join(lines)
+
+        pnl_all = pnl_df_active.iloc[-1]
         
-        val_data_points = []
-        inv_data_points = []
-        for _, r in df_iv.iterrows():
-            c = get_ticker_color(r['Ticker'])
-            val = r['Value'] if pd.notna(r['Value']) else 0
-            inv = float(r['USDC']) if pd.notna(r['USDC']) else 0.0
-            val_data_points.append(f"{{ name: '{r['Ticker']}', y: {val}, color: '{c}99' }}")
-            inv_data_points.append(f"{{ name: '{r['Ticker']}', y: {inv}, color: '#64748b99' }}")
-        val_data_js = ",\n".join(val_data_points)
-        inv_data_js = ",\n".join(inv_data_points)
-        
-        # Chart 6: ROI % Bar Data
-        df_roi = df_port[df_port['Ticker'] != 'USDC'].sort_values(by='PnL %', ascending=False)
-        roi_data_js_lines = []
-        for _, r in df_roi.iterrows():
-            t = r['Ticker']
-            val = r['PnL %']
-            if pd.notna(val):
-                c = get_ticker_color(t)
-                roi_data_js_lines.append(f"{{ name: '{t}', y: {val}, color: '{c}99' }}")
-        roi_data_js = ",\n".join(roi_data_js_lines)
+        idx_1d = -2 if len(pnl_df_active) >= 2 else 0
+        idx_7d = -8 if len(pnl_df_active) >= 8 else 0
+        idx_30d = -31 if len(pnl_df_active) >= 31 else 0
+        idx_1y = -365 if len(pnl_df_active) >= 365 else 0
 
-        # Chart 7: 24h Change Placeholder Data
-        daily_data_js_lines = []
-        for _, r in df_port[df_port['Ticker'] != 'USDC'].iterrows():
-            t = r['Ticker']
-            daily_data_js_lines.append(f"{{ name: '{t}', y: 0, color: '#64748b99' }}")
-        daily_data_js = ",\n".join(daily_data_js_lines)
+        pnl_1d = pnl_all - pnl_df_active.iloc[idx_1d]
+        pnl_7d = pnl_all - pnl_df_active.iloc[idx_7d]
+        pnl_30d = pnl_all - pnl_df_active.iloc[idx_30d]
+        pnl_1y = pnl_all - pnl_df_active.iloc[idx_1y]
 
-        charts_html = f"""
-        <!DOCTYPE html>
-        <html>
-        <head>
-            <meta charset="UTF-8">
-            <script>window.pnlDataMap = {{ 'all': [{pnl_data_js_dict['all']}], '1y': [{pnl_data_js_dict['1y']}], '30d': [{pnl_data_js_dict['30d']}], '7d': [{pnl_data_js_dict['7d']}], '1d': [{pnl_data_js_dict['1d']}] }};</script>
-            <script src="https://code.highcharts.com/stock/highstock.js"></script>
-            <script src="https://code.highcharts.com/stock/highcharts-3d.js"></script>
-            <style>
-                body {{ margin: 0; padding: 0; background: transparent; overflow: hidden; font-family: system-ui, sans-serif; }}
+        pnl_data_js_dict['all'] = format_pnl_js(pnl_all)
+        pnl_data_js_dict['1d'] = format_pnl_js(pnl_1d)
+        pnl_data_js_dict['7d'] = format_pnl_js(pnl_7d)
+        pnl_data_js_dict['30d'] = format_pnl_js(pnl_30d)
+        pnl_data_js_dict['1y'] = format_pnl_js(pnl_1y)
+
+    # Chart 5: Invested vs Current Value Data
+    df_iv = df_port[df_port['Ticker'] != 'USDC'].sort_values(by='Value', ascending=False)
+    inv_val_categories_list = [str(r['Ticker']) for _, r in df_iv.iterrows()]
+    inv_val_categories_js = json.dumps(inv_val_categories_list)
+    
+    val_data_points = []
+    inv_data_points = []
+    for _, r in df_iv.iterrows():
+        c = get_ticker_color(r['Ticker'])
+        val = r['Value'] if pd.notna(r['Value']) else 0
+        inv = float(r['USDC']) if pd.notna(r['USDC']) else 0.0
+        val_data_points.append(f"{{ name: '{r['Ticker']}', y: {val}, color: '{c}99' }}")
+        inv_data_points.append(f"{{ name: '{r['Ticker']}', y: {inv}, color: '#64748b99' }}")
+    val_data_js = ",\n".join(val_data_points)
+    inv_data_js = ",\n".join(inv_data_points)
+    
+    # Chart 6: ROI % Bar Data
+    df_roi = df_port[df_port['Ticker'] != 'USDC'].sort_values(by='PnL %', ascending=False)
+    roi_data_js_lines = []
+    for _, r in df_roi.iterrows():
+        t = r['Ticker']
+        val = r['PnL %']
+        if pd.notna(val):
+            c = get_ticker_color(t)
+            roi_data_js_lines.append(f"{{ name: '{t}', y: {val}, color: '{c}99' }}")
+    roi_data_js = ",\n".join(roi_data_js_lines)
+
+    # Chart 7: 24h Change Placeholder Data
+    daily_data_js_lines = []
+    for _, r in df_port[df_port['Ticker'] != 'USDC'].iterrows():
+        t = r['Ticker']
+        daily_data_js_lines.append(f"{{ name: '{t}', y: 0, color: '#64748b99' }}")
+    daily_data_js = ",\n".join(daily_data_js_lines)
+
+    charts_html = f"""
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <meta charset="UTF-8">
+        <script>window.pnlDataMap = {{ 'all': [{pnl_data_js_dict['all']}], '1y': [{pnl_data_js_dict['1y']}], '30d': [{pnl_data_js_dict['30d']}], '7d': [{pnl_data_js_dict['7d']}], '1d': [{pnl_data_js_dict['1d']}] }};</script>
+        <script src="https://code.highcharts.com/stock/highstock.js"></script>
+        <script src="https://code.highcharts.com/stock/highcharts-3d.js"></script>
+        <style>
+            body {{ margin: 0; padding: 0; background: transparent; overflow: hidden; font-family: system-ui, sans-serif; }}
+            
+            .charts-scroll-wrapper {{
+                width: 100%;
+                overflow-y: hidden;
+                overflow-x: auto;
+                padding: 6px 0px 6px 0px; 
+                margin-bottom: 0px; 
+                scroll-snap-type: x mandatory;
+                -webkit-overflow-scrolling: touch;
+                scrollbar-width: none; 
+                -ms-overflow-style: none;
+            }}
+            .charts-scroll-wrapper::-webkit-scrollbar {{
+                display: none;
+            }}
+            .charts-flex {{
+                display: flex;
+                flex-direction: row;
+                flex-wrap: nowrap;
+                gap: 24px;
+                width: max-content;
+                padding: 0 24px;
+            }}
+            
+            .chart-placeholder {{ scroll-snap-align: center; }}
+            
+            .chart-placeholder[data-type="pie"] {{ width: 350px; flex: 0 0 350px; height: 340px; }}
+            .chart-placeholder[data-type="history"] {{ width: 600px; flex: 0 0 600px; height: 340px; }}
+            .chart-placeholder[data-type="pnl"] {{ width: 400px; flex: 0 0 400px; height: 340px; }}
+            .chart-placeholder[data-type="roi"] {{ width: 400px; flex: 0 0 400px; height: 340px; }}
+            .chart-placeholder[data-type="allocation"] {{ width: 600px; flex: 0 0 600px; height: 340px; }}
+            .chart-placeholder[data-type="inv-val"] {{ width: 500px; flex: 0 0 500px; height: 340px; }}
+            .chart-placeholder[data-type="daily"] {{ width: 400px; flex: 0 0 400px; height: 340px; }}
+            
+            .chart-box {{
+                width: 100%;
+                height: 100%;
+                background: rgba(15, 23, 42, 0.4);
+                border: 1px solid rgba(255,255,255,0.05);
+                border-radius: 16px;
+                box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+                touch-action: pan-x pan-y; 
+                will-change: transform; 
+                position: relative;
+                display: flex;
+                flex-direction: column;
+            }}
+            
+            /* Responsive Custom Headers for Charts */
+            .chart-header {{
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                padding: 12px 16px 0 16px;
+                width: 100%;
+                box-sizing: border-box;
+            }}
+            .chart-title {{
+                color: #e2e8f0;
+                font-size: 13px;
+                font-weight: bold;
+                white-space: nowrap;
+            }}
+            .chart-controls {{
+                display: flex;
+                gap: 4px;
+            }}
+            .chart-controls button {{
+                background: rgba(0,0,0,0.3);
+                border: 1px solid rgba(255,255,255,0.1);
+                color: #94a3b8;
+                border-radius: 4px;
+                padding: 3px 8px;
+                font-size: 10px;
+                cursor: pointer;
+                font-weight: bold;
+                transition: all 0.2s;
+            }}
+            .chart-controls button.active {{
+                background: rgba(0, 255, 157, 0.15);
+                color: #00ff9d;
+                border-color: #00ff9d;
+            }}
+            .chart-body {{
+                flex: 1;
+                width: 100%;
+                position: relative;
+            }}
+
+            /* Smooth Fade Overlay */
+            #chart-overlay {{
+                visibility: hidden;
+                opacity: 0;
+                position: fixed;
+                top: 0; left: 0; width: 100%; height: 100%;
+                background: rgba(10, 15, 28, 0.85); 
+                z-index: 1000;
+                backdrop-filter: blur(5px);
+                -webkit-backdrop-filter: blur(5px);
+                transition: opacity 0.4s ease, visibility 0.4s ease;
+            }}
+            #chart-overlay.active {{
+                visibility: visible;
+                opacity: 1;
+            }}
+            
+            /* Expanded state strictly overrides visuals */
+            .expanded-chart {{
+                background: rgba(15, 23, 42, 0.98) !important;
+                border: 1px solid rgba(255, 255, 255, 0.08) !important; 
+                box-shadow: 0 15px 50px rgba(0,0,0,0.9) !important;
+                border-radius: 20px !important;
+            }}
+
+            @media (max-width: 768px) {{
+                .chart-placeholder {{ 
+                    height: 320px !important;
+                    width: 90vw !important; 
+                    flex: 0 0 90vw !important; 
+                }}
                 
-                .charts-scroll-wrapper {{
-                    width: 100%;
-                    overflow-y: hidden;
-                    overflow-x: auto;
-                    padding: 6px 0px 6px 0px; 
-                    margin-bottom: 0px; 
-                    scroll-snap-type: x mandatory;
-                    -webkit-overflow-scrolling: touch;
-                    scrollbar-width: none; 
-                    -ms-overflow-style: none;
-                }}
-                .charts-scroll-wrapper::-webkit-scrollbar {{
-                    display: none;
-                }}
-                .charts-flex {{
-                    display: flex;
-                    flex-direction: row;
-                    flex-wrap: nowrap;
-                    gap: 24px;
-                    width: max-content;
-                    padding: 0 24px;
+                .charts-flex {{ 
+                    padding: 0 5vw;
+                    gap: 16px; 
                 }}
                 
-                .chart-placeholder {{ scroll-snap-align: center; }}
-                
-                .chart-placeholder[data-type="pie"] {{ width: 350px; flex: 0 0 350px; height: 340px; }}
-                .chart-placeholder[data-type="history"] {{ width: 600px; flex: 0 0 600px; height: 340px; }}
-                .chart-placeholder[data-type="pnl"] {{ width: 400px; flex: 0 0 400px; height: 340px; }}
-                .chart-placeholder[data-type="roi"] {{ width: 400px; flex: 0 0 400px; height: 340px; }}
-                .chart-placeholder[data-type="allocation"] {{ width: 600px; flex: 0 0 600px; height: 340px; }}
-                .chart-placeholder[data-type="inv-val"] {{ width: 500px; flex: 0 0 500px; height: 340px; }}
-                .chart-placeholder[data-type="daily"] {{ width: 400px; flex: 0 0 400px; height: 340px; }}
-                
-                .chart-box {{
-                    width: 100%;
-                    height: 100%;
-                    background: rgba(15, 23, 42, 0.4);
-                    border: 1px solid rgba(255,255,255,0.05);
-                    border-radius: 16px;
-                    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-                    touch-action: pan-x pan-y; 
-                    will-change: transform; 
-                    position: relative;
-                    display: flex;
-                    flex-direction: column;
-                }}
-                
-                /* Responsive Custom Headers for Charts */
-                .chart-header {{
-                    display: flex;
-                    justify-content: space-between;
-                    align-items: center;
-                    padding: 12px 16px 0 16px;
-                    width: 100%;
-                    box-sizing: border-box;
-                }}
-                .chart-title {{
-                    color: #e2e8f0;
-                    font-size: 13px;
-                    font-weight: bold;
-                    white-space: nowrap;
-                }}
-                .chart-controls {{
-                    display: flex;
-                    gap: 4px;
-                }}
+                /* Shrink buttons slightly on very small phones to prevent overlap */
                 .chart-controls button {{
-                    background: rgba(0,0,0,0.3);
-                    border: 1px solid rgba(255,255,255,0.1);
-                    color: #94a3b8;
-                    border-radius: 4px;
-                    padding: 3px 8px;
-                    font-size: 10px;
-                    cursor: pointer;
-                    font-weight: bold;
-                    transition: all 0.2s;
+                    padding: 3px 6px;
+                    font-size: 9px;
                 }}
-                .chart-controls button.active {{
-                    background: rgba(0, 255, 157, 0.15);
-                    color: #00ff9d;
-                    border-color: #00ff9d;
-                }}
-                .chart-body {{
-                    flex: 1;
-                    width: 100%;
-                    position: relative;
-                }}
-
-                /* Smooth Fade Overlay */
-                #chart-overlay {{
-                    visibility: hidden;
-                    opacity: 0;
-                    position: fixed;
-                    top: 0; left: 0; width: 100%; height: 100%;
-                    background: rgba(10, 15, 28, 0.85); 
-                    z-index: 1000;
-                    backdrop-filter: blur(5px);
-                    -webkit-backdrop-filter: blur(5px);
-                    transition: opacity 0.4s ease, visibility 0.4s ease;
-                }}
-                #chart-overlay.active {{
-                    visibility: visible;
-                    opacity: 1;
-                }}
+            }}
+        </style>
+    </head>
+    <body>
+        <div id="chart-overlay"></div>
+        
+        <div class="charts-scroll-wrapper" id="chartsScrollContainer">
+            <div class="charts-flex">
+                <div class="chart-placeholder" data-type="pie">
+                    <div id="pie-container" class="chart-box"></div>
+                </div>
                 
-                /* Expanded state strictly overrides visuals */
-                .expanded-chart {{
-                    background: rgba(15, 23, 42, 0.98) !important;
-                    border: 1px solid rgba(255, 255, 255, 0.08) !important; 
-                    box-shadow: 0 15px 50px rgba(0,0,0,0.9) !important;
-                    border-radius: 20px !important;
-                }}
-
-                @media (max-width: 768px) {{
-                    .chart-placeholder {{ 
-                        height: 320px !important;
-                        width: 90vw !important; 
-                        flex: 0 0 90vw !important; 
-                    }}
-                    
-                    .charts-flex {{ 
-                        padding: 0 5vw;
-                        gap: 16px; 
-                    }}
-                    
-                    /* Shrink buttons slightly on very small phones to prevent overlap */
-                    .chart-controls button {{
-                        padding: 3px 6px;
-                        font-size: 9px;
-                    }}
-                }}
-            </style>
-        </head>
-        <body>
-            <div id="chart-overlay"></div>
-            
-            <div class="charts-scroll-wrapper" id="chartsScrollContainer">
-                <div class="charts-flex">
-                    <div class="chart-placeholder" data-type="pie">
-                        <div id="pie-container" class="chart-box"></div>
-                    </div>
-                    
-                    <div class="chart-placeholder" data-type="history">
-                        <div id="history-wrapper" class="chart-box">
-                            <div class="chart-header">
-                                <div class="chart-title">Historical Performance</div>
-                                <div class="chart-controls hist-controls">
-                                    <button class="active" data-range="all">All</button>
-                                    <button data-range="1w">1W</button>
-                                    <button data-range="1m">1M</button>
-                                    <button data-range="1y">1Y</button>
-                                    <button data-range="ytd">YTD</button>
-                                </div>
+                <div class="chart-placeholder" data-type="history">
+                    <div id="history-wrapper" class="chart-box">
+                        <div class="chart-header">
+                            <div class="chart-title">Historical Performance</div>
+                            <div class="chart-controls hist-controls">
+                                <button class="active" data-range="all">All</button>
+                                <button data-range="1w">1W</button>
+                                <button data-range="1m">1M</button>
+                                <button data-range="1y">1Y</button>
+                                <button data-range="ytd">YTD</button>
                             </div>
-                            <div id="history-container" class="chart-body"></div>
                         </div>
-                    </div>
-                    
-                    <div class="chart-placeholder" data-type="pnl">
-                        <div id="pnl-wrapper" class="chart-box">
-                            <div class="chart-header">
-                                <div class="chart-title">Winners & Losers ($)</div>
-                                <div class="chart-controls pnl-controls">
-                                    <button class="active" data-range="all">All</button>
-                                    <button data-range="1d">Today</button>
-                                    <button data-range="7d">1W</button>
-                                    <button data-range="30d">1M</button>
-                                    <button data-range="1y">1Y</button>
-                                </div>
-                            </div>
-                            <div id="pnl-container" class="chart-body"></div>
-                        </div>
-                    </div>
-                    
-                    <div class="chart-placeholder" data-type="roi">
-                        <div id="roi-wrapper" class="chart-box">
-                            <div class="chart-header">
-                                <div class="chart-title">ROI (%) by Asset</div>
-                            </div>
-                            <div id="roi-container" class="chart-body"></div>
-                        </div>
-                    </div>
-                    
-                    <div class="chart-placeholder" data-type="daily">
-                        <div id="daily-wrapper" class="chart-box">
-                            <div class="chart-header">
-                                <div class="chart-title">24h Market Movers (%)</div>
-                            </div>
-                            <div id="daily-container" class="chart-body"></div>
-                        </div>
-                    </div>
-                    
-                    <div class="chart-placeholder" data-type="allocation">
-                        <div id="allocation-container" class="chart-box"></div>
-                    </div>
-                    
-                    <div class="chart-placeholder" data-type="inv-val">
-                        <div id="inv-val-container" class="chart-box"></div>
+                        <div id="history-container" class="chart-body"></div>
                     </div>
                 </div>
+                
+                <div class="chart-placeholder" data-type="pnl">
+                    <div id="pnl-wrapper" class="chart-box">
+                        <div class="chart-header">
+                            <div class="chart-title">Winners & Losers ($)</div>
+                            <div class="chart-controls pnl-controls">
+                                <button class="active" data-range="all">All</button>
+                                <button data-range="1d">Today</button>
+                                <button data-range="7d">1W</button>
+                                <button data-range="30d">1M</button>
+                                <button data-range="1y">1Y</button>
+                            </div>
+                        </div>
+                        <div id="pnl-container" class="chart-body"></div>
+                    </div>
+                </div>
+                
+                <div class="chart-placeholder" data-type="roi">
+                    <div id="roi-wrapper" class="chart-box">
+                        <div class="chart-header">
+                            <div class="chart-title">ROI (%) by Asset</div>
+                        </div>
+                        <div id="roi-container" class="chart-body"></div>
+                    </div>
+                </div>
+                
+                <div class="chart-placeholder" data-type="daily">
+                    <div id="daily-wrapper" class="chart-box">
+                        <div class="chart-header">
+                            <div class="chart-title">24h Market Movers (%)</div>
+                        </div>
+                        <div id="daily-container" class="chart-body"></div>
+                    </div>
+                </div>
+                
+                <div class="chart-placeholder" data-type="allocation">
+                    <div id="allocation-container" class="chart-box"></div>
+                </div>
+                
+                <div class="chart-placeholder" data-type="inv-val">
+                    <div id="inv-val-container" class="chart-box"></div>
+                </div>
             </div>
+        </div>
+        
+        <script>
+            Highcharts.setOptions({{ global: {{ useUTC: false }} }});
+            // Helper for proper negative dollar signs without messing up Privacy mode
+            function formatMoneyStr(val) {{
+                return val < 0 ? '-$' + Highcharts.numberFormat(Math.abs(val), 2) : '$' + Highcharts.numberFormat(val, 2);
+            }}
             
-            <script>
-                Highcharts.setOptions({{ global: {{ useUTC: false }} }});
-                // Helper for proper negative dollar signs without messing up Privacy mode
-                function formatMoneyStr(val) {{
-                    return val < 0 ? '-$' + Highcharts.numberFormat(Math.abs(val), 2) : '$' + Highcharts.numberFormat(val, 2);
+            function formatAxisMoneyStr(val) {{
+                return val < 0 ? '-$' + Highcharts.numberFormat(Math.abs(val), 0) : '$' + Highcharts.numberFormat(val, 0);
+            }}
+
+            // Chart 1: Pie
+            Highcharts.chart('pie-container', {{
+                chart: {{ type: 'pie', options3d: {{ enabled: true, alpha: 55, beta: 0 }}, backgroundColor: 'transparent', margin: [0, 0, 0, 0] }},
+                title: {{ text: 'Current Holdings', style: {{ color: '#e2e8f0', fontSize: '13px', fontWeight: 'bold' }}, align: 'left', x: 16, y: 24 }},
+                tooltip: {{
+                    formatter: function() {{
+                        const isPrivacy = document.body.classList.contains('privacy-mode');
+                        if (isPrivacy) return '<b>' + this.point.name + '</b><br/>' + this.point.percentage.toFixed(1) + '%';
+                        return '<b>' + this.point.name + '</b><br/>' + formatMoneyStr(this.point.y) + '<br/>' + this.point.percentage.toFixed(1) + '%';
+                    }},
+                    backgroundColor: 'rgba(15, 23, 42, 0.95)', style: {{ color: '#fff' }}, borderWidth: 1, borderColor: 'rgba(255,255,255,0.15)'
+                }},
+                plotOptions: {{ pie: {{ allowPointSelect: true, cursor: 'pointer', depth: 40, innerSize: '40%', size: '65%', dataLabels: {{ enabled: true, format: '<b>{{point.name}}</b><br>{{point.percentage:.1f}}%', style: {{ color: '#e2e8f0', textOutline: 'none', fontSize: '10px', fontWeight: '600' }}, connectorColor: 'rgba(255,255,255,0.2)', distance: 10, padding: 0 }}, borderWidth: 0 }} }},
+                credits: {{ enabled: false }},
+                series: [{{ name: 'Holdings', data: [{pie_data_js}] }}]
+            }});
+
+            // Chart 2: History Area (Using Highstock)
+            Highcharts.stockChart('history-container', {{
+                chart: {{ type: 'areaspline', backgroundColor: 'transparent', marginTop: 25, marginBottom: 35 }}, 
+                rangeSelector: {{ enabled: false }}, 
+                navigator: {{ enabled: false }},
+                scrollbar: {{ enabled: false }},
+                title: {{ text: null }},
+                legend: {{ enabled: true, itemStyle: {{ color: '#94a3b8', fontSize: '11px', fontWeight: 'normal' }}, itemHoverStyle: {{ color: '#ffffff' }}, verticalAlign: 'top', align: 'center', y: -10 }},
+                xAxis: {{ gridLineColor: 'rgba(255,255,255,0.05)', tickWidth: 0, minorGridLineWidth: 0 }},
+                yAxis: {{ opposite: false, title: {{ text: null }}, labels: {{ style: {{ color: '#94a3b8', fontSize: '10px' }}, align: 'right', formatter: function() {{ return document.body.classList.contains('privacy-mode') ? '***' : formatAxisMoneyStr(this.value); }} }}, gridLineColor: 'rgba(255,255,255,0.05)' }},
+                tooltip: {{
+                    shared: true, backgroundColor: 'rgba(15, 23, 42, 0.95)', style: {{ color: '#fff' }}, borderColor: 'rgba(255,255,255,0.15)',
+                    formatter: function() {{
+                        let s = '<b style="font-size: 11px; color:#cbd5e1;">' + Highcharts.dateFormat('%b %e, %Y', this.x) + '</b>';
+                        const isPrivacy = document.body.classList.contains('privacy-mode');
+                        this.points.forEach(function(point) {{
+                            let val = isPrivacy ? '***' : formatMoneyStr(point.y);
+                            s += '<br/>' + '<span style="color:'+point.series.color+'">\u25CF</span> ' + point.series.name + ': <b style="font-size: 13px;">' + val + '</b>';
+                         }});
+                        return s;
+                    }}
+                }},
+                plotOptions: {{ areaspline: {{ fillOpacity: 0.3, lineWidth: 2 }} }},
+                credits: {{ enabled: false }},
+                series: [{{ name: 'Portfolio Value', data: [{hist_val_js}], color: '#00ff9d', fillColor: {{ linearGradient: {{ x1: 0, y1: 0, x2: 0, y2: 1 }}, stops: [ [0, 'rgba(0, 255, 157, 0.5)'], [1, 'rgba(0, 255, 157, 0.0)'] ] }}, zIndex: 3 }}, 
+                         {{ name: 'BTC Benchmark', type: 'line', data: [{hist_btc_js}], color: '#f7931a', lineWidth: 2, zIndex: 2 }}, 
+                         {{ name: 'Net Invested', type: 'line', data: [{hist_inv_js}], color: '#64748b', dashStyle: 'Dash', lineWidth: 2, zIndex: 1 }}]
+            }});
+
+            // Custom Range Logic for History Chart
+            document.querySelectorAll('.hist-controls button').forEach(btn => {{
+                btn.addEventListener('click', (e) => {{
+                    e.stopPropagation();
+                    document.querySelectorAll('.hist-controls button').forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    const range = btn.getAttribute('data-range');
+                    const chart = Highcharts.charts.find(c => c && c.renderTo.id === 'history-container');
+                    if (chart) {{
+                        const max = chart.xAxis[0].dataMax;
+                        const min = chart.xAxis[0].dataMin;
+                        const day = 24 * 3600 * 1000;
+                        let newMin = min;
+                        if (range === 'all') {{
+                            chart.xAxis[0].setExtremes(null, null, true, true);
+                        }} else {{
+                            if (range === '1w') newMin = max - 7 * day;
+                            else if (range === '1m') newMin = max - 30 * day;
+                            else if (range === '1y') newMin = max - 365 * day;
+                            else if (range === 'ytd') {{
+                                const d = new Date(max);
+                                newMin = new Date(d.getFullYear(), 0, 1).getTime();
+                            }}
+                            chart.xAxis[0].setExtremes(Math.max(min, newMin), max, true, true);
+                        }}
+                    }}
+                }});
+            }});
+
+            // Chart 3: Winners & Losers (PnL Bar)
+            Highcharts.chart('pnl-container', {{
+                chart: {{ type: 'bar', backgroundColor: 'transparent', marginTop: 15, marginBottom: 25 }},
+                title: {{ text: null }},
+                xAxis: {{ type: 'category', labels: {{ style: {{ color: '#94a3b8', fontWeight: 'bold' }} }}, gridLineColor: 'rgba(255,255,255,0.05)', tickWidth: 0, lineWidth: 0 }},
+                yAxis: {{ title: {{ text: null }}, labels: {{ enabled: false }}, gridLineColor: 'rgba(255,255,255,0.05)', minPadding: 0.25, maxPadding: 0.25 }},
+                legend: {{ enabled: false }},
+                tooltip: {{
+                    backgroundColor: 'rgba(15, 23, 42, 0.95)', style: {{ color: '#fff' }}, borderColor: 'rgba(255,255,255,0.15)',
+                    formatter: function() {{
+                        const isPrivacy = document.body.classList.contains('privacy-mode');
+                        const val = isPrivacy ? '***' : formatMoneyStr(this.y);
+                        return `<b>${{this.point.name}}</b><br/>PnL: <b style="color:${{this.point.color}}">${{val}}</b>`;
+                    }}
+                }},
+                plotOptions: {{ bar: {{ borderRadius: 4, borderWidth: 0, pointPadding: 0.1, groupPadding: 0.1, maxPointWidth: 35, shadow: {{ color: 'rgba(0,0,0,0.3)', offsetX: 1, offsetY: 2, width: 4 }}, dataLabels: {{ enabled: true, inside: false, crop: false, overflow: 'allow', style: {{ color: '#fff', textOutline: '2px #0f172a', fontWeight: 'bold', fontSize: '11px' }}, formatter: function() {{ return document.body.classList.contains('privacy-mode') ? '***' : formatMoneyStr(this.y); }} }} }} }},
+                credits: {{ enabled: false }},
+                series: [{{ name: 'PnL', data: window.pnlDataMap['all'] }}]
+            }});
+
+            document.querySelectorAll('.pnl-controls button').forEach(btn => {{
+                btn.addEventListener('click', (e) => {{
+                    e.stopPropagation(); 
+                    document.querySelectorAll('.pnl-controls button').forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    const range = btn.getAttribute('data-range');
+                    const chart = Highcharts.charts.find(c => c && c.renderTo.id === 'pnl-container');
+                    if (chart && window.pnlDataMap[range]) {{
+                        chart.series[0].setData(window.pnlDataMap[range], true, {{ duration: 500 }}, true);
+                    }}
+                }});
+            }});
+
+            // Chart 6: ROI % Bar Chart
+            Highcharts.chart('roi-container', {{
+                chart: {{ type: 'bar', backgroundColor: 'transparent', marginTop: 15, marginBottom: 25 }},
+                title: {{ text: null }},
+                xAxis: {{ type: 'category', labels: {{ style: {{ color: '#94a3b8', fontWeight: 'bold' }} }}, gridLineColor: 'rgba(255,255,255,0.05)', tickWidth: 0, lineWidth: 0 }},
+                yAxis: {{ title: {{ text: null }}, labels: {{ enabled: false }}, gridLineColor: 'rgba(255,255,255,0.05)', minPadding: 0.25, maxPadding: 0.25 }},
+                legend: {{ enabled: false }},
+                tooltip: {{
+                    backgroundColor: 'rgba(15, 23, 42, 0.95)', style: {{ color: '#fff' }}, borderColor: 'rgba(255,255,255,0.15)',
+                    formatter: function() {{
+                        const val = Highcharts.numberFormat(this.y, 2) + '%';
+                        return `<b>${{this.point.name}}</b><br/>ROI: <b style="color:${{this.point.color}}">${{val}}</b>`;
+                    }}
+                }},
+                plotOptions: {{ bar: {{ borderRadius: 4, borderWidth: 0, pointPadding: 0.1, groupPadding: 0.1, maxPointWidth: 35, shadow: {{ color: 'rgba(0,0,0,0.3)', offsetX: 1, offsetY: 2, width: 4 }}, dataLabels: {{ enabled: true, inside: false, crop: false, overflow: 'allow', style: {{ color: '#fff', textOutline: '2px #0f172a', fontWeight: 'bold', fontSize: '11px' }}, formatter: function() {{ return Highcharts.numberFormat(this.y, 2) + '%'; }} }} }} }},
+                credits: {{ enabled: false }},
+                series: [{{ name: 'ROI %', data: [ {roi_data_js} ] }}]
+            }});
+
+            // Chart 7: 24h Change Bar Chart
+            Highcharts.chart('daily-container', {{
+                chart: {{ type: 'bar', backgroundColor: 'transparent', marginTop: 15, marginBottom: 25 }},
+                title: {{ text: null }},
+                xAxis: {{ type: 'category', labels: {{ style: {{ color: '#94a3b8', fontWeight: 'bold' }} }}, gridLineColor: 'rgba(255,255,255,0.05)', tickWidth: 0, lineWidth: 0 }},
+                yAxis: {{ title: {{ text: null }}, labels: {{ enabled: false }}, gridLineColor: 'rgba(255,255,255,0.05)', minPadding: 0.25, maxPadding: 0.25 }},
+                legend: {{ enabled: false }},
+                tooltip: {{
+                    backgroundColor: 'rgba(15, 23, 42, 0.95)', style: {{ color: '#fff' }}, borderColor: 'rgba(255,255,255,0.15)',
+                    formatter: function() {{
+                        const val = Highcharts.numberFormat(Math.abs(this.y), 2) + '%';
+                        const sign = this.y >= 0 ? '▲ ' : '▼ ';
+                        return `<b>${{this.point.name}}</b><br/>24h Change: <b style="color:${{this.point.color}}">${{sign}}${{val}}</b>`;
+                    }}
+                }},
+                plotOptions: {{ bar: {{ borderRadius: 4, borderWidth: 0, pointPadding: 0.1, groupPadding: 0.1, maxPointWidth: 35, shadow: {{ color: 'rgba(0,0,0,0.3)', offsetX: 1, offsetY: 2, width: 4 }}, dataLabels: {{ enabled: true, inside: false, crop: false, overflow: 'allow', style: {{ color: '#fff', textOutline: '2px #0f172a', fontWeight: 'bold', fontSize: '11px' }}, formatter: function() {{ return (this.y >= 0 ? '+' : '') + Highcharts.numberFormat(this.y, 2) + '%'; }} }} }} }},
+                credits: {{ enabled: false }},
+                series: [{{ name: '24h Change', data: [ {daily_data_js} ] }}]
+            }});
+
+            // Chart 4: Portfolio Allocation (Stacked Area -> smooth areaspline)
+            Highcharts.chart('allocation-container', {{
+                chart: {{ type: 'areaspline', backgroundColor: 'transparent', marginTop: 45, marginBottom: 35 }},
+                title: {{ text: 'Asset Allocation', align: 'left', x: 8, y: 24, style: {{ color: '#e2e8f0', fontSize: '13px', fontWeight: 'bold' }} }},
+                xAxis: {{ type: 'datetime', labels: {{ style: {{ color: '#94a3b8', fontSize: '10px' }} }}, gridLineColor: 'rgba(255,255,255,0.05)', tickWidth: 0, minorGridLineWidth: 0 }},
+                yAxis: {{ title: {{ text: null }}, labels: {{ formatter: function() {{ return this.value + '%'; }}, style: {{ color: '#94a3b8', fontSize: '10px' }} }}, gridLineColor: 'rgba(255,255,255,0.05)', max: 100 }},
+                legend: {{ enabled: false }},
+                tooltip: {{
+                    shared: true, backgroundColor: 'rgba(15, 23, 42, 0.95)', style: {{ color: '#fff' }}, borderColor: 'rgba(255,255,255,0.15)',
+                    formatter: function() {{
+                        let s = '<b style="font-size: 11px; color:#cbd5e1;">' + Highcharts.dateFormat('%b %e, %Y', this.x) + '</b>';
+                        this.points.forEach(function(point) {{
+                            s += '<br/>' + '<span style="color:'+point.series.color+'">\u25CF</span> ' + point.series.name + ': <b>' + Highcharts.numberFormat(point.percentage, 1) + '%</b>';
+                        }});
+                        return s;
+                    }}
+                }},
+                plotOptions: {{ areaspline: {{ stacking: 'percent', fillOpacity: 0.25, lineWidth: 2, marker: {{ enabled: false, symbol: 'circle', radius: 2, states: {{ hover: {{ enabled: true }} }} }} }} }},
+                credits: {{ enabled: false }},
+                series: [{allocation_series_js}]
+            }});
+
+            // Chart 5: Invested vs Current Value (Grouped Column)
+            Highcharts.chart('inv-val-container', {{
+                chart: {{ type: 'column', backgroundColor: 'transparent', marginTop: 45, marginBottom: 35 }},
+                title: {{ text: 'Invested vs Current Value', align: 'left', x: 8, y: 24, style: {{ color: '#e2e8f0', fontSize: '13px', fontWeight: 'bold' }} }},
+                xAxis: {{ type: 'category', categories: {inv_val_categories_js}, labels: {{ style: {{ color: '#94a3b8', fontWeight: 'bold', fontSize: '10px' }} }}, gridLineColor: 'rgba(255,255,255,0.05)', tickWidth: 0 }},
+                yAxis: {{ title: {{ text: null }}, labels: {{ style: {{ color: '#94a3b8', fontSize: '10px' }}, formatter: function() {{ return document.body.classList.contains('privacy-mode') ? '***' : formatAxisMoneyStr(this.value); }} }}, gridLineColor: 'rgba(255,255,255,0.05)', minPadding: 0.15, maxPadding: 0.15 }},
+                legend: {{ enabled: false }},
+                tooltip: {{
+                    shared: true, backgroundColor: 'rgba(15, 23, 42, 0.95)', style: {{ color: '#fff' }}, borderColor: 'rgba(255,255,255,0.15)',
+                    formatter: function() {{
+                        let s = '<b style="font-size: 13px;">' + this.points[0].key + '</b>';
+                        const isPrivacy = document.body.classList.contains('privacy-mode');
+                        this.points.forEach(function(point) {{
+                            let val = isPrivacy ? '***' : formatMoneyStr(point.y);
+                            s += '<br/>' + '<span style="color:'+ point.color +'">\u25CF</span> ' + point.series.name + ': <b>' + val + '</b>';
+                        }});
+                        return s;
+                    }}
+                }},
+                plotOptions: {{ column: {{ borderRadius: 4, borderWidth: 0, maxPointWidth: 40, dataLabels: {{ enabled: true, inside: false, crop: false, overflow: 'allow', style: {{ color: '#fff', textOutline: '2px #0f172a', fontWeight: 'bold', fontSize: '11px' }}, formatter: function() {{ return document.body.classList.contains('privacy-mode') ? '***' : formatMoneyStr(this.y); }} }} }} }},
+                credits: {{ enabled: false }},
+                series: [
+                    {{ name: 'Invested', data: [{inv_data_js}] }},
+                    {{ name: 'Current Value', data: [{val_data_js}] }}
+                ]
+            }});
+
+            try {{
+                if (window !== window.parent && window.parent.document) {{
+                    if (!window.parent.document.getElementById('chart-fullscreen-css')) {{
+                        const style = window.parent.document.createElement('style');
+                        style.id = 'chart-fullscreen-css';
+                        style.innerHTML = `
+                            iframe.fullscreen-mode {{
+                                position: fixed !important;
+                                top: 0 !important;
+                                left: 0 !important;
+                                width: 100vw !important;
+                                height: 100vh !important;
+                                max-width: 100vw !important;
+                                max-height: 100vh !important;
+                                z-index: 999999 !important;
+                                border: none !important;
+                                background: transparent !important;
+                            }}
+                        `;
+                        window.parent.document.head.appendChild(style);
+                    }}
+                }}
+            }} catch(e) {{}}
+
+            function toggleExpandChart(wrapperId) {{
+                // BLOCK PC COMPLETELY - Only runs on Mobile
+                if (window.innerWidth > 768) return;
+            
+                const el = document.getElementById(wrapperId);
+                const overlay = document.getElementById('chart-overlay');
+                const wrapper = document.getElementById('chartsScrollContainer');
+
+                let parentIframe = null;
+                try {{
+                    const iframes = window.parent.document.querySelectorAll('iframe');
+                    for (let ifr of iframes) {{ if (ifr.contentWindow === window) parentIframe = ifr; }}
+                }} catch(e) {{}}
+                
+                const screenW = window.parent ? window.parent.innerWidth : window.innerWidth;
+                const screenH = window.parent ? window.parent.innerHeight : window.innerHeight;
+
+                if (el.classList.contains('expanded-chart')) {{
+                    // ==========================================
+                    // CLOSING MECHANICS 
+                    // ==========================================
+                    overlay.classList.remove('active');
+                    
+                    const origTop = parseFloat(el.getAttribute('data-orig-top')) || 0;
+                    const origLeft = parseFloat(el.getAttribute('data-orig-left')) || 0;
+
+                    // Instantly remove class so background crossfades cleanly during the travel
+                    el.classList.remove('expanded-chart');
+
+                    // Transition smoothly to original slot
+                    el.style.transition = 'transform 0.4s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.4s ease, box-shadow 0.4s ease';
+                    el.style.transform = `translate(${{origLeft}}px, ${{origTop}}px) scale(1)`;
+
+                    // Ensure flawless snapping without a flash when the CSS transition finishes
+                    const finishClose = (e) => {{
+                        if (e && e.propertyName !== 'transform') return;
+                        el.removeEventListener('transitionend', finishClose);
+                        clearTimeout(el._closeTimeout);
+                        if (parentIframe) parentIframe.classList.remove('fullscreen-mode');
+                        el.style.cssText = ''; 
+                        wrapper.style.overflowX = 'auto'; // Restore scroll snapping
+                        
+                        // Restore siblings
+                        document.querySelectorAll('.chart-box').forEach(c => {{
+                            c.style.opacity = '1';
+                            c.style.pointerEvents = 'auto';
+                        }});
+                    }};
+                    el.addEventListener('transitionend', finishClose);
+                    el._closeTimeout = setTimeout(() => {{ finishClose(); }}, 450); // Fallback
+
+                    return;
                 }}
                 
-                function formatAxisMoneyStr(val) {{
-                    return val < 0 ? '-$' + Highcharts.numberFormat(Math.abs(val), 0) : '$' + Highcharts.numberFormat(val, 0);
+                // ==========================================
+                // OPENING MECHANICS 
+                // ==========================================
+                
+                // 1. SILENT VANISH: instantly hide siblings to prevent bleeding
+                document.querySelectorAll('.chart-box').forEach(c => {{
+                    if (c.id !== wrapperId) {{
+                        c.style.transition = 'opacity 0.15s ease';
+                        c.style.opacity = '0';
+                        c.style.pointerEvents = 'none';
+                    }}
+                }});
+
+                const chartRect = el.getBoundingClientRect();
+                let visualTop = chartRect.top;
+                let visualLeft = chartRect.left;
+
+                if (parentIframe) {{
+                    const iframeRect = parentIframe.getBoundingClientRect();
+                    visualTop += iframeRect.top;
+                    visualLeft += iframeRect.left;
                 }}
 
-                // Chart 1: Pie
-                Highcharts.chart('pie-container', {{
-                    chart: {{ type: 'pie', options3d: {{ enabled: true, alpha: 55, beta: 0 }}, backgroundColor: 'transparent', margin: [0, 0, 0, 0] }},
-                    title: {{ text: 'Current Holdings', style: {{ color: '#e2e8f0', fontSize: '13px', fontWeight: 'bold' }}, align: 'left', x: 16, y: 24 }},
-                    tooltip: {{
-                        formatter: function() {{
-                            const isPrivacy = document.body.classList.contains('privacy-mode');
-                            if (isPrivacy) return '<b>' + this.point.name + '</b><br/>' + this.point.percentage.toFixed(1) + '%';
-                            return '<b>' + this.point.name + '</b><br/>' + formatMoneyStr(this.point.y) + '<br/>' + this.point.percentage.toFixed(1) + '%';
-                        }},
-                        backgroundColor: 'rgba(15, 23, 42, 0.95)', style: {{ color: '#fff' }}, borderWidth: 1, borderColor: 'rgba(255,255,255,0.15)'
-                    }},
-                    plotOptions: {{ pie: {{ allowPointSelect: true, cursor: 'pointer', depth: 40, innerSize: '40%', size: '65%', dataLabels: {{ enabled: true, format: '<b>{{point.name}}</b><br>{{point.percentage:.1f}}%', style: {{ color: '#e2e8f0', textOutline: 'none', fontSize: '10px', fontWeight: '600' }}, connectorColor: 'rgba(255,255,255,0.2)', distance: 10, padding: 0 }}, borderWidth: 0 }} }},
-                    credits: {{ enabled: false }},
-                    series: [{{ name: 'Holdings', data: [{pie_data_js}] }}]
-                }});
+                if (parentIframe) parentIframe.classList.add('fullscreen-mode');
+                overlay.classList.add('active'); 
+                wrapper.style.overflowX = 'visible';
 
-                // Chart 2: History Area (Using Highstock)
-                Highcharts.stockChart('history-container', {{
-                    chart: {{ type: 'areaspline', backgroundColor: 'transparent', marginTop: 25, marginBottom: 35 }}, 
-                    rangeSelector: {{ enabled: false }}, 
-                    navigator: {{ enabled: false }},
-                    scrollbar: {{ enabled: false }},
-                    title: {{ text: null }},
-                    legend: {{ enabled: true, itemStyle: {{ color: '#94a3b8', fontSize: '11px', fontWeight: 'normal' }}, itemHoverStyle: {{ color: '#ffffff' }}, verticalAlign: 'top', align: 'center', y: -10 }},
-                    xAxis: {{ gridLineColor: 'rgba(255,255,255,0.05)', tickWidth: 0, minorGridLineWidth: 0 }},
-                    yAxis: {{ opposite: false, title: {{ text: null }}, labels: {{ style: {{ color: '#94a3b8', fontSize: '10px' }}, align: 'right', formatter: function() {{ return document.body.classList.contains('privacy-mode') ? '***' : formatAxisMoneyStr(this.value); }} }}, gridLineColor: 'rgba(255,255,255,0.05)' }},
-                    tooltip: {{
-                        shared: true, backgroundColor: 'rgba(15, 23, 42, 0.95)', style: {{ color: '#fff' }}, borderColor: 'rgba(255,255,255,0.15)',
-                        formatter: function() {{
-                            let s = '<b style="font-size: 11px; color:#cbd5e1;">' + Highcharts.dateFormat('%b %e, %Y', this.x) + '</b>';
-                            const isPrivacy = document.body.classList.contains('privacy-mode');
-                            this.points.forEach(function(point) {{
-                                let val = isPrivacy ? '***' : formatMoneyStr(point.y);
-                                s += '<br/>' + '<span style="color:'+point.series.color+'">\u25CF</span> ' + point.series.name + ': <b style="font-size: 13px;">' + val + '</b>';
-                             }});
-                            return s;
-                        }}
-                    }},
-                    plotOptions: {{ areaspline: {{ fillOpacity: 0.3, lineWidth: 2 }} }},
-                    credits: {{ enabled: false }},
-                    series: [{{ name: 'Portfolio Value', data: [{hist_val_js}], color: '#00ff9d', fillColor: {{ linearGradient: {{ x1: 0, y1: 0, x2: 0, y2: 1 }}, stops: [ [0, 'rgba(0, 255, 157, 0.5)'], [1, 'rgba(0, 255, 157, 0.0)'] ] }}, zIndex: 3 }}, 
-                             {{ name: 'BTC Benchmark', type: 'line', data: [{hist_btc_js}], color: '#f7931a', lineWidth: 2, zIndex: 2 }}, 
-                             {{ name: 'Net Invested', type: 'line', data: [{hist_inv_js}], color: '#64748b', dashStyle: 'Dash', lineWidth: 2, zIndex: 1 }}]
-                }});
+                const origW = chartRect.width;
+                const origH = chartRect.height;
+                
+                let targetW = screenW * 0.95;
+                let targetH = screenH * 0.70;
+                
+                // Calculate perfectly uniform maximum scale
+                const maxScaleX = targetW / origW;
+                const maxScaleY = targetH / origH;
+                const targetScale = Math.min(maxScaleX, maxScaleY);
+                
+                const scaledW = origW * targetScale;
+                const scaledH = origH * targetScale;
+                const centerLeft = (screenW - scaledW) / 2;
+                const centerTop = (screenH - scaledH) / 2;
 
-                // Custom Range Logic for History Chart
-                document.querySelectorAll('.hist-controls button').forEach(btn => {{
-                    btn.addEventListener('click', (e) => {{
+                // Save origins
+                el.setAttribute('data-orig-top', visualTop);
+                el.setAttribute('data-orig-left', visualLeft);
+
+                // Phase 1: Lock the chart in its starting spot natively small, no HC Redraw
+                el.style.position = 'fixed';
+                el.style.top = '0px';
+                el.style.left = '0px';
+                el.style.width = origW + 'px';
+                el.style.height = origH + 'px';
+                el.style.margin = '0';
+                el.style.zIndex = '1001';
+                el.style.transformOrigin = 'top left'; 
+                el.style.transition = 'none';
+                el.style.transform = `translate(${{visualLeft}}px, ${{visualTop}}px) scale(1)`;
+                
+                void el.offsetWidth; // Force CSS Engine Reflow
+
+                // Phase 2: Add CSS class for background color and apply transform translation/scale
+                el.classList.add('expanded-chart');
+                el.style.transition = 'transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.4s ease, box-shadow 0.4s ease';
+                el.style.transform = `translate(${{centerLeft}}px, ${{centerTop}}px) scale(${{targetScale}})`;
+            }}
+
+            function setupDoubleTap(elementId) {{
+                const el = document.getElementById(elementId);
+                if (!el) return;
+                let lastTap = 0;
+
+                el.addEventListener('touchend', function(e) {{
+                    const currentTime = new Date().getTime();
+                    const tapLength = currentTime - lastTap;
+                    if (tapLength < 400 && tapLength > 0) {{
+                        toggleExpandChart(elementId);
+                        e.preventDefault(); 
                         e.stopPropagation();
-                        document.querySelectorAll('.hist-controls button').forEach(b => b.classList.remove('active'));
-                        btn.classList.add('active');
-                        const range = btn.getAttribute('data-range');
-                        const chart = Highcharts.charts.find(c => c && c.renderTo.id === 'history-container');
-                        if (chart) {{
-                            const max = chart.xAxis[0].dataMax;
-                            const min = chart.xAxis[0].dataMin;
-                            const day = 24 * 3600 * 1000;
-                            let newMin = min;
-                            if (range === 'all') {{
-                                chart.xAxis[0].setExtremes(null, null, true, true);
-                            }} else {{
-                                if (range === '1w') newMin = max - 7 * day;
-                                else if (range === '1m') newMin = max - 30 * day;
-                                else if (range === '1y') newMin = max - 365 * day;
-                                else if (range === 'ytd') {{
-                                    const d = new Date(max);
-                                    newMin = new Date(d.getFullYear(), 0, 1).getTime();
-                                }}
-                                chart.xAxis[0].setExtremes(Math.max(min, newMin), max, true, true);
-                            }}
-                        }}
-                    }});
+                    }}
+                    lastTap = currentTime;
                 }});
+            }}
 
-                // Chart 3: Winners & Losers (PnL Bar)
-                Highcharts.chart('pnl-container', {{
-                    chart: {{ type: 'bar', backgroundColor: 'transparent', marginTop: 15, marginBottom: 25 }},
-                    title: {{ text: null }},
-                    xAxis: {{ type: 'category', labels: {{ style: {{ color: '#94a3b8', fontWeight: 'bold' }} }}, gridLineColor: 'rgba(255,255,255,0.05)', tickWidth: 0, lineWidth: 0 }},
-                    yAxis: {{ title: {{ text: null }}, labels: {{ enabled: false }}, gridLineColor: 'rgba(255,255,255,0.05)', minPadding: 0.25, maxPadding: 0.25 }},
-                    legend: {{ enabled: false }},
-                    tooltip: {{
-                        backgroundColor: 'rgba(15, 23, 42, 0.95)', style: {{ color: '#fff' }}, borderColor: 'rgba(255,255,255,0.15)',
-                        formatter: function() {{
-                            const isPrivacy = document.body.classList.contains('privacy-mode');
-                            const val = isPrivacy ? '***' : formatMoneyStr(this.y);
-                            return `<b>${{this.point.name}}</b><br/>PnL: <b style="color:${{this.point.color}}">${{val}}</b>`;
-                        }}
-                    }},
-                    plotOptions: {{ bar: {{ borderRadius: 4, borderWidth: 0, pointPadding: 0.1, groupPadding: 0.1, maxPointWidth: 35, shadow: {{ color: 'rgba(0,0,0,0.3)', offsetX: 1, offsetY: 2, width: 4 }}, dataLabels: {{ enabled: true, inside: false, crop: false, overflow: 'allow', style: {{ color: '#fff', textOutline: '2px #0f172a', fontWeight: 'bold', fontSize: '11px' }}, formatter: function() {{ return document.body.classList.contains('privacy-mode') ? '***' : formatMoneyStr(this.y); }} }} }} }},
-                    credits: {{ enabled: false }},
-                    series: [{{ name: 'PnL', data: window.pnlDataMap['all'] }}]
+            setupDoubleTap('pie-container');
+            setupDoubleTap('history-wrapper');
+            setupDoubleTap('pnl-wrapper');
+            setupDoubleTap('roi-wrapper');
+            setupDoubleTap('daily-wrapper');
+            setupDoubleTap('allocation-container');
+            setupDoubleTap('inv-val-container');
+
+            document.getElementById('chart-overlay').addEventListener('click', () => {{
+                document.querySelectorAll('.expanded-chart').forEach(el => {{
+                    if (el.classList.contains('expanded-chart')) {{
+                        toggleExpandChart(el.id);
+                    }}
                 }});
+            }});
 
-                document.querySelectorAll('.pnl-controls button').forEach(btn => {{
-                    btn.addEventListener('click', (e) => {{
-                        e.stopPropagation(); 
-                        document.querySelectorAll('.pnl-controls button').forEach(b => b.classList.remove('active'));
-                        btn.classList.add('active');
-                        const range = btn.getAttribute('data-range');
-                        const chart = Highcharts.charts.find(c => c && c.renderTo.id === 'pnl-container');
-                        if (chart && window.pnlDataMap[range]) {{
-                            chart.series[0].setData(window.pnlDataMap[range], true, {{ duration: 500 }}, true);
-                        }}
-                    }});
-                }});
+            const chartScroll = document.getElementById('chartsScrollContainer');
+            if (chartScroll) {{
+                chartScroll.addEventListener('wheel', (evt) => {{
+                    if (Math.abs(evt.deltaY) > Math.abs(evt.deltaX)) {{
+                        evt.preventDefault();
+                        chartScroll.scrollBy({{ left: evt.deltaY > 0 ? 200 : -200, behavior: 'smooth' }});
+                    }}
+                }}, {{ passive: false }});
+            }}
 
-                // Chart 6: ROI % Bar Chart
-                Highcharts.chart('roi-container', {{
-                    chart: {{ type: 'bar', backgroundColor: 'transparent', marginTop: 15, marginBottom: 25 }},
-                    title: {{ text: null }},
-                    xAxis: {{ type: 'category', labels: {{ style: {{ color: '#94a3b8', fontWeight: 'bold' }} }}, gridLineColor: 'rgba(255,255,255,0.05)', tickWidth: 0, lineWidth: 0 }},
-                    yAxis: {{ title: {{ text: null }}, labels: {{ enabled: false }}, gridLineColor: 'rgba(255,255,255,0.05)', minPadding: 0.25, maxPadding: 0.25 }},
-                    legend: {{ enabled: false }},
-                    tooltip: {{
-                        backgroundColor: 'rgba(15, 23, 42, 0.95)', style: {{ color: '#fff' }}, borderColor: 'rgba(255,255,255,0.15)',
-                        formatter: function() {{
-                            const val = Highcharts.numberFormat(this.y, 2) + '%';
-                            return `<b>${{this.point.name}}</b><br/>ROI: <b style="color:${{this.point.color}}">${{val}}</b>`;
-                        }}
-                    }},
-                    plotOptions: {{ bar: {{ borderRadius: 4, borderWidth: 0, pointPadding: 0.1, groupPadding: 0.1, maxPointWidth: 35, shadow: {{ color: 'rgba(0,0,0,0.3)', offsetX: 1, offsetY: 2, width: 4 }}, dataLabels: {{ enabled: true, inside: false, crop: false, overflow: 'allow', style: {{ color: '#fff', textOutline: '2px #0f172a', fontWeight: 'bold', fontSize: '11px' }}, formatter: function() {{ return Highcharts.numberFormat(this.y, 2) + '%'; }} }} }} }},
-                    credits: {{ enabled: false }},
-                    series: [{{ name: 'ROI %', data: [ {roi_data_js} ] }}]
-                }});
-
-                // Chart 7: 24h Change Bar Chart
-                Highcharts.chart('daily-container', {{
-                    chart: {{ type: 'bar', backgroundColor: 'transparent', marginTop: 15, marginBottom: 25 }},
-                    title: {{ text: null }},
-                    xAxis: {{ type: 'category', labels: {{ style: {{ color: '#94a3b8', fontWeight: 'bold' }} }}, gridLineColor: 'rgba(255,255,255,0.05)', tickWidth: 0, lineWidth: 0 }},
-                    yAxis: {{ title: {{ text: null }}, labels: {{ enabled: false }}, gridLineColor: 'rgba(255,255,255,0.05)', minPadding: 0.25, maxPadding: 0.25 }},
-                    legend: {{ enabled: false }},
-                    tooltip: {{
-                        backgroundColor: 'rgba(15, 23, 42, 0.95)', style: {{ color: '#fff' }}, borderColor: 'rgba(255,255,255,0.15)',
-                        formatter: function() {{
-                            const val = Highcharts.numberFormat(Math.abs(this.y), 2) + '%';
-                            const sign = this.y >= 0 ? '▲ ' : '▼ ';
-                            return `<b>${{this.point.name}}</b><br/>24h Change: <b style="color:${{this.point.color}}">${{sign}}${{val}}</b>`;
-                        }}
-                    }},
-                    plotOptions: {{ bar: {{ borderRadius: 4, borderWidth: 0, pointPadding: 0.1, groupPadding: 0.1, maxPointWidth: 35, shadow: {{ color: 'rgba(0,0,0,0.3)', offsetX: 1, offsetY: 2, width: 4 }}, dataLabels: {{ enabled: true, inside: false, crop: false, overflow: 'allow', style: {{ color: '#fff', textOutline: '2px #0f172a', fontWeight: 'bold', fontSize: '11px' }}, formatter: function() {{ return (this.y >= 0 ? '+' : '') + Highcharts.numberFormat(this.y, 2) + '%'; }} }} }} }},
-                    credits: {{ enabled: false }},
-                    series: [{{ name: '24h Change', data: [ {daily_data_js} ] }}]
-                }});
-
-                // Chart 4: Portfolio Allocation (Stacked Area -> smooth areaspline)
-                Highcharts.chart('allocation-container', {{
-                    chart: {{ type: 'areaspline', backgroundColor: 'transparent', marginTop: 45, marginBottom: 35 }},
-                    title: {{ text: 'Asset Allocation', align: 'left', x: 8, y: 24, style: {{ color: '#e2e8f0', fontSize: '13px', fontWeight: 'bold' }} }},
-                    xAxis: {{ type: 'datetime', labels: {{ style: {{ color: '#94a3b8', fontSize: '10px' }} }}, gridLineColor: 'rgba(255,255,255,0.05)', tickWidth: 0, minorGridLineWidth: 0 }},
-                    yAxis: {{ title: {{ text: null }}, labels: {{ formatter: function() {{ return this.value + '%'; }}, style: {{ color: '#94a3b8', fontSize: '10px' }} }}, gridLineColor: 'rgba(255,255,255,0.05)', max: 100 }},
-                    legend: {{ enabled: false }},
-                    tooltip: {{
-                        shared: true, backgroundColor: 'rgba(15, 23, 42, 0.95)', style: {{ color: '#fff' }}, borderColor: 'rgba(255,255,255,0.15)',
-                        formatter: function() {{
-                            let s = '<b style="font-size: 11px; color:#cbd5e1;">' + Highcharts.dateFormat('%b %e, %Y', this.x) + '</b>';
-                            this.points.forEach(function(point) {{
-                                s += '<br/>' + '<span style="color:'+point.series.color+'">\u25CF</span> ' + point.series.name + ': <b>' + Highcharts.numberFormat(point.percentage, 1) + '%</b>';
-                            }});
-                            return s;
-                        }}
-                    }},
-                    plotOptions: {{ areaspline: {{ stacking: 'percent', fillOpacity: 0.25, lineWidth: 2, marker: {{ enabled: false, symbol: 'circle', radius: 2, states: {{ hover: {{ enabled: true }} }} }} }} }},
-                    credits: {{ enabled: false }},
-                    series: [{allocation_series_js}]
-                }});
-
-                // Chart 5: Invested vs Current Value (Grouped Column)
-                Highcharts.chart('inv-val-container', {{
-                    chart: {{ type: 'column', backgroundColor: 'transparent', marginTop: 45, marginBottom: 35 }},
-                    title: {{ text: 'Invested vs Current Value', align: 'left', x: 8, y: 24, style: {{ color: '#e2e8f0', fontSize: '13px', fontWeight: 'bold' }} }},
-                    xAxis: {{ type: 'category', categories: {inv_val_categories_js}, labels: {{ style: {{ color: '#94a3b8', fontWeight: 'bold', fontSize: '10px' }} }}, gridLineColor: 'rgba(255,255,255,0.05)', tickWidth: 0 }},
-                    yAxis: {{ title: {{ text: null }}, labels: {{ style: {{ color: '#94a3b8', fontSize: '10px' }}, formatter: function() {{ return document.body.classList.contains('privacy-mode') ? '***' : formatAxisMoneyStr(this.value); }} }}, gridLineColor: 'rgba(255,255,255,0.05)', minPadding: 0.15, maxPadding: 0.15 }},
-                    legend: {{ enabled: false }},
-                    tooltip: {{
-                        shared: true, backgroundColor: 'rgba(15, 23, 42, 0.95)', style: {{ color: '#fff' }}, borderColor: 'rgba(255,255,255,0.15)',
-                        formatter: function() {{
-                            let s = '<b style="font-size: 13px;">' + this.points[0].key + '</b>';
-                            const isPrivacy = document.body.classList.contains('privacy-mode');
-                            this.points.forEach(function(point) {{
-                                let val = isPrivacy ? '***' : formatMoneyStr(point.y);
-                                s += '<br/>' + '<span style="color:'+ point.color +'">\u25CF</span> ' + point.series.name + ': <b>' + val + '</b>';
-                            }});
-                            return s;
-                        }}
-                    }},
-                    plotOptions: {{ column: {{ borderRadius: 4, borderWidth: 0, maxPointWidth: 40, dataLabels: {{ enabled: true, inside: false, crop: false, overflow: 'allow', style: {{ color: '#fff', textOutline: '2px #0f172a', fontWeight: 'bold', fontSize: '11px' }}, formatter: function() {{ return document.body.classList.contains('privacy-mode') ? '***' : formatMoneyStr(this.y); }} }} }} }},
-                    credits: {{ enabled: false }},
-                    series: [
-                        {{ name: 'Invested', data: [{inv_data_js}] }},
-                        {{ name: 'Current Value', data: [{val_data_js}] }}
-                    ]
-                }});
-
+            setInterval(() => {{
                 try {{
-                    if (window !== window.parent && window.parent.document) {{
-                        if (!window.parent.document.getElementById('chart-fullscreen-css')) {{
-                            const style = window.parent.document.createElement('style');
-                            style.id = 'chart-fullscreen-css';
-                            style.innerHTML = `
-                                iframe.fullscreen-mode {{
-                                    position: fixed !important;
-                                    top: 0 !important;
-                                    left: 0 !important;
-                                    width: 100vw !important;
-                                    height: 100vh !important;
-                                    max-width: 100vw !important;
-                                    max-height: 100vh !important;
-                                    z-index: 999999 !important;
-                                    border: none !important;
-                                    background: transparent !important;
-                                }}
-                            `;
-                            window.parent.document.head.appendChild(style);
+                    const saved = localStorage.getItem('dashboardOpen');
+                    const isPrivacy = (saved === 'false');
+                    const currentlyPrivacy = document.body.classList.contains('privacy-mode');
+                    
+                    if (isPrivacy !== currentlyPrivacy) {{
+                        if (isPrivacy) {{
+                            document.body.classList.add('privacy-mode');
+                        }} else {{
+                            document.body.classList.remove('privacy-mode');
                         }}
+                        ['history-container', 'pnl-container', 'roi-container', 'daily-container', 'inv-val-container'].forEach(id => {{
+                            const hc = Highcharts.charts.find(c => c && c.renderTo.id === id);
+                            if (hc && hc.yAxis && hc.yAxis[0]) {{ hc.yAxis[0].isDirty = true; hc.redraw(true); }}
+                        }});
                     }}
                 }} catch(e) {{}}
+            }}, 200);
+        </script>
+    </body>
+    </html>
+    """
+    components.html(charts_html, height=355, scrolling=False)
 
-                function toggleExpandChart(wrapperId) {{
-                    // BLOCK PC COMPLETELY - Only runs on Mobile
-                    if (window.innerWidth > 768) return;
-                
-                    const el = document.getElementById(wrapperId);
-                    const overlay = document.getElementById('chart-overlay');
-                    const wrapper = document.getElementById('chartsScrollContainer');
-
-                    let parentIframe = null;
-                    try {{
-                        const iframes = window.parent.document.querySelectorAll('iframe');
-                        for (let ifr of iframes) {{ if (ifr.contentWindow === window) parentIframe = ifr; }}
-                    }} catch(e) {{}}
-                    
-                    const screenW = window.parent ? window.parent.innerWidth : window.innerWidth;
-                    const screenH = window.parent ? window.parent.innerHeight : window.innerHeight;
-
-                    if (el.classList.contains('expanded-chart')) {{
-                        // ==========================================
-                        // CLOSING MECHANICS 
-                        // ==========================================
-                        overlay.classList.remove('active');
-                        
-                        const origTop = parseFloat(el.getAttribute('data-orig-top')) || 0;
-                        const origLeft = parseFloat(el.getAttribute('data-orig-left')) || 0;
-
-                        // Instantly remove class so background crossfades cleanly during the travel
-                        el.classList.remove('expanded-chart');
-
-                        // Transition smoothly to original slot
-                        el.style.transition = 'transform 0.4s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.4s ease, box-shadow 0.4s ease';
-                        el.style.transform = `translate(${{origLeft}}px, ${{origTop}}px) scale(1)`;
-
-                        // Ensure flawless snapping without a flash when the CSS transition finishes
-                        const finishClose = (e) => {{
-                            if (e && e.propertyName !== 'transform') return;
-                            el.removeEventListener('transitionend', finishClose);
-                            clearTimeout(el._closeTimeout);
-                            if (parentIframe) parentIframe.classList.remove('fullscreen-mode');
-                            el.style.cssText = ''; 
-                            wrapper.style.overflowX = 'auto'; // Restore scroll snapping
-                            
-                            // Restore siblings
-                            document.querySelectorAll('.chart-box').forEach(c => {{
-                                c.style.opacity = '1';
-                                c.style.pointerEvents = 'auto';
-                            }});
-                        }};
-                        el.addEventListener('transitionend', finishClose);
-                        el._closeTimeout = setTimeout(() => {{ finishClose(); }}, 450); // Fallback
-
-                        return;
-                    }}
-                    
-                    // ==========================================
-                    // OPENING MECHANICS 
-                    // ==========================================
-                    
-                    // 1. SILENT VANISH: instantly hide siblings to prevent bleeding
-                    document.querySelectorAll('.chart-box').forEach(c => {{
-                        if (c.id !== wrapperId) {{
-                            c.style.transition = 'opacity 0.15s ease';
-                            c.style.opacity = '0';
-                            c.style.pointerEvents = 'none';
-                        }}
-                    }});
-
-                    const chartRect = el.getBoundingClientRect();
-                    let visualTop = chartRect.top;
-                    let visualLeft = chartRect.left;
-
-                    if (parentIframe) {{
-                        const iframeRect = parentIframe.getBoundingClientRect();
-                        visualTop += iframeRect.top;
-                        visualLeft += iframeRect.left;
-                    }}
-
-                    if (parentIframe) parentIframe.classList.add('fullscreen-mode');
-                    overlay.classList.add('active'); 
-                    wrapper.style.overflowX = 'visible';
-
-                    const origW = chartRect.width;
-                    const origH = chartRect.height;
-                    
-                    let targetW = screenW * 0.95;
-                    let targetH = screenH * 0.70;
-                    
-                    // Calculate perfectly uniform maximum scale
-                    const maxScaleX = targetW / origW;
-                    const maxScaleY = targetH / origH;
-                    const targetScale = Math.min(maxScaleX, maxScaleY);
-                    
-                    const scaledW = origW * targetScale;
-                    const scaledH = origH * targetScale;
-                    const centerLeft = (screenW - scaledW) / 2;
-                    const centerTop = (screenH - scaledH) / 2;
-
-                    // Save origins
-                    el.setAttribute('data-orig-top', visualTop);
-                    el.setAttribute('data-orig-left', visualLeft);
-
-                    // Phase 1: Lock the chart in its starting spot natively small, no HC Redraw
-                    el.style.position = 'fixed';
-                    el.style.top = '0px';
-                    el.style.left = '0px';
-                    el.style.width = origW + 'px';
-                    el.style.height = origH + 'px';
-                    el.style.margin = '0';
-                    el.style.zIndex = '1001';
-                    el.style.transformOrigin = 'top left'; 
-                    el.style.transition = 'none';
-                    el.style.transform = `translate(${{visualLeft}}px, ${{visualTop}}px) scale(1)`;
-                    
-                    void el.offsetWidth; // Force CSS Engine Reflow
-
-                    // Phase 2: Add CSS class for background color and apply transform translation/scale
-                    el.classList.add('expanded-chart');
-                    el.style.transition = 'transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.4s ease, box-shadow 0.4s ease';
-                    el.style.transform = `translate(${{centerLeft}}px, ${{centerTop}}px) scale(${{targetScale}})`;
-                }}
-
-                function setupDoubleTap(elementId) {{
-                    const el = document.getElementById(elementId);
-                    if (!el) return;
-                    let lastTap = 0;
-
-                    el.addEventListener('touchend', function(e) {{
-                        const currentTime = new Date().getTime();
-                        const tapLength = currentTime - lastTap;
-                        if (tapLength < 400 && tapLength > 0) {{
-                            toggleExpandChart(elementId);
-                            e.preventDefault(); 
-                            e.stopPropagation();
-                        }}
-                        lastTap = currentTime;
-                    }});
-                }}
-
-                setupDoubleTap('pie-container');
-                setupDoubleTap('history-wrapper');
-                setupDoubleTap('pnl-wrapper');
-                setupDoubleTap('roi-wrapper');
-                setupDoubleTap('daily-wrapper');
-                setupDoubleTap('allocation-container');
-                setupDoubleTap('inv-val-container');
-
-                document.getElementById('chart-overlay').addEventListener('click', () => {{
-                    document.querySelectorAll('.expanded-chart').forEach(el => {{
-                        if (el.classList.contains('expanded-chart')) {{
-                            toggleExpandChart(el.id);
-                        }}
-                    }});
-                }});
-
-                const chartScroll = document.getElementById('chartsScrollContainer');
-                if (chartScroll) {{
-                    chartScroll.addEventListener('wheel', (evt) => {{
-                        if (Math.abs(evt.deltaY) > Math.abs(evt.deltaX)) {{
-                            evt.preventDefault();
-                            chartScroll.scrollBy({{ left: evt.deltaY > 0 ? 200 : -200, behavior: 'smooth' }});
-                        }}
-                    }}, {{ passive: false }});
-                }}
-
-                setInterval(() => {{
-                    try {{
-                        const saved = localStorage.getItem('dashboardOpen');
-                        const isPrivacy = (saved === 'false');
-                        const currentlyPrivacy = document.body.classList.contains('privacy-mode');
-                        
-                        if (isPrivacy !== currentlyPrivacy) {{
-                            if (isPrivacy) {{
-                                document.body.classList.add('privacy-mode');
-                            }} else {{
-                                document.body.classList.remove('privacy-mode');
-                            }}
-                            ['history-container', 'pnl-container', 'roi-container', 'daily-container', 'inv-val-container'].forEach(id => {{
-                                const hc = Highcharts.charts.find(c => c && c.renderTo.id === id);
-                                if (hc && hc.yAxis && hc.yAxis[0]) {{ hc.yAxis[0].isDirty = true; hc.redraw(true); }}
-                            }});
-                        }}
-                    }} catch(e) {{}}
-                }}, 200);
-            </script>
-        </body>
-        </html>
-        """
-        components.html(charts_html, height=355, scrolling=False)
-
-        # ================== 3. SUBDUED USDC BANNER ==================
-        usdc_banner_html = f"""
+    # ================== 3. SUBDUED USDC BANNER ==================
+    usdc_banner_html = f"""
 <input type="checkbox" id="dash-toggle-usdc" class="dashboard-toggle" style="display:none;">
 <div class="usdc-banner" style="--border: #2775ca;">
 <div class="usdc-banner-left">
@@ -1592,570 +1723,757 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
 <div class="usdc-banner-amount">{format_holdings(usdc_holdings, 'USDC')}</div>
 </div>
 """
-        st.markdown(usdc_banner_html, unsafe_allow_html=True)
+    st.markdown(usdc_banner_html, unsafe_allow_html=True)
 
-        # ================== 4. FLIP CARDS ==================
-        cards_html = ""
-        for _, r in df_port.iterrows():
-            ticker = r['Ticker']
-            if ticker == 'USDC':
-                continue
-                
-            pnl = r['PnL']
-            pnl_color = "#00ff9d" if pnl > 0 else "#ff4d4d" if pnl < 0 else "#aaaaaa"
-            arrow = "▲" if pnl > 0 else "▼" if pnl < 0 else ""
-            base_color = get_ticker_color(ticker)
-            border_color = base_color if base_color != '#000000' else '#ffffff'
-            logo_url = get_ticker_logo(ticker)
-            pnl_pct_formatted = format_percent(abs(r['PnL %'])) if pd.notna(r['PnL %']) else ""
-            live_price = r['Live']
-            avg_price = r['AVG']
-            live_price_formatted = format_price(live_price)
-            avg_price_formatted = format_price(avg_price)
-            chart_color = border_color
+    # ================== 4. FLIP CARDS ==================
+    cards_html = ""
+    for _, r in df_port.iterrows():
+        ticker = r['Ticker']
+        if ticker == 'USDC':
+            continue
             
-            cards_html += f"""
+        pnl = r['PnL']
+        pnl_color = "#00ff9d" if pnl > 0 else "#ff4d4d" if pnl < 0 else "#aaaaaa"
+        arrow = "▲" if pnl > 0 else "▼" if pnl < 0 else ""
+        base_color = get_ticker_color(ticker)
+        border_color = base_color if base_color != '#000000' else '#ffffff'
+        logo_url = get_ticker_logo(ticker)
+        pnl_pct_formatted = format_percent(abs(r['PnL %'])) if pd.notna(r['PnL %']) else ""
+        live_price = r['Live']
+        avg_price = r['AVG']
+        live_price_formatted = format_price(live_price)
+        avg_price_formatted = format_price(avg_price)
+        chart_color = border_color
+        
+        cards_html += f"""
 <div class="flip-card" data-ticker="{ticker}" data-holdings="{r['Holdings']}" data-invested="{r['USDC']}" data-current-price="{live_price}" data-avg-price="{avg_price}" data-price-7d="{r.get('Price7d', live_price)}" data-price-30d="{r.get('Price30d', live_price)}" data-price-90d="{r.get('Price90d', live_price)}" data-price-ytd="{r.get('PriceYTD', live_price)}" data-refresh="{st.session_state.refresh_key}" data-border="{border_color}" data-chart-color="{chart_color}" data-logo="{logo_url}">
-    <div class="flip-card-inner">
-        <div class="flip-card-front">
-            <div class="card-header" style="align-items: center; margin-bottom: 4px;">
-                <div class="header-left-container">
-                    <div class="header-logo-row">
-                        <img src="{logo_url}" style="height:44px;width:44px;border-radius:50%;object-fit:contain;" onerror="this.src='https://via.placeholder.com/44/1e2a44/ffffff?text={ticker[0]}';">
-                        <span style="font-weight:700;font-size:1.3rem;margin-left:12px;color:#ffffff;">{ticker}</span>
-                    </div>
-                </div>
-                <div class="header-right">
-                    <div class="stat-group" style="align-items: flex-end;">
-                        <div class="current-value" style="font-size: 1.4rem;">${live_price_formatted}</div>
-                        <div class="stat-label" style="font-size: 0.75rem; margin-top: 2px; color: #94a3b8;">Avg: <span class="privacy-val" style="color: #cbd5e1; font-weight: 600;">${avg_price_formatted}</span></div>
-                    </div>
+<div class="flip-card-inner">
+    <div class="flip-card-front">
+        <div class="card-header" style="align-items: center; margin-bottom: 4px;">
+            <div class="header-left-container">
+                <div class="header-logo-row">
+                    <img src="{logo_url}" style="height:44px;width:44px;border-radius:50%;object-fit:contain;" onerror="this.src='https://via.placeholder.com/44/1e2a44/ffffff?text={ticker[0]}';">
+                    <span style="font-weight:700;font-size:1.3rem;margin-left:12px;color:#ffffff;">{ticker}</span>
                 </div>
             </div>
-            
-            <div class="metrics-row">
-                <div class="metric-col"><span class="metric-lbl">24H</span><span class="metric-val" id="change-24h-{ticker}">...</span></div>
-                <div class="metric-col"><span class="metric-lbl">7D</span><span class="metric-val" id="change-7d-{ticker}">...</span></div>
-                <div class="metric-col"><span class="metric-lbl">30D</span><span class="metric-val" id="change-30d-{ticker}">...</span></div>
-                <div class="metric-col"><span class="metric-lbl">90D</span><span class="metric-val" id="change-90d-{ticker}">...</span></div>
-                <div class="metric-col"><span class="metric-lbl">YTD</span><span class="metric-val" id="change-ytd-{ticker}">...</span></div>
-            </div>
-            
-            <div class="card-content">
-                <div class="label-value-row" style="margin-top:4px;"><span class="label">Holdings</span><span class="value privacy-val">{format_holdings(r['Holdings'], ticker)}</span></div>
-                <div class="label-value-row"><span class="label">Invested</span><span class="value privacy-val">{format_money(r['USDC'])}</span></div>
-                <div class="label-value-row"><span class="label">PnL</span><span class="value card-pnl privacy-val" style="color:{pnl_color};">{arrow} {format_money(abs(pnl) if pd.notna(pnl) else "")}</span></div>
-                <div class="label-value-row"><span class="label">PnL %</span><span class="value card-pnl-pct privacy-val" style="color:{pnl_color};">{arrow} {pnl_pct_formatted}</span></div>
-                <div class="label-value-row total"><span class="label">Value</span><span class="value total-value privacy-val">{format_money(r['Value'])}</span></div>
+            <div class="header-right">
+                <div class="stat-group" style="align-items: flex-end;">
+                    <div class="current-value" style="font-size: 1.4rem;">${live_price_formatted}</div>
+                    <div class="stat-label" style="font-size: 0.75rem; margin-top: 2px; color: #94a3b8;">Avg: <span class="privacy-val" style="color: #cbd5e1; font-weight: 600;">${avg_price_formatted}</span></div>
+                </div>
             </div>
         </div>
-        <div class="flip-card-back">
-            <a href="https://www.tradingview.com/chart/?symbol=BINANCE:{ticker}USDT" target="_blank" class="tv-external-btn" title="Open in TradingView App/Web to save drawings">
-                {TV_ICON}
-                <div style="margin-left: 6px; display:flex;">{EXTERNAL_LINK_ICON}</div>
-            </a>
-            <div class="chart-container">
-                <canvas id="chart-{ticker}"></canvas>
-                <div class="chart-loading" id="loading-{ticker}">Loading chart...</div>
-            </div>
+        
+        <div class="metrics-row">
+            <div class="metric-col"><span class="metric-lbl">24H</span><span class="metric-val" id="change-24h-{ticker}">...</span></div>
+            <div class="metric-col"><span class="metric-lbl">7D</span><span class="metric-val" id="change-7d-{ticker}">...</span></div>
+            <div class="metric-col"><span class="metric-lbl">30D</span><span class="metric-val" id="change-30d-{ticker}">...</span></div>
+            <div class="metric-col"><span class="metric-lbl">90D</span><span class="metric-val" id="change-90d-{ticker}">...</span></div>
+            <div class="metric-col"><span class="metric-lbl">YTD</span><span class="metric-val" id="change-ytd-{ticker}">...</span></div>
+        </div>
+        
+        <div class="card-content">
+            <div class="label-value-row" style="margin-top:4px;"><span class="label">Holdings</span><span class="value privacy-val">{format_holdings(r['Holdings'], ticker)}</span></div>
+            <div class="label-value-row"><span class="label">Invested</span><span class="value privacy-val">{format_money(r['USDC'])}</span></div>
+            <div class="label-value-row"><span class="label">PnL</span><span class="value card-pnl privacy-val" style="color:{pnl_color};">{arrow} {format_money(abs(pnl) if pd.notna(pnl) else "")}</span></div>
+            <div class="label-value-row"><span class="label">PnL %</span><span class="value card-pnl-pct privacy-val" style="color:{pnl_color};">{arrow} {pnl_pct_formatted}</span></div>
+            <div class="label-value-row total"><span class="label">Value</span><span class="value total-value privacy-val">{format_money(r['Value'])}</span></div>
+        </div>
+    </div>
+    <div class="flip-card-back">
+        <a href="https://www.tradingview.com/chart/?symbol=BINANCE:{ticker}USDT" target="_blank" class="tv-external-btn" title="Open in TradingView App/Web to save drawings">
+            {TV_ICON}
+            <div style="margin-left: 6px; display:flex;">{EXTERNAL_LINK_ICON}</div>
+        </a>
+        <div class="chart-container">
+            <canvas id="chart-{ticker}"></canvas>
+            <div class="chart-loading" id="loading-{ticker}">Loading chart...</div>
         </div>
     </div>
 </div>
+</div>
 """
 
-        full_html = f"""
+    full_html = f"""
 <!DOCTYPE html>
 <html>
 <head>
-    <meta charset="UTF-8">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-    <style>
-        * {{ box-sizing: border-box; }}
-        html, body {{
-            margin: 0;
-            padding: 0;
-            width: 100%;
-            overflow-x: hidden;
-            background: transparent;
-        }}
-        body {{
-            font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
-            color: white;
-        }}
-        
-        /* Privacy Mode CSS */
-        body.privacy-mode .privacy-val {{ color: transparent !important; position: relative; }}
-        body.privacy-mode .privacy-val::after {{ content: '***'; position: absolute; right: 0; top: 0; color: #94a3b8; font-size: 1rem; font-weight: 700; }}
-        body.privacy-mode .total-value::after {{ color: #ffffff; font-size: 1.15rem; }}
+<meta charset="UTF-8">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+    * {{ box-sizing: border-box; }}
+    html, body {{
+        margin: 0;
+        padding: 0;
+        width: 100%;
+        overflow-x: hidden;
+        background: transparent;
+    }}
+    body {{
+        font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+        color: white;
+    }}
+    
+    /* Privacy Mode CSS */
+    body.privacy-mode .privacy-val {{ color: transparent !important; position: relative; }}
+    body.privacy-mode .privacy-val::after {{ content: '***'; position: absolute; right: 0; top: 0; color: #94a3b8; font-size: 1rem; font-weight: 700; }}
+    body.privacy-mode .total-value::after {{ color: #ffffff; font-size: 1.15rem; }}
 
-        .flip-card-front, .flip-card-back, .flip-card {{
-            outline: none;
-            -webkit-tap-highlight-color: transparent;
-        }}
-        .scroll-wrapper {{
-            width: 100%;
-            overflow-y: hidden;
-            overflow-x: auto;
-            padding: 20px 0px 20px 0px;
-            margin-bottom: 0px;
-            scroll-snap-type: x mandatory; 
-            -webkit-overflow-scrolling: touch;
-            scrollbar-width: none; 
-            -ms-overflow-style: none;
-        }}
-        
-        .scroll-wrapper::-webkit-scrollbar {{
-            display: none;
-        }}
+    .flip-card-front, .flip-card-back, .flip-card {{
+        outline: none;
+        -webkit-tap-highlight-color: transparent;
+    }}
+    .scroll-wrapper {{
+        width: 100%;
+        overflow-y: hidden;
+        overflow-x: auto;
+        padding: 20px 0px 20px 0px;
+        margin-bottom: 0px;
+        scroll-snap-type: x mandatory; 
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none; 
+        -ms-overflow-style: none;
+    }}
+    
+    .scroll-wrapper::-webkit-scrollbar {{
+        display: none;
+    }}
 
-        .coin-grid {{
-            display: flex;
-            flex-direction: row;
-            flex-wrap: nowrap;
-            gap: 24px;
-            width: max-content;
-            padding: 0 24px; 
-            background: transparent !important;
-            overflow: visible !important;
-        }}
-        .flip-card {{
-            flex: 0 0 420px;
-            background-color: transparent;
-            height: 320px;
-            perspective: 1200px;
-            cursor: pointer;
-            scroll-snap-align: center;
-        }}
-        .flip-card-inner {{
-            position: relative;
-            width: 100%;
-            height: 100%;
-            transition: transform 0.5s ease-in-out;
-            transform-style: preserve-3d;
-            border-radius: 18px;
-        }}
-        .flip-card.flipped .flip-card-inner {{
-            transform: rotateY(180deg);
-        }}
-        .flip-card-front, .flip-card-back {{
-            position: absolute;
-            width: 100%;
-            height: 100%;
-            backface-visibility: hidden;
-            border-radius: 18px;
-            padding: 14px 18px;
-            background: #0f172a;
-            box-shadow: 0 8px 24px rgba(0,0,0,0.3);
-            border: 2px solid transparent;
-            overflow: hidden; 
-        }}
-        .flip-card-front {{
-            display: flex;
-            flex-direction: column;
-            justify-content: flex-start;
-        }}
-        .flip-card-back {{
-            transform: rotateY(180deg);
-            display: flex;
-            flex-direction: column;
-            padding: 24px 16px 16px 16px; 
-        }}
-        
-        .tv-external-btn {{
-            position: absolute;
-            top: 10px;
-            left: 12px;
-            color: #64748b;
-            cursor: pointer;
-            z-index: 20;
-            transition: color 0.2s ease;
-            padding: 4px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            text-decoration: none;
-        }}
-        .tv-external-btn:hover {{ color: #ffffff; }}
-        
-        @media (hover: hover) and (pointer: fine) {{
-            .flip-card:hover .flip-card-front,
-            .flip-card:hover .flip-card-back {{
-                border-color: var(--border);
-                box-shadow: 0 12px 28px rgba(0,0,0,0.5), 0 0 12px var(--border);
-            }}
-        }}
-        
-        .flip-card.touch-hover .flip-card-front,
-        .flip-card.touch-hover .flip-card-back {{
+    .coin-grid {{
+        display: flex;
+        flex-direction: row;
+        flex-wrap: nowrap;
+        gap: 24px;
+        width: max-content;
+        padding: 0 24px; 
+        background: transparent !important;
+        overflow: visible !important;
+    }}
+    .flip-card {{
+        flex: 0 0 420px;
+        background-color: transparent;
+        height: 320px;
+        perspective: 1200px;
+        cursor: pointer;
+        scroll-snap-align: center;
+    }}
+    .flip-card-inner {{
+        position: relative;
+        width: 100%;
+        height: 100%;
+        transition: transform 0.5s ease-in-out;
+        transform-style: preserve-3d;
+        border-radius: 18px;
+    }}
+    .flip-card.flipped .flip-card-inner {{
+        transform: rotateY(180deg);
+    }}
+    .flip-card-front, .flip-card-back {{
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        backface-visibility: hidden;
+        border-radius: 18px;
+        padding: 14px 18px;
+        background: #0f172a;
+        box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+        border: 2px solid transparent;
+        overflow: hidden; 
+    }}
+    .flip-card-front {{
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-start;
+    }}
+    .flip-card-back {{
+        transform: rotateY(180deg);
+        display: flex;
+        flex-direction: column;
+        padding: 24px 16px 16px 16px; 
+    }}
+    
+    .tv-external-btn {{
+        position: absolute;
+        top: 10px;
+        left: 12px;
+        color: #64748b;
+        cursor: pointer;
+        z-index: 20;
+        transition: color 0.2s ease;
+        padding: 4px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        text-decoration: none;
+    }}
+    .tv-external-btn:hover {{ color: #ffffff; }}
+    
+    @media (hover: hover) and (pointer: fine) {{
+        .flip-card:hover .flip-card-front,
+        .flip-card:hover .flip-card-back {{
             border-color: var(--border);
             box-shadow: 0 12px 28px rgba(0,0,0,0.5), 0 0 12px var(--border);
         }}
-        
-        .card-header {{
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            width: 100%;
-        }}
-        .header-left-container {{
-            display: flex;
-            flex-direction: column;
-            justify-content: flex-start;
-            flex-shrink: 0;
-        }}
-        .header-logo-row {{
-            display: flex;
-            align-items: center;
-        }}
-        .header-right {{
-            display: flex;
-            flex-direction: column;
-            align-items: flex-end;
-            text-align: right;
-            flex: 1;
-        }}
-        .stat-group {{
-            display: flex;
-            flex-direction: column;
-            align-items: flex-end;
-        }}
-        .stat-label {{
-            font-size: 0.7rem;
-            color: #aaa;
-            margin-bottom: 2px;
-            font-weight: 500;
-        }}
-        .current-value, .stat-value {{
-            font-size: 0.98rem;
-            font-weight: 700;
-            color: white;
-            white-space: nowrap;
-        }}
-        
-        .metrics-row {{
-            display: flex;
-            justify-content: space-between;
-            background: rgba(255,255,255,0.03);
-            border: 1px solid rgba(255,255,255,0.05);
-            border-radius: 12px;
-            padding: 8px 12px;
-            margin-top: 14px;
-            margin-bottom: 14px;
-        }}
-        .metric-col {{
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 4px;
-        }}
-        .metric-lbl {{
-            font-size: 0.65rem;
-            color: #94a3b8;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }}
-        .metric-val {{
-            font-size: 0.85rem;
-            font-weight: 700;
-            white-space: nowrap;
-        }}
+    }}
+    
+    .flip-card.touch-hover .flip-card-front,
+    .flip-card.touch-hover .flip-card-back {{
+        border-color: var(--border);
+        box-shadow: 0 12px 28px rgba(0,0,0,0.5), 0 0 12px var(--border);
+    }}
+    
+    .card-header {{
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        width: 100%;
+    }}
+    .header-left-container {{
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-start;
+        flex-shrink: 0;
+    }}
+    .header-logo-row {{
+        display: flex;
+        align-items: center;
+    }}
+    .header-right {{
+        display: flex;
+        flex-direction: column;
+        align-items: flex-end;
+        text-align: right;
+        flex: 1;
+    }}
+    .stat-group {{
+        display: flex;
+        flex-direction: column;
+        align-items: flex-end;
+    }}
+    .stat-label {{
+        font-size: 0.7rem;
+        color: #aaa;
+        margin-bottom: 2px;
+        font-weight: 500;
+    }}
+    .current-value, .stat-value {{
+        font-size: 0.98rem;
+        font-weight: 700;
+        color: white;
+        white-space: nowrap;
+    }}
+    
+    .metrics-row {{
+        display: flex;
+        justify-content: space-between;
+        background: rgba(255,255,255,0.03);
+        border: 1px solid rgba(255,255,255,0.05);
+        border-radius: 12px;
+        padding: 8px 12px;
+        margin-top: 14px;
+        margin-bottom: 14px;
+    }}
+    .metric-col {{
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 4px;
+    }}
+    .metric-lbl {{
+        font-size: 0.65rem;
+        color: #94a3b8;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }}
+    .metric-val {{
+        font-size: 0.85rem;
+        font-weight: 700;
+        white-space: nowrap;
+    }}
 
-        .card-content {{
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-        }}
-        .label-value-row {{
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            font-size: 0.95rem;
-            line-height: 1.3;
-        }}
-        .label {{ color: #aaa; font-weight: 500; }}
-        .value {{ font-weight: 600; color: white; font-size: 1rem; }}
-        .total {{
-            font-size: 1.05rem;
-            margin-top: 6px;
-            border-top: 1px solid rgba(255,255,255,0.15);
-            padding-top: 6px;
-        }}
-        .total-value {{ font-size: 1.15rem; font-weight: 700; }}
-        
-        .chart-container {{
-            position: relative;
-            width: 100%;
-            height: 100%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }}
+    .card-content {{
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }}
+    .label-value-row {{
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-size: 0.95rem;
+        line-height: 1.3;
+    }}
+    .label {{ color: #aaa; font-weight: 500; }}
+    .value {{ font-weight: 600; color: white; font-size: 1rem; }}
+    .total {{
+        font-size: 1.05rem;
+        margin-top: 6px;
+        border-top: 1px solid rgba(255,255,255,0.15);
+        padding-top: 6px;
+    }}
+    .total-value {{ font-size: 1.15rem; font-weight: 700; }}
+    
+    .chart-container {{
+        position: relative;
+        width: 100%;
+        height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }}
 
-        canvas {{
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100% !important;
-            height: 100% !important;
-        }}
-        .chart-loading {{
-            position: absolute;
-            color: #ccc;
-            font-size: 0.85rem;
-            z-index: 10;
-        }}
+    canvas {{
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100% !important;
+        height: 100% !important;
+    }}
+    .chart-loading {{
+        position: absolute;
+        color: #ccc;
+        font-size: 0.85rem;
+        z-index: 10;
+    }}
+    
+    @media (max-width: 700px) {{
+        .flip-card {{ flex: 0 0 85vw; height: 305px; }}
+        .coin-grid {{ padding: 0 7.5vw; gap: 16px; }}
         
-        @media (max-width: 700px) {{
-            .flip-card {{ flex: 0 0 85vw; height: 305px; }}
-            .coin-grid {{ padding: 0 7.5vw; gap: 16px; }}
-            
-            .flip-card-front, .flip-card-back {{ padding: 12px 10px; }}
-            .current-value, .stat-value {{ font-size: min(3.8vw, 0.95rem); letter-spacing: -0.3px; }}
-            .stat-label {{ font-size: min(2.5vw, 0.65rem); }}
-            .header-logo-row span {{ font-size: min(4vw, 1.1rem) !important; margin-left: 6px !important; }}
-            .header-logo-row img {{ height: 32px !important; width: 32px !important; }}
-            
-            .metrics-row {{ padding: 6px 8px; }}
-            .metric-val {{ font-size: 0.75rem; }}
-            .metric-lbl {{ font-size: 0.55rem; }}
-        }}
-    </style>
+        .flip-card-front, .flip-card-back {{ padding: 12px 10px; }}
+        .current-value, .stat-value {{ font-size: min(3.8vw, 0.95rem); letter-spacing: -0.3px; }}
+        .stat-label {{ font-size: min(2.5vw, 0.65rem); }}
+        .header-logo-row span {{ font-size: min(4vw, 1.1rem) !important; margin-left: 6px !important; }}
+        .header-logo-row img {{ height: 32px !important; width: 32px !important; }}
+        
+        .metrics-row {{ padding: 6px 8px; }}
+        .metric-val {{ font-size: 0.75rem; }}
+        .metric-lbl {{ font-size: 0.55rem; }}
+    }}
+</style>
 </head>
 <body>
 
 <div class="scroll-wrapper" id="scrollContainer">
-    <div class="coin-grid">
-        {cards_html}
-    </div>
+<div class="coin-grid">
+    {cards_html}
+</div>
 </div>
 
 <script>
-    (function() {{
-        function closeAllOpenUI(e) {{
-            const isCardClick = e && e.target && typeof e.target.closest === 'function' && e.target.closest('.flip-card');
-            
-            if (!isCardClick) {{
-                document.querySelectorAll('.flip-card.flipped').forEach(card => {{
-                    card.classList.remove('flipped');
-                    card.classList.remove('touch-hover');
-                }});
-            }}
-        }}
-
-        ['click', 'touchstart'].forEach(evt => {{
-            document.addEventListener(evt, (e) => {{
-                closeAllOpenUI(e);
-            }}, {{ passive: true }});
-        }});
-
-        let lastDashState = null;
-        setInterval(() => {{
-            try {{
-                const dt = window.parent.document.getElementById('dash-toggle');
-                const dtUsdc = window.parent.document.getElementById('dash-toggle-usdc');
-                if (dt) {{
-                    const isChecked = dt.checked;
-                    if (dtUsdc && dtUsdc.checked !== isChecked) {{
-                        dtUsdc.checked = isChecked;
-                    }}
-
-                    if (isChecked !== lastDashState) {{
-                        lastDashState = isChecked;
-                        if (isChecked) {{
-                            document.body.classList.remove('privacy-mode');
-                            localStorage.setItem('dashboardOpen', 'true');
-                        }} else {{
-                            document.body.classList.add('privacy-mode');
-                            localStorage.setItem('dashboardOpen', 'false');
-                        }}
-                    }}
-                }}
-            }} catch(e) {{}}
-        }}, 150);
+(function() {{
+    function closeAllOpenUI(e) {{
+        const isCardClick = e && e.target && typeof e.target.closest === 'function' && e.target.closest('.flip-card');
         
+        if (!isCardClick) {{
+            document.querySelectorAll('.flip-card.flipped').forEach(card => {{
+                card.classList.remove('flipped');
+                card.classList.remove('touch-hover');
+            }});
+        }}
+    }}
+
+    ['click', 'touchstart'].forEach(evt => {{
+        document.addEventListener(evt, (e) => {{
+            closeAllOpenUI(e);
+        }}, {{ passive: true }});
+    }});
+
+    let lastDashState = null;
+    setInterval(() => {{
         try {{
             const dt = window.parent.document.getElementById('dash-toggle');
             const dtUsdc = window.parent.document.getElementById('dash-toggle-usdc');
             if (dt) {{
-                const saved = localStorage.getItem('dashboardOpen');
-                if (saved === 'true') {{
-                    dt.checked = true;
-                    if(dtUsdc) dtUsdc.checked = true;
-                    document.body.classList.remove('privacy-mode');
-                    lastDashState = true;
-                }} else {{
-                    dt.checked = false;
-                    if(dtUsdc) dtUsdc.checked = false;
-                    document.body.classList.add('privacy-mode');
-                    lastDashState = false;
+                const isChecked = dt.checked;
+                if (dtUsdc && dtUsdc.checked !== isChecked) {{
+                    dtUsdc.checked = isChecked;
+                }}
+
+                if (isChecked !== lastDashState) {{
+                    lastDashState = isChecked;
+                    if (isChecked) {{
+                        document.body.classList.remove('privacy-mode');
+                        localStorage.setItem('dashboardOpen', 'true');
+                    }} else {{
+                        document.body.classList.add('privacy-mode');
+                        localStorage.setItem('dashboardOpen', 'false');
+                    }}
                 }}
             }}
         }} catch(e) {{}}
+    }}, 150);
+    
+    try {{
+        const dt = window.parent.document.getElementById('dash-toggle');
+        const dtUsdc = window.parent.document.getElementById('dash-toggle-usdc');
+        if (dt) {{
+            const saved = localStorage.getItem('dashboardOpen');
+            if (saved === 'true') {{
+                dt.checked = true;
+                if(dtUsdc) dtUsdc.checked = true;
+                document.body.classList.remove('privacy-mode');
+                lastDashState = true;
+            }} else {{
+                dt.checked = false;
+                if(dtUsdc) dtUsdc.checked = false;
+                document.body.classList.add('privacy-mode');
+                lastDashState = false;
+            }}
+        }}
+    }} catch(e) {{}}
 
+    try {{
+        ['click', 'touchstart'].forEach(evt => {{
+            window.parent.document.addEventListener(evt, (e) => {{
+                closeAllOpenUI(e); 
+            }}, {{ passive: true }});
+        }});
+    }} catch(err) {{
+        console.log("Cannot bind to parent document");
+    }}
+
+    const scrollContainer = document.getElementById('scrollContainer');
+    if (scrollContainer) {{
+        scrollContainer.addEventListener('wheel', (evt) => {{
+            if (Math.abs(evt.deltaY) > Math.abs(evt.deltaX)) {{
+                evt.preventDefault();
+                scrollContainer.scrollBy({{ left: evt.deltaY > 0 ? 200 : -200, behavior: 'smooth' }});
+            }}
+        }}, {{ passive: false }});
+    }}
+
+    function updateMetricUI(card, ticker, period, basePrice, currentPrice) {{
+        const span = card.querySelector(`#change-${{period}}-${{ticker}}`);
+        if (!span || !basePrice) return;
+        const change = ((currentPrice - basePrice) / basePrice) * 100;
+        const sign = change >= 0 ? '▲' : '▼';
+        const color = change >= 0 ? '#00ff9d' : '#ff4d4d';
+        span.innerHTML = `<span style="color:${{color}};">${{sign}} ${{Math.abs(change).toFixed(2)}}%</span>`;
+    }}
+
+    const usdcHoldings = {usdc_holdings};
+    async function updateLivePrices() {{
+        const cards = Array.from(document.querySelectorAll('.flip-card'));
+        if (cards.length === 0) return;
+        const tickers = cards.map(card => card.getAttribute('data-ticker'));
+        const symbolMap = {{
+            'BTC':'BTC','ETH':'ETH','SOL':'SOL','HBAR':'HBAR',
+            'XRP':'XRP','BNB':'BNB','TRX':'TRX','LINK':'LINK','SUI':'SUI'
+        }};
+        const mappedTickers = tickers.map(t => symbolMap[t.toUpperCase()] || t.toUpperCase());
+
+        const url = `https://min-api.cryptocompare.com/data/pricemultifull?fsyms=${{mappedTickers.join(',')}}&tsyms=USD`;
         try {{
-            ['click', 'touchstart'].forEach(evt => {{
-                window.parent.document.addEventListener(evt, (e) => {{
-                    closeAllOpenUI(e); 
-                }}, {{ passive: true }});
-            }});
-        }} catch(err) {{
-            console.log("Cannot bind to parent document");
-        }}
-
-        const scrollContainer = document.getElementById('scrollContainer');
-        if (scrollContainer) {{
-            scrollContainer.addEventListener('wheel', (evt) => {{
-                if (Math.abs(evt.deltaY) > Math.abs(evt.deltaX)) {{
-                    evt.preventDefault();
-                    scrollContainer.scrollBy({{ left: evt.deltaY > 0 ? 200 : -200, behavior: 'smooth' }});
-                }}
-            }}, {{ passive: false }});
-        }}
-
-        function updateMetricUI(card, ticker, period, basePrice, currentPrice) {{
-            const span = card.querySelector(`#change-${{period}}-${{ticker}}`);
-            if (!span || !basePrice) return;
-            const change = ((currentPrice - basePrice) / basePrice) * 100;
-            const sign = change >= 0 ? '▲' : '▼';
-            const color = change >= 0 ? '#00ff9d' : '#ff4d4d';
-            span.innerHTML = `<span style="color:${{color}};">${{sign}} ${{Math.abs(change).toFixed(2)}}%</span>`;
-        }}
-
-        const usdcHoldings = {usdc_holdings};
-        async function updateLivePrices() {{
-            const cards = Array.from(document.querySelectorAll('.flip-card'));
-            if (cards.length === 0) return;
-            const tickers = cards.map(card => card.getAttribute('data-ticker'));
-            const symbolMap = {{
-                'BTC':'BTC','ETH':'ETH','SOL':'SOL','HBAR':'HBAR',
-                'XRP':'XRP','BNB':'BNB','TRX':'TRX','LINK':'LINK','SUI':'SUI'
-            }};
-            const mappedTickers = tickers.map(t => symbolMap[t.toUpperCase()] || t.toUpperCase());
-
-            const url = `https://min-api.cryptocompare.com/data/pricemultifull?fsyms=${{mappedTickers.join(',')}}&tsyms=USD`;
-            try {{
-                const resp = await fetch(url, {{ headers: {{ 'User-Agent': 'Mozilla/5.0' }} }});
-                const data = await resp.json();
+            const resp = await fetch(url, {{ headers: {{ 'User-Agent': 'Mozilla/5.0' }} }});
+            const data = await resp.json();
+            
+            let totalCoinValue = 0;
+            let totalCoinInvested = 0;
+            // Keep track of diffs to update charts smoothly
+            let tickerValues = {{}};
+            let tickerDiffs = {{}};
+            let tickerRoi = {{}};
+            let ticker24h = {{}};
+            
+            cards.forEach(card => {{
+                const ticker = card.getAttribute('data-ticker');
+                const sym = symbolMap[ticker.toUpperCase()] || ticker.toUpperCase();
+                const holdings = parseFloat(card.getAttribute('data-holdings'));
+                const invested = parseFloat(card.getAttribute('data-invested'));
+                let price = parseFloat(card.getAttribute('data-current-price'));
                 
-                let totalCoinValue = 0;
-                let totalCoinInvested = 0;
-                // Keep track of diffs to update charts smoothly
-                let tickerValues = {{}};
-                let tickerDiffs = {{}};
-                let tickerRoi = {{}};
-                let ticker24h = {{}};
-                
-                cards.forEach(card => {{
-                    const ticker = card.getAttribute('data-ticker');
-                    const sym = symbolMap[ticker.toUpperCase()] || ticker.toUpperCase();
-                    const holdings = parseFloat(card.getAttribute('data-holdings'));
-                    const invested = parseFloat(card.getAttribute('data-invested'));
-                    let price = parseFloat(card.getAttribute('data-current-price'));
-                    
-                    const changeSpan = card.querySelector(`#change-24h-${{ticker}}`);
+                const changeSpan = card.querySelector(`#change-24h-${{ticker}}`);
 
-                    if (data.RAW && data.RAW[sym] && data.RAW[sym].USD) {{
-                        const newPrice = data.RAW[sym].USD.PRICE;
-                        if (newPrice !== undefined) {{
-                            const oldVal = holdings * price;
-                            price = newPrice;
-                            card.setAttribute('data-current-price', price);
-                            
-                            const value = holdings * price;
-                            tickerValues[ticker] = value;
-                            tickerDiffs[ticker] = value - oldVal;
-                            
-                            const priceFmt = price < 1 ? price.toFixed(4) : price.toLocaleString('en-US', {{minimumFractionDigits: 2, maximumFractionDigits: 2}});
-                            const currentEl = card.querySelector('.current-value');
-                            if (currentEl) currentEl.innerText = '$' + priceFmt;
-                            
-                            const pnl = value - invested;
-                            const pnlPct = invested > 0 ? (pnl / invested) * 100 : 0;
-                            tickerRoi[ticker] = pnlPct;
-                            
-                            const valStr = '$' + value.toLocaleString('en-US', {{minimumFractionDigits: 2, maximumFractionDigits: 2}});
-                            const pnlStr = (pnl >= 0 ? '▲ $' : '▼ $') + Math.abs(pnl).toLocaleString('en-US', {{minimumFractionDigits: 2, maximumFractionDigits: 2}});
-                            const pnlPctStr = (pnl >= 0 ? '▲ ' : '▼ ') + Math.abs(pnlPct).toFixed(2) + '%';
-                            const color = pnl >= 0 ? '#00ff9d' : '#ff4d4d';
-                            
-                            const valEl = card.querySelector('.total-value');
-                            if (valEl) valEl.innerText = valStr;
-                            
-                            const pnlEl = card.querySelector('.card-pnl');
-                            if (pnlEl) {{
-                                pnlEl.innerText = pnlStr;
-                                pnlEl.style.color = color;
-                            }}
-                            
-                            const pnlPctEl = card.querySelector('.card-pnl-pct');
-                            if (pnlPctEl) {{
-                                pnlPctEl.innerText = pnlPctStr;
-                                pnlPctEl.style.color = color;
-                            }}
-                            
-                            // Update Historical Metrics directly via math
-                            const p7d = parseFloat(card.getAttribute('data-price-7d'));
-                            const p30d = parseFloat(card.getAttribute('data-price-30d'));
-                            const p90d = parseFloat(card.getAttribute('data-price-90d'));
-                            const pytd = parseFloat(card.getAttribute('data-price-ytd'));
-                            
-                            updateMetricUI(card, ticker, '7d', p7d, price);
-                            updateMetricUI(card, ticker, '30d', p30d, price);
-                            updateMetricUI(card, ticker, '90d', p90d, price);
-                            updateMetricUI(card, ticker, 'ytd', pytd, price);
-                            
-                            // Update sparkline chart
-                            if (window.chartCache && window.chartCache[ticker] && window.chartCache[ticker].chartObj) {{
-                                const chart = window.chartCache[ticker].chartObj;
-                                const dataLen = chart.data.datasets[0].data.length;
-                                if (dataLen > 0) {{
-                                    chart.data.datasets[0].data[dataLen - 1] = price;
-                                    chart.update('none'); 
-                                }}
-                            }}
+                if (data.RAW && data.RAW[sym] && data.RAW[sym].USD) {{
+                    const newPrice = data.RAW[sym].USD.PRICE;
+                    if (newPrice !== undefined) {{
+                        const oldVal = holdings * price;
+                        price = newPrice;
+                        card.setAttribute('data-current-price', price);
+                        
+                        const value = holdings * price;
+                        tickerValues[ticker] = value;
+                        tickerDiffs[ticker] = value - oldVal;
+                        
+                        const priceFmt = price < 1 ? price.toFixed(4) : price.toLocaleString('en-US', {{minimumFractionDigits: 2, maximumFractionDigits: 2}});
+                        const currentEl = card.querySelector('.current-value');
+                        if (currentEl) currentEl.innerText = '$' + priceFmt;
+                        
+                        const pnl = value - invested;
+                        const pnlPct = invested > 0 ? (pnl / invested) * 100 : 0;
+                        tickerRoi[ticker] = pnlPct;
+                        
+                        const valStr = '$' + value.toLocaleString('en-US', {{minimumFractionDigits: 2, maximumFractionDigits: 2}});
+                        const pnlStr = (pnl >= 0 ? '▲ $' : '▼ $') + Math.abs(pnl).toLocaleString('en-US', {{minimumFractionDigits: 2, maximumFractionDigits: 2}});
+                        const pnlPctStr = (pnl >= 0 ? '▲ ' : '▼ ') + Math.abs(pnlPct).toFixed(2) + '%';
+                        const color = pnl >= 0 ? '#00ff9d' : '#ff4d4d';
+                        
+                        const valEl = card.querySelector('.total-value');
+                        if (valEl) valEl.innerText = valStr;
+                        
+                        const pnlEl = card.querySelector('.card-pnl');
+                        if (pnlEl) {{
+                            pnlEl.innerText = pnlStr;
+                            pnlEl.style.color = color;
                         }}
                         
-                        // Update live 24h change text
-                        if (changeSpan && data.RAW[sym].USD.CHANGEPCT24HOUR !== undefined) {{
-                            const change = data.RAW[sym].USD.CHANGEPCT24HOUR;
-                            ticker24h[ticker] = change;
-                            const sign = change >= 0 ? '▲' : '▼';
-                            const color = change >= 0 ? '#00ff9d' : '#ff4d4d';
-                            changeSpan.innerHTML = `<span style="color:${{color}};">${{sign}} ${{Math.abs(change).toFixed(2)}}%</span>`;
+                        const pnlPctEl = card.querySelector('.card-pnl-pct');
+                        if (pnlPctEl) {{
+                            pnlPctEl.innerText = pnlPctStr;
+                            pnlPctEl.style.color = color;
                         }}
-                    }} else if (changeSpan && changeSpan.innerText === '...') {{
-                         changeSpan.innerHTML = `N/A`;
+                        
+                        // Update Historical Metrics directly via math
+                        const p7d = parseFloat(card.getAttribute('data-price-7d'));
+                        const p30d = parseFloat(card.getAttribute('data-price-30d'));
+                        const p90d = parseFloat(card.getAttribute('data-price-90d'));
+                        const pytd = parseFloat(card.getAttribute('data-price-ytd'));
+                        
+                        updateMetricUI(card, ticker, '7d', p7d, price);
+                        updateMetricUI(card, ticker, '30d', p30d, price);
+                        updateMetricUI(card, ticker, '90d', p90d, price);
+                        updateMetricUI(card, ticker, 'ytd', pytd, price);
+                        
+                        // Update sparkline chart
+                        if (window.chartCache && window.chartCache[ticker] && window.chartCache[ticker].chartObj) {{
+                            const chart = window.chartCache[ticker].chartObj;
+                            const dataLen = chart.data.datasets[0].data.length;
+                            if (dataLen > 0) {{
+                                chart.data.datasets[0].data[dataLen - 1] = price;
+                                chart.update('none'); 
+                            }}
+                        }}
                     }}
                     
-                    totalCoinValue += (holdings * price);
-                    totalCoinInvested += invested;
-                }});
+                    // Update live 24h change text
+                    if (changeSpan && data.RAW[sym].USD.CHANGEPCT24HOUR !== undefined) {{
+                        const change = data.RAW[sym].USD.CHANGEPCT24HOUR;
+                        ticker24h[ticker] = change;
+                        const sign = change >= 0 ? '▲' : '▼';
+                        const color = change >= 0 ? '#00ff9d' : '#ff4d4d';
+                        changeSpan.innerHTML = `<span style="color:${{color}};">${{sign}} ${{Math.abs(change).toFixed(2)}}%</span>`;
+                    }}
+                }} else if (changeSpan && changeSpan.innerText === '...') {{
+                     changeSpan.innerHTML = `N/A`;
+                }}
                 
-                const totalPortfolioValue = totalCoinValue + usdcHoldings;
-                const totalPnL = totalCoinValue - totalCoinInvested;
-                const totalInvestedBase = totalPortfolioValue - totalPnL;
-                const totalPnLPct = totalInvestedBase !== 0 ? (totalPnL / totalInvestedBase) * 100 : 0;
-                
-                const dashValStr = '$' + totalPortfolioValue.toLocaleString('en-US', {{minimumFractionDigits: 2, maximumFractionDigits: 2}});
-                const dashPnlStr = (totalPnL >= 0 ? '▲ $' : '▼ $') + Math.abs(totalPnL).toLocaleString('en-US', {{minimumFractionDigits: 2, maximumFractionDigits: 2}});
-                const dashPnlPctStr = (totalPnL >= 0 ? '▲ ' : '▼ ') + Math.abs(totalPnLPct).toFixed(2) + '%';
-                const dashColor = totalPnL >= 0 ? '#00ff9d' : '#ff4d4d';
-                
-                const parentDoc = window.parent.document;
-                const dValue = parentDoc.getElementById('dash-total-value');
-                const dPnl = parentDoc.getElementById('dash-pnl');
-                const dPnlPct = parentDoc.getElementById('dash-pnl-pct');
-                
-                if (dValue) dValue.innerText = dashValStr;
-                if (dPnl) {{ dPnl.innerText = dashPnlStr; dPnl.style.color = dashColor; }}
-                if (dPnlPct) {{ dPnlPct.innerText = dashPnlPctStr; dPnlPct.style.color = dashColor; }}
+                totalCoinValue += (holdings * price);
+                totalCoinInvested += invested;
+            }});
+            
+            const totalPortfolioValue = totalCoinValue + usdcHoldings;
+            const totalPnL = totalCoinValue - totalCoinInvested;
+            const totalInvestedBase = totalPortfolioValue - totalPnL;
+            const totalPnLPct = totalInvestedBase !== 0 ? (totalPnL / totalInvestedBase) * 100 : 0;
+            
+            const dashValStr = '$' + totalPortfolioValue.toLocaleString('en-US', {{minimumFractionDigits: 2, maximumFractionDigits: 2}});
+            const dashPnlStr = (totalPnL >= 0 ? '▲ $' : '▼ $') + Math.abs(totalPnL).toLocaleString('en-US', {{minimumFractionDigits: 2, maximumFractionDigits: 2}});
+            const dashPnlPctStr = (totalPnL >= 0 ? '▲ ' : '▼ ') + Math.abs(totalPnLPct).toFixed(2) + '%';
+            const dashColor = totalPnL >= 0 ? '#00ff9d' : '#ff4d4d';
+            
+            const parentDoc = window.parent.document;
+            const dValue = parentDoc.getElementById('dash-total-value');
+            const dPnl = parentDoc.getElementById('dash-pnl');
+            const dPnlPct = parentDoc.getElementById('dash-pnl-pct');
+            
+            if (dValue) dValue.innerText = dashValStr;
+            if (dPnl) {{ dPnl.innerText = dashPnlStr; dPnl.style.color = dashColor; }}
+            if (dPnlPct) {{ dPnlPct.innerText = dashPnlPctStr; dPnlPct.style.color = dashColor; }}
 
-                // ==========================================
-                // DYNAMICALLY UPDATE HIGHCHARTS (SYNCED)
-                // ==========================================
-                try {{
-                    let hcWin = null;
+            // ==========================================
+            // DYNAMICALLY UPDATE HIGHCHARTS (SYNCED)
+            // ==========================================
+            try {{
+                let hcWin = null;
+                const iframes = window.parent.document.querySelectorAll('iframe');
+                for (let i = 0; i < iframes.length; i++) {{
+                    if (iframes[i].contentWindow && iframes[i].contentWindow.Highcharts) {{
+                        hcWin = iframes[i].contentWindow;
+                        break;
+                    }}
+                }}
+
+                if (hcWin) {{
+                    const HC = hcWin.Highcharts;
+                    const pieChart = HC.charts.find(c => c && c.renderTo.id === 'pie-container');
+                    const histChart = HC.charts.find(c => c && c.renderTo.id === 'history-container');
+                    const pnlChart = HC.charts.find(c => c && c.renderTo.id === 'pnl-container');
+                    const roiChart = HC.charts.find(c => c && c.renderTo.id === 'roi-container');
+                    const dailyChart = HC.charts.find(c => c && c.renderTo.id === 'daily-container');
+                    const allocChart = HC.charts.find(c => c && c.renderTo.id === 'allocation-container');
+                    const invValChart = HC.charts.find(c => c && c.renderTo.id === 'inv-val-container');
+                    
+                    // 1. Pie Chart
+                    if (pieChart && pieChart.series[0]) {{
+                        pieChart.series[0].points.forEach(point => {{
+                            if (tickerValues[point.name] !== undefined) {{
+                                 point.update({{y: tickerValues[point.name]}}, false);
+                            }}
+                        }});
+                        pieChart.redraw(true);
+                    }}
+
+                    // 2. History Chart (Portfolio Value is series 0)
+                    if (histChart && histChart.series[0]) {{
+                        const points = histChart.series[0].points;
+                        if (points && points.length > 0) {{
+                            const lastPoint = points[points.length - 1];
+                            lastPoint.update({{y: totalPortfolioValue}}, false);
+                        }}
+                        histChart.redraw(true);
+                    }}
+
+                    // 3. PnL Bar Chart
+                    if (pnlChart && pnlChart.series[0]) {{
+                        pnlChart.series[0].points.forEach(point => {{
+                            if (tickerDiffs[point.name] !== undefined) {{
+                                point.update({{y: point.y + tickerDiffs[point.name]}}, false);
+                            }}
+                        }});
+                        
+                        if (typeof hcWin.pnlDataMap !== 'undefined') {{
+                            Object.keys(hcWin.pnlDataMap).forEach(key => {{
+                                hcWin.pnlDataMap[key].forEach(pt => {{
+                                     if (tickerDiffs[pt.name] !== undefined) {{
+                                        pt.y += tickerDiffs[pt.name];
+                                     }}
+                                }});
+                            }});
+                        }}
+                        pnlChart.redraw(true);
+                    }}
+                    
+                    // 4. ROI Chart
+                    if (roiChart && roiChart.series[0]) {{
+                         roiChart.series[0].points.forEach(point => {{
+                            if (tickerRoi[point.name] !== undefined) {{
+                                point.update({{y: tickerRoi[point.name]}}, false);
+                             }}
+                        }});
+                        roiChart.redraw(true);
+                    }}
+                    
+                    // 5. Daily 24h Chart
+                    if (dailyChart && dailyChart.series[0]) {{
+                         dailyChart.series[0].points.forEach(point => {{
+                            if (ticker24h[point.name] !== undefined) {{
+                                const val = ticker24h[point.name];
+                                const color = val >= 0 ? 'rgba(0, 255, 157, 0.65)' : 'rgba(255, 77, 77, 0.65)'; 
+                                point.update({{y: val, color: color}}, false);
+                            }}
+                        }});
+                        dailyChart.redraw(true);
+                    }}
+
+                    // 6. Asset Allocation Chart
+                    if (allocChart) {{
+                        allocChart.series.forEach(s => {{
+                             if (tickerValues[s.name] !== undefined) {{
+                                const points = s.points;
+                                if (points && points.length > 0) {{
+                                    const lastPoint = points[points.length - 1];
+                                    lastPoint.update({{y: tickerValues[s.name]}}, false);
+                                 }}
+                            }}
+                        }});
+                        allocChart.redraw(true);
+                    }}
+
+                    // 7. Invested vs Value Chart (Series 1 is 'Current Value')
+                    if (invValChart && invValChart.series[1]) {{
+                        invValChart.series[1].points.forEach(point => {{
+                             if (tickerValues[point.name] !== undefined) {{
+                                point.update({{y: tickerValues[point.name]}}, false);
+                            }}
+                         }});
+                        invValChart.redraw(true);
+                    }}
+                }}
+            }} catch (e) {{
+                console.error("Highcharts Sync Error: ", e);
+            }}
+            
+        }} catch (e) {{
+            console.error('Auto-refresh error:', e);
+        }}
+    }}
+    setInterval(updateLivePrices, 10000);
+    
+    function saveFlippedState() {{
+        const flippedCards = [];
+        document.querySelectorAll('.flip-card').forEach(card => {{
+            if (card.classList.contains('flipped')) {{
+                const ticker = card.getAttribute('data-ticker');
+                if (ticker) flippedCards.push(ticker);
+            }}
+        }});
+        localStorage.setItem('flippedCards', JSON.stringify(flippedCards));
+    }}
+    
+    function restoreFlippedState() {{
+        const saved = localStorage.getItem('flippedCards');
+        if (!saved) return;
+        const flippedTickers = JSON.parse(saved);
+        document.querySelectorAll('.flip-card').forEach(card => {{
+            const ticker = card.getAttribute('data-ticker');
+            if (flippedTickers.includes(ticker)) {{
+                card.classList.add('flipped');
+                card.classList.add('touch-hover');
+                const currentPrice = parseFloat(card.getAttribute('data-current-price'));
+                const avgPrice = parseFloat(card.getAttribute('data-avg-price'));
+                const chartColor = card.getAttribute('data-chart-color');
+                if (!chartCache[ticker] || !chartCache[ticker].chartObj) {{
+                     renderChart(card, ticker, currentPrice, avgPrice, chartColor);
+                }}
+            }}
+        }});
+        localStorage.removeItem('flippedCards');
+    }}
+
+    const flipCards = document.querySelectorAll('.flip-card');
+    window.chartCache = window.chartCache || {{}};
+    const chartCache = window.chartCache;
+    const refreshKey = '{st.session_state.refresh_key}';
+    
+    async function fetchAll24hChanges() {{
+        const cards = Array.from(document.querySelectorAll('.flip-card'));
+        if (cards.length === 0) return;
+        const tickers = cards.map(card => card.getAttribute('data-ticker'));
+        const symbolMap = {{
+            'BTC':'BTC','ETH':'ETH','SOL':'SOL','HBAR':'HBAR',
+            'XRP':'XRP','BNB':'BNB','TRX':'TRX','LINK':'LINK','SUI':'SUI'
+        }};
+        const mappedTickers = tickers.map(t => symbolMap[t.toUpperCase()] || t.toUpperCase());
+
+        const url = `https://min-api.cryptocompare.com/data/pricemultifull?fsyms=${{mappedTickers.join(',')}}&tsyms=USD`;
+        try {{
+            const resp = await fetch(url, {{ headers: {{ 'User-Agent': 'Mozilla/5.0' }} }});
+            const data = await resp.json();
+            
+            let init24h = {{}};
+
+            cards.forEach(card => {{
+                const ticker = card.getAttribute('data-ticker');
+                const sym = symbolMap[ticker.toUpperCase()] || ticker.toUpperCase();
+                const changeSpan = card.querySelector(`#change-24h-${{ticker}}`);
+
+                if (changeSpan && data.RAW && data.RAW[sym] && data.RAW[sym].USD && data.RAW[sym].USD.CHANGEPCT24HOUR !== undefined) {{
+                    const change = data.RAW[sym].USD.CHANGEPCT24HOUR;
+                    init24h[ticker] = change;
+                    const sign = change >= 0 ? '▲' : '▼';
+                    const color = change >= 0 ? '#00ff9d' : '#ff4d4d';
+                    changeSpan.innerHTML = `<span style="color:${{color}};">${{sign}} ${{Math.abs(change).toFixed(2)}}%</span>`;
+                }} else if (changeSpan) {{
+                     changeSpan.innerHTML = `N/A`;
+                }}
+            }});
+            
+            // Immediately push this initial fetch into the daily Highcharts graph
+            try {{
+                let hcWin = window;
+                if (window !== window.parent) {{
                     const iframes = window.parent.document.querySelectorAll('iframe');
                     for (let i = 0; i < iframes.length; i++) {{
                         if (iframes[i].contentWindow && iframes[i].contentWindow.Highcharts) {{
@@ -2163,854 +2481,680 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                             break;
                         }}
                     }}
-
-                    if (hcWin) {{
-                        const HC = hcWin.Highcharts;
-                        const pieChart = HC.charts.find(c => c && c.renderTo.id === 'pie-container');
-                        const histChart = HC.charts.find(c => c && c.renderTo.id === 'history-container');
-                        const pnlChart = HC.charts.find(c => c && c.renderTo.id === 'pnl-container');
-                        const roiChart = HC.charts.find(c => c && c.renderTo.id === 'roi-container');
-                        const dailyChart = HC.charts.find(c => c && c.renderTo.id === 'daily-container');
-                        const allocChart = HC.charts.find(c => c && c.renderTo.id === 'allocation-container');
-                        const invValChart = HC.charts.find(c => c && c.renderTo.id === 'inv-val-container');
-                        
-                        // 1. Pie Chart
-                        if (pieChart && pieChart.series[0]) {{
-                            pieChart.series[0].points.forEach(point => {{
-                                if (tickerValues[point.name] !== undefined) {{
-                                     point.update({{y: tickerValues[point.name]}}, false);
-                                }}
-                            }});
-                            pieChart.redraw(true);
-                        }}
-
-                        // 2. History Chart (Portfolio Value is series 0)
-                        if (histChart && histChart.series[0]) {{
-                            const points = histChart.series[0].points;
-                            if (points && points.length > 0) {{
-                                const lastPoint = points[points.length - 1];
-                                lastPoint.update({{y: totalPortfolioValue}}, false);
+                }}
+                if (hcWin && hcWin.Highcharts) {{
+                    const dailyC = hcWin.Highcharts.charts.find(c => c && c.renderTo.id === 'daily-container');
+                    if (dailyC && dailyC.series[0]) {{
+                        dailyC.series[0].points.forEach(pt => {{
+                            if (init24h[pt.name] !== undefined) {{
+                                 const val = init24h[pt.name];
+                                document.querySelector('.metric-val').parentElement.parentElement.parentElement.parentElement.parentElement.parentElement.parentElement.parentElement // trigger
+                                pt.update({{y: val, color: val >= 0 ? 'rgba(0, 255, 157, 0.65)' : 'rgba(255, 77, 77, 0.65)'}}, false);
                             }}
-                            histChart.redraw(true);
-                        }}
-
-                        // 3. PnL Bar Chart
-                        if (pnlChart && pnlChart.series[0]) {{
-                            pnlChart.series[0].points.forEach(point => {{
-                                if (tickerDiffs[point.name] !== undefined) {{
-                                    point.update({{y: point.y + tickerDiffs[point.name]}}, false);
-                                }}
-                            }});
-                            
-                            if (typeof hcWin.pnlDataMap !== 'undefined') {{
-                                Object.keys(hcWin.pnlDataMap).forEach(key => {{
-                                    hcWin.pnlDataMap[key].forEach(pt => {{
-                                         if (tickerDiffs[pt.name] !== undefined) {{
-                                            pt.y += tickerDiffs[pt.name];
-                                         }}
-                                    }});
-                                }});
-                            }}
-                            pnlChart.redraw(true);
-                        }}
-                        
-                        // 4. ROI Chart
-                        if (roiChart && roiChart.series[0]) {{
-                             roiChart.series[0].points.forEach(point => {{
-                                if (tickerRoi[point.name] !== undefined) {{
-                                    point.update({{y: tickerRoi[point.name]}}, false);
-                                 }}
-                            }});
-                            roiChart.redraw(true);
-                        }}
-                        
-                        // 5. Daily 24h Chart
-                        if (dailyChart && dailyChart.series[0]) {{
-                             dailyChart.series[0].points.forEach(point => {{
-                                if (ticker24h[point.name] !== undefined) {{
-                                    const val = ticker24h[point.name];
-                                    const color = val >= 0 ? 'rgba(0, 255, 157, 0.65)' : 'rgba(255, 77, 77, 0.65)'; 
-                                    point.update({{y: val, color: color}}, false);
-                                }}
-                            }});
-                            dailyChart.redraw(true);
-                        }}
-
-                        // 6. Asset Allocation Chart
-                        if (allocChart) {{
-                            allocChart.series.forEach(s => {{
-                                 if (tickerValues[s.name] !== undefined) {{
-                                    const points = s.points;
-                                    if (points && points.length > 0) {{
-                                        const lastPoint = points[points.length - 1];
-                                        lastPoint.update({{y: tickerValues[s.name]}}, false);
-                                     }}
-                                }}
-                            }});
-                            allocChart.redraw(true);
-                        }}
-
-                        // 7. Invested vs Value Chart (Series 1 is 'Current Value')
-                        if (invValChart && invValChart.series[1]) {{
-                            invValChart.series[1].points.forEach(point => {{
-                                 if (tickerValues[point.name] !== undefined) {{
-                                    point.update({{y: tickerValues[point.name]}}, false);
-                                }}
-                             }});
-                            invValChart.redraw(true);
-                        }}
-                    }}
-                }} catch (e) {{
-                    console.error("Highcharts Sync Error: ", e);
-                }}
-                
-            }} catch (e) {{
-                console.error('Auto-refresh error:', e);
-            }}
-        }}
-        setInterval(updateLivePrices, 10000);
-        
-        function saveFlippedState() {{
-            const flippedCards = [];
-            document.querySelectorAll('.flip-card').forEach(card => {{
-                if (card.classList.contains('flipped')) {{
-                    const ticker = card.getAttribute('data-ticker');
-                    if (ticker) flippedCards.push(ticker);
-                }}
-            }});
-            localStorage.setItem('flippedCards', JSON.stringify(flippedCards));
-        }}
-        
-        function restoreFlippedState() {{
-            const saved = localStorage.getItem('flippedCards');
-            if (!saved) return;
-            const flippedTickers = JSON.parse(saved);
-            document.querySelectorAll('.flip-card').forEach(card => {{
-                const ticker = card.getAttribute('data-ticker');
-                if (flippedTickers.includes(ticker)) {{
-                    card.classList.add('flipped');
-                    card.classList.add('touch-hover');
-                    const currentPrice = parseFloat(card.getAttribute('data-current-price'));
-                    const avgPrice = parseFloat(card.getAttribute('data-avg-price'));
-                    const chartColor = card.getAttribute('data-chart-color');
-                    if (!chartCache[ticker] || !chartCache[ticker].chartObj) {{
-                         renderChart(card, ticker, currentPrice, avgPrice, chartColor);
+                         }});
+                        dailyC.redraw();
                     }}
                 }}
-            }});
-            localStorage.removeItem('flippedCards');
-        }}
-
-        const flipCards = document.querySelectorAll('.flip-card');
-        window.chartCache = window.chartCache || {{}};
-        const chartCache = window.chartCache;
-        const refreshKey = '{st.session_state.refresh_key}';
-        
-        async function fetchAll24hChanges() {{
-            const cards = Array.from(document.querySelectorAll('.flip-card'));
-            if (cards.length === 0) return;
-            const tickers = cards.map(card => card.getAttribute('data-ticker'));
-            const symbolMap = {{
-                'BTC':'BTC','ETH':'ETH','SOL':'SOL','HBAR':'HBAR',
-                'XRP':'XRP','BNB':'BNB','TRX':'TRX','LINK':'LINK','SUI':'SUI'
-            }};
-            const mappedTickers = tickers.map(t => symbolMap[t.toUpperCase()] || t.toUpperCase());
-
-            const url = `https://min-api.cryptocompare.com/data/pricemultifull?fsyms=${{mappedTickers.join(',')}}&tsyms=USD`;
-            try {{
-                const resp = await fetch(url, {{ headers: {{ 'User-Agent': 'Mozilla/5.0' }} }});
-                const data = await resp.json();
-                
-                let init24h = {{}};
-
-                cards.forEach(card => {{
-                    const ticker = card.getAttribute('data-ticker');
-                    const sym = symbolMap[ticker.toUpperCase()] || ticker.toUpperCase();
-                    const changeSpan = card.querySelector(`#change-24h-${{ticker}}`);
-
-                    if (changeSpan && data.RAW && data.RAW[sym] && data.RAW[sym].USD && data.RAW[sym].USD.CHANGEPCT24HOUR !== undefined) {{
-                        const change = data.RAW[sym].USD.CHANGEPCT24HOUR;
-                        init24h[ticker] = change;
-                        const sign = change >= 0 ? '▲' : '▼';
-                        const color = change >= 0 ? '#00ff9d' : '#ff4d4d';
-                        changeSpan.innerHTML = `<span style="color:${{color}};">${{sign}} ${{Math.abs(change).toFixed(2)}}%</span>`;
-                    }} else if (changeSpan) {{
-                         changeSpan.innerHTML = `N/A`;
-                    }}
-                }});
-                
-                // Immediately push this initial fetch into the daily Highcharts graph
-                try {{
-                    let hcWin = window;
-                    if (window !== window.parent) {{
-                        const iframes = window.parent.document.querySelectorAll('iframe');
-                        for (let i = 0; i < iframes.length; i++) {{
-                            if (iframes[i].contentWindow && iframes[i].contentWindow.Highcharts) {{
-                                hcWin = iframes[i].contentWindow;
-                                break;
-                            }}
-                        }}
-                    }}
-                    if (hcWin && hcWin.Highcharts) {{
-                        const dailyC = hcWin.Highcharts.charts.find(c => c && c.renderTo.id === 'daily-container');
-                        if (dailyC && dailyC.series[0]) {{
-                            dailyC.series[0].points.forEach(pt => {{
-                                if (init24h[pt.name] !== undefined) {{
-                                     const val = init24h[pt.name];
-                                    pt.update({{y: val, color: val >= 0 ? 'rgba(0, 255, 157, 0.65)' : 'rgba(255, 77, 77, 0.65)'}}, false);
-                                }}
-                             }});
-                            dailyC.redraw();
-                        }}
-                    }}
-                }} catch(e) {{}}
-                
-            }} catch(e) {{
-                console.error("Bulk 24h change error", e);
-            }}
-        }}
-        
-        async function fetchHistoricalData(ticker) {{
-            const symbolMap = {{
-                'BTC':'BTC','ETH':'ETH','SOL':'SOL','HBAR':'HBAR',
-                'XRP':'XRP','BNB':'BNB','TRX':'TRX','LINK':'LINK','SUI':'SUI'
-            }};
-            const sym = symbolMap[ticker.toUpperCase()];
-            if (!sym) return null;
-            const url = `https://min-api.cryptocompare.com/data/v2/histoday?fsym=${{sym}}&tsym=USD&limit=30`;
-            try {{
-                const resp = await fetch(url, {{ headers: {{ 'User-Agent': 'Mozilla/5.0' }} }});
-                const data = await resp.json();
-                if (data && data.Data && data.Data.Data) {{
-                    const ohlc = data.Data.Data;
-                    const labels = ohlc.map(d => {{
-                        const dt = new Date(d.time * 1000);
-                        return `${{dt.getDate().toString().padStart(2,'0')}}/${{(dt.getMonth()+1).toString().padStart(2,'0')}}`;
-                    }});
-                    const prices = ohlc.map(d => d.close);
-                    return {{ labels, prices }};
-                }}
-                return null;
-            }} catch(e) {{
-                console.error("Fetch error for", ticker, e);
-                return null;
-            }}
-        }}
-        
-        async function renderChart(card, ticker, currentPrice, avgPrice, chartColor) {{
-            const canvas = card.querySelector(`canvas#chart-${{ticker}}`);
-            const loadingDiv = card.querySelector(`.chart-loading`);
-            if (!canvas) return;
-            if (chartCache[ticker] && chartCache[ticker].chart) {{
-                if (loadingDiv) loadingDiv.style.display = 'none';
-                return;
-            }}
-            if (loadingDiv) loadingDiv.style.display = 'block';
-            const hist = await fetchHistoricalData(ticker);
-            if (!hist || hist.prices.length === 0) {{
-                if (loadingDiv) loadingDiv.innerText = 'Failed to load chart data';
-                return;
-            }}
+            }} catch(e) {{}}
             
-            hist.prices[hist.prices.length - 1] = currentPrice;
-            const ctx = canvas.getContext('2d');
-            if (chartCache[ticker] && chartCache[ticker].chartObj) {{
-                chartCache[ticker].chartObj.destroy();
+        }} catch(e) {{
+            console.error("Bulk 24h change error", e);
+        }}
+    }}
+    
+    async function fetchHistoricalData(ticker) {{
+        const symbolMap = {{
+            'BTC':'BTC','ETH':'ETH','SOL':'SOL','HBAR':'HBAR',
+            'XRP':'XRP','BNB':'BNB','TRX':'TRX','LINK':'LINK','SUI':'SUI'
+        }};
+        const sym = symbolMap[ticker.toUpperCase()];
+        if (!sym) return null;
+        const url = `https://min-api.cryptocompare.com/data/v2/histoday?fsym=${{sym}}&tsym=USD&limit=30`;
+        try {{
+            const resp = await fetch(url, {{ headers: {{ 'User-Agent': 'Mozilla/5.0' }} }});
+            const data = await resp.json();
+            if (data && data.Data && data.Data.Data) {{
+                const ohlc = data.Data.Data;
+                const labels = ohlc.map(d => {{
+                    const dt = new Date(d.time * 1000);
+                    return `${{dt.getDate().toString().padStart(2,'0')}}/${{(dt.getMonth()+1).toString().padStart(2,'0')}}`;
+                }});
+                const prices = ohlc.map(d => d.close);
+                return {{ labels, prices }};
             }}
-            const datasets = [
-                {{
-                    label: 'Close Price ($)',
-                    data: hist.prices,
-                    borderColor: chartColor,
-                    backgroundColor: chartColor + '20',
-                    borderWidth: 2,
-                    fill: true,
-                    tension: 0.2,
-                    pointRadius: 2,
-                    pointBackgroundColor: chartColor
-                }},
-                {{
-                    label: 'Avg Price ($)',
-                    data: new Array(hist.labels.length).fill(avgPrice),
-                    borderColor: '#ffaa00',
-                    borderWidth: 2,
-                    borderDash: [5, 5],
-                    fill: false,
-                    pointRadius: 0,
-                    type: 'line'
-                }}
-            ];
-            const newChart = new Chart(ctx, {{
-                type: 'line',
-                data: {{
-                    labels: hist.labels,
-                    datasets: datasets
-                }},
-                 options: {{
-                    responsive: true,
-                    maintainAspectRatio: false, 
-                    plugins: {{
-                        legend: {{ display: false }},
-                        tooltip: {{ mode: 'index', intersect: false }}
-                    }},
-                    scales: {{
-                         x: {{ ticks: {{ color: '#ccc', maxRotation: 45, autoSkip: true, maxTicksLimit: 6 }}, grid: {{ color: 'rgba(255,255,255,0.1)' }} }},
-                        y: {{ position: 'right', ticks: {{ color: '#ccc' }}, grid: {{ color: 'rgba(255,255,255,0.1)' }} }}
-                    }}
-                }}
-             }});
-            chartCache[ticker] = {{ chartObj: newChart, data: hist }};
+            return null;
+        }} catch(e) {{
+            console.error("Fetch error for", ticker, e);
+            return null;
+        }}
+    }}
+    
+    async function renderChart(card, ticker, currentPrice, avgPrice, chartColor) {{
+        const canvas = card.querySelector(`canvas#chart-${{ticker}}`);
+        const loadingDiv = card.querySelector(`.chart-loading`);
+        if (!canvas) return;
+        if (chartCache[ticker] && chartCache[ticker].chart) {{
             if (loadingDiv) loadingDiv.style.display = 'none';
+            return;
+        }}
+        if (loadingDiv) loadingDiv.style.display = 'block';
+        const hist = await fetchHistoricalData(ticker);
+        if (!hist || hist.prices.length === 0) {{
+            if (loadingDiv) loadingDiv.innerText = 'Failed to load chart data';
+            return;
         }}
         
-        flipCards.forEach(card => {{
-            const ticker = card.getAttribute('data-ticker');
-            const currentPrice = parseFloat(card.getAttribute('data-current-price'));
-            const avgPrice = parseFloat(card.getAttribute('data-avg-price'));
-            const chartColor = card.getAttribute('data-chart-color');
-            const border = card.getAttribute('data-border');
-            card.style.setProperty('--border', border);
-            
-            // We initialize the calculated static metrics here so they appear instantly 
-            const p7d = parseFloat(card.getAttribute('data-price-7d'));
-            const p30d = parseFloat(card.getAttribute('data-price-30d'));
-            const p90d = parseFloat(card.getAttribute('data-price-90d'));
-            const pytd = parseFloat(card.getAttribute('data-price-ytd'));
-            
-            updateMetricUI(card, ticker, '7d', p7d, currentPrice);
-            updateMetricUI(card, ticker, '30d', p30d, currentPrice);
-            updateMetricUI(card, ticker, '90d', p90d, currentPrice);
-            updateMetricUI(card, ticker, 'ytd', pytd, currentPrice);
-            
-            const front = card.querySelector('.flip-card-front');
-            front.addEventListener('click', (e) => {{
-                e.stopPropagation();
-                if (!card.classList.contains('flipped')) {{
-                    card.classList.add('flipped');
-                    card.classList.add('touch-hover');
-                    if (!chartCache[ticker] || !chartCache[ticker].chartObj) {{
-                        renderChart(card, ticker, currentPrice, avgPrice, chartColor);
-                    }}
+        hist.prices[hist.prices.length - 1] = currentPrice;
+        const ctx = canvas.getContext('2d');
+        if (chartCache[ticker] && chartCache[ticker].chartObj) {{
+            chartCache[ticker].chartObj.destroy();
+        }}
+        const datasets = [
+            {{
+                label: 'Close Price ($)',
+                data: hist.prices,
+                borderColor: chartColor,
+                backgroundColor: chartColor + '20',
+                borderWidth: 2,
+                fill: true,
+                tension: 0.2,
+                pointRadius: 2,
+                pointBackgroundColor: chartColor
+            }},
+            {{
+                label: 'Avg Price ($)',
+                data: new Array(hist.labels.length).fill(avgPrice),
+                borderColor: '#ffaa00',
+                borderWidth: 2,
+                borderDash: [5, 5],
+                fill: false,
+                pointRadius: 0,
+                type: 'line'
+            }}
+        ];
+        const newChart = new Chart(ctx, {{
+            type: 'line',
+            data: {{
+                labels: hist.labels,
+                datasets: datasets
+            }},
+             options: {{
+                responsive: true,
+                maintainAspectRatio: false, 
+                plugins: {{
+                    legend: {{ display: false }},
+                    tooltip: {{ mode: 'index', intersect: false }}
+                }},
+                scales: {{
+                     x: {{ ticks: {{ color: '#ccc', maxRotation: 45, autoSkip: true, maxTicksLimit: 6 }}, grid: {{ color: 'rgba(255,255,255,0.1)' }} }},
+                    y: {{ position: 'right', ticks: {{ color: '#ccc' }}, grid: {{ color: 'rgba(255,255,255,0.1)' }} }}
                 }}
-            }});
-            
-            const backDiv = card.querySelector('.flip-card-back');
-            backDiv.addEventListener('click', (e) => {{
-                card.classList.remove('flipped');
-                card.classList.remove('touch-hover');
-            }});
-            
-            const extBtn = card.querySelector('.tv-external-btn');
-            if (extBtn) {{
-                extBtn.addEventListener('click', (e) => {{
-                    e.stopPropagation();
-                }});
+            }}
+         }});
+        chartCache[ticker] = {{ chartObj: newChart, data: hist }};
+        if (loadingDiv) loadingDiv.style.display = 'none';
+    }}
+    
+    flipCards.forEach(card => {{
+        const ticker = card.getAttribute('data-ticker');
+        const currentPrice = parseFloat(card.getAttribute('data-current-price'));
+        const avgPrice = parseFloat(card.getAttribute('data-avg-price'));
+        const chartColor = card.getAttribute('data-chart-color');
+        const border = card.getAttribute('data-border');
+        card.style.setProperty('--border', border);
+        
+        // We initialize the calculated static metrics here so they appear instantly 
+        const p7d = parseFloat(card.getAttribute('data-price-7d'));
+        const p30d = parseFloat(card.getAttribute('data-price-30d'));
+        const p90d = parseFloat(card.getAttribute('data-price-90d'));
+        const pytd = parseFloat(card.getAttribute('data-price-ytd'));
+        
+        updateMetricUI(card, ticker, '7d', p7d, currentPrice);
+        updateMetricUI(card, ticker, '30d', p30d, currentPrice);
+        updateMetricUI(card, ticker, '90d', p90d, currentPrice);
+        updateMetricUI(card, ticker, 'ytd', pytd, currentPrice);
+        
+        const front = card.querySelector('.flip-card-front');
+        front.addEventListener('click', (e) => {{
+            e.stopPropagation();
+            if (!card.classList.contains('flipped')) {{
+                card.classList.add('flipped');
+                card.classList.add('touch-hover');
+                if (!chartCache[ticker] || !chartCache[ticker].chartObj) {{
+                    renderChart(card, ticker, currentPrice, avgPrice, chartColor);
+                }}
             }}
         }});
         
-        // Initial call to sync 24h change values immediately on load
-        updateLivePrices();
-        restoreFlippedState();
+        const backDiv = card.querySelector('.flip-card-back');
+        backDiv.addEventListener('click', (e) => {{
+            card.classList.remove('flipped');
+            card.classList.remove('touch-hover');
+        }});
         
-        if (window.oldRefreshKey && window.oldRefreshKey !== refreshKey) {{
-            for (let key in chartCache) {{
-                if (chartCache[key].chartObj) chartCache[key].chartObj.destroy();
-            }}
-            window.chartCache = {{}};
+        const extBtn = card.querySelector('.tv-external-btn');
+        if (extBtn) {{
+            extBtn.addEventListener('click', (e) => {{
+                e.stopPropagation();
+            }});
         }}
-        window.oldRefreshKey = refreshKey;
-    }})();
+    }});
+    
+    // Initial call to sync 24h change values immediately on load
+    updateLivePrices();
+    restoreFlippedState();
+    
+    if (window.oldRefreshKey && window.oldRefreshKey !== refreshKey) {{
+        for (let key in chartCache) {{
+            if (chartCache[key].chartObj) chartCache[key].chartObj.destroy();
+        }}
+        window.chartCache = {{}};
+    }}
+    window.oldRefreshKey = refreshKey;
+}})();
 </script>
 </body>
 </html>
 """
-        components.html(full_html, height=380, scrolling=False)
+    components.html(full_html, height=380, scrolling=False)
+    
+    # Overview specific settings / actions placed nicely at the bottom
+    st.divider()
+    action_col1, action_col2 = st.columns(2)
+    with action_col1:
+        if st.button("🔄 Refresh All Prices & Charts", use_container_width=True):
+            st.session_state.refresh_key = random.randint(100000, 999999)
+            st.session_state.ui_version += 1
+            st.success("✅ Prices & charts refreshed!")
+            st.rerun()
+    with action_col2:
+        data = {"crypto": json.loads(st.session_state.crypto_df.to_json(orient="records")),
+                "fiat": json.loads(st.session_state.fiat_df.to_json(orient="records"))}
+        st.download_button("💾 Download Backup", json.dumps(data, indent=2), "portfolio_backup.json", "application/json", use_container_width=True)
 
-    # ====================== CRYPTO TRANSACTIONS ======================
-    elif st.session_state.page == "Crypto Transactions":
-        glossy_header("Crypto Transactions", CRYPTO_ICON)
+with tab_crypto:
+    glossy_header("Crypto Transactions", CRYPTO_ICON)
 
-        st.markdown("""
-        <style>
-        /* 1. NEW ADD TRANSACTION CARD */
-        div[data-testid="stForm"]:has(.add-tx-card) {
-            background: #0f172a !important;
-            border: 1px solid rgba(255,255,255,0.05) !important;
-            border-radius: 16px !important;
-            padding: 24px !important;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.3) !important;
-            margin-bottom: 24px !important;
+    st.markdown("""
+    <style>
+    /* 1. NEW ADD TRANSACTION CARD */
+    div[data-testid="stForm"]:has(.add-tx-card) {
+        background: #0f172a !important;
+        border: 1px solid rgba(255,255,255,0.05) !important;
+        border-radius: 16px !important;
+        padding: 24px !important;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.3) !important;
+        margin-bottom: 24px !important;
+    }
+    div[data-testid="stForm"]:has(.add-tx-card) label { font-size: 0.85rem !important; color: #94a3b8 !important; padding-bottom: 2px !important; }
+    
+    div[data-testid="stForm"]:has(.add-tx-card) .stTextInput input,
+    div[data-testid="stForm"]:has(.add-tx-card) .stNumberInput input,
+    div[data-testid="stForm"]:has(.add-tx-card) .stDateInput input {
+        background: rgba(255,255,255,0.03) !important;
+        border: 1px solid rgba(255,255,255,0.1) !important;
+        color: #fff !important;
+        border-radius: 8px !important;
+        margin-bottom: 0px !important;
+    }
+
+    /* 1a. FIRST ROW (4 columns): Inputs */
+    div[data-testid="stForm"]:has(.add-tx-card) div[data-testid="stHorizontalBlock"]:has(> div[data-testid="column"]:nth-child(4)) {
+        display: flex !important;
+        gap: 12px !important;
+    }
+    
+    /* 1b. SECOND ROW (2 columns): Action (Switch + Button) */
+    div[data-testid="stForm"]:has(.add-tx-card) div[data-testid="stHorizontalBlock"]:has(> div[data-testid="column"]:nth-child(2):last-child) {
+        display: flex !important;
+        flex-direction: row !important;
+        justify-content: space-between !important;
+        align-items: center !important;
+        margin-top: 12px !important;
+        gap: 12px !important;
+    }
+    /* Make switch column hug content, make button column take rest */
+    div[data-testid="stForm"]:has(.add-tx-card) div[data-testid="stHorizontalBlock"]:has(> div[data-testid="column"]:nth-child(2):last-child) > div[data-testid="column"]:nth-child(1) {
+        flex: 0 0 auto !important;
+        width: auto !important;
+    }
+    div[data-testid="stForm"]:has(.add-tx-card) div[data-testid="stHorizontalBlock"]:has(> div[data-testid="column"]:nth-child(2):last-child) > div[data-testid="column"]:nth-child(2) {
+        flex: 1 1 auto !important;
+        width: auto !important;
+    }
+
+    /* BEAUTIFUL BUY/SELL SWITCH */
+    div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] {
+        background: rgba(0,0,0,0.3) !important;
+        padding: 6px !important;
+        border-radius: 12px !important;
+        display: flex !important;
+        flex-direction: row !important;
+        gap: 8px !important;
+        align-items: center !important;
+        margin: 0 !important;
+        height: 48px !important;
+        border: 1px solid rgba(255,255,255,0.05) !important;
+        min-width: 200px !important;
+    }
+    div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label {
+        margin: 0 !important;
+        cursor: pointer !important; 
+        padding: 0 !important; 
+        border-radius: 8px !important;
+        border: 1px solid transparent !important; 
+        transition: all 0.3s ease !important;
+        background: transparent !important;
+        flex: 1 !important; 
+        display: flex !important;
+        justify-content: center !important;
+        align-items: center !important;
+        height: 100% !important;
+    }
+    div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label:hover { background: rgba(255,255,255,0.05) !important;
+    }
+    div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label > div:first-child { display: none !important;
+    } 
+    div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label p {
+        font-weight: bold !important;
+        font-size: 1.05rem !important; color: #94a3b8 !important; margin: 0 !important; padding: 0 !important; white-space: nowrap !important; line-height: 1 !important;
+    }
+    /* Active Buy */
+    div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label:has(input:checked):first-child,
+    div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label[aria-checked="true"]:first-child {
+        background: rgba(0, 255, 157, 0.15) !important;
+        border-color: #00ff9d !important;
+    }
+    div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label:has(input:checked):first-child p,
+    div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label[aria-checked="true"]:first-child p { color: #00ff9d !important;
+    }
+    
+    /* Active Sell */
+    div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label:has(input:checked):last-child,
+    div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label[aria-checked="true"]:last-child {
+        background: rgba(255, 77, 77, 0.15) !important;
+        border-color: #ff4d4d !important;
+    }
+    div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label:has(input:checked):last-child p,
+    div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label[aria-checked="true"]:last-child p { color: #ff4d4d !important;
+    }
+
+    /* 3. RIGHT ALIGNED SUBMIT BUTTON */
+    div[data-testid="stForm"]:has(.add-tx-card) .stButton {
+        display: flex !important;
+        justify-content: flex-end !important; /* Force to right side */
+        align-items: center !important;
+        margin: 0 !important; padding: 0 !important;
+        width: 100% !important;
+    }
+    div[data-testid="stForm"]:has(.add-tx-card) .stButton > button {
+        background: #1e2a44 !important;
+        color: #e0e0e0 !important; padding: 0 24px !important;
+        border-radius: 10px !important; font-size: 1.05rem !important; font-weight: 700 !important;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.25) !important; transition: all 0.3s ease !important;
+        border: none !important; margin: 0 !important; width: auto !important;
+        height: 48px !important; min-height: 48px !important;
+    }
+    div[data-testid="stForm"]:has(.add-tx-card) .stButton > button:hover {
+        transform: translateY(-2px) !important;
+        box-shadow: 0 8px 20px rgba(255, 255, 255, 0.2) !important; color: white !important;
+    }
+
+    /* 4. TRANSACTION ROW STYLING & INLINE BUTTONS */
+    div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row) {
+        background: #0f172a !important;
+        border: 1px solid rgba(255,255,255,0.05) !important;
+        border-radius: 12px !important;
+        padding: 12px 16px !important;
+        margin-bottom: 12px !important;
+        position: relative;
+        z-index: 2;
+    }
+    div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row) > div { padding: 0 !important;
+    } 
+    
+    div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row) div[data-testid="stButton"] button {
+        background: rgba(255,255,255,0.05) !important;
+        border-radius: 8px !important; border: none !important;
+        height: 40px !important; width: 40px !important; display: flex !important; align-items: center !important;
+        justify-content: center !important; padding: 0 !important; margin: 0 auto !important; font-size: 1.2rem !important;
+        transition: all 0.2s !important;
+    }
+    div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row) div[data-testid="stButton"] button:hover {
+        background: rgba(255,255,255,0.15) !important;
+        transform: scale(1.05) !important;
+    }
+
+    /* 5. SMOOTH EDIT ROLLOUT */
+    @keyframes rollDown { from { opacity: 0;
+        transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+    div[data-testid="stForm"]:has(.edit-rollout) {
+        animation: rollDown 0.3s ease forwards !important;
+        background: rgba(0,0,0,0.2) !important;
+        border-left: 3px solid #00ff9d !important; border-radius: 0 0 12px 12px !important;
+        border-top: none !important; border-right: none !important;
+        border-bottom: none !important;
+        padding: 16px !important; margin-top: -24px !important; margin-bottom: 20px !important;
+        position: relative; z-index: 1;
+        box-shadow: inset 0 4px 10px rgba(0,0,0,0.15) !important;
+    }
+
+    /* 6. REDESIGNED DELETE DIALOG */
+    div[data-testid="stVerticalBlockBorderWrapper"]:has(.del-warn) {
+        border-color: rgba(255, 77, 77, 0.3) !important;
+        background: rgba(15, 23, 42, 0.95) !important;
+        border-radius: 12px !important; 
+        padding: 16px !important; 
+        text-align: center !important;
+        margin-bottom: 12px !important;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.4) !important;
+    }
+    div[data-testid="stVerticalBlockBorderWrapper"]:has(.del-warn) .stButton > button {
+        border-radius: 8px !important;
+        font-weight: 600 !important; 
+        transition: all 0.2s !important; 
+        width: 100% !important; 
+        margin-top: 8px !important;
+        padding: 6px 12px !important;
+    }
+    div[data-testid="stVerticalBlockBorderWrapper"]:has(.del-warn) div[data-testid="column"]:nth-child(1) .stButton > button {
+        background: rgba(255, 77, 77, 0.1) !important;
+        color: #ff4d4d !important; 
+        border: 1px solid rgba(255, 77, 77, 0.3) !important;
+    }
+    div[data-testid="stVerticalBlockBorderWrapper"]:has(.del-warn) div[data-testid="column"]:nth-child(1) .stButton > button:hover {
+        background: #ff4d4d !important;
+        color: white !important;
+    }
+    div[data-testid="stVerticalBlockBorderWrapper"]:has(.del-warn) div[data-testid="column"]:nth-child(2) .stButton > button {
+        background: rgba(255, 255, 255, 0.05) !important;
+        color: #cbd5e1 !important; 
+        border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    }
+    div[data-testid="stVerticalBlockBorderWrapper"]:has(.del-warn) div[data-testid="column"]:nth-child(2) .stButton > button:hover {
+        background: rgba(255, 255, 255, 0.15) !important;
+        color: white !important;
+    }
+
+    /* ==============================================================
+       7. MOBILE OVERRIDES (IRONCLAD)
+       ============================================================== */
+    @media (max-width: 768px) {
+        .stApp { padding-top: 72px !important;
         }
-        div[data-testid="stForm"]:has(.add-tx-card) label { font-size: 0.85rem !important; color: #94a3b8 !important; padding-bottom: 2px !important; }
+        .glossy-header { margin-top: 48px !important; margin-bottom: 24px !important;
+        padding: 20px 16px !important; font-size: 22px !important; min-height: 90px; }
+        .home-header { margin-bottom: 0 !important;
+        }
         
-        div[data-testid="stForm"]:has(.add-tx-card) .stTextInput input,
-        div[data-testid="stForm"]:has(.add-tx-card) .stNumberInput input,
-        div[data-testid="stForm"]:has(.add-tx-card) .stDateInput input {
-            background: rgba(255,255,255,0.03) !important;
-            border: 1px solid rgba(255,255,255,0.1) !important;
-            color: #fff !important;
-            border-radius: 8px !important;
-            margin-bottom: 0px !important;
-        }
-
-        /* 1a. FIRST ROW (4 columns): Inputs */
-        div[data-testid="stForm"]:has(.add-tx-card) div[data-testid="stHorizontalBlock"]:has(> div[data-testid="column"]:nth-child(4)) {
+        /* Fix Add Form Mobile Grid */
+        /* Force all horizontal blocks inside the form to flex explicitly */
+        div[data-testid="stForm"]:has(.add-tx-card) div[data-testid="stHorizontalBlock"] {
             display: flex !important;
+            flex-direction: row !important; 
+            flex-wrap: wrap !important; 
             gap: 12px !important;
         }
         
-        /* 1b. SECOND ROW (2 columns): Action (Switch + Button) */
-        div[data-testid="stForm"]:has(.add-tx-card) div[data-testid="stHorizontalBlock"]:has(> div[data-testid="column"]:nth-child(2):last-child) {
-            display: flex !important;
-            flex-direction: row !important;
-            justify-content: space-between !important;
-            align-items: center !important;
-            margin-top: 12px !important;
-            gap: 12px !important;
+        /* The 4-column inputs row -> map exactly to 2x2 grid */
+        div[data-testid="stForm"]:has(.add-tx-card) div[data-testid="stHorizontalBlock"]:has(> div[data-testid="column"]:nth-child(4)) > div[data-testid="column"] {
+            min-width: calc(50% - 12px) !important;
+            width: calc(50% - 12px) !important;
+            flex: 1 1 calc(50% - 12px) !important;
         }
-        /* Make switch column hug content, make button column take rest */
-        div[data-testid="stForm"]:has(.add-tx-card) div[data-testid="stHorizontalBlock"]:has(> div[data-testid="column"]:nth-child(2):last-child) > div[data-testid="column"]:nth-child(1) {
-            flex: 0 0 auto !important;
-            width: auto !important;
+        div[data-testid="stForm"]:has(.add-tx-card) input { padding: 6px !important;
+        font-size: 0.95rem !important; }
+        
+        /* The 2-column action row -> map to the 50/50 split below inputs (Switch left, Button right) */
+        div[data-testid="stForm"]:has(.add-tx-card) div[data-testid="stHorizontalBlock"]:has(> div[data-testid="column"]:nth-child(2):last-child) > div[data-testid="column"] {
+            min-width: calc(50% - 12px) !important;
+            width: calc(50% - 12px) !important;
+            flex: 1 1 calc(50% - 12px) !important;
         }
-        div[data-testid="stForm"]:has(.add-tx-card) div[data-testid="stHorizontalBlock"]:has(> div[data-testid="column"]:nth-child(2):last-child) > div[data-testid="column"]:nth-child(2) {
-            flex: 1 1 auto !important;
-            width: auto !important;
-        }
-
-        /* BEAUTIFUL BUY/SELL SWITCH */
         div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] {
-            background: rgba(0,0,0,0.3) !important;
-            padding: 6px !important;
-            border-radius: 12px !important;
-            display: flex !important;
-            flex-direction: row !important;
-            gap: 8px !important;
-            align-items: center !important;
-            margin: 0 !important;
-            height: 48px !important;
-            border: 1px solid rgba(255,255,255,0.05) !important;
-            min-width: 200px !important;
+            min-width: 0 !important;
+            width: 100% !important; 
         }
-        div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label {
-            margin: 0 !important;
-            cursor: pointer !important; 
-            padding: 0 !important; 
-            border-radius: 8px !important;
-            border: 1px solid transparent !important; 
-            transition: all 0.3s ease !important;
-            background: transparent !important;
-            flex: 1 !important; 
-            display: flex !important;
-            justify-content: center !important;
-            align-items: center !important;
-            height: 100% !important;
-        }
-        div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label:hover { background: rgba(255,255,255,0.05) !important;
-        }
-        div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label > div:first-child { display: none !important;
-        } 
-        div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label p {
-            font-weight: bold !important;
-            font-size: 1.05rem !important; color: #94a3b8 !important; margin: 0 !important; padding: 0 !important; white-space: nowrap !important; line-height: 1 !important;
-        }
-        /* Active Buy */
-        div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label:has(input:checked):first-child,
-        div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label[aria-checked="true"]:first-child {
-            background: rgba(0, 255, 157, 0.15) !important;
-            border-color: #00ff9d !important;
-        }
-        div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label:has(input:checked):first-child p,
-        div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label[aria-checked="true"]:first-child p { color: #00ff9d !important;
-        }
-        
-        /* Active Sell */
-        div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label:has(input:checked):last-child,
-        div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label[aria-checked="true"]:last-child {
-            background: rgba(255, 77, 77, 0.15) !important;
-            border-color: #ff4d4d !important;
-        }
-        div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label:has(input:checked):last-child p,
-        div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label[aria-checked="true"]:last-child p { color: #ff4d4d !important;
-        }
-
-        /* 3. RIGHT ALIGNED SUBMIT BUTTON */
+        /* Push the submit button to the absolute right of its column */
         div[data-testid="stForm"]:has(.add-tx-card) .stButton {
             display: flex !important;
-            justify-content: flex-end !important; /* Force to right side */
-            align-items: center !important;
-            margin: 0 !important; padding: 0 !important;
+            justify-content: flex-end !important;
             width: 100% !important;
         }
         div[data-testid="stForm"]:has(.add-tx-card) .stButton > button {
-            background: #1e2a44 !important;
-            color: #e0e0e0 !important; padding: 0 24px !important;
-            border-radius: 10px !important; font-size: 1.05rem !important; font-weight: 700 !important;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.25) !important; transition: all 0.3s ease !important;
-            border: none !important; margin: 0 !important; width: auto !important;
-            height: 48px !important; min-height: 48px !important;
-        }
-        div[data-testid="stForm"]:has(.add-tx-card) .stButton > button:hover {
-            transform: translateY(-2px) !important;
-            box-shadow: 0 8px 20px rgba(255, 255, 255, 0.2) !important; color: white !important;
+            width: 100% !important;
+            max-width: 120px !important; 
+            padding: 0 16px !important;
         }
 
-        /* 4. TRANSACTION ROW STYLING & INLINE BUTTONS */
-        div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row) {
-            background: #0f172a !important;
-            border: 1px solid rgba(255,255,255,0.05) !important;
-            border-radius: 12px !important;
-            padding: 12px 16px !important;
-            margin-bottom: 12px !important;
-            position: relative;
-            z-index: 2;
+        /* Force Mobile Transaction Rows to stay perfectly horizontal */
+        div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row) > div > div[data-testid="stVerticalBlock"] > div[data-testid="stHorizontalBlock"] {
+            display: flex !important;
+            flex-direction: row !important; flex-wrap: nowrap !important; align-items: center !important; overflow: hidden !important; gap: 2px !important;
         }
-        div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row) > div { padding: 0 !important;
-        } 
+        div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row) div[data-testid="column"] {
+            min-width: 0 !important;
+            padding: 0 !important; width: auto !important; flex-shrink: 1 !important;
+        }
+        /* Exact layout for the 5 strict columns to prevent ANY dropping/wrapping */
+        div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row) > div > div[data-testid="stVerticalBlock"] > div[data-testid="stHorizontalBlock"] > div[data-testid="column"]:nth-child(1) { flex: 0 0 35px !important;
+        width: 35px !important; } /* Logo */
+        div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row) > div > div[data-testid="stVerticalBlock"] > div[data-testid="stHorizontalBlock"] > div[data-testid="column"]:nth-child(2) { flex: 1 1 auto !important;
+        overflow: hidden !important; text-align: left; } /* Ticker */
+        div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row) > div > div[data-testid="stVerticalBlock"] > div[data-testid="stHorizontalBlock"] > div[data-testid="column"]:nth-child(3) { flex: 1.5 1 auto !important;
+        overflow: hidden !important; text-align: center; } /* Amounts */
+        div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row) > div > div[data-testid="stVerticalBlock"] > div[data-testid="stHorizontalBlock"] > div[data-testid="column"]:nth-child(4) { flex: 0 0 36px !important;
+        width: 36px !important; } /* Edit */
+        div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row) > div > div[data-testid="stVerticalBlock"] > div[data-testid="stHorizontalBlock"] > div[data-testid="column"]:nth-child(5) { flex: 0 0 36px !important;
+        width: 36px !important; } /* Delete */
         
         div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row) div[data-testid="stButton"] button {
-            background: rgba(255,255,255,0.05) !important;
-            border-radius: 8px !important; border: none !important;
-            height: 40px !important; width: 40px !important; display: flex !important; align-items: center !important;
-            justify-content: center !important; padding: 0 !important; margin: 0 auto !important; font-size: 1.2rem !important;
-            transition: all 0.2s !important;
+            width: 30px !important;
+            height: 30px !important; font-size: 0.9rem !important; margin: 0 auto !important;
         }
-        div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row) div[data-testid="stButton"] button:hover {
-            background: rgba(255,255,255,0.15) !important;
-            transform: scale(1.05) !important;
-        }
-
-        /* 5. SMOOTH EDIT ROLLOUT */
-        @keyframes rollDown { from { opacity: 0;
-            transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
-        div[data-testid="stForm"]:has(.edit-rollout) {
-            animation: rollDown 0.3s ease forwards !important;
-            background: rgba(0,0,0,0.2) !important;
-            border-left: 3px solid #00ff9d !important; border-radius: 0 0 12px 12px !important;
-            border-top: none !important; border-right: none !important;
-            border-bottom: none !important;
-            padding: 16px !important; margin-top: -24px !important; margin-bottom: 20px !important;
-            position: relative; z-index: 1;
-            box-shadow: inset 0 4px 10px rgba(0,0,0,0.15) !important;
-        }
-
-        /* 6. REDESIGNED DELETE DIALOG */
-        div[data-testid="stVerticalBlockBorderWrapper"]:has(.del-warn) {
-            border-color: rgba(255, 77, 77, 0.3) !important;
-            background: rgba(15, 23, 42, 0.95) !important;
-            border-radius: 12px !important; 
-            padding: 16px !important; 
-            text-align: center !important;
-            margin-bottom: 12px !important;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.4) !important;
-        }
-        div[data-testid="stVerticalBlockBorderWrapper"]:has(.del-warn) .stButton > button {
-            border-radius: 8px !important;
-            font-weight: 600 !important; 
-            transition: all 0.2s !important; 
-            width: 100% !important; 
-            margin-top: 8px !important;
-            padding: 6px 12px !important;
-        }
-        div[data-testid="stVerticalBlockBorderWrapper"]:has(.del-warn) div[data-testid="column"]:nth-child(1) .stButton > button {
-            background: rgba(255, 77, 77, 0.1) !important;
-            color: #ff4d4d !important; 
-            border: 1px solid rgba(255, 77, 77, 0.3) !important;
-        }
-        div[data-testid="stVerticalBlockBorderWrapper"]:has(.del-warn) div[data-testid="column"]:nth-child(1) .stButton > button:hover {
-            background: #ff4d4d !important;
-            color: white !important;
-        }
-        div[data-testid="stVerticalBlockBorderWrapper"]:has(.del-warn) div[data-testid="column"]:nth-child(2) .stButton > button {
-            background: rgba(255, 255, 255, 0.05) !important;
-            color: #cbd5e1 !important; 
-            border: 1px solid rgba(255, 255, 255, 0.1) !important;
-        }
-        div[data-testid="stVerticalBlockBorderWrapper"]:has(.del-warn) div[data-testid="column"]:nth-child(2) .stButton > button:hover {
-            background: rgba(255, 255, 255, 0.15) !important;
-            color: white !important;
-        }
-
-        /* ==============================================================
-           7. MOBILE OVERRIDES (IRONCLAD)
-           ============================================================== */
-        @media (max-width: 768px) {
-            .stApp { padding-top: 72px !important;
-            }
-            .glossy-header { margin-top: 48px !important; margin-bottom: 24px !important;
-            padding: 20px 16px !important; font-size: 22px !important; min-height: 90px; }
-            .home-header { margin-bottom: 0 !important;
-            }
-            
-            /* Fix Add Form Mobile Grid */
-            /* Force all horizontal blocks inside the form to flex explicitly */
-            div[data-testid="stForm"]:has(.add-tx-card) div[data-testid="stHorizontalBlock"] {
-                display: flex !important;
-                flex-direction: row !important; 
-                flex-wrap: wrap !important; 
-                gap: 12px !important;
-            }
-            
-            /* The 4-column inputs row -> map exactly to 2x2 grid */
-            div[data-testid="stForm"]:has(.add-tx-card) div[data-testid="stHorizontalBlock"]:has(> div[data-testid="column"]:nth-child(4)) > div[data-testid="column"] {
-                min-width: calc(50% - 12px) !important;
-                width: calc(50% - 12px) !important;
-                flex: 1 1 calc(50% - 12px) !important;
-            }
-            div[data-testid="stForm"]:has(.add-tx-card) input { padding: 6px !important;
-            font-size: 0.95rem !important; }
-            
-            /* The 2-column action row -> map to the 50/50 split below inputs (Switch left, Button right) */
-            div[data-testid="stForm"]:has(.add-tx-card) div[data-testid="stHorizontalBlock"]:has(> div[data-testid="column"]:nth-child(2):last-child) > div[data-testid="column"] {
-                min-width: calc(50% - 12px) !important;
-                width: calc(50% - 12px) !important;
-                flex: 1 1 calc(50% - 12px) !important;
-            }
-            div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] {
-                min-width: 0 !important;
-                width: 100% !important; 
-            }
-            /* Push the submit button to the absolute right of its column */
-            div[data-testid="stForm"]:has(.add-tx-card) .stButton {
-                display: flex !important;
-                justify-content: flex-end !important;
-                width: 100% !important;
-            }
-            div[data-testid="stForm"]:has(.add-tx-card) .stButton > button {
-                width: 100% !important;
-                max-width: 120px !important; 
-                padding: 0 16px !important;
-            }
-
-            /* Force Mobile Transaction Rows to stay perfectly horizontal */
-            div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row) > div > div[data-testid="stVerticalBlock"] > div[data-testid="stHorizontalBlock"] {
-                display: flex !important;
-                flex-direction: row !important; flex-wrap: nowrap !important; align-items: center !important; overflow: hidden !important; gap: 2px !important;
-            }
-            div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row) div[data-testid="column"] {
-                min-width: 0 !important;
-                padding: 0 !important; width: auto !important; flex-shrink: 1 !important;
-            }
-            /* Exact layout for the 5 strict columns to prevent ANY dropping/wrapping */
-            div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row) > div > div[data-testid="stVerticalBlock"] > div[data-testid="stHorizontalBlock"] > div[data-testid="column"]:nth-child(1) { flex: 0 0 35px !important;
-            width: 35px !important; } /* Logo */
-            div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row) > div > div[data-testid="stVerticalBlock"] > div[data-testid="stHorizontalBlock"] > div[data-testid="column"]:nth-child(2) { flex: 1 1 auto !important;
-            overflow: hidden !important; text-align: left; } /* Ticker */
-            div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row) > div > div[data-testid="stVerticalBlock"] > div[data-testid="stHorizontalBlock"] > div[data-testid="column"]:nth-child(3) { flex: 1.5 1 auto !important;
-            overflow: hidden !important; text-align: center; } /* Amounts */
-            div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row) > div > div[data-testid="stVerticalBlock"] > div[data-testid="stHorizontalBlock"] > div[data-testid="column"]:nth-child(4) { flex: 0 0 36px !important;
-            width: 36px !important; } /* Edit */
-            div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row) > div > div[data-testid="stVerticalBlock"] > div[data-testid="stHorizontalBlock"] > div[data-testid="column"]:nth-child(5) { flex: 0 0 36px !important;
-            width: 36px !important; } /* Delete */
-            
-            div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row) div[data-testid="stButton"] button {
-                width: 30px !important;
-                height: 30px !important; font-size: 0.9rem !important; margin: 0 auto !important;
-            }
-            
-            .mobile-logo { width: 32px !important;
-            height: 32px !important; margin-top: 0 !important; }
-            .mobile-tx-ticker { font-size: 0.95rem !important;
-            margin-left: 2px !important;}
-            .mobile-tx-amount { font-size: 0.95rem !important;
-            white-space: nowrap !important; }
-            .mobile-tx-sub { font-size: 0.7rem !important;
-            white-space: nowrap !important; margin-left: 2px !important;}
-            
-            /* Dashboard Mobile Stats Override Fix */
-            .stats-layer-inner { gap: 6px !important;
-            }
-            .stats-layer { margin-top: -60px !important; margin-bottom: 18px;
-            } 
-            .glossy-box.swapped { height: 80px !important;
-            min-height: 80px !important; max-height: 80px !important; padding: 0 !important; min-width: 0 !important;
-            }
-            .dash-value { font-size: clamp(11px, 3.5vw, 15px) !important;
-            top: 24px !important; } 
-            .dash-label { font-size: clamp(8px, 2.5vw, 10px) !important;
-            bottom: 8px !important; white-space: nowrap !important; letter-spacing: 0.5px !important; }
-            
-            /* Restyled Subdued USDC Banner Mobile */
-            .usdc-banner { padding: 8px 14px;
-            width: 92%; margin: -12px auto 12px auto !important; }
-            .usdc-banner-left img { width: 24px;
-            height: 24px; }
-            .usdc-banner-title { font-size: 0.95rem;
-            }
-            .usdc-banner-subtitle { font-size: 0.7rem;
-            }
-            .usdc-banner-amount { font-size: 1.1rem;
-            }
-        }
-        </style>
-        """, unsafe_allow_html=True)
-
-        # 1. ADD NEW TRANSACTION CARD
-        with st.form("add_crypto", border=False):
-            st.markdown("<div class='add-tx-card'></div><h3 style='text-align: center; color: white; margin-top: 0px; margin-bottom: 10px;'>New Transaction</h3>", unsafe_allow_html=True)
-            
-            # Row 1: Inputs (Rendered as 4 columns on PC, cleanly wrapped to 2x2 grid by CSS on mobile)
-            r1c1, r1c2, r1c3, r1c4 = st.columns(4)
-            with r1c1: selected_date = st.date_input("Date", value=date(2026, 3, 25))
-            with r1c2: ticker = st.text_input("Ticker", value="BTC").upper().strip()
-            with r1c3: usdc = st.number_input("USDC Amount", value=15.0, step=0.01)
-            with r1c4: amount = st.number_input("Coin Amount", value=0.1, step=0.000001, format="%.8f")
-            
-            # Row 2: Action Row (Always 2 columns mapping naturally under the 2x2 layout above on mobile)
-            action_col1, action_col2 = st.columns(2)
-            with action_col1:
-                tx_type = st.radio("Type", ["Buy", "Sell"], horizontal=True, label_visibility="collapsed")
-            with action_col2:
-                submitted = st.form_submit_button("+ Add")
-            
-            if submitted:
-                if ticker:
-                    final_usdc = usdc if tx_type == "Buy" else -usdc
-                    final_amount = amount if tx_type == "Buy" else -amount
-                    price = round(usdc / amount, 8) if amount > 0 else 0.0
-                    
-                    new_row = pd.DataFrame([{"Datum": date_to_excel_serial(selected_date), "USDC": final_usdc, "Ticker": ticker, "Amount": final_amount, "Price": price}])
-                    st.session_state.crypto_df = pd.concat([st.session_state.crypto_df, new_row], ignore_index=True)
-                    save_crypto(st.session_state.crypto_df)
-                    st.session_state.crypto_table_version += 1
-                    st.session_state.ui_version += 1
-                    st.success(f"✅ Executed {tx_type}: {amount} {ticker}")
-                    st.rerun()
-
-        # Preserve original index for accurate editing/deleting, then sort descending by Date
-        df_display = st.session_state.crypto_df.copy()
-        df_display['orig_idx'] = df_display.index
-        df_display = df_display.dropna(how='all')
-        df_display = df_display.sort_values(by='Datum', ascending=False)
-
-        st.markdown("<h4 style='color: white; margin-top: 20px; margin-bottom: 15px;'>Transaction History</h4>", unsafe_allow_html=True)
         
-        # 2. SCROLLABLE TRANSACTION LIST
-        with st.container(height=550, border=False):
-            for i, r in df_display.iterrows():
-                orig_idx = r['orig_idx']
-                logo_url = get_ticker_logo(r['Ticker'])
-                amount = r['Amount']
-                usdc = r['USDC']
-                is_buy = amount >= 0
-                
-                abs_amount = abs(amount)
-                abs_usdc = abs(usdc)
-                price = abs_usdc / abs_amount if abs_amount > 0 else 0
-                
-                sign = "+" if is_buy else "-"
-                color = "#00ff9d" if is_buy else "#ff4d4d"
-                action_text = "Spent" if is_buy else "Received"
-                
-                invested_formatted = format_money(abs_usdc)
-                amount_formatted = format_holdings(abs_amount, r['Ticker'])
-                price_formatted = format_price(price)
-                date_str = format_datum(r['Datum'])
+        .mobile-logo { width: 32px !important;
+        height: 32px !important; margin-top: 0 !important; }
+        .mobile-tx-ticker { font-size: 0.95rem !important;
+        margin-left: 2px !important;}
+        .mobile-tx-amount { font-size: 0.95rem !important;
+        white-space: nowrap !important; }
+        .mobile-tx-sub { font-size: 0.7rem !important;
+        white-space: nowrap !important; margin-left: 2px !important;}
+        
+        /* Dashboard Mobile Stats Override Fix */
+        .stats-layer-inner { gap: 6px !important;
+        }
+        .stats-layer { margin-top: -60px !important; margin-bottom: 18px;
+        } 
+        .glossy-box.swapped { height: 80px !important;
+        min-height: 80px !important; max-height: 80px !important; padding: 0 !important; min-width: 0 !important;
+        }
+        .dash-value { font-size: clamp(11px, 3.5vw, 15px) !important;
+        top: 24px !important; } 
+        .dash-label { font-size: clamp(8px, 2.5vw, 10px) !important;
+        bottom: 8px !important; white-space: nowrap !important; letter-spacing: 0.5px !important; }
+        
+        /* Restyled Subdued USDC Banner Mobile */
+        .usdc-banner { padding: 8px 14px;
+        width: 92%; margin: -12px auto 12px auto !important; }
+        .usdc-banner-left img { width: 24px;
+        height: 24px; }
+        .usdc-banner-title { font-size: 0.95rem;
+        }
+        .usdc-banner-subtitle { font-size: 0.7rem;
+        }
+        .usdc-banner-amount { font-size: 1.1rem;
+        }
+    }
+    </style>
+    """, unsafe_allow_html=True)
 
-                # If user clicked delete, show confirmation dialog replacing the row
-                if st.session_state.get('confirm_delete_crypto') == orig_idx:
-                    with st.container(border=True):
-                        st.markdown("<div class='del-warn'></div><h4 style='color: #ff4d4d; margin-top: 0; margin-bottom: 5px; font-size: 1.1rem; font-weight: 600;'>Delete this transaction?</h4>", unsafe_allow_html=True)
-                        c_yes, c_no = st.columns(2)
-                        with c_yes:
-                            if st.button("Delete", key=f"yes_del_{orig_idx}", use_container_width=True):
-                                st.session_state.crypto_df = st.session_state.crypto_df.drop(orig_idx).reset_index(drop=True)
+    # 1. ADD NEW TRANSACTION CARD
+    with st.form("add_crypto", border=False):
+        st.markdown("<div class='add-tx-card'></div><h3 style='text-align: center; color: white; margin-top: 0px; margin-bottom: 10px;'>New Transaction</h3>", unsafe_allow_html=True)
+        
+        # Row 1: Inputs (Rendered as 4 columns on PC, cleanly wrapped to 2x2 grid by CSS on mobile)
+        r1c1, r1c2, r1c3, r1c4 = st.columns(4)
+        with r1c1: selected_date = st.date_input("Date", value=date(2026, 3, 25))
+        with r1c2: ticker = st.text_input("Ticker", value="BTC").upper().strip()
+        with r1c3: usdc = st.number_input("USDC Amount", value=15.0, step=0.01)
+        with r1c4: amount = st.number_input("Coin Amount", value=0.1, step=0.000001, format="%.8f")
+        
+        # Row 2: Action Row (Always 2 columns mapping naturally under the 2x2 layout above on mobile)
+        action_col1, action_col2 = st.columns(2)
+        with action_col1:
+            tx_type = st.radio("Type", ["Buy", "Sell"], horizontal=True, label_visibility="collapsed")
+        with action_col2:
+            submitted = st.form_submit_button("+ Add")
+        
+        if submitted:
+            if ticker:
+                final_usdc = usdc if tx_type == "Buy" else -usdc
+                final_amount = amount if tx_type == "Buy" else -amount
+                price = round(usdc / amount, 8) if amount > 0 else 0.0
+                
+                new_row = pd.DataFrame([{"Datum": date_to_excel_serial(selected_date), "USDC": final_usdc, "Ticker": ticker, "Amount": final_amount, "Price": price}])
+                st.session_state.crypto_df = pd.concat([st.session_state.crypto_df, new_row], ignore_index=True)
+                save_crypto(st.session_state.crypto_df)
+                st.session_state.crypto_table_version += 1
+                st.session_state.ui_version += 1
+                st.success(f"✅ Executed {tx_type}: {amount} {ticker}")
+                st.rerun()
+
+    # Preserve original index for accurate editing/deleting, then sort descending by Date
+    df_display = st.session_state.crypto_df.copy()
+    df_display['orig_idx'] = df_display.index
+    df_display = df_display.dropna(how='all')
+    df_display = df_display.sort_values(by='Datum', ascending=False)
+
+    st.markdown("<h4 style='color: white; margin-top: 20px; margin-bottom: 15px;'>Transaction History</h4>", unsafe_allow_html=True)
+    
+    # 2. SCROLLABLE TRANSACTION LIST
+    with st.container(height=550, border=False):
+        for i, r in df_display.iterrows():
+            orig_idx = r['orig_idx']
+            logo_url = get_ticker_logo(r['Ticker'])
+            amount = r['Amount']
+            usdc = r['USDC']
+            is_buy = amount >= 0
+            
+            abs_amount = abs(amount)
+            abs_usdc = abs(usdc)
+            price = abs_usdc / abs_amount if abs_amount > 0 else 0
+            
+            sign = "+" if is_buy else "-"
+            color = "#00ff9d" if is_buy else "#ff4d4d"
+            action_text = "Spent" if is_buy else "Received"
+            
+            invested_formatted = format_money(abs_usdc)
+            amount_formatted = format_holdings(abs_amount, r['Ticker'])
+            price_formatted = format_price(price)
+            date_str = format_datum(r['Datum'])
+
+            # If user clicked delete, show confirmation dialog replacing the row
+            if st.session_state.get('confirm_delete_crypto') == orig_idx:
+                with st.container(border=True):
+                    st.markdown("<div class='del-warn'></div><h4 style='color: #ff4d4d; margin-top: 0; margin-bottom: 5px; font-size: 1.1rem; font-weight: 600;'>Delete this transaction?</h4>", unsafe_allow_html=True)
+                    c_yes, c_no = st.columns(2)
+                    with c_yes:
+                        if st.button("Delete", key=f"yes_del_{orig_idx}", use_container_width=True):
+                            st.session_state.crypto_df = st.session_state.crypto_df.drop(orig_idx).reset_index(drop=True)
+                            save_crypto(st.session_state.crypto_df)
+                            st.session_state['confirm_delete_crypto'] = None
+                            st.session_state.crypto_table_version += 1
+                            st.session_state.ui_version += 1
+                            st.rerun()
+                    with c_no:
+                        if st.button("Cancel", key=f"no_del_{orig_idx}", use_container_width=True):
+                            st.session_state['confirm_delete_crypto'] = None
+                            st.rerun()
+            else:
+                # Standard Row Display
+                with st.container(border=True):
+                    st.markdown("<div class='tx-row'></div>", unsafe_allow_html=True)
+                    
+                    # STRICT 5 COLUMNS: Logo, Ticker/Date, Values, Edit, Delete
+                    col_logo, col_ticker, col_vals, col_edit, col_del = st.columns([0.5, 2, 2.5, 0.5, 0.5])
+                    
+                    with col_logo:
+                        st.markdown(f"<img src='{logo_url}' class='mobile-logo' style='width:42px;height:42px;border-radius:50%;object-fit:contain;margin-top:6px;' onerror=\"this.src='https://via.placeholder.com/42/1e2a44/ffffff?text={r['Ticker'][0]}';\">", unsafe_allow_html=True)
+                        
+                    with col_ticker:
+                        st.markdown(f"""
+                            <div style="line-height: 1.2; margin-top: 6px; overflow: hidden; text-overflow: ellipsis;">
+                                <div class="mobile-tx-ticker" style="font-weight: 700; font-size: 1.15rem; color: #ffffff; white-space: nowrap;">{r['Ticker']}</div>
+                                <div class="mobile-tx-sub" style="font-size: 0.85rem; color: #94a3b8; white-space: nowrap;">{date_str}</div>
+                            </div>
+                        """, unsafe_allow_html=True)
+                        
+                    with col_vals:
+                        st.markdown(f"""
+                            <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; margin-top: 6px;">
+                                <div class="mobile-tx-amount" style="font-weight: 700; font-size: 1.15rem; color: {color}; white-space: nowrap;">{sign}{amount_formatted}</div>
+                                <div class="mobile-tx-sub" style="font-size: 0.85rem; color: #cbd5e1; white-space: nowrap;">{action_text}: {invested_formatted} @ ${price_formatted}</div>
+                            </div>
+                        """, unsafe_allow_html=True)
+                        
+                    with col_edit:
+                        if st.button("✏️", key=f"edit_btn_{orig_idx}"):
+                            if st.session_state.get('edit_crypto_row') == orig_idx:
+                                st.session_state['edit_crypto_row'] = None
+                            else:
+                                st.session_state['edit_crypto_row'] = orig_idx
+                            st.rerun()
+                            
+                    with col_del:
+                        if st.button("🗑️", key=f"del_btn_{orig_idx}"):
+                            st.session_state['confirm_delete_crypto'] = orig_idx
+                            st.rerun()
+
+                # 3. ROLL OUT EDIT FORM Directly Attached
+                if st.session_state.get('edit_crypto_row') == orig_idx:
+                    with st.form(f"edit_crypto_form_{orig_idx}", border=False):
+                        st.markdown("<div class='edit-rollout form-compact-marker'></div><h4 style='color: #00ff9d; margin-top: 0px; margin-bottom: 15px;'>✏️ Edit Row Details</h4>", unsafe_allow_html=True)
+                        
+                        e_r1c1, e_r1c2 = st.columns(2)
+                        with e_r1c1: new_date = st.date_input("Date", value=datetime(1899, 12, 30) + timedelta(days=int(r['Datum'])))
+                        with e_r1c2: new_ticker = st.text_input("Ticker", value=r['Ticker']).upper().strip()
+                        
+                        e_r2c1, e_r2c2 = st.columns(2)
+                        with e_r2c1: new_usdc = st.number_input("USDC Amount", value=float(abs(r['USDC'])), step=0.01)
+                        with e_r2c2: new_amount = st.number_input("Coin Amount", value=float(abs(r['Amount'])), step=0.000001, format="%.8f")
+                        
+                        tx_type_edit = st.radio("Type", ["Buy", "Sell"], horizontal=True, index=0 if is_buy else 1, label_visibility="collapsed")
+                        
+                        e_save, e_cancel = st.columns(2)
+                        with e_save: 
+                            if st.form_submit_button("💾 Save Changes"):
+                                final_usdc = new_usdc if tx_type_edit == "Buy" else -new_usdc
+                                final_amount = new_amount if tx_type_edit == "Buy" else -new_amount
+                                new_price = round(new_usdc / new_amount, 8) if new_amount > 0 else 0.0
+                                
+                                st.session_state.crypto_df.loc[orig_idx] = {"Datum": date_to_excel_serial(new_date), "USDC": final_usdc, "Ticker": new_ticker, "Amount": final_amount, "Price": new_price}
                                 save_crypto(st.session_state.crypto_df)
-                                st.session_state['confirm_delete_crypto'] = None
+                                st.session_state['edit_crypto_row'] = None
                                 st.session_state.crypto_table_version += 1
                                 st.session_state.ui_version += 1
-                                st.rerun()
-                        with c_no:
-                            if st.button("Cancel", key=f"no_del_{orig_idx}", use_container_width=True):
-                                st.session_state['confirm_delete_crypto'] = None
-                                st.rerun()
-                else:
-                    # Standard Row Display
-                    with st.container(border=True):
-                        st.markdown("<div class='tx-row'></div>", unsafe_allow_html=True)
-                        
-                        # STRICT 5 COLUMNS: Logo, Ticker/Date, Values, Edit, Delete
-                        col_logo, col_ticker, col_vals, col_edit, col_del = st.columns([0.5, 2, 2.5, 0.5, 0.5])
-                        
-                        with col_logo:
-                            st.markdown(f"<img src='{logo_url}' class='mobile-logo' style='width:42px;height:42px;border-radius:50%;object-fit:contain;margin-top:6px;' onerror=\"this.src='https://via.placeholder.com/42/1e2a44/ffffff?text={r['Ticker'][0]}';\">", unsafe_allow_html=True)
-                            
-                        with col_ticker:
-                            st.markdown(f"""
-                                <div style="line-height: 1.2; margin-top: 6px; overflow: hidden; text-overflow: ellipsis;">
-                                    <div class="mobile-tx-ticker" style="font-weight: 700; font-size: 1.15rem; color: #ffffff; white-space: nowrap;">{r['Ticker']}</div>
-                                    <div class="mobile-tx-sub" style="font-size: 0.85rem; color: #94a3b8; white-space: nowrap;">{date_str}</div>
-                                </div>
-                            """, unsafe_allow_html=True)
-                            
-                        with col_vals:
-                            st.markdown(f"""
-                                <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; margin-top: 6px;">
-                                    <div class="mobile-tx-amount" style="font-weight: 700; font-size: 1.15rem; color: {color}; white-space: nowrap;">{sign}{amount_formatted}</div>
-                                    <div class="mobile-tx-sub" style="font-size: 0.85rem; color: #cbd5e1; white-space: nowrap;">{action_text}: {invested_formatted} @ ${price_formatted}</div>
-                                </div>
-                            """, unsafe_allow_html=True)
-                            
-                        with col_edit:
-                            if st.button("✏️", key=f"edit_btn_{orig_idx}"):
-                                if st.session_state.get('edit_crypto_row') == orig_idx:
-                                    st.session_state['edit_crypto_row'] = None
-                                else:
-                                    st.session_state['edit_crypto_row'] = orig_idx
+                                st.success("✅ Transaction updated!")
                                 st.rerun()
                                 
-                        with col_del:
-                            if st.button("🗑️", key=f"del_btn_{orig_idx}"):
-                                st.session_state['confirm_delete_crypto'] = orig_idx
+                        with e_cancel:
+                            if st.form_submit_button("❌ Cancel"):
+                                st.session_state['edit_crypto_row'] = None
                                 st.rerun()
 
-                    # 3. ROLL OUT EDIT FORM Directly Attached
-                    if st.session_state.get('edit_crypto_row') == orig_idx:
-                        with st.form(f"edit_crypto_form_{orig_idx}", border=False):
-                            st.markdown("<div class='edit-rollout form-compact-marker'></div><h4 style='color: #00ff9d; margin-top: 0px; margin-bottom: 15px;'>✏️ Edit Row Details</h4>", unsafe_allow_html=True)
-                            
-                            e_r1c1, e_r1c2 = st.columns(2)
-                            with e_r1c1: new_date = st.date_input("Date", value=datetime(1899, 12, 30) + timedelta(days=int(r['Datum'])))
-                            with e_r1c2: new_ticker = st.text_input("Ticker", value=r['Ticker']).upper().strip()
-                            
-                            e_r2c1, e_r2c2 = st.columns(2)
-                            with e_r2c1: new_usdc = st.number_input("USDC Amount", value=float(abs(r['USDC'])), step=0.01)
-                            with e_r2c2: new_amount = st.number_input("Coin Amount", value=float(abs(r['Amount'])), step=0.000001, format="%.8f")
-                            
-                            tx_type_edit = st.radio("Type", ["Buy", "Sell"], horizontal=True, index=0 if is_buy else 1, label_visibility="collapsed")
-                            
-                            e_save, e_cancel = st.columns(2)
-                            with e_save: 
-                                if st.form_submit_button("💾 Save Changes"):
-                                    final_usdc = new_usdc if tx_type_edit == "Buy" else -new_usdc
-                                    final_amount = new_amount if tx_type_edit == "Buy" else -new_amount
-                                    new_price = round(new_usdc / new_amount, 8) if new_amount > 0 else 0.0
-                                    
-                                    st.session_state.crypto_df.loc[orig_idx] = {"Datum": date_to_excel_serial(new_date), "USDC": final_usdc, "Ticker": new_ticker, "Amount": final_amount, "Price": new_price}
-                                    save_crypto(st.session_state.crypto_df)
-                                    st.session_state['edit_crypto_row'] = None
-                                    st.session_state.crypto_table_version += 1
-                                    st.session_state.ui_version += 1
-                                    st.success("✅ Transaction updated!")
-                                    st.rerun()
-                                    
-                            with e_cancel:
-                                if st.form_submit_button("❌ Cancel"):
-                                    st.session_state['edit_crypto_row'] = None
-                                    st.rerun()
+with tab_fiat:
+    total_czk = pd.to_numeric(st.session_state.fiat_df['CZK'], errors='coerce').fillna(0).sum()
+    total_eur = pd.to_numeric(st.session_state.fiat_df['EUR'], errors='coerce').fillna(0).sum()
+    total_usdc = pd.to_numeric(st.session_state.fiat_df['USDC'], errors='coerce').fillna(0).sum()
+    fees_eur = pd.to_numeric(st.session_state.fiat_df['Fee'], errors='coerce').fillna(0).sum()
+    fees_czk = (pd.to_numeric(st.session_state.fiat_df['Fee'], errors='coerce').fillna(0) *
+                pd.to_numeric(st.session_state.fiat_df['CZK/EUR'], errors='coerce').fillna(0)).sum()
 
-    # ====================== FIAT TRANSACTIONS ======================
-    elif st.session_state.page == "Fiat Transactions":
-        total_czk = pd.to_numeric(st.session_state.fiat_df['CZK'], errors='coerce').fillna(0).sum()
-        total_eur = pd.to_numeric(st.session_state.fiat_df['EUR'], errors='coerce').fillna(0).sum()
-        total_usdc = pd.to_numeric(st.session_state.fiat_df['USDC'], errors='coerce').fillna(0).sum()
-        fees_eur = pd.to_numeric(st.session_state.fiat_df['Fee'], errors='coerce').fillna(0).sum()
-        fees_czk = (pd.to_numeric(st.session_state.fiat_df['Fee'], errors='coerce').fillna(0) *
-                    pd.to_numeric(st.session_state.fiat_df['CZK/EUR'], errors='coerce').fillna(0)).sum()
+    glossy_header("Fiat Transactions", FIAT_ICON)
 
-        glossy_header("Fiat Transactions", FIAT_ICON)
-
-        summary_html = f"""
+    summary_html = f"""
 <div style="display:flex;flex-wrap:wrap;justify-content:center;gap:12px;margin-bottom:30px;">
 <div class="glossy-box swapped"><div class="dash-value">{total_czk:,.2f}</div><div class="dash-label">Total CZK</div></div>
 <div class="glossy-box swapped"><div class="dash-value">{total_eur:,.2f}</div><div class="dash-label">Total EUR</div></div>
@@ -3021,93 +3165,93 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
 </div>
 </div>
 """
-        st.markdown(summary_html, unsafe_allow_html=True)
+    st.markdown(summary_html, unsafe_allow_html=True)
 
-        df_clean = st.session_state.fiat_df.dropna(how='all').reset_index(drop=True)
-        table_container = st.container(key=f"fiat_table_container_{st.session_state.ui_version}")
-        with table_container:
-            with st.container(height=520, border=True):
-                h = st.columns([1.0, 0.9, 0.9, 0.6, 0.9, 1.0, 0.4, 0.4])
-                h[0].markdown("**Date**")
-                h[1].markdown("**CZK**")
-                h[2].markdown("**EUR**")
-                h[3].markdown("**Fee**")
-                h[4].markdown("**CZK/EUR**")
-                h[5].markdown("**USDC**")
-                h[6].markdown("**Del**")
-                h[7].markdown("**Edit**")
-                for i, r in df_clean.iterrows():
-                    cols = st.columns([1.0, 0.9, 0.9, 0.6, 0.9, 1.0, 0.4, 0.4])
-                    with cols[0]: st.write(format_datum(r['Datum']))
-                    with cols[1]: st.write(f"{r['CZK']:,.2f}")
-                    with cols[2]: st.write(f"{r['EUR']:,.2f}")
-                    with cols[3]: st.write(f"{r['Fee']:,.2f}")
-                    with cols[4]: st.write(f"{r['CZK/EUR']:,.5f}")
-                    with cols[5]: st.write(format_money(r['USDC']))
-                    with cols[6]:
-                        if st.session_state.get(f'confirm_del_fiat_{i}'):
-                            if st.button("✅", key=f"yes_fiat_{i}"):
-                                st.session_state.fiat_df = st.session_state.fiat_df.drop(i).reset_index(drop=True)
-                                save_fiat(st.session_state.fiat_df)
-                                st.session_state.fiat_table_version += 1
-                                st.session_state.ui_version += 1
-                                st.session_state[f'confirm_del_fiat_{i}'] = False
-                                st.rerun()
-                        else:
-                            if st.button("🗑️", key=f"del_{i}_{st.session_state.fiat_table_version}_{st.session_state.ui_version}"):
-                                st.session_state[f'confirm_del_fiat_{i}'] = True
-                                st.rerun()
-                    with cols[7]:
-                        if st.button("✏️", key=f"edit_{i}_{st.session_state.fiat_table_version}_{st.session_state.ui_version}"):
-                            st.session_state.editing_row = i
+    df_clean = st.session_state.fiat_df.dropna(how='all').reset_index(drop=True)
+    table_container = st.container(key=f"fiat_table_container_{st.session_state.ui_version}")
+    with table_container:
+        with st.container(height=520, border=True):
+            h = st.columns([1.0, 0.9, 0.9, 0.6, 0.9, 1.0, 0.4, 0.4])
+            h[0].markdown("**Date**")
+            h[1].markdown("**CZK**")
+            h[2].markdown("**EUR**")
+            h[3].markdown("**Fee**")
+            h[4].markdown("**CZK/EUR**")
+            h[5].markdown("**USDC**")
+            h[6].markdown("**Del**")
+            h[7].markdown("**Edit**")
+            for i, r in df_clean.iterrows():
+                cols = st.columns([1.0, 0.9, 0.9, 0.6, 0.9, 1.0, 0.4, 0.4])
+                with cols[0]: st.write(format_datum(r['Datum']))
+                with cols[1]: st.write(f"{r['CZK']:,.2f}")
+                with cols[2]: st.write(f"{r['EUR']:,.2f}")
+                with cols[3]: st.write(f"{r['Fee']:,.2f}")
+                with cols[4]: st.write(f"{r['CZK/EUR']:,.5f}")
+                with cols[5]: st.write(format_money(r['USDC']))
+                with cols[6]:
+                    if st.session_state.get(f'confirm_del_fiat_{i}'):
+                        if st.button("✅", key=f"yes_fiat_{i}"):
+                            st.session_state.fiat_df = st.session_state.fiat_df.drop(i).reset_index(drop=True)
+                            save_fiat(st.session_state.fiat_df)
+                            st.session_state.fiat_table_version += 1
+                            st.session_state.ui_version += 1
+                            st.session_state[f'confirm_del_fiat_{i}'] = False
                             st.rerun()
-
-        if 'editing_row' in st.session_state:
-            edit_idx = st.session_state.editing_row
-            row = st.session_state.fiat_df.loc[edit_idx]
-            st.markdown("**Edit row**")
-            with st.form("edit_fiat_row"):
-                col_a, col_b = st.columns(2)
-                with col_a:
-                    new_date = st.date_input("Date", value=datetime(1899, 12, 30) + timedelta(days=int(row['Datum'])))
-                    new_datum = date_to_excel_serial(new_date)
-                with col_b:
-                    new_czk = st.number_input("CZK", value=float(row['CZK']), step=0.01)
-                new_eur = st.number_input("EUR", value=float(row['EUR']), step=0.01)
-                new_fee = st.number_input("Fee", value=float(row['Fee']), step=0.01)
-                new_usdc = st.number_input("USDC", value=float(row['USDC']), step=0.01)
-                new_czk_eur = round(new_czk / new_eur, 5) if new_eur > 0 else 0.0
-                col_save, col_cancel = st.columns(2)
-                with col_save:
-                    if st.form_submit_button("💾 Save Changes"):
-                        st.session_state.fiat_df.loc[edit_idx] = {"Datum": new_datum, "CZK": new_czk, "EUR": new_eur, "Fee": new_fee, "CZK/EUR": new_czk_eur, "USDC": new_usdc, "NI": row.get('NI', ""), "GG": row.get('GG', ""), "ER": row.get('ER', "")}
-                        save_fiat(st.session_state.fiat_df)
-                        del st.session_state.editing_row
-                        st.session_state.fiat_table_version += 1
-                        st.session_state.ui_version += 1
-                        st.success("✅ Row updated!")
-                        st.rerun()
-                with col_cancel:
-                    if st.form_submit_button("❌ Cancel"):
-                        del st.session_state.editing_row
+                    else:
+                        if st.button("🗑️", key=f"del_{i}_{st.session_state.fiat_table_version}_{st.session_state.ui_version}"):
+                            st.session_state[f'confirm_del_fiat_{i}'] = True
+                            st.rerun()
+                with cols[7]:
+                    if st.button("✏️", key=f"edit_{i}_{st.session_state.fiat_table_version}_{st.session_state.ui_version}"):
+                        st.session_state.editing_row = i
                         st.rerun()
 
-        st.subheader("➕ Add New Fiat Entry")
-        with st.form("add_fiat"):
-            col1, col2 = st.columns(2)
-            with col1:
-                selected_date = st.date_input("Date", value=date(2026, 3, 25))
-                datum = date_to_excel_serial(selected_date)
-            with col2:
-                czk = st.number_input("CZK", value=1000.0, step=0.01)
-            eur = st.number_input("EUR", value=40.0, step=0.01)
-            fee = st.number_input("Fee", value=1.0, step=0.01)
-            usdc = st.number_input("USDC", value=44.67, step=0.01)
-            czk_eur = round(czk / eur, 5) if eur > 0 else 0.0
-            if st.form_submit_button("➕ Add Entry"):
-                new_row = pd.DataFrame([{"Datum": datum, "CZK": czk, "EUR": eur, "Fee": fee, "CZK/EUR": czk_eur, "USDC": usdc, "NI": "", "GG": "", "ER": ""}])
-                st.session_state.fiat_df = pd.concat([st.session_state.fiat_df, new_row], ignore_index=True)
-                save_fiat(st.session_state.fiat_df)
-                st.session_state.fiat_table_version += 1
-                st.session_state.ui_version += 1
-                st.rerun()
+    if 'editing_row' in st.session_state:
+        edit_idx = st.session_state.editing_row
+        row = st.session_state.fiat_df.loc[edit_idx]
+        st.markdown("**Edit row**")
+        with st.form("edit_fiat_row"):
+            col_a, col_b = st.columns(2)
+            with col_a:
+                new_date = st.date_input("Date", value=datetime(1899, 12, 30) + timedelta(days=int(row['Datum'])))
+                new_datum = date_to_excel_serial(new_date)
+            with col_b:
+                new_czk = st.number_input("CZK", value=float(row['CZK']), step=0.01)
+            new_eur = st.number_input("EUR", value=float(row['EUR']), step=0.01)
+            new_fee = st.number_input("Fee", value=float(row['Fee']), step=0.01)
+            new_usdc = st.number_input("USDC", value=float(row['USDC']), step=0.01)
+            new_czk_eur = round(new_czk / new_eur, 5) if new_eur > 0 else 0.0
+            col_save, col_cancel = st.columns(2)
+            with col_save:
+                if st.form_submit_button("💾 Save Changes"):
+                    st.session_state.fiat_df.loc[edit_idx] = {"Datum": new_datum, "CZK": new_czk, "EUR": new_eur, "Fee": new_fee, "CZK/EUR": new_czk_eur, "USDC": new_usdc, "NI": row.get('NI', ""), "GG": row.get('GG', ""), "ER": row.get('ER', "")}
+                    save_fiat(st.session_state.fiat_df)
+                    del st.session_state.editing_row
+                    st.session_state.fiat_table_version += 1
+                    st.session_state.ui_version += 1
+                    st.success("✅ Row updated!")
+                    st.rerun()
+            with col_cancel:
+                if st.form_submit_button("❌ Cancel"):
+                    del st.session_state.editing_row
+                    st.rerun()
+
+    st.subheader("➕ Add New Fiat Entry")
+    with st.form("add_fiat"):
+        col1, col2 = st.columns(2)
+        with col1:
+            selected_date = st.date_input("Date", value=date(2026, 3, 25))
+            datum = date_to_excel_serial(selected_date)
+        with col2:
+            czk = st.number_input("CZK", value=1000.0, step=0.01)
+        eur = st.number_input("EUR", value=40.0, step=0.01)
+        fee = st.number_input("Fee", value=1.0, step=0.01)
+        usdc = st.number_input("USDC", value=44.67, step=0.01)
+        czk_eur = round(czk / eur, 5) if eur > 0 else 0.0
+        if st.form_submit_button("➕ Add Entry"):
+            new_row = pd.DataFrame([{"Datum": datum, "CZK": czk, "EUR": eur, "Fee": fee, "CZK/EUR": czk_eur, "USDC": usdc, "NI": "", "GG": "", "ER": ""}])
+            st.session_state.fiat_df = pd.concat([st.session_state.fiat_df, new_row], ignore_index=True)
+            save_fiat(st.session_state.fiat_df)
+            st.session_state.fiat_table_version += 1
+            st.session_state.ui_version += 1
+            st.rerun()
