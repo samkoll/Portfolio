@@ -13,6 +13,17 @@ import streamlit.components.v1 as components
 # ====================== CONFIG ======================
 st.set_page_config(page_title="Portfolio", layout="wide", page_icon="📊")
 
+# ====================== SAFE FLOAT HELPER ======================
+# This PREVENTS the Historical Chart from crashing due to empty/NaN data
+def safe_float(val):
+    try:
+        f = float(val)
+        if pd.isna(f) or f != f or f == float('inf') or f == float('-inf'):
+            return 0.0
+        return f
+    except:
+        return 0.0
+
 # ====================== SVG ICONS ======================
 DASHBOARD_ICON = '<svg xmlns="http://www.w3.org/2000/svg" width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="#00ff9d" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>'
 CRYPTO_ICON = '<svg xmlns="http://www.w3.org/2000/svg" width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="#00ff9d" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M14.5 8.5L9.5 13.5"/><path d="M9.5 8.5L14.5 13.5"/></svg>'
@@ -28,6 +39,8 @@ if 'fiat_df' not in st.session_state: st.session_state.fiat_df = pd.DataFrame()
 if 'crypto_table_version' not in st.session_state: st.session_state.crypto_table_version = 0
 if 'fiat_table_version' not in st.session_state: st.session_state.fiat_table_version = 0
 if 'ui_version' not in st.session_state: st.session_state.ui_version = 0
+if 'page' not in st.session_state: st.session_state.page = "Home"
+if 'anim_dir' not in st.session_state: st.session_state.anim_dir = "none"
 if 'last_known_prices' not in st.session_state: st.session_state.last_known_prices = {"USDC": 1.0}
 if 'refresh_key' not in st.session_state: st.session_state.refresh_key = random.randint(100000, 999999)
 if 'portfolio_cache' not in st.session_state: st.session_state.portfolio_cache = {}
@@ -36,208 +49,219 @@ def glossy_header(title: str, icon_svg: str):
     html = f'<div class="glossy-header">{icon_svg}<span style="margin-left:12px;">{title}</span></div>'
     st.markdown(html, unsafe_allow_html=True)
 
-# ====================== TRUE SPA CAROUSEL ARCHITECTURE ======================
-# This hides the sidebar and forces the 3 main st.containers to align horizontally
-st.markdown("""
+# ====================== HIDDEN SIDEBAR ROUTING ======================
+with st.sidebar:
+    nav_items = ["Home", "Crypto", "Fiat"]
+    curr_idx = nav_items.index(st.session_state.page) if st.session_state.page in nav_items else 0
+    
+    if st.button("Nav_Home", key="btn_home"):
+        st.session_state.anim_dir = "slide-in-left"
+        st.session_state.page = "Home"
+        st.rerun()
+    if st.button("Nav_Crypto", key="btn_crypto"):
+        st.session_state.anim_dir = "slide-in-right" if curr_idx < 1 else "slide-in-left"
+        st.session_state.page = "Crypto"
+        st.rerun()
+    if st.button("Nav_Fiat", key="btn_fiat"):
+        st.session_state.anim_dir = "slide-in-right"
+        st.session_state.page = "Fiat"
+        st.rerun()
+
+# ====================== GLOBAL CSS STYLES ======================
+anim_css = ""
+if st.session_state.anim_dir == 'slide-in-right':
+    anim_css = "@keyframes slideIn { from { transform: translateX(100vw); opacity: 0; } to { transform: translateX(0); opacity: 1; } }"
+elif st.session_state.anim_dir == 'slide-in-left':
+    anim_css = "@keyframes slideIn { from { transform: translateX(-100vw); opacity: 0; } to { transform: translateX(0); opacity: 1; } }"
+
+st.markdown(f"""
 <style>
-/* Hide Sidebar & Header */
-[data-testid="stSidebar"], [data-testid="collapsedControl"], header[data-testid="stHeader"], footer { display: none !important; }
+html, body, .stApp {{ overflow-x: hidden !important; background: linear-gradient(180deg, #0f1724 0%, #0a0f1c 100%) !important; }}
+div[data-testid="stSidebar"] {{ display: none !important; }}
+div[data-testid="collapsedControl"] {{ display: none !important; }}
+header[data-testid="stHeader"] {{ display: none !important; }}
 
-html, body, .stApp {
-    overflow: hidden !important; 
-    background: linear-gradient(180deg, #0f1724 0%, #0a0f1c 100%) !important;
-}
-div[data-testid="stMainBlockContainer"] {
-    padding: 0 !important;
-    max-width: 100vw !important;
-    overflow: hidden !important;
-}
+div[data-testid="stMainBlockContainer"] {{
+    padding-left: 14px !important; padding-right: 14px !important; padding-top: 14px !important; padding-bottom: 90px !important;
+    max-width: 100% !important; animation: slideIn 0.35s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+}}
+{anim_css}
+@media (min-width: 1200px) {{ div[data-testid="stMainBlockContainer"] {{ padding-left: 18px !important; padding-right: 18px !important; }} }}
+@media (max-width: 768px) {{ div[data-testid="stMainBlockContainer"] {{ padding-left: 8px !important; padding-right: 8px !important; }} }}
 
-/* Transform Streamlit's Main Block into a Horizontal Drag Carousel */
-div[data-testid="stMainBlockContainer"] > div > div[data-testid="stVerticalBlock"] {
-    display: flex !important;
-    flex-direction: row !important;
-    flex-wrap: nowrap !important;
-    overflow-x: auto !important;
-    overflow-y: hidden !important;
-    scroll-snap-type: x mandatory !important;
-    scroll-behavior: smooth !important;
-    width: 100vw !important;
-    height: 100vh !important;
-    -webkit-overflow-scrolling: touch !important;
-    scrollbar-width: none; 
-}
-div[data-testid="stMainBlockContainer"] > div > div[data-testid="stVerticalBlock"]::-webkit-scrollbar { display: none; }
-
-/* The 3 Individual Pages (Containers) */
-div[data-testid="stMainBlockContainer"] > div > div[data-testid="stVerticalBlock"] > div[data-testid="stVerticalBlock"] {
-    min-width: 100vw !important;
-    max-width: 100vw !important;
-    flex: 0 0 100vw !important;
-    height: 100vh !important;
-    scroll-snap-align: start !important;
-    overflow-y: auto !important;
-    overflow-x: hidden !important;
-    padding: 20px 14px 120px 14px !important; /* Bottom padding prevents content from hiding behind floating nav */
-    box-sizing: border-box !important;
-}
-@media (min-width: 1200px) {
-    div[data-testid="stMainBlockContainer"] > div > div[data-testid="stVerticalBlock"] > div[data-testid="stVerticalBlock"] { padding-left: 24px !important; padding-right: 24px !important; }
-}
-
-/* FLOATING PILL BOTTOM NAVIGATION BAR */
-.bottom-nav-pill {
-    position: fixed;
-    bottom: 20px;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 90%;
-    max-width: 450px;
-    height: 65px;
-    background: rgba(15, 23, 42, 0.85);
-    backdrop-filter: blur(15px);
-    -webkit-backdrop-filter: blur(15px);
-    border-radius: 35px;
-    border: 1px solid rgba(255,255,255,0.1);
-    display: flex;
-    justify-content: space-evenly;
-    align-items: center;
-    z-index: 999999;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-}
-.nav-item {
+/* BOTTOM NAVIGATION BAR */
+.bottom-nav-pill {{
+    position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); width: 90%; max-width: 400px; height: 65px;
+    background: rgba(15, 23, 42, 0.95); backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px);
+    border-radius: 35px; border: 1px solid rgba(255,255,255,0.1); display: flex; justify-content: space-evenly; align-items: center;
+    z-index: 999998; box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+}}
+.nav-item {{
     display: flex; flex-direction: column; align-items: center; justify-content: center;
     color: #64748b; font-size: 11px; font-weight: 600; cursor: pointer; flex: 1; height: 100%; transition: color 0.3s ease;
     -webkit-tap-highlight-color: transparent;
-}
-.nav-item.active { color: #00ff9d; }
-.nav-item svg { width: 22px; height: 22px; margin-bottom: 4px; stroke: currentColor; fill: none; transition: transform 0.2s ease; }
-.nav-item.active svg { transform: translateY(-2px); filter: drop-shadow(0 0 4px rgba(0,255,157,0.4)); }
+}}
+.nav-item.active {{ color: #00ff9d; }}
+.nav-item svg {{ width: 22px; height: 22px; margin-bottom: 4px; stroke: currentColor; fill: none; transition: transform 0.2s ease; }}
+.nav-item.active svg {{ transform: translateY(-2px); filter: drop-shadow(0 0 4px rgba(0,255,157,0.4)); }}
 
 /* Global UI Elements */
-.dashboard-wrapper { position: relative; z-index: 10; }
-.glossy-header-label { cursor: pointer; display: block; position: relative; z-index: 3; -webkit-tap-highlight-color: transparent; }
-.home-header { margin-bottom: 0 !important; padding-bottom: 30px !important; }
-.pull-indicator { position: absolute; bottom: 8px; left: 50%; transform: translateX(-50%); color: #64748b; opacity: 0.8; transition: color 0.3s ease; }
-.pull-indicator .eye-open { display: none; }
-.pull-indicator .eye-closed { display: block; }
-.dashboard-toggle:checked ~ .dashboard-wrapper .glossy-header-label .pull-indicator .eye-open { display: block; }
-.dashboard-toggle:checked ~ .dashboard-wrapper .glossy-header-label .pull-indicator .eye-closed { display: none; }
-.dashboard-toggle:checked ~ .dashboard-wrapper .glossy-header-label .pull-indicator { color: #ffffff; }
+.dashboard-wrapper {{ position: relative; z-index: 10; }}
+.glossy-header-label {{ cursor: pointer; display: block; position: relative; z-index: 3; -webkit-tap-highlight-color: transparent; }}
+.home-header {{ margin-bottom: 0 !important; padding-bottom: 30px !important; }}
+.pull-indicator {{ position: absolute; bottom: 8px; left: 50%; transform: translateX(-50%); color: #64748b; opacity: 0.8; transition: color 0.3s ease; }}
+.pull-indicator .eye-open {{ display: none; }}
+.pull-indicator .eye-closed {{ display: block; }}
+.dashboard-toggle:checked ~ .dashboard-wrapper .glossy-header-label .pull-indicator .eye-open {{ display: block; }}
+.dashboard-toggle:checked ~ .dashboard-wrapper .glossy-header-label .pull-indicator .eye-closed {{ display: none; }}
+.dashboard-toggle:checked ~ .dashboard-wrapper .glossy-header-label .pull-indicator {{ color: #ffffff; }}
 
-.stats-layer { position: relative; z-index: 1; margin-top: -60px !important; transition: margin-top 0.4s cubic-bezier(0.4, 0, 0.2, 1); margin-bottom: 24px; }
-.dashboard-toggle:checked ~ .dashboard-wrapper .stats-layer { margin-top: 14px !important; }
-.stats-layer-inner { display: grid !important; grid-template-columns: repeat(3, 1fr) !important; gap: 14px; width: 100%; }
-.dash-value { font-size: clamp(14px, 2.5vw, 24px) !important; font-weight: 700; line-height: 1.05; color: #ffffff; position: absolute; top: 20px; left: 0; width: 100%; text-align: center; margin: 0; transition: opacity 0.3s ease; padding: 0 4px; box-sizing: border-box; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.dashboard-toggle:not(:checked) ~ .dashboard-wrapper .stats-layer .dash-value { opacity: 0; pointer-events: none; }
-.dash-label { font-size: 11px !important; font-weight: 600; letter-spacing: 1.5px; text-transform: uppercase; color: #94a3b8; line-height: 1.2; position: absolute; bottom: 8px; left: 0; width: 100%; text-align: center; }
+.stats-layer {{ position: relative; z-index: 1; margin-top: -60px !important; transition: margin-top 0.4s cubic-bezier(0.4, 0, 0.2, 1); margin-bottom: 24px; }}
+.dashboard-toggle:checked ~ .dashboard-wrapper .stats-layer {{ margin-top: 14px !important; }}
+.stats-layer-inner {{ display: grid !important; grid-template-columns: repeat(3, 1fr) !important; gap: 14px; width: 100%; }}
+.dash-value {{ font-size: clamp(14px, 2.5vw, 24px) !important; font-weight: 700; line-height: 1.05; color: #ffffff; position: absolute; top: 20px; left: 0; width: 100%; text-align: center; margin: 0; transition: opacity 0.3s ease; padding: 0 4px; box-sizing: border-box; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }}
+.dashboard-toggle:not(:checked) ~ .dashboard-wrapper .stats-layer .dash-value {{ opacity: 0; pointer-events: none; }}
+.dash-label {{ font-size: 11px !important; font-weight: 600; letter-spacing: 1.5px; text-transform: uppercase; color: #94a3b8; line-height: 1.2; position: absolute; bottom: 8px; left: 0; width: 100%; text-align: center; }}
 
-.glossy-header { position: relative; overflow: hidden; background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); border: 1px solid rgba(255,255,255,0.05); border-radius: 18px; box-shadow: 0 10px 30px rgba(0,0,0,0.4); transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.4s ease, border-color 0.4s ease; padding: 32px 24px; min-height: 130px; font-size: 29px; font-weight: 700; letter-spacing: 1.5px; line-height: 1.1; display: flex; align-items: center; justify-content: center; gap: 16px; width: 100% !important; margin-bottom: 38px; }
-.glossy-box { position: relative; overflow: hidden; background: linear-gradient(180deg, #162032 0%, #0f172a 100%); border: 1px solid rgba(255,255,255,0.05); border-radius: 18px; box-shadow: 0 8px 24px rgba(0,0,0,0.4); padding: 28px 30px; text-align: center; flex: 1; min-width: 220px; display: flex; flex-direction: column; justify-content: center; }
-.glossy-box:not(.swapped) > div:first-child { font-size: 12px; font-weight: 600; letter-spacing: 1.5px; text-transform: uppercase; color: #94a3b8; margin-bottom: 6px; line-height: 1.2; }
-.glossy-box:not(.swapped) > div:last-child { font-size: 27px; font-weight: 700; line-height: 1.05; color: #ffffff; }
-.glossy-box.swapped { min-width: 0 !important; height: 80px !important; min-height: 80px !important; max-height: 80px !important; padding: 0; display: block; }
+.glossy-header {{ position: relative; overflow: hidden; background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); border: 1px solid rgba(255,255,255,0.05); border-radius: 18px; box-shadow: 0 10px 30px rgba(0,0,0,0.4); transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.4s ease, border-color 0.4s ease; padding: 32px 24px; min-height: 130px; font-size: 29px; font-weight: 700; letter-spacing: 1.5px; line-height: 1.1; display: flex; align-items: center; justify-content: center; gap: 16px; width: 100% !important; margin-bottom: 38px; }}
+.glossy-box {{ position: relative; overflow: hidden; background: linear-gradient(180deg, #162032 0%, #0f172a 100%); border: 1px solid rgba(255,255,255,0.05); border-radius: 18px; box-shadow: 0 8px 24px rgba(0,0,0,0.4); padding: 28px 30px; text-align: center; flex: 1; min-width: 220px; display: flex; flex-direction: column; justify-content: center; }}
+.glossy-box:not(.swapped) > div:first-child {{ font-size: 12px; font-weight: 600; letter-spacing: 1.5px; text-transform: uppercase; color: #94a3b8; margin-bottom: 6px; line-height: 1.2; }}
+.glossy-box:not(.swapped) > div:last-child {{ font-size: 27px; font-weight: 700; line-height: 1.05; color: #ffffff; }}
+.glossy-box.swapped {{ min-width: 0 !important; height: 80px !important; min-height: 80px !important; max-height: 80px !important; padding: 0; display: block; }}
 
-/* Subdued and Smaller USDC Banner */
-.usdc-banner { position: relative; overflow: hidden; background: rgba(15, 23, 42, 0.5); border: 1px solid rgba(39, 117, 202, 0.2); border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); padding: 10px 20px; width: 90%; max-width: 400px; margin: -15px auto 12px auto !important; display: flex; align-items: center; justify-content: space-between; }
-.usdc-banner-left { display: flex; align-items: center; gap: 12px; }
-.usdc-banner-left img { width: 28px; height: 28px; border-radius: 50%; object-fit: contain; opacity: 0.85; }
-.usdc-banner-title { font-size: 1.05rem; font-weight: 600; color: #e2e8f0; display: flex; align-items: center; gap: 8px; }
-.usdc-banner-subtitle { font-size: 0.75rem; font-weight: 500; color: #64748b; }
-.usdc-banner-amount { font-size: 1.2rem; font-weight: 600; color: #e2e8f0; }
+.usdc-banner {{ position: relative; overflow: hidden; background: rgba(15, 23, 42, 0.5); border: 1px solid rgba(39, 117, 202, 0.2); border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); padding: 10px 20px; width: 90%; max-width: 400px; margin: -15px auto 12px auto !important; display: flex; align-items: center; justify-content: space-between; }}
+.usdc-banner-left {{ display: flex; align-items: center; gap: 12px; }}
+.usdc-banner-left img {{ width: 28px; height: 28px; border-radius: 50%; object-fit: contain; opacity: 0.85; }}
+.usdc-banner-title {{ font-size: 1.05rem; font-weight: 600; color: #e2e8f0; display: flex; align-items: center; gap: 8px; }}
+.usdc-banner-subtitle {{ font-size: 0.75rem; font-weight: 500; color: #64748b; }}
+.usdc-banner-amount {{ font-size: 1.2rem; font-weight: 600; color: #e2e8f0; }}
+.dashboard-toggle:not(:checked) ~ .usdc-banner .usdc-banner-amount {{ font-size: 0 !important; }}
+.dashboard-toggle:not(:checked) ~ .usdc-banner .usdc-banner-amount::after {{ content: '***'; font-size: 1.2rem; color: #e2e8f0; }}
 
-/* Privacy Mode */
-.dashboard-toggle:not(:checked) ~ .usdc-banner .usdc-banner-amount { font-size: 0 !important; }
-.dashboard-toggle:not(:checked) ~ .usdc-banner .usdc-banner-amount::after { content: '***'; font-size: 1.2rem; color: #e2e8f0; }
+button[aria-label="Step Up"], button[aria-label="Step Down"], button[data-testid="stNumberInputStepUp"], button[data-testid="stNumberInputStepDown"] {{ display: none !important; }}
+input[type="number"]::-webkit-inner-spin-button, input[type="number"]::-webkit-outer-spin-button {{ -webkit-appearance: none; margin: 0; }}
+input[type="number"] {{ -moz-appearance: textfield; }}
 
-button[aria-label="Step Up"], button[aria-label="Step Down"], button[data-testid="stNumberInputStepUp"], button[data-testid="stNumberInputStepDown"] { display: none !important; }
-input[type="number"]::-webkit-inner-spin-button, input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
-input[type="number"] { -moz-appearance: textfield; }
-
-/* Transaction Row Styling */
-div[data-testid="stForm"]:has(.add-tx-card) { background: #0f172a !important; border: 1px solid rgba(255,255,255,0.05) !important; border-radius: 16px !important; padding: 24px !important; box-shadow: 0 4px 15px rgba(0,0,0,0.3) !important; margin-bottom: 24px !important; }
-div[data-testid="stForm"]:has(.add-tx-card) label { font-size: 0.85rem !important; color: #94a3b8 !important; padding-bottom: 2px !important; }
-div[data-testid="stForm"]:has(.add-tx-card) .stTextInput input, div[data-testid="stForm"]:has(.add-tx-card) .stNumberInput input, div[data-testid="stForm"]:has(.add-tx-card) .stDateInput input { background: rgba(255,255,255,0.03) !important; border: 1px solid rgba(255,255,255,0.1) !important; color: #fff !important; border-radius: 8px !important; margin-bottom: 0px !important; }
-div[data-testid="stForm"]:has(.add-tx-card) div[data-testid="stHorizontalBlock"]:has(> div[data-testid="column"]:nth-child(4)) { display: flex !important; gap: 12px !important; }
-div[data-testid="stForm"]:has(.add-tx-card) div[data-testid="stHorizontalBlock"]:has(> div[data-testid="column"]:nth-child(2):last-child) { display: flex !important; flex-direction: row !important; justify-content: space-between !important; align-items: center !important; margin-top: 12px !important; gap: 12px !important; }
-div[data-testid="stForm"]:has(.add-tx-card) div[data-testid="stHorizontalBlock"]:has(> div[data-testid="column"]:nth-child(2):last-child) > div[data-testid="column"]:nth-child(1) { flex: 0 0 auto !important; width: auto !important; }
-div[data-testid="stForm"]:has(.add-tx-card) div[data-testid="stHorizontalBlock"]:has(> div[data-testid="column"]:nth-child(2):last-child) > div[data-testid="column"]:nth-child(2) { flex: 1 1 auto !important; width: auto !important; }
-div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] { background: rgba(0,0,0,0.3) !important; padding: 6px !important; border-radius: 12px !important; display: flex !important; flex-direction: row !important; gap: 8px !important; align-items: center !important; margin: 0 !important; height: 48px !important; border: 1px solid rgba(255,255,255,0.05) !important; min-width: 200px !important; }
-div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label { margin: 0 !important; cursor: pointer !important; padding: 0 !important; border-radius: 8px !important; border: 1px solid transparent !important; transition: all 0.3s ease !important; background: transparent !important; flex: 1 !important; display: flex !important; justify-content: center !important; align-items: center !important; height: 100% !important; }
-div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label:hover { background: rgba(255,255,255,0.05) !important; }
-div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label > div:first-child { display: none !important; } 
-div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label p { font-weight: bold !important; font-size: 1.05rem !important; color: #94a3b8 !important; margin: 0 !important; padding: 0 !important; white-space: nowrap !important; line-height: 1 !important; }
-div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label:has(input:checked):first-child, div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label[aria-checked="true"]:first-child { background: rgba(0, 255, 157, 0.15) !important; border-color: #00ff9d !important; }
-div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label:has(input:checked):first-child p, div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label[aria-checked="true"]:first-child p { color: #00ff9d !important; }
-div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label:has(input:checked):last-child, div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label[aria-checked="true"]:last-child { background: rgba(255, 77, 77, 0.15) !important; border-color: #ff4d4d !important; }
-div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label:has(input:checked):last-child p, div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label[aria-checked="true"]:last-child p { color: #ff4d4d !important; }
-div[data-testid="stForm"]:has(.add-tx-card) .stButton { display: flex !important; justify-content: flex-end !important; align-items: center !important; margin: 0 !important; padding: 0 !important; width: 100% !important; }
-div[data-testid="stForm"]:has(.add-tx-card) .stButton > button { background: #1e2a44 !important; color: #e0e0e0 !important; padding: 0 24px !important; border-radius: 10px !important; font-size: 1.05rem !important; font-weight: 700 !important; box-shadow: 0 4px 15px rgba(0,0,0,0.25) !important; transition: all 0.3s ease !important; border: none !important; margin: 0 !important; width: auto !important; height: 48px !important; min-height: 48px !important; }
-div[data-testid="stForm"]:has(.add-tx-card) .stButton > button:hover { transform: translateY(-2px) !important; box-shadow: 0 8px 20px rgba(255, 255, 255, 0.2) !important; color: white !important; }
-div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row) { background: #0f172a !important; border: 1px solid rgba(255,255,255,0.05) !important; border-radius: 12px !important; padding: 12px 16px !important; margin-bottom: 12px !important; position: relative; z-index: 2; }
-div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row) > div { padding: 0 !important; } 
-div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row) div[data-testid="stButton"] button { background: rgba(255,255,255,0.05) !important; border-radius: 8px !important; border: none !important; height: 40px !important; width: 40px !important; display: flex !important; align-items: center !important; justify-content: center !important; padding: 0 !important; margin: 0 auto !important; font-size: 1.2rem !important; transition: all 0.2s !important; }
-div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row) div[data-testid="stButton"] button:hover { background: rgba(255,255,255,0.15) !important; transform: scale(1.05) !important; }
-@keyframes rollDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
-div[data-testid="stForm"]:has(.edit-rollout) { animation: rollDown 0.3s ease forwards !important; background: rgba(0,0,0,0.2) !important; border-left: 3px solid #00ff9d !important; border-radius: 0 0 12px 12px !important; border-top: none !important; border-right: none !important; border-bottom: none !important; padding: 16px !important; margin-top: -24px !important; margin-bottom: 20px !important; position: relative; z-index: 1; box-shadow: inset 0 4px 10px rgba(0,0,0,0.15) !important; }
-div[data-testid="stVerticalBlockBorderWrapper"]:has(.del-warn) { border-color: rgba(255, 77, 77, 0.3) !important; background: rgba(15, 23, 42, 0.95) !important; border-radius: 12px !important; padding: 16px !important; text-align: center !important; margin-bottom: 12px !important; box-shadow: 0 4px 20px rgba(0,0,0,0.4) !important; }
-div[data-testid="stVerticalBlockBorderWrapper"]:has(.del-warn) .stButton > button { border-radius: 8px !important; font-weight: 600 !important; transition: all 0.2s !important; width: 100% !important; margin-top: 8px !important; padding: 6px 12px !important; }
-div[data-testid="stVerticalBlockBorderWrapper"]:has(.del-warn) div[data-testid="column"]:nth-child(1) .stButton > button { background: rgba(255, 77, 77, 0.1) !important; color: #ff4d4d !important; border: 1px solid rgba(255, 77, 77, 0.3) !important; }
-div[data-testid="stVerticalBlockBorderWrapper"]:has(.del-warn) div[data-testid="column"]:nth-child(1) .stButton > button:hover { background: #ff4d4d !important; color: white !important; }
-div[data-testid="stVerticalBlockBorderWrapper"]:has(.del-warn) div[data-testid="column"]:nth-child(2) .stButton > button { background: rgba(255, 255, 255, 0.05) !important; color: #cbd5e1 !important; border: 1px solid rgba(255, 255, 255, 0.1) !important; }
-div[data-testid="stVerticalBlockBorderWrapper"]:has(.del-warn) div[data-testid="column"]:nth-child(2) .stButton > button:hover { background: rgba(255, 255, 255, 0.15) !important; color: white !important; }
-
-/* Expanded Chart CSS Jailbreak */
-.stApp.chart-expanded-mode div[data-testid="stMainBlockContainer"] > div > div[data-testid="stVerticalBlock"] {
-    overflow: visible !important;
-    scroll-snap-type: none !important;
-}
-.stApp.chart-expanded-mode div[data-testid="stMainBlockContainer"] > div > div[data-testid="stVerticalBlock"] > div[data-testid="stVerticalBlock"] {
-    overflow: visible !important;
-    transform: none !important;
-}
-
-@media (max-width: 768px) {
-    .glossy-header { min-height: 90px; font-size: 22px; padding: 20px 16px; margin-bottom: 24px; margin-top: 20px; }
-    .stats-layer-inner { gap: 6px !important; }
-    .dash-value { font-size: clamp(11px, 3.5vw, 15px) !important; top: 24px !important; } 
-    .dash-label { font-size: clamp(8px, 2.5vw, 10px) !important; bottom: 8px !important; white-space: nowrap !important; letter-spacing: 0.5px !important; }
-    .usdc-banner { padding: 8px 14px; width: 92%; margin-bottom: 24px !important; }
-    .usdc-banner-amount { font-size: 1.1rem; }
-    
-    div[data-testid="stForm"]:has(.add-tx-card) div[data-testid="stHorizontalBlock"] { display: flex !important; flex-direction: row !important; flex-wrap: wrap !important; gap: 12px !important; }
-    div[data-testid="stForm"]:has(.add-tx-card) div[data-testid="stHorizontalBlock"]:has(> div[data-testid="column"]:nth-child(4)) > div[data-testid="column"] { min-width: calc(50% - 12px) !important; width: calc(50% - 12px) !important; flex: 1 1 calc(50% - 12px) !important; }
-    div[data-testid="stForm"]:has(.add-tx-card) input { padding: 6px !important; font-size: 0.95rem !important; }
-    div[data-testid="stForm"]:has(.add-tx-card) div[data-testid="stHorizontalBlock"]:has(> div[data-testid="column"]:nth-child(2):last-child) > div[data-testid="column"] { min-width: calc(50% - 12px) !important; width: calc(50% - 12px) !important; flex: 1 1 calc(50% - 12px) !important; }
-    div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] { min-width: 0 !important; width: 100% !important; }
-    div[data-testid="stForm"]:has(.add-tx-card) .stButton { display: flex !important; justify-content: flex-end !important; width: 100% !important; }
-    div[data-testid="stForm"]:has(.add-tx-card) .stButton > button { width: 100% !important; max-width: 120px !important; padding: 0 16px !important; }
-    div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row) > div > div[data-testid="stVerticalBlock"] > div[data-testid="stHorizontalBlock"] { display: flex !important; flex-direction: row !important; flex-wrap: nowrap !important; align-items: center !important; overflow: hidden !important; gap: 2px !important; }
-    div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row) div[data-testid="column"] { min-width: 0 !important; padding: 0 !important; width: auto !important; flex-shrink: 1 !important; }
-    div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row) > div > div[data-testid="stVerticalBlock"] > div[data-testid="stHorizontalBlock"] > div[data-testid="column"]:nth-child(1) { flex: 0 0 35px !important; width: 35px !important; }
-    div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row) > div > div[data-testid="stVerticalBlock"] > div[data-testid="stHorizontalBlock"] > div[data-testid="column"]:nth-child(2) { flex: 1 1 auto !important; overflow: hidden !important; text-align: left; }
-    div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row) > div > div[data-testid="stVerticalBlock"] > div[data-testid="stHorizontalBlock"] > div[data-testid="column"]:nth-child(3) { flex: 1.5 1 auto !important; overflow: hidden !important; text-align: center; }
-    div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row) > div > div[data-testid="stVerticalBlock"] > div[data-testid="stHorizontalBlock"] > div[data-testid="column"]:nth-child(4) { flex: 0 0 36px !important; width: 36px !important; }
-    div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row) > div > div[data-testid="stVerticalBlock"] > div[data-testid="stHorizontalBlock"] > div[data-testid="column"]:nth-child(5) { flex: 0 0 36px !important; width: 36px !important; }
-    div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row) div[data-testid="stButton"] button { width: 30px !important; height: 30px !important; font-size: 0.9rem !important; margin: 0 auto !important; }
-    .mobile-logo { width: 32px !important; height: 32px !important; margin-top: 0 !important; }
-    .mobile-tx-ticker { font-size: 0.95rem !important; margin-left: 2px !important;}
-    .mobile-tx-amount { font-size: 0.95rem !important; white-space: nowrap !important; }
-    .mobile-tx-sub { font-size: 0.7rem !important; white-space: nowrap !important; margin-left: 2px !important;}
-}
+@media (max-width: 768px) {{
+    .glossy-header {{ min-height: 90px; font-size: 22px; padding: 20px 16px; margin-bottom: 24px; margin-top: 20px; }}
+    .stats-layer-inner {{ gap: 6px !important; }}
+    .dash-value {{ font-size: clamp(11px, 3.5vw, 15px) !important; top: 24px !important; }} 
+    .dash-label {{ font-size: clamp(8px, 2.5vw, 10px) !important; bottom: 8px !important; white-space: nowrap !important; letter-spacing: 0.5px !important; }}
+    .usdc-banner {{ padding: 8px 14px; width: 92%; margin-bottom: 24px !important; }}
+    .usdc-banner-amount {{ font-size: 1.1rem; }}
+}}
 </style>
 """, unsafe_allow_html=True)
+st.session_state.anim_dir = "none" # Reset animation trigger
+
+# ====================== RENDER BOTTOM NAV BAR ======================
+st.markdown(f"""
+<div class="bottom-nav-pill">
+    <div class="nav-item {'active' if st.session_state.page == 'Home' else ''}" onclick="window.parent.clickStreamlitNav('Nav_Home')">
+        {DASHBOARD_ICON}<span>Overview</span>
+    </div>
+    <div class="nav-item {'active' if st.session_state.page == 'Crypto' else ''}" onclick="window.parent.clickStreamlitNav('Nav_Crypto')">
+        {CRYPTO_ICON}<span>Crypto</span>
+    </div>
+    <div class="nav-item {'active' if st.session_state.page == 'Fiat' else ''}" onclick="window.parent.clickStreamlitNav('Nav_Fiat')">
+        {FIAT_ICON}<span>Fiat</span>
+    </div>
+</div>
+""", unsafe_allow_html=True)
+
+# ====================== GLOBAL DRAG & EYE ICON ENGINE ======================
+js_engine = f"""
+if (!window.mySwipeEngineLoaded) {{
+    window.mySwipeEngineLoaded = true;
+    const doc = window.parent ? window.parent.document : document;
+    const win = window.parent ? window.parent : window;
+
+    win.clickStreamlitNav = function(targetText) {{
+        const btns = doc.querySelectorAll('div[data-testid="stSidebar"] button p');
+        for (let p of btns) {{
+            if (p.innerText === targetText) {{ p.parentElement.click(); break; }}
+        }}
+    }};
+
+    let tsX = 0, tsY = 0;
+    doc.addEventListener('touchstart', e => {{
+        if (e.touches.length > 1) return;
+        const target = e.target;
+        if (target.closest('.charts-scroll-wrapper') || target.closest('.scroll-wrapper') || target.tagName === 'CANVAS') return;
+        tsX = e.touches[0].clientX; tsY = e.touches[0].clientY;
+    }}, {{passive: true}});
+
+    doc.addEventListener('touchend', e => {{
+        if (e.changedTouches.length > 1) return;
+        const target = e.target;
+        if (target.closest('.charts-scroll-wrapper') || target.closest('.scroll-wrapper') || target.tagName === 'CANVAS') return;
+        
+        const dX = tsX - e.changedTouches[0].clientX;
+        const dY = tsY - e.changedTouches[0].clientY;
+        
+        if (Math.abs(dX) > 60 && Math.abs(dX) > Math.abs(dY)) {{
+            const current = "{st.session_state.page}";
+            if (dX > 0) {{ // Swipe Left -> Go to Next
+                if (current === "Home") win.clickStreamlitNav("Nav_Crypto");
+                else if (current === "Crypto") win.clickStreamlitNav("Nav_Fiat");
+            }} else {{ // Swipe Right -> Go to Prev
+                if (current === "Fiat") win.clickStreamlitNav("Nav_Crypto");
+                else if (current === "Crypto") win.clickStreamlitNav("Nav_Home");
+            }}
+        }}
+    }}, {{passive: true}});
+
+    // Universal Eye Icon Sync
+    setInterval(() => {{
+        const dt = doc.getElementById('dash-toggle');
+        const dtUsdc = doc.getElementById('dash-toggle-usdc');
+        if (dt) {{
+            const isChecked = dt.checked;
+            if (dtUsdc && dtUsdc.checked !== isChecked) dtUsdc.checked = isChecked;
+            const body = doc.body;
+            if (isChecked) {{
+                body.classList.remove('privacy-mode');
+                win.localStorage.setItem('dashboardOpen', 'true');
+            }} else {{
+                body.classList.add('privacy-mode');
+                win.localStorage.setItem('dashboardOpen', 'false');
+            }}
+        }}
+    }}, 150);
+    
+    setTimeout(() => {{
+        const saved = win.localStorage.getItem('dashboardOpen');
+        const dt = doc.getElementById('dash-toggle');
+        const dtUsdc = doc.getElementById('dash-toggle-usdc');
+        if (dt) {{
+            if (saved === 'true') {{ dt.checked = true; if(dtUsdc) dtUsdc.checked = true; doc.body.classList.remove('privacy-mode'); }}
+            else {{ dt.checked = false; if(dtUsdc) dtUsdc.checked = false; doc.body.classList.add('privacy-mode'); }}
+        }}
+    }}, 100);
+}}
+"""
+encoded_js = json.dumps(js_engine)
+
+swipe_injector = f"""
+<script>
+(function() {{
+    const doc = window.parent.document;
+    if (!doc.getElementById('global-swipe-script')) {{
+        const script = doc.createElement('script');
+        script.id = 'global-swipe-script';
+        script.textContent = {encoded_js};
+        doc.head.appendChild(script);
+    }}
+}})();
+</script>
+"""
+components.html(swipe_injector, height=0, width=0)
 
 # ====================== DATA PREPARATION ENGINE ======================
 DATA_DIR = Path("data")
 DATA_DIR.mkdir(exist_ok=True)
 CRYPTO_JSON = DATA_DIR / "crypto_transactions.json"
 FIAT_JSON = DATA_DIR / "fiat_transactions.json"
-
-def format_datum(datum_val):
-    if pd.isna(datum_val) or datum_val == "": return ""
-    try: return (datetime(1899, 12, 30) + timedelta(days=int(float(datum_val)))).strftime("%d.%m.%Y")
-    except: return str(datum_val)
 
 def date_to_excel_serial(selected_date: date) -> int: return (selected_date - datetime(1899, 12, 30).date()).days
 def parse_excel_date(x):
@@ -389,13 +413,13 @@ def build_portfolio_history(crypto_df, fiat_df, last_prices, hist_dict):
 
     history_data = []
     for d in date_range:
-        history_data.append({'time': int(datetime.combine(d, datetime.min.time()).timestamp()) * 1000, 'value': float(total_portfolio_value.loc[d]), 'invested': float(cum_fiat_usdc.loc[d]), 'btc': float(btc_benchmark_value.loc[d])})
+        history_data.append({'time': int(datetime.combine(d, datetime.min.time()).timestamp()) * 1000, 'value': safe_float(total_portfolio_value.loc[d]), 'invested': safe_float(cum_fiat_usdc.loc[d]), 'btc': safe_float(btc_benchmark_value.loc[d])})
         
     allocation_series_js_list = []
     if not common_cols.empty:
         coin_values_last_day = {c: (cum_holdings[c].loc[date_range[-1]] * prices_df[c].loc[date_range[-1]]) for c in common_cols}
         for coin in sorted(coin_values_last_day.keys(), key=lambda c: coin_values_last_day[c], reverse=True):
-            data_points = [f"[{int(datetime.combine(d, datetime.min.time()).timestamp()) * 1000}, {float((cum_holdings[coin] * prices_df[coin]).loc[d])}]" for d in date_range]
+            data_points = [f"[{int(datetime.combine(d, datetime.min.time()).timestamp()) * 1000}, {safe_float((cum_holdings[coin] * prices_df[coin]).loc[d])}]" for d in date_range]
             allocation_series_js_list.append(f"{{ name: '{coin}', data: [{','.join(data_points)}], color: '{get_ticker_color(coin)}', marker: {{ enabled: false }} }}")
 
     return history_data, ",\n".join(allocation_series_js_list), pnl_df
@@ -467,72 +491,9 @@ history_data_raw, allocation_series_js, pnl_df = vault['history_data_raw'], vaul
 usdc_row = df_port[df_port['Ticker'] == 'USDC'].iloc[0] if not df_port[df_port['Ticker'] == 'USDC'].empty else None
 usdc_holdings = usdc_row['Holdings'] if usdc_row is not None else 0
 
-# ================== BOTTOM NAV & SCROLL ENGINE ==================
-st.markdown(f"""
-<div class="bottom-nav-pill">
-    <div class="nav-item" id="nav-btn-0" onclick="window.parent.scrollToPage(0)">
-        {DASHBOARD_ICON}<span>Overview</span>
-    </div>
-    <div class="nav-item" id="nav-btn-1" onclick="window.parent.scrollToPage(1)">
-        {CRYPTO_ICON}<span>Crypto</span>
-    </div>
-    <div class="nav-item" id="nav-btn-2" onclick="window.parent.scrollToPage(2)">
-        {FIAT_ICON}<span>Fiat</span>
-    </div>
-</div>
-""", unsafe_allow_html=True)
-
-# Bulletproof pure JS injection using a hidden img onerror to completely bypass Streamlit markdown stripping
-js_scroll_sync = """
-<img src="dummy" style="display:none;" onerror="
-if (!window.scrollEngineLoaded) {
-    window.scrollEngineLoaded = true;
-    const win = window.parent || window;
-    const doc = win.document;
-
-    let attachInt = setInterval(function() {
-        const master = doc.querySelector('div[data-testid=&quot;stMainBlockContainer&quot;] > div > div[data-testid=&quot;stVerticalBlock&quot;]');
-        if (master) {
-            clearInterval(attachInt);
-
-            const saved = win.localStorage.getItem('appScrollPos');
-            if (saved) master.scrollLeft = parseInt(saved);
-
-            master.addEventListener('scroll', function() {
-                clearTimeout(win.scrollTimeout);
-                win.scrollTimeout = setTimeout(function() {
-                    win.localStorage.setItem('appScrollPos', master.scrollLeft);
-                    const width = win.innerWidth;
-                    const idx = Math.round(master.scrollLeft / width);
-                    const items = doc.querySelectorAll('.nav-item');
-                    items.forEach(function(el, i) {
-                        if(i === idx) el.classList.add('active');
-                        else el.classList.remove('active');
-                    });
-                }, 50);
-            });
-
-            win.scrollToPage = function(idx) {
-                const width = win.innerWidth;
-                master.scrollTo({ left: width * idx, behavior: 'smooth' });
-            };
-            
-            const initWidth = win.innerWidth;
-            const initIdx = Math.round((saved ? parseInt(saved) : 0) / initWidth);
-            const items = doc.querySelectorAll('.nav-item');
-            items.forEach(function(el, i) {
-                if(i === initIdx) el.classList.add('active');
-                else el.classList.remove('active');
-            });
-        }
-    }, 100);
-}
-">
-"""
-st.markdown(js_scroll_sync, unsafe_allow_html=True)
-
-# ================== PAGE 1: HOME ==================
-with st.container():
+# ====================== PAGE ROUTING ======================
+if st.session_state.page == "Home":
+    
     value_box_html = f"""
     <input type="checkbox" id="dash-toggle" class="dashboard-toggle" style="display:none;">
     <div class="dashboard-wrapper">
@@ -566,7 +527,7 @@ with st.container():
     pnl_data_js_dict = {'all': '', '1y': '', '30d': '', '7d': '', '1d': ''}
     if not pnl_df.empty:
         pnl_df_active = pnl_df[[c for c in [t for t in df_port['Ticker'] if t != 'USDC'] if c in pnl_df.columns]] if [c for c in [t for t in df_port['Ticker'] if t != 'USDC'] if c in pnl_df.columns] else pnl_df
-        def format_pnl_js(series): return ",\n".join([f"{{ name: '{t}', y: {v}, color: '{get_ticker_color(t)}99' }}" for t, v in series.dropna().sort_values(ascending=True).items()])
+        def format_pnl_js(series): return ",\n".join([f"{{ name: '{t}', y: {safe_float(v)}, color: '{get_ticker_color(t)}99' }}" for t, v in series.dropna().sort_values(ascending=True).items()])
         pnl_all = pnl_df_active.iloc[-1]
         pnl_data_js_dict['all'] = format_pnl_js(pnl_all)
         pnl_data_js_dict['1d'] = format_pnl_js(pnl_all - pnl_df_active.iloc[-2 if len(pnl_df_active) >= 2 else 0])
@@ -581,21 +542,12 @@ with st.container():
     roi_data_js = ",\n".join([f"{{ name: '{r['Ticker']}', y: {r['PnL %']}, color: '{get_ticker_color(r['Ticker'])}99' }}" for _, r in df_port[df_port['Ticker'] != 'USDC'].sort_values(by='PnL %', ascending=False).iterrows() if pd.notna(r['PnL %'])])
     daily_data_js = ",\n".join([f"{{ name: '{r['Ticker']}', y: 0, color: '#64748b99' }}" for _, r in df_port[df_port['Ticker'] != 'USDC'].iterrows()])
 
-    # Perfectly un-minified HTML with rock-solid Python injection points
     charts_html = f"""
     <!DOCTYPE html>
     <html>
     <head>
         <meta charset="UTF-8">
-        <script>
-            window.pnlDataMap = {{
-                'all': [{pnl_data_js_dict['all']}],
-                '1y': [{pnl_data_js_dict['1y']}],
-                '30d': [{pnl_data_js_dict['30d']}],
-                '7d': [{pnl_data_js_dict['7d']}],
-                '1d': [{pnl_data_js_dict['1d']}]
-            }};
-        </script>
+        <script>window.pnlDataMap = {{ 'all': [{pnl_data_js_dict['all']}], '1y': [{pnl_data_js_dict['1y']}], '30d': [{pnl_data_js_dict['30d']}], '7d': [{pnl_data_js_dict['7d']}], '1d': [{pnl_data_js_dict['1d']}] }};</script>
         <script src="https://code.highcharts.com/stock/highstock.js"></script>
         <script src="https://code.highcharts.com/stock/highcharts-3d.js"></script>
         <style>
@@ -620,8 +572,15 @@ with st.container():
             .chart-body {{ flex: 1; width: 100%; position: relative; }}
             #chart-overlay {{ visibility: hidden; opacity: 0; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(10, 15, 28, 0.85); z-index: 1000; backdrop-filter: blur(5px); -webkit-backdrop-filter: blur(5px); transition: opacity 0.4s ease, visibility 0.4s ease; }}
             #chart-overlay.active {{ visibility: visible; opacity: 1; }}
+            
+            /* CSS Jailbreak for the expanding charts */
             .expanded-chart {{ background: rgba(15, 23, 42, 0.98) !important; border: 1px solid rgba(255, 255, 255, 0.08) !important; box-shadow: 0 15px 50px rgba(0,0,0,0.9) !important; border-radius: 20px !important; }}
-            @media (max-width: 768px) {{ .chart-placeholder {{ height: 320px !important; width: 90vw !important; flex: 0 0 90vw !important; }} .charts-flex {{ padding: 0 5vw; gap: 16px; }} .chart-controls button {{ padding: 3px 6px; font-size: 9px; }} }}
+            
+            @media (max-width: 768px) {{ 
+                .chart-placeholder {{ height: 320px !important; width: 90vw !important; flex: 0 0 90vw !important; }} 
+                .charts-flex {{ padding: 0 5vw; gap: 16px; }} 
+                .chart-controls button {{ padding: 3px 6px; font-size: 9px; }} 
+            }}
         </style>
     </head>
     <body>
@@ -797,7 +756,6 @@ with st.container():
                         parentIframe.style.height = '';
                         parentIframe.style.zIndex = '';
                         parentIframe.style.background = '';
-                        window.parent.document.querySelector('.stApp').classList.remove('chart-expanded-mode');
                     }}
                 }} else {{
                     // OPEN MECHANIC
@@ -809,10 +767,10 @@ with st.container():
                     el.classList.add('expanded-chart');
                     
                     el.style.position = 'fixed';
-                    el.style.top = '10vh';
+                    el.style.top = '5vh';
                     el.style.left = '5vw';
                     el.style.width = '90vw';
-                    el.style.height = '75vh';
+                    el.style.height = '80vh';
                     el.style.zIndex = '9999999';
                     el.style.transform = 'none';
                     el.style.transition = 'all 0.3s ease';
@@ -825,7 +783,6 @@ with st.container():
                         parentIframe.style.height = '100vh';
                         parentIframe.style.zIndex = '999999';
                         parentIframe.style.background = 'rgba(10,15,28,0.98)';
-                        window.parent.document.querySelector('.stApp').classList.add('chart-expanded-mode');
                     }}
                     
                     setTimeout(() => {{
@@ -868,29 +825,6 @@ with st.container():
                     }}
                 }}, {{ passive: false }});
             }}
-
-            setInterval(() => {{
-                try {{
-                    const saved = localStorage.getItem('dashboardOpen');
-                    const isPrivacy = (saved === 'false');
-                    const currentlyPrivacy = document.body.classList.contains('privacy-mode');
-                    if (isPrivacy !== currentlyPrivacy) {{
-                        if (isPrivacy) document.body.classList.add('privacy-mode');
-                        else document.body.classList.remove('privacy-mode');
-                        ['history-container', 'pnl-container', 'roi-container', 'daily-container', 'inv-val-container'].forEach(id => {{
-                            const hc = Highcharts.charts.find(c => c && c.renderTo.id === id);
-                            if (hc && hc.yAxis && hc.yAxis[0]) {{ hc.yAxis[0].isDirty = true; hc.redraw(true); }}
-                        }});
-                    }}
-                }} catch(e) {{}}
-            }}, 200);
-            
-            // Constantly ensure charts auto-resize perfectly when you swipe back to the Home tab
-            setInterval(() => {{
-                Highcharts.charts.forEach(c => {{
-                    if (c && c.renderTo && c.renderTo.clientWidth > 0) {{ c.reflow(); }}
-                }});
-            }}, 500);
         </script>
     </body>
     </html>
@@ -909,9 +843,67 @@ with st.container():
 
 
 # ================== PAGE 2: CRYPTO ==================
-with st.container():
+elif st.session_state.page == "Crypto":
     glossy_header("Crypto Transactions", CRYPTO_ICON)
-    
+
+    st.markdown("""
+    <style>
+    div[data-testid="stForm"]:has(.add-tx-card) { background: #0f172a !important; border: 1px solid rgba(255,255,255,0.05) !important; border-radius: 16px !important; padding: 24px !important; box-shadow: 0 4px 15px rgba(0,0,0,0.3) !important; margin-bottom: 24px !important; }
+    div[data-testid="stForm"]:has(.add-tx-card) label { font-size: 0.85rem !important; color: #94a3b8 !important; padding-bottom: 2px !important; }
+    div[data-testid="stForm"]:has(.add-tx-card) .stTextInput input, div[data-testid="stForm"]:has(.add-tx-card) .stNumberInput input, div[data-testid="stForm"]:has(.add-tx-card) .stDateInput input { background: rgba(255,255,255,0.03) !important; border: 1px solid rgba(255,255,255,0.1) !important; color: #fff !important; border-radius: 8px !important; margin-bottom: 0px !important; }
+    div[data-testid="stForm"]:has(.add-tx-card) div[data-testid="stHorizontalBlock"]:has(> div[data-testid="column"]:nth-child(4)) { display: flex !important; gap: 12px !important; }
+    div[data-testid="stForm"]:has(.add-tx-card) div[data-testid="stHorizontalBlock"]:has(> div[data-testid="column"]:nth-child(2):last-child) { display: flex !important; flex-direction: row !important; justify-content: space-between !important; align-items: center !important; margin-top: 12px !important; gap: 12px !important; }
+    div[data-testid="stForm"]:has(.add-tx-card) div[data-testid="stHorizontalBlock"]:has(> div[data-testid="column"]:nth-child(2):last-child) > div[data-testid="column"]:nth-child(1) { flex: 0 0 auto !important; width: auto !important; }
+    div[data-testid="stForm"]:has(.add-tx-card) div[data-testid="stHorizontalBlock"]:has(> div[data-testid="column"]:nth-child(2):last-child) > div[data-testid="column"]:nth-child(2) { flex: 1 1 auto !important; width: auto !important; }
+    div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] { background: rgba(0,0,0,0.3) !important; padding: 6px !important; border-radius: 12px !important; display: flex !important; flex-direction: row !important; gap: 8px !important; align-items: center !important; margin: 0 !important; height: 48px !important; border: 1px solid rgba(255,255,255,0.05) !important; min-width: 200px !important; }
+    div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label { margin: 0 !important; cursor: pointer !important; padding: 0 !important; border-radius: 8px !important; border: 1px solid transparent !important; transition: all 0.3s ease !important; background: transparent !important; flex: 1 !important; display: flex !important; justify-content: center !important; align-items: center !important; height: 100% !important; }
+    div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label:hover { background: rgba(255,255,255,0.05) !important; }
+    div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label > div:first-child { display: none !important; } 
+    div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label p { font-weight: bold !important; font-size: 1.05rem !important; color: #94a3b8 !important; margin: 0 !important; padding: 0 !important; white-space: nowrap !important; line-height: 1 !important; }
+    div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label:has(input:checked):first-child, div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label[aria-checked="true"]:first-child { background: rgba(0, 255, 157, 0.15) !important; border-color: #00ff9d !important; }
+    div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label:has(input:checked):first-child p, div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label[aria-checked="true"]:first-child p { color: #00ff9d !important; }
+    div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label:has(input:checked):last-child, div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label[aria-checked="true"]:last-child { background: rgba(255, 77, 77, 0.15) !important; border-color: #ff4d4d !important; }
+    div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label:has(input:checked):last-child p, div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label[aria-checked="true"]:last-child p { color: #ff4d4d !important; }
+    div[data-testid="stForm"]:has(.add-tx-card) .stButton { display: flex !important; justify-content: flex-end !important; align-items: center !important; margin: 0 !important; padding: 0 !important; width: 100% !important; }
+    div[data-testid="stForm"]:has(.add-tx-card) .stButton > button { background: #1e2a44 !important; color: #e0e0e0 !important; padding: 0 24px !important; border-radius: 10px !important; font-size: 1.05rem !important; font-weight: 700 !important; box-shadow: 0 4px 15px rgba(0,0,0,0.25) !important; transition: all 0.3s ease !important; border: none !important; margin: 0 !important; width: auto !important; height: 48px !important; min-height: 48px !important; }
+    div[data-testid="stForm"]:has(.add-tx-card) .stButton > button:hover { transform: translateY(-2px) !important; box-shadow: 0 8px 20px rgba(255, 255, 255, 0.2) !important; color: white !important; }
+    div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row) { background: #0f172a !important; border: 1px solid rgba(255,255,255,0.05) !important; border-radius: 12px !important; padding: 12px 16px !important; margin-bottom: 12px !important; position: relative; z-index: 2; }
+    div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row) > div { padding: 0 !important; } 
+    div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row) div[data-testid="stButton"] button { background: rgba(255,255,255,0.05) !important; border-radius: 8px !important; border: none !important; height: 40px !important; width: 40px !important; display: flex !important; align-items: center !important; justify-content: center !important; padding: 0 !important; margin: 0 auto !important; font-size: 1.2rem !important; transition: all 0.2s !important; }
+    div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row) div[data-testid="stButton"] button:hover { background: rgba(255,255,255,0.15) !important; transform: scale(1.05) !important; }
+    @keyframes rollDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+    div[data-testid="stForm"]:has(.edit-rollout) { animation: rollDown 0.3s ease forwards !important; background: rgba(0,0,0,0.2) !important; border-left: 3px solid #00ff9d !important; border-radius: 0 0 12px 12px !important; border-top: none !important; border-right: none !important; border-bottom: none !important; padding: 16px !important; margin-top: -24px !important; margin-bottom: 20px !important; position: relative; z-index: 1; box-shadow: inset 0 4px 10px rgba(0,0,0,0.15) !important; }
+    div[data-testid="stVerticalBlockBorderWrapper"]:has(.del-warn) { border-color: rgba(255, 77, 77, 0.3) !important; background: rgba(15, 23, 42, 0.95) !important; border-radius: 12px !important; padding: 16px !important; text-align: center !important; margin-bottom: 12px !important; box-shadow: 0 4px 20px rgba(0,0,0,0.4) !important; }
+    div[data-testid="stVerticalBlockBorderWrapper"]:has(.del-warn) .stButton > button { border-radius: 8px !important; font-weight: 600 !important; transition: all 0.2s !important; width: 100% !important; margin-top: 8px !important; padding: 6px 12px !important; }
+    div[data-testid="stVerticalBlockBorderWrapper"]:has(.del-warn) div[data-testid="column"]:nth-child(1) .stButton > button { background: rgba(255, 77, 77, 0.1) !important; color: #ff4d4d !important; border: 1px solid rgba(255, 77, 77, 0.3) !important; }
+    div[data-testid="stVerticalBlockBorderWrapper"]:has(.del-warn) div[data-testid="column"]:nth-child(1) .stButton > button:hover { background: #ff4d4d !important; color: white !important; }
+    div[data-testid="stVerticalBlockBorderWrapper"]:has(.del-warn) div[data-testid="column"]:nth-child(2) .stButton > button { background: rgba(255, 255, 255, 0.05) !important; color: #cbd5e1 !important; border: 1px solid rgba(255, 255, 255, 0.1) !important; }
+    div[data-testid="stVerticalBlockBorderWrapper"]:has(.del-warn) div[data-testid="column"]:nth-child(2) .stButton > button:hover { background: rgba(255, 255, 255, 0.15) !important; color: white !important; }
+
+    @media (max-width: 768px) {
+        div[data-testid="stForm"]:has(.add-tx-card) div[data-testid="stHorizontalBlock"] { display: flex !important; flex-direction: row !important; flex-wrap: wrap !important; gap: 12px !important; }
+        div[data-testid="stForm"]:has(.add-tx-card) div[data-testid="stHorizontalBlock"]:has(> div[data-testid="column"]:nth-child(4)) > div[data-testid="column"] { min-width: calc(50% - 12px) !important; width: calc(50% - 12px) !important; flex: 1 1 calc(50% - 12px) !important; }
+        div[data-testid="stForm"]:has(.add-tx-card) input { padding: 6px !important; font-size: 0.95rem !important; }
+        div[data-testid="stForm"]:has(.add-tx-card) div[data-testid="stHorizontalBlock"]:has(> div[data-testid="column"]:nth-child(2):last-child) > div[data-testid="column"] { min-width: calc(50% - 12px) !important; width: calc(50% - 12px) !important; flex: 1 1 calc(50% - 12px) !important; }
+        div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] { min-width: 0 !important; width: 100% !important; }
+        div[data-testid="stForm"]:has(.add-tx-card) .stButton { display: flex !important; justify-content: flex-end !important; width: 100% !important; }
+        div[data-testid="stForm"]:has(.add-tx-card) .stButton > button { width: 100% !important; max-width: 120px !important; padding: 0 16px !important; }
+        div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row) > div > div[data-testid="stVerticalBlock"] > div[data-testid="stHorizontalBlock"] { display: flex !important; flex-direction: row !important; flex-wrap: nowrap !important; align-items: center !important; overflow: hidden !important; gap: 2px !important; }
+        div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row) div[data-testid="column"] { min-width: 0 !important; padding: 0 !important; width: auto !important; flex-shrink: 1 !important; }
+        div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row) > div > div[data-testid="stVerticalBlock"] > div[data-testid="stHorizontalBlock"] > div[data-testid="column"]:nth-child(1) { flex: 0 0 35px !important; width: 35px !important; }
+        div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row) > div > div[data-testid="stVerticalBlock"] > div[data-testid="stHorizontalBlock"] > div[data-testid="column"]:nth-child(2) { flex: 1 1 auto !important; overflow: hidden !important; text-align: left; }
+        div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row) > div > div[data-testid="stVerticalBlock"] > div[data-testid="stHorizontalBlock"] > div[data-testid="column"]:nth-child(3) { flex: 1.5 1 auto !important; overflow: hidden !important; text-align: center; }
+        div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row) > div > div[data-testid="stVerticalBlock"] > div[data-testid="stHorizontalBlock"] > div[data-testid="column"]:nth-child(4) { flex: 0 0 36px !important; width: 36px !important; }
+        div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row) > div > div[data-testid="stVerticalBlock"] > div[data-testid="stHorizontalBlock"] > div[data-testid="column"]:nth-child(5) { flex: 0 0 36px !important; width: 36px !important; }
+        div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row) div[data-testid="stButton"] button { width: 30px !important; height: 30px !important; font-size: 0.9rem !important; margin: 0 auto !important; }
+        .mobile-logo { width: 32px !important; height: 32px !important; margin-top: 0 !important; }
+        .mobile-tx-ticker { font-size: 0.95rem !important; margin-left: 2px !important;}
+        .mobile-tx-amount { font-size: 0.95rem !important; white-space: nowrap !important; }
+        .mobile-tx-sub { font-size: 0.7rem !important; white-space: nowrap !important; margin-left: 2px !important;}
+    }
+    </style>
+    """, unsafe_allow_html=True)
+
     with st.form("add_crypto", border=False):
         st.markdown("<div class='add-tx-card'></div><h3 style='text-align: center; color: white; margin-top: 0px; margin-bottom: 10px;'>New Transaction</h3>", unsafe_allow_html=True)
         
@@ -1022,7 +1014,7 @@ with st.container():
                                 st.rerun()
 
 # ================== PAGE 3: FIAT ==================
-with st.container():
+elif st.session_state.page == "Fiat":
     total_czk = pd.to_numeric(st.session_state.fiat_df['CZK'], errors='coerce').fillna(0).sum()
     total_eur = pd.to_numeric(st.session_state.fiat_df['EUR'], errors='coerce').fillna(0).sum()
     total_usdc = pd.to_numeric(st.session_state.fiat_df['USDC'], errors='coerce').fillna(0).sum()
