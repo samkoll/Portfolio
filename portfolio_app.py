@@ -49,17 +49,15 @@ div[data-testid="stMainBlockContainer"] {
 /* ---------------------------------------------------
    NATIVE APP NAVIGATION BAR & TAB HIDING
 --------------------------------------------------- */
-/* Universally target and hide the first element (the header bar) regardless of internal class names */
-div[data-testid="stTabs"] > div:first-child {
-    display: none !important; 
-    position: absolute !important;
+/* Safely target ONLY the header container by checking if it contains the tab buttons */
+div[data-testid="stTabs"] > div:has(button[data-baseweb="tab"]) {
+    display: none !important;
     height: 0px !important;
-    width: 0px !important;
-    overflow: hidden !important;
-    visibility: hidden !important;
-    opacity: 0 !important;
+    margin: 0px !important;
+    padding: 0px !important;
 }
-div[data-testid="stTabs"] > div[data-baseweb="tab-panel"] {
+div[data-testid="stTabs"] > div[data-baseweb="tab-panel"],
+div[data-testid="stTabs"] > div[role="tabpanel"] {
     padding-bottom: 20px !important; 
 }
 
