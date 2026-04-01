@@ -193,6 +193,65 @@ div[data-testid="stVerticalBlockBorderWrapper"]:has(.del-warn) div[data-testid="
 </style>
 """, unsafe_allow_html=True)
 
+# ====================== GLOBAL DRAG & SWIPE LISTENER ======================
+js_engine = """
+if (!window.mySwipeEngineLoaded) {
+    window.mySwipeEngineLoaded = true;
+    const doc = window.parent ? window.parent.document : document;
+    
+    let touchstartX = 0;
+    let touchstartY = 0;
+
+    doc.addEventListener('touchstart', function(e) {
+        if (e.touches.length > 1) return;
+        // Ignore swipes directly on charts or scrollable grid items
+        if (e.target.closest('.charts-scroll-wrapper') || e.target.closest('.scroll-wrapper') || e.target.closest('canvas')) return;
+        touchstartX = e.touches[0].clientX;
+        touchstartY = e.touches[0].clientY;
+    }, {passive: true});
+
+    doc.addEventListener('touchend', function(e) {
+        if (e.changedTouches.length > 1) return;
+        if (e.target.closest('.charts-scroll-wrapper') || e.target.closest('.scroll-wrapper') || e.target.closest('canvas')) return;
+
+        const endX = e.changedTouches[0].clientX;
+        const endY = e.changedTouches[0].clientY;
+        const deltaX = endX - touchstartX;
+        const deltaY = endY - touchstartY;
+
+        // Ensure we swiped far enough horizontally, and not vertically
+        if (Math.abs(deltaX) > 80 && Math.abs(deltaX) > Math.abs(deltaY)) {
+            // Find Streamlit's native Tab buttons
+            const tabs = Array.from(doc.querySelectorAll('button[data-baseweb="tab"]'));
+            if (!tabs.length) return;
+            
+            const activeIdx = tabs.findIndex(t => t.getAttribute('aria-selected') === 'true');
+            if (deltaX < 0 && activeIdx < tabs.length - 1) {
+                tabs[activeIdx + 1].click(); // Swipe Left -> Load Next Page
+            } else if (deltaX > 0 && activeIdx > 0) {
+                tabs[activeIdx - 1].click(); // Swipe Right -> Load Prev Page
+            }
+        }
+    }, {passive: true});
+}
+"""
+encoded_js = json.dumps(js_engine)
+
+swipe_injector = f"""
+<script>
+(function() {{
+    const doc = window.parent.document;
+    if (!doc.getElementById('global-swipe-script')) {{
+        const script = doc.createElement('script');
+        script.id = 'global-swipe-script';
+        script.textContent = {encoded_js};
+        doc.head.appendChild(script);
+    }}
+}})();
+</script>
+"""
+components.html(swipe_injector, height=0, width=0)
+
 # ====================== SVG ICONS ======================
 DASHBOARD_ICON = '''<svg xmlns="http://www.w3.org/2000/svg" width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="#00ff9d" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>'''
 CRYPTO_ICON = '''<svg xmlns="http://www.w3.org/2000/svg" width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="#00ff9d" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M14.5 8.5L9.5 13.5"/><path d="M9.5 8.5L14.5 13.5"/></svg>'''
@@ -207,7 +266,7 @@ DATA_DIR.mkdir(exist_ok=True)
 CRYPTO_JSON = DATA_DIR / "crypto_transactions.json"
 FIAT_JSON = DATA_DIR / "fiat_transactions.json"
 
-# ====================== DATE HELPERS ======================
+# ====================== DATA LOGIC ======================
 def format_datum(datum_val):
     if pd.isna(datum_val) or datum_val == "": return ""
     try: return (datetime(1899, 12, 30) + timedelta(days=int(float(datum_val)))).strftime("%d.%m.%Y")
@@ -219,7 +278,6 @@ def parse_excel_date(x):
     try: return (datetime(1899, 12, 30) + timedelta(days=int(float(x)))).date()
     except: return datetime.now().date()
 
-# ====================== INITIAL DATA ======================
 def get_initial_crypto_df():
     return pd.DataFrame([
         {"Datum": 46098, "USDC": 8.33, "Ticker": "HBAR", "Amount": 83.60159414, "Price": 0.09963924834},
@@ -426,88 +484,13 @@ if 'crypto_df' not in st.session_state: st.session_state.crypto_df = load_or_ini
 if 'fiat_df' not in st.session_state: st.session_state.fiat_df = load_or_init_fiat()
 if 'crypto_table_version' not in st.session_state: st.session_state.crypto_table_version = 0
 if 'fiat_table_version' not in st.session_state: st.session_state.fiat_table_version = 0
-if 'ui_version' not in st.session_state: st.session_state.ui_version = 0
 if 'last_known_prices' not in st.session_state: st.session_state.last_known_prices = {"USDC": 1.0}
 if 'refresh_key' not in st.session_state: st.session_state.refresh_key = random.randint(100000, 999999)
 if 'portfolio_cache' not in st.session_state: st.session_state.portfolio_cache = {}
 
 def glossy_header(title: str, icon_svg: str): st.markdown(f"""<div class="glossy-header">{icon_svg}<span style="margin-left:12px;">{title}</span></div>""", unsafe_allow_html=True)
 
-# ====================== SIDEBAR UTILITIES ======================
-with st.sidebar:
-    st.markdown("### Settings")
-    if st.button("🔄 Refresh All Prices & Charts", use_container_width=True):
-        st.session_state.refresh_key = random.randint(100000, 999999)
-        st.session_state.ui_version += 1
-        st.success("✅ Prices & charts refreshed!")
-        st.rerun()
-    data = {"crypto": json.loads(st.session_state.crypto_df.to_json(orient="records")), "fiat": json.loads(st.session_state.fiat_df.to_json(orient="records"))}
-    st.download_button("💾 Download Backup", json.dumps(data, indent=2), "portfolio_backup.json", "application/json", use_container_width=True)
-
-# ====================== GLOBAL DRAG & SWIPE LISTENER ======================
-# The entire raw script is cleanly generated in Python, JSON encoded to escape all newlines 
-# and quotes securely, and passed to a minimal injector script. This completely bypasses
-# Python's backtick escape warnings AND Streamlit's markdown-stripping protocols.
-
-js_engine = """
-if (!window.mySwipeEngineLoaded) {
-    window.mySwipeEngineLoaded = true;
-    const doc = window.parent ? window.parent.document : document;
-    const win = window.parent ? window.parent : window;
-    
-    let touchstartX = 0;
-    let touchstartY = 0;
-
-    doc.addEventListener('touchstart', function(e) {
-        if (e.touches.length > 1) return;
-        // Ignore swipes on charts or scrollable tables
-        if (e.target.closest('.charts-scroll-wrapper') || e.target.closest('.scroll-wrapper') || e.target.closest('canvas')) return;
-        touchstartX = e.touches[0].clientX;
-        touchstartY = e.touches[0].clientY;
-    }, {passive: true});
-
-    doc.addEventListener('touchend', function(e) {
-        if (e.changedTouches.length > 1) return;
-        if (e.target.closest('.charts-scroll-wrapper') || e.target.closest('.scroll-wrapper') || e.target.closest('canvas')) return;
-
-        const endX = e.changedTouches[0].clientX;
-        const endY = e.changedTouches[0].clientY;
-        const deltaX = endX - touchstartX;
-        const deltaY = endY - touchstartY;
-
-        if (Math.abs(deltaX) > 80 && Math.abs(deltaX) > Math.abs(deltaY)) {
-            // Find Streamlit's native Tab buttons
-            const tabs = Array.from(doc.querySelectorAll('button[data-baseweb="tab"]'));
-            if (!tabs.length) return;
-            
-            const activeIdx = tabs.findIndex(t => t.getAttribute('aria-selected') === 'true');
-            if (deltaX < 0 && activeIdx < tabs.length - 1) {
-                tabs[activeIdx + 1].click(); // Swipe Left -> Next Tab
-            } else if (deltaX > 0 && activeIdx > 0) {
-                tabs[activeIdx - 1].click(); // Swipe Right -> Prev Tab
-            }
-        }
-    }, {passive: true});
-}
-"""
-encoded_js = json.dumps(js_engine)
-
-swipe_injector = f"""
-<script>
-(function() {{
-    const doc = window.parent.document;
-    if (!doc.getElementById('global-swipe-script')) {{
-        const script = doc.createElement('script');
-        script.id = 'global-swipe-script';
-        script.textContent = {encoded_js};
-        doc.head.appendChild(script);
-    }}
-}})();
-</script>
-"""
-components.html(swipe_injector, height=0, width=0)
-
-# ================== ZERO-LATENCY CACHE ARCHITECTURE ==================
+# ================== GLOBAL CALCULATIONS ==================
 current_hash = f"{st.session_state.crypto_table_version}_{st.session_state.fiat_table_version}_{st.session_state.refresh_key}"
 
 if st.session_state.portfolio_cache.get('hash') != current_hash:
@@ -537,9 +520,11 @@ history_data_raw, allocation_series_js, pnl_df = vault['history_data_raw'], vaul
 usdc_row = df_port[df_port['Ticker'] == 'USDC'].iloc[0] if not df_port[df_port['Ticker'] == 'USDC'].empty else None
 usdc_holdings = usdc_row['Holdings'] if usdc_row is not None else 0
 
-# ====================== NATIVE TABS ======================
-tab_home, tab_crypto, tab_fiat = st.tabs(["🏠 Overview", "📊 Crypto", "💰 Fiat"])
 
+# ================== NATIVE TAB ARCHITECTURE ==================
+tab_home, tab_crypto, tab_fiat = st.tabs(["Overview", "Crypto", "Fiat"])
+
+# ================== PAGE 1: HOME ==================
 with tab_home:
     value_box_html = f"""
     <input type="checkbox" id="dash-toggle" class="dashboard-toggle" style="display:none;">
@@ -589,6 +574,7 @@ with tab_home:
     roi_data_js = ",\n".join([f"{{ name: '{r['Ticker']}', y: {r['PnL %']}, color: '{get_ticker_color(r['Ticker'])}99' }}" for _, r in df_port[df_port['Ticker'] != 'USDC'].sort_values(by='PnL %', ascending=False).iterrows() if pd.notna(r['PnL %'])])
     daily_data_js = ",\n".join([f"{{ name: '{r['Ticker']}', y: 0, color: '#64748b99' }}" for _, r in df_port[df_port['Ticker'] != 'USDC'].iterrows()])
 
+    # We un-minified the Highcharts code entirely to ensure Double Tap triggers properly and is readable
     charts_html = f"""
     <!DOCTYPE html>
     <html>
@@ -599,10 +585,32 @@ with tab_home:
         <script src="https://code.highcharts.com/stock/highcharts-3d.js"></script>
         <style>
             body {{ margin: 0; padding: 0; background: transparent; overflow: hidden; font-family: system-ui, sans-serif; }}
-            .charts-scroll-wrapper {{ width: 100%; overflow-y: hidden; overflow-x: auto; padding: 6px 0px 6px 0px; margin-bottom: 0px; scroll-snap-type: x mandatory; -webkit-overflow-scrolling: touch; scrollbar-width: none; -ms-overflow-style: none; }}
-            .charts-scroll-wrapper::-webkit-scrollbar {{ display: none; }}
-            .charts-flex {{ display: flex; flex-direction: row; flex-wrap: nowrap; gap: 24px; width: max-content; padding: 0 24px; }}
+            
+            .charts-scroll-wrapper {{
+                width: 100%;
+                overflow-y: hidden;
+                overflow-x: auto;
+                padding: 6px 0px 6px 0px; 
+                margin-bottom: 0px; 
+                scroll-snap-type: x mandatory;
+                -webkit-overflow-scrolling: touch;
+                scrollbar-width: none; 
+                -ms-overflow-style: none;
+            }}
+            .charts-scroll-wrapper::-webkit-scrollbar {{
+                display: none;
+            }}
+            .charts-flex {{
+                display: flex;
+                flex-direction: row;
+                flex-wrap: nowrap;
+                gap: 24px;
+                width: max-content;
+                padding: 0 24px;
+            }}
+            
             .chart-placeholder {{ scroll-snap-align: center; }}
+            
             .chart-placeholder[data-type="pie"] {{ width: 350px; flex: 0 0 350px; height: 340px; }}
             .chart-placeholder[data-type="history"] {{ width: 600px; flex: 0 0 600px; height: 340px; }}
             .chart-placeholder[data-type="pnl"] {{ width: 400px; flex: 0 0 400px; height: 340px; }}
@@ -610,52 +618,584 @@ with tab_home:
             .chart-placeholder[data-type="allocation"] {{ width: 600px; flex: 0 0 600px; height: 340px; }}
             .chart-placeholder[data-type="inv-val"] {{ width: 500px; flex: 0 0 500px; height: 340px; }}
             .chart-placeholder[data-type="daily"] {{ width: 400px; flex: 0 0 400px; height: 340px; }}
-            .chart-box {{ width: 100%; height: 100%; background: rgba(15, 23, 42, 0.4); border: 1px solid rgba(255,255,255,0.05); border-radius: 16px; box-shadow: 0 4px 15px rgba(0,0,0,0.2); touch-action: pan-x pan-y; will-change: transform; position: relative; display: flex; flex-direction: column; }}
-            .chart-header {{ display: flex; justify-content: space-between; align-items: center; padding: 12px 16px 0 16px; width: 100%; box-sizing: border-box; }}
-            .chart-title {{ color: #e2e8f0; font-size: 13px; font-weight: bold; white-space: nowrap; }}
-            .chart-controls {{ display: flex; gap: 4px; }}
-            .chart-controls button {{ background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1); color: #94a3b8; border-radius: 4px; padding: 3px 8px; font-size: 10px; cursor: pointer; font-weight: bold; transition: all 0.2s; }}
-            .chart-controls button.active {{ background: rgba(0, 255, 157, 0.15); color: #00ff9d; border-color: #00ff9d; }}
-            .chart-body {{ flex: 1; width: 100%; position: relative; }}
-            #chart-overlay {{ visibility: hidden; opacity: 0; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(10, 15, 28, 0.85); z-index: 1000; backdrop-filter: blur(5px); -webkit-backdrop-filter: blur(5px); transition: opacity 0.4s ease, visibility 0.4s ease; }}
-            #chart-overlay.active {{ visibility: visible; opacity: 1; }}
-            .expanded-chart {{ background: rgba(15, 23, 42, 0.98) !important; border: 1px solid rgba(255, 255, 255, 0.08) !important; box-shadow: 0 15px 50px rgba(0,0,0,0.9) !important; border-radius: 20px !important; }}
-            @media (max-width: 768px) {{ .chart-placeholder {{ height: 320px !important; width: 90vw !important; flex: 0 0 90vw !important; }} .charts-flex {{ padding: 0 5vw; gap: 16px; }} .chart-controls button {{ padding: 3px 6px; font-size: 9px; }} }}
+            
+            .chart-box {{
+                width: 100%;
+                height: 100%;
+                background: rgba(15, 23, 42, 0.4);
+                border: 1px solid rgba(255,255,255,0.05);
+                border-radius: 16px;
+                box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+                touch-action: pan-x pan-y; 
+                will-change: transform; 
+                position: relative;
+                display: flex;
+                flex-direction: column;
+            }}
+            
+            .chart-header {{
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                padding: 12px 16px 0 16px;
+                width: 100%;
+                box-sizing: border-box;
+            }}
+            .chart-title {{
+                color: #e2e8f0;
+                font-size: 13px;
+                font-weight: bold;
+                white-space: nowrap;
+            }}
+            .chart-controls {{
+                display: flex;
+                gap: 4px;
+            }}
+            .chart-controls button {{
+                background: rgba(0,0,0,0.3);
+                border: 1px solid rgba(255,255,255,0.1);
+                color: #94a3b8;
+                border-radius: 4px;
+                padding: 3px 8px;
+                font-size: 10px;
+                cursor: pointer;
+                font-weight: bold;
+                transition: all 0.2s;
+            }}
+            .chart-controls button.active {{
+                background: rgba(0, 255, 157, 0.15);
+                color: #00ff9d;
+                border-color: #00ff9d;
+            }}
+            .chart-body {{
+                flex: 1;
+                width: 100%;
+                position: relative;
+            }}
+
+            #chart-overlay {{
+                visibility: hidden;
+                opacity: 0;
+                position: fixed;
+                top: 0; left: 0; width: 100%; height: 100%;
+                background: rgba(10, 15, 28, 0.85); 
+                z-index: 1000;
+                backdrop-filter: blur(5px);
+                -webkit-backdrop-filter: blur(5px);
+                transition: opacity 0.4s ease, visibility 0.4s ease;
+            }}
+            #chart-overlay.active {{
+                visibility: visible;
+                opacity: 1;
+            }}
+            
+            .expanded-chart {{
+                background: rgba(15, 23, 42, 0.98) !important;
+                border: 1px solid rgba(255, 255, 255, 0.08) !important; 
+                box-shadow: 0 15px 50px rgba(0,0,0,0.9) !important;
+                border-radius: 20px !important;
+            }}
+
+            @media (max-width: 768px) {{
+                .chart-placeholder {{ 
+                    height: 320px !important;
+                    width: 90vw !important; 
+                    flex: 0 0 90vw !important; 
+                }}
+                .charts-flex {{ 
+                    padding: 0 5vw;
+                    gap: 16px; 
+                }}
+                .chart-controls button {{
+                    padding: 3px 6px;
+                    font-size: 9px;
+                }}
+            }}
         </style>
     </head>
     <body>
         <div id="chart-overlay"></div>
+        
         <div class="charts-scroll-wrapper" id="chartsScrollContainer">
             <div class="charts-flex">
-                <div class="chart-placeholder" data-type="pie"><div id="pie-container" class="chart-box"></div></div>
-                <div class="chart-placeholder" data-type="history"><div id="history-wrapper" class="chart-box"><div class="chart-header"><div class="chart-title">Historical Performance</div><div class="chart-controls hist-controls"><button class="active" data-range="all">All</button><button data-range="1w">1W</button><button data-range="1m">1M</button><button data-range="1y">1Y</button><button data-range="ytd">YTD</button></div></div><div id="history-container" class="chart-body"></div></div></div>
-                <div class="chart-placeholder" data-type="pnl"><div id="pnl-wrapper" class="chart-box"><div class="chart-header"><div class="chart-title">Winners & Losers ($)</div><div class="chart-controls pnl-controls"><button class="active" data-range="all">All</button><button data-range="1d">Today</button><button data-range="7d">1W</button><button data-range="30d">1M</button><button data-range="1y">1Y</button></div></div><div id="pnl-container" class="chart-body"></div></div></div>
-                <div class="chart-placeholder" data-type="roi"><div id="roi-wrapper" class="chart-box"><div class="chart-header"><div class="chart-title">ROI (%) by Asset</div></div><div id="roi-container" class="chart-body"></div></div></div>
-                <div class="chart-placeholder" data-type="daily"><div id="daily-wrapper" class="chart-box"><div class="chart-header"><div class="chart-title">24h Market Movers (%)</div></div><div id="daily-container" class="chart-body"></div></div></div>
-                <div class="chart-placeholder" data-type="allocation"><div id="allocation-container" class="chart-box"></div></div>
-                <div class="chart-placeholder" data-type="inv-val"><div id="inv-val-container" class="chart-box"></div></div>
+                <div class="chart-placeholder" data-type="pie">
+                    <div id="pie-container" class="chart-box"></div>
+                </div>
+                
+                <div class="chart-placeholder" data-type="history">
+                    <div id="history-wrapper" class="chart-box">
+                        <div class="chart-header">
+                            <div class="chart-title">Historical Performance</div>
+                            <div class="chart-controls hist-controls">
+                                <button class="active" data-range="all">All</button>
+                                <button data-range="1w">1W</button>
+                                <button data-range="1m">1M</button>
+                                <button data-range="1y">1Y</button>
+                                <button data-range="ytd">YTD</button>
+                            </div>
+                        </div>
+                        <div id="history-container" class="chart-body"></div>
+                    </div>
+                </div>
+                
+                <div class="chart-placeholder" data-type="pnl">
+                    <div id="pnl-wrapper" class="chart-box">
+                        <div class="chart-header">
+                            <div class="chart-title">Winners & Losers ($)</div>
+                            <div class="chart-controls pnl-controls">
+                                <button class="active" data-range="all">All</button>
+                                <button data-range="1d">Today</button>
+                                <button data-range="7d">1W</button>
+                                <button data-range="30d">1M</button>
+                                <button data-range="1y">1Y</button>
+                            </div>
+                        </div>
+                        <div id="pnl-container" class="chart-body"></div>
+                    </div>
+                </div>
+                
+                <div class="chart-placeholder" data-type="roi">
+                    <div id="roi-wrapper" class="chart-box">
+                        <div class="chart-header">
+                            <div class="chart-title">ROI (%) by Asset</div>
+                        </div>
+                        <div id="roi-container" class="chart-body"></div>
+                    </div>
+                </div>
+                
+                <div class="chart-placeholder" data-type="daily">
+                    <div id="daily-wrapper" class="chart-box">
+                        <div class="chart-header">
+                            <div class="chart-title">24h Market Movers (%)</div>
+                        </div>
+                        <div id="daily-container" class="chart-body"></div>
+                    </div>
+                </div>
+                
+                <div class="chart-placeholder" data-type="allocation">
+                    <div id="allocation-container" class="chart-box"></div>
+                </div>
+                
+                <div class="chart-placeholder" data-type="inv-val">
+                    <div id="inv-val-container" class="chart-box"></div>
+                </div>
             </div>
         </div>
+        
         <script>
             Highcharts.setOptions({{ global: {{ useUTC: false }} }});
-            function formatMoneyStr(val) {{ return val < 0 ? '-$' + Highcharts.numberFormat(Math.abs(val), 2) : '$' + Highcharts.numberFormat(val, 2); }}
-            function formatAxisMoneyStr(val) {{ return val < 0 ? '-$' + Highcharts.numberFormat(Math.abs(val), 0) : '$' + Highcharts.numberFormat(val, 0); }}
-            Highcharts.chart('pie-container', {{ chart: {{ type: 'pie', options3d: {{ enabled: true, alpha: 55, beta: 0 }}, backgroundColor: 'transparent', margin: [0, 0, 0, 0] }}, title: {{ text: 'Current Holdings', style: {{ color: '#e2e8f0', fontSize: '13px', fontWeight: 'bold' }}, align: 'left', x: 16, y: 24 }}, tooltip: {{ formatter: function() {{ const isPrivacy = document.body.classList.contains('privacy-mode'); if (isPrivacy) return '<b>' + this.point.name + '</b><br/>' + this.point.percentage.toFixed(1) + '%'; return '<b>' + this.point.name + '</b><br/>' + formatMoneyStr(this.point.y) + '<br/>' + this.point.percentage.toFixed(1) + '%'; }}, backgroundColor: 'rgba(15, 23, 42, 0.95)', style: {{ color: '#fff' }}, borderWidth: 1, borderColor: 'rgba(255,255,255,0.15)' }}, plotOptions: {{ pie: {{ allowPointSelect: true, cursor: 'pointer', depth: 40, innerSize: '40%', size: '65%', dataLabels: {{ enabled: true, format: '<b>{{point.name}}</b><br>{{point.percentage:.1f}}%', style: {{ color: '#e2e8f0', textOutline: 'none', fontSize: '10px', fontWeight: '600' }}, connectorColor: 'rgba(255,255,255,0.2)', distance: 10, padding: 0 }}, borderWidth: 0 }} }}, credits: {{ enabled: false }}, series: [{{ name: 'Holdings', data: [{pie_data_js}] }}] }});
-            Highcharts.stockChart('history-container', {{ chart: {{ type: 'areaspline', backgroundColor: 'transparent', marginTop: 25, marginBottom: 35 }}, rangeSelector: {{ enabled: false }}, navigator: {{ enabled: false }}, scrollbar: {{ enabled: false }}, title: {{ text: null }}, legend: {{ enabled: true, itemStyle: {{ color: '#94a3b8', fontSize: '11px', fontWeight: 'normal' }}, itemHoverStyle: {{ color: '#ffffff' }}, verticalAlign: 'top', align: 'center', y: -10 }}, xAxis: {{ gridLineColor: 'rgba(255,255,255,0.05)', tickWidth: 0, minorGridLineWidth: 0 }}, yAxis: {{ opposite: false, title: {{ text: null }}, labels: {{ style: {{ color: '#94a3b8', fontSize: '10px' }}, align: 'right', formatter: function() {{ return document.body.classList.contains('privacy-mode') ? '***' : formatAxisMoneyStr(this.value); }} }}, gridLineColor: 'rgba(255,255,255,0.05)' }}, tooltip: {{ shared: true, backgroundColor: 'rgba(15, 23, 42, 0.95)', style: {{ color: '#fff' }}, borderColor: 'rgba(255,255,255,0.15)', formatter: function() {{ let s = '<b style="font-size: 11px; color:#cbd5e1;">' + Highcharts.dateFormat('%b %e, %Y', this.x) + '</b>'; const isPrivacy = document.body.classList.contains('privacy-mode'); this.points.forEach(function(point) {{ let val = isPrivacy ? '***' : formatMoneyStr(point.y); s += '<br/>' + '<span style="color:'+point.series.color+'">\u25CF</span> ' + point.series.name + ': <b style="font-size: 13px;">' + val + '</b>'; }}); return s; }} }}, plotOptions: {{ areaspline: {{ fillOpacity: 0.3, lineWidth: 2 }} }}, credits: {{ enabled: false }}, series: [{{ name: 'Portfolio Value', data: [{hist_val_js}], color: '#00ff9d', fillColor: {{ linearGradient: {{ x1: 0, y1: 0, x2: 0, y2: 1 }}, stops: [ [0, 'rgba(0, 255, 157, 0.5)'], [1, 'rgba(0, 255, 157, 0.0)'] ] }}, zIndex: 3 }}, {{ name: 'BTC Benchmark', type: 'line', data: [{hist_btc_js}], color: '#f7931a', lineWidth: 2, zIndex: 2 }}, {{ name: 'Net Invested', type: 'line', data: [{hist_inv_js}], color: '#64748b', dashStyle: 'Dash', lineWidth: 2, zIndex: 1 }}] }});
-            document.querySelectorAll('.hist-controls button').forEach(btn => {{ btn.addEventListener('click', (e) => {{ e.stopPropagation(); document.querySelectorAll('.hist-controls button').forEach(b => b.classList.remove('active')); btn.classList.add('active'); const range = btn.getAttribute('data-range'); const chart = Highcharts.charts.find(c => c && c.renderTo.id === 'history-container'); if (chart) {{ const max = chart.xAxis[0].dataMax; const min = chart.xAxis[0].dataMin; const day = 24 * 3600 * 1000; let newMin = min; if (range === 'all') {{ chart.xAxis[0].setExtremes(null, null, true, true); }} else {{ if (range === '1w') newMin = max - 7 * day; else if (range === '1m') newMin = max - 30 * day; else if (range === '1y') newMin = max - 365 * day; else if (range === 'ytd') {{ const d = new Date(max); newMin = new Date(d.getFullYear(), 0, 1).getTime(); }} chart.xAxis[0].setExtremes(Math.max(min, newMin), max, true, true); }} }} }}); }});
-            Highcharts.chart('pnl-container', {{ chart: {{ type: 'bar', backgroundColor: 'transparent', marginTop: 15, marginBottom: 25 }}, title: {{ text: null }}, xAxis: {{ type: 'category', labels: {{ style: {{ color: '#94a3b8', fontWeight: 'bold' }} }}, gridLineColor: 'rgba(255,255,255,0.05)', tickWidth: 0, lineWidth: 0 }}, yAxis: {{ title: {{ text: null }}, labels: {{ enabled: false }}, gridLineColor: 'rgba(255,255,255,0.05)', minPadding: 0.25, maxPadding: 0.25 }}, legend: {{ enabled: false }}, tooltip: {{ backgroundColor: 'rgba(15, 23, 42, 0.95)', style: {{ color: '#fff' }}, borderColor: 'rgba(255,255,255,0.15)', formatter: function() {{ const isPrivacy = document.body.classList.contains('privacy-mode'); const val = isPrivacy ? '***' : formatMoneyStr(this.y); return `<b>${{this.point.name}}</b><br/>PnL: <b style="color:${{this.point.color}}">${{val}}</b>`; }} }}, plotOptions: {{ bar: {{ borderRadius: 4, borderWidth: 0, pointPadding: 0.1, groupPadding: 0.1, maxPointWidth: 35, shadow: {{ color: 'rgba(0,0,0,0.3)', offsetX: 1, offsetY: 2, width: 4 }}, dataLabels: {{ enabled: true, inside: false, crop: false, overflow: 'allow', style: {{ color: '#fff', textOutline: '2px #0f172a', fontWeight: 'bold', fontSize: '11px' }}, formatter: function() {{ return document.body.classList.contains('privacy-mode') ? '***' : formatMoneyStr(this.y); }} }} }} }}, credits: {{ enabled: false }}, series: [{{ name: 'PnL', data: window.pnlDataMap['all'] }}] }});
-            document.querySelectorAll('.pnl-controls button').forEach(btn => {{ btn.addEventListener('click', (e) => {{ e.stopPropagation(); document.querySelectorAll('.pnl-controls button').forEach(b => b.classList.remove('active')); btn.classList.add('active'); const range = btn.getAttribute('data-range'); const chart = Highcharts.charts.find(c => c && c.renderTo.id === 'pnl-container'); if (chart && window.pnlDataMap[range]) {{ chart.series[0].setData(window.pnlDataMap[range], true, {{ duration: 500 }}, true); }} }}); }});
-            Highcharts.chart('roi-container', {{ chart: {{ type: 'bar', backgroundColor: 'transparent', marginTop: 15, marginBottom: 25 }}, title: {{ text: null }}, xAxis: {{ type: 'category', labels: {{ style: {{ color: '#94a3b8', fontWeight: 'bold' }} }}, gridLineColor: 'rgba(255,255,255,0.05)', tickWidth: 0, lineWidth: 0 }}, yAxis: {{ title: {{ text: null }}, labels: {{ enabled: false }}, gridLineColor: 'rgba(255,255,255,0.05)', minPadding: 0.25, maxPadding: 0.25 }}, legend: {{ enabled: false }}, tooltip: {{ backgroundColor: 'rgba(15, 23, 42, 0.95)', style: {{ color: '#fff' }}, borderColor: 'rgba(255,255,255,0.15)', formatter: function() {{ const val = Highcharts.numberFormat(this.y, 2) + '%'; return `<b>${{this.point.name}}</b><br/>ROI: <b style="color:${{this.point.color}}">${{val}}</b>`; }} }}, plotOptions: {{ bar: {{ borderRadius: 4, borderWidth: 0, pointPadding: 0.1, groupPadding: 0.1, maxPointWidth: 35, shadow: {{ color: 'rgba(0,0,0,0.3)', offsetX: 1, offsetY: 2, width: 4 }}, dataLabels: {{ enabled: true, inside: false, crop: false, overflow: 'allow', style: {{ color: '#fff', textOutline: '2px #0f172a', fontWeight: 'bold', fontSize: '11px' }}, formatter: function() {{ return Highcharts.numberFormat(this.y, 2) + '%'; }} }} }} }}, credits: {{ enabled: false }}, series: [{{ name: 'ROI %', data: [ {roi_data_js} ] }}] }});
-            Highcharts.chart('daily-container', {{ chart: {{ type: 'bar', backgroundColor: 'transparent', marginTop: 15, marginBottom: 25 }}, title: {{ text: null }}, xAxis: {{ type: 'category', labels: {{ style: {{ color: '#94a3b8', fontWeight: 'bold' }} }}, gridLineColor: 'rgba(255,255,255,0.05)', tickWidth: 0, lineWidth: 0 }}, yAxis: {{ title: {{ text: null }}, labels: {{ enabled: false }}, gridLineColor: 'rgba(255,255,255,0.05)', minPadding: 0.25, maxPadding: 0.25 }}, legend: {{ enabled: false }}, tooltip: {{ backgroundColor: 'rgba(15, 23, 42, 0.95)', style: {{ color: '#fff' }}, borderColor: 'rgba(255,255,255,0.15)', formatter: function() {{ const val = Highcharts.numberFormat(Math.abs(this.y), 2) + '%'; const sign = this.y >= 0 ? '▲ ' : '▼ '; return `<b>${{this.point.name}}</b><br/>24h Change: <b style="color:${{this.point.color}}">${{sign}}${{val}}</b>`; }} }}, plotOptions: {{ bar: {{ borderRadius: 4, borderWidth: 0, pointPadding: 0.1, groupPadding: 0.1, maxPointWidth: 35, shadow: {{ color: 'rgba(0,0,0,0.3)', offsetX: 1, offsetY: 2, width: 4 }}, dataLabels: {{ enabled: true, inside: false, crop: false, overflow: 'allow', style: {{ color: '#fff', textOutline: '2px #0f172a', fontWeight: 'bold', fontSize: '11px' }}, formatter: function() {{ return (this.y >= 0 ? '+' : '') + Highcharts.numberFormat(this.y, 2) + '%'; }} }} }} }}, credits: {{ enabled: false }}, series: [{{ name: '24h Change', data: [ {daily_data_js} ] }}] }});
-            Highcharts.chart('allocation-container', {{ chart: {{ type: 'areaspline', backgroundColor: 'transparent', marginTop: 45, marginBottom: 35 }}, title: {{ text: 'Asset Allocation', align: 'left', x: 8, y: 24, style: {{ color: '#e2e8f0', fontSize: '13px', fontWeight: 'bold' }} }}, xAxis: {{ type: 'datetime', labels: {{ style: {{ color: '#94a3b8', fontSize: '10px' }} }}, gridLineColor: 'rgba(255,255,255,0.05)', tickWidth: 0, minorGridLineWidth: 0 }}, yAxis: {{ title: {{ text: null }}, labels: {{ formatter: function() {{ return this.value + '%'; }}, style: {{ color: '#94a3b8', fontSize: '10px' }} }}, gridLineColor: 'rgba(255,255,255,0.05)', max: 100 }}, legend: {{ enabled: false }}, tooltip: {{ shared: true, backgroundColor: 'rgba(15, 23, 42, 0.95)', style: {{ color: '#fff' }}, borderColor: 'rgba(255,255,255,0.15)', formatter: function() {{ let s = '<b style="font-size: 11px; color:#cbd5e1;">' + Highcharts.dateFormat('%b %e, %Y', this.x) + '</b>'; this.points.forEach(function(point) {{ s += '<br/>' + '<span style="color:'+point.series.color+'">\u25CF</span> ' + point.series.name + ': <b>' + Highcharts.numberFormat(point.percentage, 1) + '%</b>'; }}); return s; }} }}, plotOptions: {{ areaspline: {{ stacking: 'percent', fillOpacity: 0.25, lineWidth: 2, marker: {{ enabled: false, symbol: 'circle', radius: 2, states: {{ hover: {{ enabled: true }} }} }} }} }}, credits: {{ enabled: false }}, series: [{allocation_series_js}] }});
-            Highcharts.chart('inv-val-container', {{ chart: {{ type: 'column', backgroundColor: 'transparent', marginTop: 45, marginBottom: 35 }}, title: {{ text: 'Invested vs Current Value', align: 'left', x: 8, y: 24, style: {{ color: '#e2e8f0', fontSize: '13px', fontWeight: 'bold' }} }}, xAxis: {{ type: 'category', categories: {inv_val_categories_js}, labels: {{ style: {{ color: '#94a3b8', fontWeight: 'bold', fontSize: '10px' }} }}, gridLineColor: 'rgba(255,255,255,0.05)', tickWidth: 0 }}, yAxis: {{ title: {{ text: null }}, labels: {{ style: {{ color: '#94a3b8', fontSize: '10px' }}, formatter: function() {{ return document.body.classList.contains('privacy-mode') ? '***' : formatAxisMoneyStr(this.value); }} }}, gridLineColor: 'rgba(255,255,255,0.05)', minPadding: 0.15, maxPadding: 0.15 }}, legend: {{ enabled: false }}, tooltip: {{ shared: true, backgroundColor: 'rgba(15, 23, 42, 0.95)', style: {{ color: '#fff' }}, borderColor: 'rgba(255,255,255,0.15)', formatter: function() {{ let s = '<b style="font-size: 13px;">' + this.points[0].key + '</b>'; const isPrivacy = document.body.classList.contains('privacy-mode'); this.points.forEach(function(point) {{ let val = isPrivacy ? '***' : formatMoneyStr(point.y); s += '<br/>' + '<span style="color:'+ point.color +'">\u25CF</span> ' + point.series.name + ': <b>' + val + '</b>'; }}); return s; }} }}, plotOptions: {{ column: {{ borderRadius: 4, borderWidth: 0, maxPointWidth: 40, dataLabels: {{ enabled: true, inside: false, crop: false, overflow: 'allow', style: {{ color: '#fff', textOutline: '2px #0f172a', fontWeight: 'bold', fontSize: '11px' }}, formatter: function() {{ return document.body.classList.contains('privacy-mode') ? '***' : formatMoneyStr(this.y); }} }} }} }}, credits: {{ enabled: false }}, series: [ {{ name: 'Invested', data: [{inv_data_js}] }}, {{ name: 'Current Value', data: [{val_data_js}] }} ] }});
-            try {{ if (window !== window.parent && window.parent.document) {{ if (!window.parent.document.getElementById('chart-fullscreen-css')) {{ const style = window.parent.document.createElement('style'); style.id = 'chart-fullscreen-css'; style.innerHTML = `iframe.fullscreen-mode {{ position: fixed !important; top: 0 !important; left: 0 !important; width: 100vw !important; height: 100vh !important; max-width: 100vw !important; max-height: 100vh !important; z-index: 999999 !important; border: none !important; background: transparent !important; }}`; window.parent.document.head.appendChild(style); }} }} }} catch(e) {{}}
-            function toggleExpandChart(wrapperId) {{ if (window.innerWidth > 768) return; const el = document.getElementById(wrapperId); const overlay = document.getElementById('chart-overlay'); const wrapper = document.getElementById('chartsScrollContainer'); let parentIframe = null; try {{ const iframes = window.parent.document.querySelectorAll('iframe'); for (let ifr of iframes) {{ if (ifr.contentWindow === window) parentIframe = ifr; }} }} catch(e) {{}} const screenW = window.parent ? window.parent.innerWidth : window.innerWidth; const screenH = window.parent ? window.parent.innerHeight : window.innerHeight; if (el.classList.contains('expanded-chart')) {{ overlay.classList.remove('active'); const origTop = parseFloat(el.getAttribute('data-orig-top')) || 0; const origLeft = parseFloat(el.getAttribute('data-orig-left')) || 0; el.classList.remove('expanded-chart'); el.style.transition = 'transform 0.4s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.4s ease, box-shadow 0.4s ease'; el.style.transform = `translate(${{origLeft}}px, ${{origTop}}px) scale(1)`; const finishClose = (e) => {{ if (e && e.propertyName !== 'transform') return; el.removeEventListener('transitionend', finishClose); clearTimeout(el._closeTimeout); if (parentIframe) parentIframe.classList.remove('fullscreen-mode'); el.style.cssText = ''; wrapper.style.overflowX = 'auto'; document.querySelectorAll('.chart-box').forEach(c => {{ c.style.opacity = '1'; c.style.pointerEvents = 'auto'; }}); }}; el.addEventListener('transitionend', finishClose); el._closeTimeout = setTimeout(() => {{ finishClose(); }}, 450); return; }} document.querySelectorAll('.chart-box').forEach(c => {{ if (c.id !== wrapperId) {{ c.style.transition = 'opacity 0.15s ease'; c.style.opacity = '0'; c.style.pointerEvents = 'none'; }} }}); const chartRect = el.getBoundingClientRect(); let visualTop = chartRect.top; let visualLeft = chartRect.left; if (parentIframe) {{ const iframeRect = parentIframe.getBoundingClientRect(); visualTop += iframeRect.top; visualLeft += iframeRect.left; }} if (parentIframe) parentIframe.classList.add('fullscreen-mode'); overlay.classList.add('active'); wrapper.style.overflowX = 'visible'; const origW = chartRect.width; const origH = chartRect.height; let targetW = screenW * 0.95; let targetH = screenH * 0.70; const maxScaleX = targetW / origW; const maxScaleY = targetH / origH; const targetScale = Math.min(maxScaleX, maxScaleY); const scaledW = origW * targetScale; const scaledH = origH * targetScale; const centerLeft = (screenW - scaledW) / 2; const centerTop = (screenH - scaledH) / 2; el.setAttribute('data-orig-top', visualTop); el.setAttribute('data-orig-left', visualLeft); el.style.position = 'fixed'; el.style.top = '0px'; el.style.left = '0px'; el.style.width = origW + 'px'; el.style.height = origH + 'px'; el.style.margin = '0'; el.style.zIndex = '1001'; el.style.transformOrigin = 'top left'; el.style.transition = 'none'; el.style.transform = `translate(${{visualLeft}}px, ${{visualTop}}px) scale(1)`; void el.offsetWidth; el.classList.add('expanded-chart'); el.style.transition = 'transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.4s ease, box-shadow 0.4s ease'; el.style.transform = `translate(${{centerLeft}}px, ${{centerTop}}px) scale(${{targetScale}})`; }}
-            function setupDoubleTap(elementId) {{ const el = document.getElementById(elementId); if (!el) return; let lastTap = 0; el.addEventListener('touchend', function(e) {{ const currentTime = new Date().getTime(); const tapLength = currentTime - lastTap; if (tapLength < 400 && tapLength > 0) {{ toggleExpandChart(elementId); e.preventDefault(); e.stopPropagation(); }} lastTap = currentTime; }}); }}
-            setupDoubleTap('pie-container'); setupDoubleTap('history-wrapper'); setupDoubleTap('pnl-wrapper'); setupDoubleTap('roi-wrapper'); setupDoubleTap('daily-wrapper'); setupDoubleTap('allocation-container'); setupDoubleTap('inv-val-container');
-            document.getElementById('chart-overlay').addEventListener('click', () => {{ document.querySelectorAll('.expanded-chart').forEach(el => {{ if (el.classList.contains('expanded-chart')) {{ toggleExpandChart(el.id); }} }}); }});
-            const chartScroll = document.getElementById('chartsScrollContainer'); if (chartScroll) {{ chartScroll.addEventListener('wheel', (evt) => {{ if (Math.abs(evt.deltaY) > Math.abs(evt.deltaX)) {{ evt.preventDefault(); chartScroll.scrollBy({{ left: evt.deltaY > 0 ? 200 : -200, behavior: 'smooth' }}); }} }}, {{ passive: false }}); }}
-            setInterval(() => {{ try {{ const saved = localStorage.getItem('dashboardOpen'); const isPrivacy = (saved === 'false'); const currentlyPrivacy = document.body.classList.contains('privacy-mode'); if (isPrivacy !== currentlyPrivacy) {{ if (isPrivacy) {{ document.body.classList.add('privacy-mode'); }} else {{ document.body.classList.remove('privacy-mode'); }} ['history-container', 'pnl-container', 'roi-container', 'daily-container', 'inv-val-container'].forEach(id => {{ const hc = Highcharts.charts.find(c => c && c.renderTo.id === id); if (hc && hc.yAxis && hc.yAxis[0]) {{ hc.yAxis[0].isDirty = true; hc.redraw(true); }} }}); }} }} catch(e) {{}} }}, 200);
+            
+            function formatMoneyStr(val) {{
+                return val < 0 ? '-$' + Highcharts.numberFormat(Math.abs(val), 2) : '$' + Highcharts.numberFormat(val, 2);
+            }}
+            
+            function formatAxisMoneyStr(val) {{
+                return val < 0 ? '-$' + Highcharts.numberFormat(Math.abs(val), 0) : '$' + Highcharts.numberFormat(val, 0);
+            }}
+
+            Highcharts.chart('pie-container', {{
+                chart: {{ type: 'pie', options3d: {{ enabled: true, alpha: 55, beta: 0 }}, backgroundColor: 'transparent', margin: [0, 0, 0, 0] }},
+                title: {{ text: 'Current Holdings', style: {{ color: '#e2e8f0', fontSize: '13px', fontWeight: 'bold' }}, align: 'left', x: 16, y: 24 }},
+                tooltip: {{
+                    formatter: function() {{
+                        const isPrivacy = document.body.classList.contains('privacy-mode');
+                        if (isPrivacy) return '<b>' + this.point.name + '</b><br/>' + this.point.percentage.toFixed(1) + '%';
+                        return '<b>' + this.point.name + '</b><br/>' + formatMoneyStr(this.point.y) + '<br/>' + this.point.percentage.toFixed(1) + '%';
+                    }},
+                    backgroundColor: 'rgba(15, 23, 42, 0.95)', style: {{ color: '#fff' }}, borderWidth: 1, borderColor: 'rgba(255,255,255,0.15)'
+                }},
+                plotOptions: {{ pie: {{ allowPointSelect: true, cursor: 'pointer', depth: 40, innerSize: '40%', size: '65%', dataLabels: {{ enabled: true, format: '<b>{{point.name}}</b><br>{{point.percentage:.1f}}%', style: {{ color: '#e2e8f0', textOutline: 'none', fontSize: '10px', fontWeight: '600' }}, connectorColor: 'rgba(255,255,255,0.2)', distance: 10, padding: 0 }}, borderWidth: 0 }} }},
+                credits: {{ enabled: false }},
+                series: [{{ name: 'Holdings', data: [{pie_data_js}] }}]
+            }});
+            
+            Highcharts.stockChart('history-container', {{
+                chart: {{ type: 'areaspline', backgroundColor: 'transparent', marginTop: 25, marginBottom: 35 }}, 
+                rangeSelector: {{ enabled: false }}, 
+                navigator: {{ enabled: false }},
+                scrollbar: {{ enabled: false }},
+                title: {{ text: null }},
+                legend: {{ enabled: true, itemStyle: {{ color: '#94a3b8', fontSize: '11px', fontWeight: 'normal' }}, itemHoverStyle: {{ color: '#ffffff' }}, verticalAlign: 'top', align: 'center', y: -10 }},
+                xAxis: {{ gridLineColor: 'rgba(255,255,255,0.05)', tickWidth: 0, minorGridLineWidth: 0 }},
+                yAxis: {{ opposite: false, title: {{ text: null }}, labels: {{ style: {{ color: '#94a3b8', fontSize: '10px' }}, align: 'right', formatter: function() {{ return document.body.classList.contains('privacy-mode') ? '***' : formatAxisMoneyStr(this.value); }} }}, gridLineColor: 'rgba(255,255,255,0.05)' }},
+                tooltip: {{
+                    shared: true, backgroundColor: 'rgba(15, 23, 42, 0.95)', style: {{ color: '#fff' }}, borderColor: 'rgba(255,255,255,0.15)',
+                    formatter: function() {{
+                        let s = '<b style="font-size: 11px; color:#cbd5e1;">' + Highcharts.dateFormat('%b %e, %Y', this.x) + '</b>';
+                        const isPrivacy = document.body.classList.contains('privacy-mode');
+                        this.points.forEach(function(point) {{
+                            let val = isPrivacy ? '***' : formatMoneyStr(point.y);
+                            s += '<br/>' + '<span style="color:'+point.series.color+'">\u25CF</span> ' + point.series.name + ': <b style="font-size: 13px;">' + val + '</b>';
+                        }});
+                        return s;
+                    }}
+                }},
+                plotOptions: {{ areaspline: {{ fillOpacity: 0.3, lineWidth: 2 }} }},
+                credits: {{ enabled: false }},
+                series: [{{ name: 'Portfolio Value', data: [{hist_val_js}], color: '#00ff9d', fillColor: {{ linearGradient: {{ x1: 0, y1: 0, x2: 0, y2: 1 }}, stops: [ [0, 'rgba(0, 255, 157, 0.5)'], [1, 'rgba(0, 255, 157, 0.0)'] ] }}, zIndex: 3 }}, 
+                         {{ name: 'BTC Benchmark', type: 'line', data: [{hist_btc_js}], color: '#f7931a', lineWidth: 2, zIndex: 2 }}, 
+                         {{ name: 'Net Invested', type: 'line', data: [{hist_inv_js}], color: '#64748b', dashStyle: 'Dash', lineWidth: 2, zIndex: 1 }}]
+            }});
+            
+            document.querySelectorAll('.hist-controls button').forEach(btn => {{
+                btn.addEventListener('click', (e) => {{
+                    e.stopPropagation();
+                    document.querySelectorAll('.hist-controls button').forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    const range = btn.getAttribute('data-range');
+                    const chart = Highcharts.charts.find(c => c && c.renderTo.id === 'history-container');
+                    if (chart) {{
+                        const max = chart.xAxis[0].dataMax;
+                        const min = chart.xAxis[0].dataMin;
+                        const day = 24 * 3600 * 1000;
+                        let newMin = min;
+                        if (range === 'all') {{
+                            chart.xAxis[0].setExtremes(null, null, true, true);
+                        }} else {{
+                            if (range === '1w') newMin = max - 7 * day;
+                            else if (range === '1m') newMin = max - 30 * day;
+                            else if (range === '1y') newMin = max - 365 * day;
+                            else if (range === 'ytd') {{
+                                const d = new Date(max);
+                                newMin = new Date(d.getFullYear(), 0, 1).getTime();
+                            }}
+                            chart.xAxis[0].setExtremes(Math.max(min, newMin), max, true, true);
+                        }}
+                    }}
+                }});
+            }});
+
+            Highcharts.chart('pnl-container', {{
+                chart: {{ type: 'bar', backgroundColor: 'transparent', marginTop: 15, marginBottom: 25 }},
+                title: {{ text: null }},
+                xAxis: {{ type: 'category', labels: {{ style: {{ color: '#94a3b8', fontWeight: 'bold' }} }}, gridLineColor: 'rgba(255,255,255,0.05)', tickWidth: 0, lineWidth: 0 }},
+                yAxis: {{ title: {{ text: null }}, labels: {{ enabled: false }}, gridLineColor: 'rgba(255,255,255,0.05)', minPadding: 0.25, maxPadding: 0.25 }},
+                legend: {{ enabled: false }},
+                tooltip: {{
+                    backgroundColor: 'rgba(15, 23, 42, 0.95)', style: {{ color: '#fff' }}, borderColor: 'rgba(255,255,255,0.15)',
+                    formatter: function() {{
+                        const isPrivacy = document.body.classList.contains('privacy-mode');
+                        const val = isPrivacy ? '***' : formatMoneyStr(this.y);
+                        return `<b>${{this.point.name}}</b><br/>PnL: <b style="color:${{this.point.color}}">${{val}}</b>`;
+                    }}
+                }},
+                plotOptions: {{ bar: {{ borderRadius: 4, borderWidth: 0, pointPadding: 0.1, groupPadding: 0.1, maxPointWidth: 35, shadow: {{ color: 'rgba(0,0,0,0.3)', offsetX: 1, offsetY: 2, width: 4 }}, dataLabels: {{ enabled: true, inside: false, crop: false, overflow: 'allow', style: {{ color: '#fff', textOutline: '2px #0f172a', fontWeight: 'bold', fontSize: '11px' }}, formatter: function() {{ return document.body.classList.contains('privacy-mode') ? '***' : formatMoneyStr(this.y); }} }} }} }},
+                credits: {{ enabled: false }},
+                series: [{{ name: 'PnL', data: window.pnlDataMap['all'] }}]
+            }});
+            
+            document.querySelectorAll('.pnl-controls button').forEach(btn => {{
+                btn.addEventListener('click', (e) => {{
+                    e.stopPropagation(); 
+                    document.querySelectorAll('.pnl-controls button').forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    const range = btn.getAttribute('data-range');
+                    const chart = Highcharts.charts.find(c => c && c.renderTo.id === 'pnl-container');
+                    if (chart && window.pnlDataMap[range]) {{
+                        chart.series[0].setData(window.pnlDataMap[range], true, {{ duration: 500 }}, true);
+                    }}
+                }});
+            }});
+            
+            Highcharts.chart('roi-container', {{
+                chart: {{ type: 'bar', backgroundColor: 'transparent', marginTop: 15, marginBottom: 25 }},
+                title: {{ text: null }},
+                xAxis: {{ type: 'category', labels: {{ style: {{ color: '#94a3b8', fontWeight: 'bold' }} }}, gridLineColor: 'rgba(255,255,255,0.05)', tickWidth: 0, lineWidth: 0 }},
+                yAxis: {{ title: {{ text: null }}, labels: {{ enabled: false }}, gridLineColor: 'rgba(255,255,255,0.05)', minPadding: 0.25, maxPadding: 0.25 }},
+                legend: {{ enabled: false }},
+                tooltip: {{
+                    backgroundColor: 'rgba(15, 23, 42, 0.95)', style: {{ color: '#fff' }}, borderColor: 'rgba(255,255,255,0.15)',
+                    formatter: function() {{
+                        const val = Highcharts.numberFormat(this.y, 2) + '%';
+                        return `<b>${{this.point.name}}</b><br/>ROI: <b style="color:${{this.point.color}}">${{val}}</b>`;
+                    }}
+                }},
+                plotOptions: {{ bar: {{ borderRadius: 4, borderWidth: 0, pointPadding: 0.1, groupPadding: 0.1, maxPointWidth: 35, shadow: {{ color: 'rgba(0,0,0,0.3)', offsetX: 1, offsetY: 2, width: 4 }}, dataLabels: {{ enabled: true, inside: false, crop: false, overflow: 'allow', style: {{ color: '#fff', textOutline: '2px #0f172a', fontWeight: 'bold', fontSize: '11px' }}, formatter: function() {{ return Highcharts.numberFormat(this.y, 2) + '%'; }} }} }} }},
+                credits: {{ enabled: false }},
+                series: [{{ name: 'ROI %', data: [ {roi_data_js} ] }}]
+            }});
+            
+            Highcharts.chart('daily-container', {{
+                chart: {{ type: 'bar', backgroundColor: 'transparent', marginTop: 15, marginBottom: 25 }},
+                title: {{ text: null }},
+                xAxis: {{ type: 'category', labels: {{ style: {{ color: '#94a3b8', fontWeight: 'bold' }} }}, gridLineColor: 'rgba(255,255,255,0.05)', tickWidth: 0, lineWidth: 0 }},
+                yAxis: {{ title: {{ text: null }}, labels: {{ enabled: false }}, gridLineColor: 'rgba(255,255,255,0.05)', minPadding: 0.25, maxPadding: 0.25 }},
+                legend: {{ enabled: false }},
+                tooltip: {{
+                    backgroundColor: 'rgba(15, 23, 42, 0.95)', style: {{ color: '#fff' }}, borderColor: 'rgba(255,255,255,0.15)',
+                    formatter: function() {{
+                        const val = Highcharts.numberFormat(Math.abs(this.y), 2) + '%';
+                        const sign = this.y >= 0 ? '▲ ' : '▼ ';
+                        return `<b>${{this.point.name}}</b><br/>24h Change: <b style="color:${{this.point.color}}">${{sign}}${{val}}</b>`;
+                    }}
+                }},
+                plotOptions: {{ bar: {{ borderRadius: 4, borderWidth: 0, pointPadding: 0.1, groupPadding: 0.1, maxPointWidth: 35, shadow: {{ color: 'rgba(0,0,0,0.3)', offsetX: 1, offsetY: 2, width: 4 }}, dataLabels: {{ enabled: true, inside: false, crop: false, overflow: 'allow', style: {{ color: '#fff', textOutline: '2px #0f172a', fontWeight: 'bold', fontSize: '11px' }}, formatter: function() {{ return (this.y >= 0 ? '+' : '') + Highcharts.numberFormat(this.y, 2) + '%'; }} }} }} }},
+                credits: {{ enabled: false }},
+                series: [{{ name: '24h Change', data: [ {daily_data_js} ] }}]
+            }});
+            
+            Highcharts.chart('allocation-container', {{
+                chart: {{ type: 'areaspline', backgroundColor: 'transparent', marginTop: 45, marginBottom: 35 }},
+                title: {{ text: 'Asset Allocation', align: 'left', x: 8, y: 24, style: {{ color: '#e2e8f0', fontSize: '13px', fontWeight: 'bold' }} }},
+                xAxis: {{ type: 'datetime', labels: {{ style: {{ color: '#94a3b8', fontSize: '10px' }} }}, gridLineColor: 'rgba(255,255,255,0.05)', tickWidth: 0, minorGridLineWidth: 0 }},
+                yAxis: {{ title: {{ text: null }}, labels: {{ formatter: function() {{ return this.value + '%'; }}, style: {{ color: '#94a3b8', fontSize: '10px' }} }}, gridLineColor: 'rgba(255,255,255,0.05)', max: 100 }},
+                legend: {{ enabled: false }},
+                tooltip: {{
+                    shared: true, backgroundColor: 'rgba(15, 23, 42, 0.95)', style: {{ color: '#fff' }}, borderColor: 'rgba(255,255,255,0.15)',
+                    formatter: function() {{
+                        let s = '<b style="font-size: 11px; color:#cbd5e1;">' + Highcharts.dateFormat('%b %e, %Y', this.x) + '</b>';
+                        this.points.forEach(function(point) {{
+                            s += '<br/>' + '<span style="color:'+point.series.color+'">\u25CF</span> ' + point.series.name + ': <b>' + Highcharts.numberFormat(point.percentage, 1) + '%</b>';
+                        }});
+                        return s;
+                    }}
+                }},
+                plotOptions: {{ areaspline: {{ stacking: 'percent', fillOpacity: 0.25, lineWidth: 2, marker: {{ enabled: false, symbol: 'circle', radius: 2, states: {{ hover: {{ enabled: true }} }} }} }} }},
+                credits: {{ enabled: false }},
+                series: [{allocation_series_js}]
+            }});
+
+            Highcharts.chart('inv-val-container', {{
+                chart: {{ type: 'column', backgroundColor: 'transparent', marginTop: 45, marginBottom: 35 }},
+                title: {{ text: 'Invested vs Current Value', align: 'left', x: 8, y: 24, style: {{ color: '#e2e8f0', fontSize: '13px', fontWeight: 'bold' }} }},
+                xAxis: {{ type: 'category', categories: {inv_val_categories_js}, labels: {{ style: {{ color: '#94a3b8', fontWeight: 'bold', fontSize: '10px' }} }}, gridLineColor: 'rgba(255,255,255,0.05)', tickWidth: 0 }},
+                yAxis: {{ title: {{ text: null }}, labels: {{ style: {{ color: '#94a3b8', fontSize: '10px' }}, formatter: function() {{ return document.body.classList.contains('privacy-mode') ? '***' : formatAxisMoneyStr(this.value); }} }}, gridLineColor: 'rgba(255,255,255,0.05)', minPadding: 0.15, maxPadding: 0.15 }},
+                legend: {{ enabled: false }},
+                tooltip: {{
+                    shared: true, backgroundColor: 'rgba(15, 23, 42, 0.95)', style: {{ color: '#fff' }}, borderColor: 'rgba(255,255,255,0.15)',
+                    formatter: function() {{
+                        let s = '<b style="font-size: 13px;">' + this.points[0].key + '</b>';
+                        const isPrivacy = document.body.classList.contains('privacy-mode');
+                        this.points.forEach(function(point) {{
+                            let val = isPrivacy ? '***' : formatMoneyStr(point.y);
+                            s += '<br/>' + '<span style="color:'+ point.color +'">\u25CF</span> ' + point.series.name + ': <b>' + val + '</b>';
+                        }});
+                        return s;
+                    }}
+                }},
+                plotOptions: {{ column: {{ borderRadius: 4, borderWidth: 0, maxPointWidth: 40, dataLabels: {{ enabled: true, inside: false, crop: false, overflow: 'allow', style: {{ color: '#fff', textOutline: '2px #0f172a', fontWeight: 'bold', fontSize: '11px' }}, formatter: function() {{ return document.body.classList.contains('privacy-mode') ? '***' : formatMoneyStr(this.y); }} }} }} }},
+                credits: {{ enabled: false }},
+                series: [
+                    {{ name: 'Invested', data: [{inv_data_js}] }},
+                    {{ name: 'Current Value', data: [{val_data_js}] }}
+                ]
+            }});
+            
+            // INJECT THE CSS TO ALLOW THE TAB CONTAINER TO OVERFLOW AND BREAK FULL SCREEN
+            try {{
+                if (window !== window.parent && window.parent.document) {{
+                    if (!window.parent.document.getElementById('chart-fullscreen-css')) {{
+                        const style = window.parent.document.createElement('style');
+                        style.id = 'chart-fullscreen-css';
+                        style.innerHTML = `
+                            iframe.fullscreen-mode {{
+                                position: fixed !important;
+                                top: 0 !important;
+                                left: 0 !important;
+                                width: 100vw !important;
+                                height: 100vh !important;
+                                max-width: 100vw !important;
+                                max-height: 100vh !important;
+                                z-index: 9999999 !important;
+                                border: none !important;
+                                background: rgba(10, 15, 28, 0.95) !important;
+                            }}
+                            .stApp.chart-expanded-mode [data-baseweb="tab-panel"],
+                            .stApp.chart-expanded-mode [data-testid="stMainBlockContainer"],
+                            .stApp.chart-expanded-mode div[data-testid="stVerticalBlock"] {{
+                                transform: none !important;
+                                z-index: 999999 !important;
+                                overflow: visible !important;
+                                clip-path: none !important;
+                            }}
+                        `;
+                        window.parent.document.head.appendChild(style);
+                    }}
+                }}
+            }} catch(e) {{}}
+
+            function toggleExpandChart(wrapperId) {{
+                // BLOCK PC COMPLETELY - Only runs on Mobile
+                if (window.innerWidth > 768) return;
+            
+                const el = document.getElementById(wrapperId);
+                const overlay = document.getElementById('chart-overlay');
+                const wrapper = document.getElementById('chartsScrollContainer');
+
+                let parentIframe = null;
+                try {{
+                    const iframes = window.parent.document.querySelectorAll('iframe');
+                    for (let ifr of iframes) {{ if (ifr.contentWindow === window) parentIframe = ifr; }}
+                }} catch(e) {{}}
+                
+                const screenW = window.parent ? window.parent.innerWidth : window.innerWidth;
+                const screenH = window.parent ? window.parent.innerHeight : window.innerHeight;
+                
+                if (el.classList.contains('expanded-chart')) {{
+                    // ==========================================
+                    // CLOSING MECHANICS 
+                    // ==========================================
+                    overlay.classList.remove('active');
+                    
+                    const origTop = parseFloat(el.getAttribute('data-orig-top')) || 0;
+                    const origLeft = parseFloat(el.getAttribute('data-orig-left')) || 0;
+                    
+                    el.classList.remove('expanded-chart');
+                    
+                    el.style.transition = 'transform 0.4s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.4s ease, box-shadow 0.4s ease';
+                    el.style.transform = `translate(${{origLeft}}px, ${{origTop}}px) scale(1)`;
+
+                    const finishClose = (e) => {{
+                        if (e && e.propertyName !== 'transform') return;
+                        el.removeEventListener('transitionend', finishClose);
+                        clearTimeout(el._closeTimeout);
+                        
+                        if (parentIframe) {{
+                            parentIframe.classList.remove('fullscreen-mode');
+                            window.parent.document.querySelector('.stApp').classList.remove('chart-expanded-mode');
+                        }}
+                        el.style.cssText = ''; 
+                        wrapper.style.overflowX = 'auto'; // Restore scroll snapping
+                        
+                        document.querySelectorAll('.chart-box').forEach(c => {{
+                            c.style.opacity = '1';
+                            c.style.pointerEvents = 'auto';
+                        }});
+                    }};
+                    el.addEventListener('transitionend', finishClose);
+                    el._closeTimeout = setTimeout(() => {{ finishClose(); }}, 450); 
+
+                    return;
+                }}
+                
+                // ==========================================
+                // OPENING MECHANICS 
+                // ==========================================
+                
+                document.querySelectorAll('.chart-box').forEach(c => {{
+                    if (c.id !== wrapperId) {{
+                        c.style.transition = 'opacity 0.15s ease';
+                        c.style.opacity = '0';
+                        c.style.pointerEvents = 'none';
+                    }}
+                }});
+                
+                const chartRect = el.getBoundingClientRect();
+                let visualTop = chartRect.top;
+                let visualLeft = chartRect.left;
+                
+                if (parentIframe) {{
+                    const iframeRect = parentIframe.getBoundingClientRect();
+                    visualTop += iframeRect.top;
+                    visualLeft += iframeRect.left;
+                }}
+
+                if (parentIframe) {{
+                    parentIframe.classList.add('fullscreen-mode');
+                    window.parent.document.querySelector('.stApp').classList.add('chart-expanded-mode');
+                }}
+                
+                overlay.classList.add('active'); 
+                wrapper.style.overflowX = 'visible';
+
+                const origW = chartRect.width;
+                const origH = chartRect.height;
+                
+                let targetW = screenW * 0.95;
+                let targetH = screenH * 0.70;
+                
+                const maxScaleX = targetW / origW;
+                const maxScaleY = targetH / origH;
+                const targetScale = Math.min(maxScaleX, maxScaleY);
+                
+                const scaledW = origW * targetScale;
+                const scaledH = origH * targetScale;
+                const centerLeft = (screenW - scaledW) / 2;
+                const centerTop = (screenH - scaledH) / 2;
+
+                el.setAttribute('data-orig-top', visualTop);
+                el.setAttribute('data-orig-left', visualLeft);
+
+                el.style.position = 'fixed';
+                el.style.top = '0px';
+                el.style.left = '0px';
+                el.style.width = origW + 'px';
+                el.style.height = origH + 'px';
+                el.style.margin = '0';
+                el.style.zIndex = '1001';
+                el.style.transformOrigin = 'top left'; 
+                el.style.transition = 'none';
+                el.style.transform = `translate(${{visualLeft}}px, ${{visualTop}}px) scale(1)`;
+                
+                void el.offsetWidth; // Force Reflow
+
+                el.classList.add('expanded-chart');
+                el.style.transition = 'transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.4s ease, box-shadow 0.4s ease';
+                el.style.transform = `translate(${{centerLeft}}px, ${{centerTop}}px) scale(${{targetScale}})`;
+            }}
+
+            function setupDoubleTap(elementId) {{
+                const el = document.getElementById(elementId);
+                if (!el) return;
+                let lastTap = 0;
+
+                el.addEventListener('touchend', function(e) {{
+                    const currentTime = new Date().getTime();
+                    const tapLength = currentTime - lastTap;
+                    if (tapLength < 400 && tapLength > 0) {{
+                        toggleExpandChart(elementId);
+                        e.preventDefault(); 
+                        e.stopPropagation();
+                    }}
+                    lastTap = currentTime;
+                }});
+            }}
+
+            setupDoubleTap('pie-container');
+            setupDoubleTap('history-wrapper');
+            setupDoubleTap('pnl-wrapper');
+            setupDoubleTap('roi-wrapper');
+            setupDoubleTap('daily-wrapper');
+            setupDoubleTap('allocation-container');
+            setupDoubleTap('inv-val-container');
+
+            document.getElementById('chart-overlay').addEventListener('click', () => {{
+                document.querySelectorAll('.expanded-chart').forEach(el => {{
+                    if (el.classList.contains('expanded-chart')) {{
+                        toggleExpandChart(el.id);
+                    }}
+                }});
+            }});
+            
+            const chartScroll = document.getElementById('chartsScrollContainer');
+            if (chartScroll) {{
+                chartScroll.addEventListener('wheel', (evt) => {{
+                    if (Math.abs(evt.deltaY) > Math.abs(evt.deltaX)) {{
+                        evt.preventDefault();
+                        chartScroll.scrollBy({{ left: evt.deltaY > 0 ? 200 : -200, behavior: 'smooth' }});
+                    }}
+                }}, {{ passive: false }});
+            }}
+
+            setInterval(() => {{
+                try {{
+                    const saved = localStorage.getItem('dashboardOpen');
+                    const isPrivacy = (saved === 'false');
+                    const currentlyPrivacy = document.body.classList.contains('privacy-mode');
+                    
+                    if (isPrivacy !== currentlyPrivacy) {{
+                        if (isPrivacy) {{
+                            document.body.classList.add('privacy-mode');
+                        }} else {{
+                            document.body.classList.remove('privacy-mode');
+                        }}
+                        ['history-container', 'pnl-container', 'roi-container', 'daily-container', 'inv-val-container'].forEach(id => {{
+                            const hc = Highcharts.charts.find(c => c && c.renderTo.id === id);
+                            if (hc && hc.yAxis && hc.yAxis[0]) {{ hc.yAxis[0].isDirty = true; hc.redraw(true); }}
+                        }});
+                    }}
+                }} catch(e) {{}}
+            }}, 200);
             
             // Constantly ensure charts auto-resize perfectly when you swipe to the Home tab
             setInterval(() => {{
