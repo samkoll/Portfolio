@@ -3027,88 +3027,171 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                 st.session_state.ui_version += 1
                 st.rerun()
 
-# ====================== BOTTOM NAVIGATION BAR ======================
-st.markdown('<div style="height: 90px;"></div>', unsafe_allow_html=True) # Spacer so content isn't covered
+# ====================== APP NAVIGATION (NATIVE OVERLAY & SWIPE) ======================
 
-with st.container():
-    st.markdown('<div class="bottom-nav-marker" style="display:none;"></div>', unsafe_allow_html=True)
-    nav_cols = st.columns(3)
-    
-    with nav_cols[0]:
-        if st.button("🏠 Overview", use_container_width=True):
+st.markdown('<div style="height: 100px;"></div>', unsafe_allow_html=True) # Bottom Spacer
+
+# --- 1. The Hidden Router (Actual Python Buttons) ---
+router_container = st.container()
+with router_container:
+    st.markdown('<div id="router-anchor"></div>', unsafe_allow_html=True)
+    r1, r2, r3 = st.columns(3)
+    with r1:
+        if st.button("ROUTER_HOME"):
             st.session_state.page = "Home"
-            st.session_state.ui_version += 1
             st.rerun()
-            
-    with nav_cols[1]:
-        if st.button("📊 Crypto", use_container_width=True):
+    with r2:
+        if st.button("ROUTER_CRYPTO"):
             st.session_state.page = "Crypto Transactions"
-            st.session_state.ui_version += 1
             st.rerun()
-            
-    with nav_cols[2]:
-        if st.button("💰 Fiat", use_container_width=True):
+    with r3:
+        if st.button("ROUTER_FIAT"):
             st.session_state.page = "Fiat Transactions"
-            st.session_state.ui_version += 1
             st.rerun()
 
-# Dynamically highlight the active page
-active_index = {"Home": 1, "Crypto Transactions": 2, "Fiat Transactions": 3}.get(st.session_state.page, 1)
+# --- 2. The Custom HTML/CSS Native App Bar ---
+active_page = st.session_state.page
+home_active = "active" if active_page == "Home" else ""
+crypto_active = "active" if active_page == "Crypto Transactions" else ""
+fiat_active = "active" if active_page == "Fiat Transactions" else ""
 
 st.markdown(f"""
 <style>
-/* Pin the next block right after our marker to the bottom */
-div.element-container:has(.bottom-nav-marker) + div[data-testid="stHorizontalBlock"] {{
-    position: fixed !important;
-    bottom: 0 !important;
-    left: 0 !important;
-    right: 0 !important;
-    background: rgba(15, 23, 42, 0.98) !important;
-    backdrop-filter: blur(10px) !important;
-    -webkit-backdrop-filter: blur(10px) !important;
-    border-top: 1px solid rgba(255, 255, 255, 0.05) !important;
-    padding: 10px 10px max(10px, env(safe-area-inset-bottom)) 10px !important;
-    z-index: 99999 !important;
-    margin: 0 !important;
-    box-shadow: 0 -5px 20px rgba(0,0,0,0.5) !important;
-    gap: 0 !important;
-}}
+/* Hide Streamlit's default header to maximize mobile screen real estate */
+header[data-testid="stHeader"] {{ display: none !important; }}
 
-/* Base Styling for Bottom Nav Buttons */
-div.element-container:has(.bottom-nav-marker) + div[data-testid="stHorizontalBlock"] button {{
-    background: transparent !important;
-    border: none !important;
-    box-shadow: none !important;
-    padding: 10px 4px !important;
-    height: auto !important;
-    margin: 0 !important;
-    border-radius: 12px !important;
-    transition: all 0.2s ease !important;
-}}
+/* Hide the ugly router buttons cleanly */
+div[data-testid="stVerticalBlock"]:has(#router-anchor) {{ display: none !important; opacity: 0; pointer-events: none; }}
 
-div.element-container:has(.bottom-nav-marker) + div[data-testid="stHorizontalBlock"] button p {{
-    color: #64748b !important;
-    font-size: clamp(11px, 3.5vw, 15px) !important;
-    font-weight: 600 !important;
-    margin: 0 !important;
-    transition: color 0.2s ease !important;
+/* NATIVE BOTTOM BAR STYLING */
+#native-bottom-bar {{
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: rgba(10, 15, 28, 0.90);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    padding: 12px 10px calc(12px + env(safe-area-inset-bottom)) 10px;
+    z-index: 99; /* Sit strictly below the mobile sidebar overlay */
+    box-shadow: 0 -10px 40px rgba(0,0,0,0.5);
 }}
-
-div.element-container:has(.bottom-nav-marker) + div[data-testid="stHorizontalBlock"] button:hover {{
-    background: rgba(255,255,255,0.05) !important;
+#native-bottom-bar .nav-tab {{
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    flex: 1;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    opacity: 0.5;
+    padding: 8px 0;
+    border-radius: 14px;
+    margin: 0 4px;
+    -webkit-tap-highlight-color: transparent;
 }}
-
-div.element-container:has(.bottom-nav-marker) + div[data-testid="stHorizontalBlock"] button:hover p {{
-    color: #cbd5e1 !important;
+#native-bottom-bar .nav-tab.active {{
+    opacity: 1;
+    background: rgba(0, 255, 157, 0.1);
 }}
-
-/* HIGHLIGHT ACTIVE STATE DYNAMICALLY */
-div.element-container:has(.bottom-nav-marker) + div[data-testid="stHorizontalBlock"] div[data-testid="column"]:nth-child({active_index}) button {{
-    background: rgba(0, 255, 157, 0.1) !important;
+#native-bottom-bar .nav-icon {{
+    font-size: 22px;
+    margin-bottom: 4px;
+    transition: transform 0.2s ease;
 }}
-
-div.element-container:has(.bottom-nav-marker) + div[data-testid="stHorizontalBlock"] div[data-testid="column"]:nth-child({active_index}) button p {{
-    color: #00ff9d !important;
+#native-bottom-bar .nav-tab.active .nav-icon {{
+    transform: scale(1.1);
+}}
+#native-bottom-bar .nav-lbl {{
+    font-size: 11px;
+    font-weight: 600;
+    color: #94a3b8;
+    transition: color 0.2s ease;
+}}
+#native-bottom-bar .nav-tab.active .nav-lbl {{
+    color: #00ff9d;
 }}
 </style>
+
+<div id="native-bottom-bar">
+    <div class="nav-tab {home_active}" id="tab-home" onclick="window.parent.document.querySelectorAll('button p').forEach(p => {{ if(p.innerText === 'ROUTER_HOME') p.closest('button').click(); }})">
+        <span class="nav-icon">🏠</span>
+        <span class="nav-lbl">Overview</span>
+    </div>
+    <div class="nav-tab {crypto_active}" id="tab-crypto" onclick="window.parent.document.querySelectorAll('button p').forEach(p => {{ if(p.innerText === 'ROUTER_CRYPTO') p.closest('button').click(); }})">
+        <span class="nav-icon">📊</span>
+        <span class="nav-lbl">Crypto</span>
+    </div>
+    <div class="nav-tab {fiat_active}" id="tab-fiat" onclick="window.parent.document.querySelectorAll('button p').forEach(p => {{ if(p.innerText === 'ROUTER_FIAT') p.closest('button').click(); }})">
+        <span class="nav-icon">💰</span>
+        <span class="nav-lbl">Fiat</span>
+    </div>
+</div>
 """, unsafe_allow_html=True)
+
+# --- 3. JS Swipe Controller & Router Fallback Hider ---
+js_controller = f"""
+<script>
+(function() {{
+    const parentDoc = window.parent.document;
+
+    // Fallback: If CSS :has() fails on old browsers, hide the router explicitly using JS
+    const anchor = parentDoc.getElementById('router-anchor');
+    if (anchor) {{
+        const block = anchor.closest('div[data-testid="stVerticalBlock"]');
+        if (block) block.style.display = 'none';
+    }}
+
+    // Global Swipe Logic
+    if (parentDoc._swipeSetupDone) return;
+    parentDoc._swipeSetupDone = true;
+
+    let startX = 0, startY = 0;
+    parentDoc.addEventListener('touchstart', e => {{
+        startX = e.changedTouches[0].screenX;
+        startY = e.changedTouches[0].screenY;
+    }}, {{passive: true}});
+
+    parentDoc.addEventListener('touchend', e => {{
+        const endX = e.changedTouches[0].screenX;
+        const endY = e.changedTouches[0].screenY;
+        const diffX = endX - startX;
+        const diffY = endY - startY;
+
+        // Requires a distinct horizontal swipe of at least 75px
+        if (Math.abs(diffX) > Math.abs(diffY) && Math.abs(diffX) > 75) {{
+            
+            // Guard: Ignore the swipe if the user is swiping inside horizontal scrolls or charts
+            const tgt = e.target;
+            if (tgt.closest('.charts-scroll-wrapper') || tgt.closest('.scroll-wrapper') || tgt.closest('.flip-card') || tgt.tagName.toLowerCase() === 'canvas') return;
+
+            const clickTarget = (btnText) => {{
+                Array.from(parentDoc.querySelectorAll('button p')).forEach(p => {{
+                    if (p.innerText === btnText) p.closest('button').click();
+                }});
+            }};
+
+            // Check current active tab from DOM explicitly
+            const isHome = parentDoc.querySelector('#tab-home') && parentDoc.querySelector('#tab-home').classList.contains('active');
+            const isCrypto = parentDoc.querySelector('#tab-crypto') && parentDoc.querySelector('#tab-crypto').classList.contains('active');
+            const isFiat = parentDoc.querySelector('#tab-fiat') && parentDoc.querySelector('#tab-fiat').classList.contains('active');
+
+            if (diffX < 0) {{ 
+                // Swiped Left -> Move to Next Right Tab
+                if (isHome) clickTarget('ROUTER_CRYPTO');
+                else if (isCrypto) clickTarget('ROUTER_FIAT');
+            }} else {{ 
+                // Swiped Right -> Move to Previous Left Tab
+                if (isFiat) clickTarget('ROUTER_CRYPTO');
+                else if (isCrypto) clickTarget('ROUTER_HOME');
+            }}
+        }}
+    }}, {{passive: true}});
+}})();
+</script>
+"""
+components.html(js_controller, height=0, width=0)
