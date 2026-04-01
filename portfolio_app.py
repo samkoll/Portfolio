@@ -400,7 +400,7 @@ def get_with_retry(url: str, headers: dict, timeout: int = 12, retries: int = 4)
             time.sleep(1.5 ** attempt)
     return None
 
-# ====================== DATA FETCHING & CALCULATIONS ======================
+# ====================== LIVE PRICE FUNCTION ======================
 @st.cache_data(ttl=15, show_spinner=False)
 def get_all_cryptocompare_prices(tickers, refresh_key=0):
     prices = {"USDC": 1.0}
@@ -536,8 +536,10 @@ def build_portfolio_history(crypto_df, fiat_df, last_prices, refresh_key):
         if coin not in prices_df.columns:
             prices_df[coin] = live_p
         
+        # Inject precise live price directly into the end of history for precise 1D PnL calculation
         prices_df.loc[date_range[-1], coin] = live_p
     
+    # Calculate PnL Tracking Dataframe
     pnl_df = pd.DataFrame()
     if not crypto.empty and not crypto_assets.empty:
         invested_daily = crypto_assets.groupby(['Date', 'Ticker'])['USDC'].sum().unstack(fill_value=0)
@@ -621,6 +623,7 @@ def get_ticker_color(ticker: str) -> str:
     if ticker in known:
         return known[ticker]
     
+    # Fallback dynamic color
     c = f"#{hashlib.md5(ticker.encode()).hexdigest()[:6]}"
     if c == '#000000': 
         return '#ffffff'
@@ -851,7 +854,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                 lines = []
                 for ticker, val in series.items():
                     c = get_ticker_color(ticker)
-                    lines.append(f"{{ name: '{ticker}', y: {val}, color: 'transparent', borderColor: '{c}' }}")
+                    lines.append(f"{{ name: '{ticker}', y: {val}, color: '{c}99' }}")
                 return ",\n".join(lines)
 
             pnl_all = pnl_df_active.iloc[-1]
@@ -876,14 +879,17 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
         df_iv = df_port[df_port['Ticker'] != 'USDC'].sort_values(by='Value', ascending=False)
         inv_val_categories_list = [str(r['Ticker']) for _, r in df_iv.iterrows()]
         inv_val_categories_js = json.dumps(inv_val_categories_list)
-        inv_data_js = ",".join([str(r['USDC'] if pd.notna(r['USDC']) else 0) for _, r in df_iv.iterrows()])
         
         val_data_points = []
+        inv_data_points = []
         for _, r in df_iv.iterrows():
             c = get_ticker_color(r['Ticker'])
             val = r['Value'] if pd.notna(r['Value']) else 0
-            val_data_points.append(f"{{ y: {val}, color: 'transparent', borderColor: '{c}' }}")
-        val_data_js = ",".join(val_data_points)
+            inv = float(r['USDC']) if pd.notna(r['USDC']) else 0.0
+            val_data_points.append(f"{{ name: '{r['Ticker']}', y: {val}, color: '{c}99' }}")
+            inv_data_points.append(f"{{ name: '{r['Ticker']}', y: {inv}, color: '#64748b99' }}")
+        val_data_js = ",\n".join(val_data_points)
+        inv_data_js = ",\n".join(inv_data_points)
         
         # Chart 6: ROI % Bar Data
         df_roi = df_port[df_port['Ticker'] != 'USDC'].sort_values(by='PnL %', ascending=False)
@@ -893,14 +899,14 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
             val = r['PnL %']
             if pd.notna(val):
                 c = get_ticker_color(t)
-                roi_data_js_lines.append(f"{{ name: '{t}', y: {val}, color: 'transparent', borderColor: '{c}' }}")
+                roi_data_js_lines.append(f"{{ name: '{t}', y: {val}, color: '{c}99' }}")
         roi_data_js = ",\n".join(roi_data_js_lines)
 
         # Chart 7: 24h Change Placeholder Data
         daily_data_js_lines = []
         for _, r in df_port[df_port['Ticker'] != 'USDC'].iterrows():
             t = r['Ticker']
-            daily_data_js_lines.append(f"{{ name: '{t}', y: 0, color: 'transparent', borderColor: '#64748b' }}")
+            daily_data_js_lines.append(f"{{ name: '{t}', y: 0, color: '#64748b99' }}")
         daily_data_js = ",\n".join(daily_data_js_lines)
 
         charts_html = f"""
@@ -917,7 +923,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                     width: 100%;
                     overflow-y: hidden;
                     overflow-x: auto;
-                    padding: 24px 0px 32px 0px; 
+                    padding: 6px 0px 6px 0px; 
                     margin-bottom: 0px; 
                     scroll-snap-type: x mandatory;
                     -webkit-overflow-scrolling: touch;
@@ -1222,10 +1228,10 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                         formatter: function() {{
                             const isPrivacy = document.body.classList.contains('privacy-mode');
                             const val = isPrivacy ? '***' : formatMoneyStr(this.y);
-                            return `<b>${{this.point.name}}</b><br/>PnL: <b style="color:${{this.point.borderColor}}">${{val}}</b>`;
+                            return `<b>${{this.point.name}}</b><br/>PnL: <b style="color:${{this.point.color}}">${{val}}</b>`;
                         }}
                     }},
-                    plotOptions: {{ bar: {{ borderRadius: 4, borderWidth: 2, pointPadding: 0.1, groupPadding: 0.1, maxPointWidth: 35, dataLabels: {{ enabled: true, inside: false, crop: false, overflow: 'allow', style: {{ color: '#fff', textOutline: '2px #0f172a', fontWeight: 'bold', fontSize: '11px' }}, formatter: function() {{ return document.body.classList.contains('privacy-mode') ? '***' : formatMoneyStr(this.y); }} }} }} }},
+                    plotOptions: {{ bar: {{ borderRadius: 4, borderWidth: 0, pointPadding: 0.1, groupPadding: 0.1, maxPointWidth: 35, dataLabels: {{ enabled: true, inside: false, crop: false, overflow: 'allow', style: {{ color: '#fff', textOutline: '2px #0f172a', fontWeight: 'bold', fontSize: '11px' }}, formatter: function() {{ return document.body.classList.contains('privacy-mode') ? '***' : formatMoneyStr(this.y); }} }} }} }},
                     credits: {{ enabled: false }},
                     series: [{{ name: 'PnL', data: pnlDataMap['all'] }}]
                 }});
@@ -1254,10 +1260,10 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                         backgroundColor: 'rgba(15, 23, 42, 0.95)', style: {{ color: '#fff' }}, borderColor: 'rgba(255,255,255,0.15)',
                         formatter: function() {{
                             const val = Highcharts.numberFormat(this.y, 2) + '%';
-                            return `<b>${{this.point.name}}</b><br/>ROI: <b style="color:${{this.point.borderColor}}">${{val}}</b>`;
+                            return `<b>${{this.point.name}}</b><br/>ROI: <b style="color:${{this.point.color}}">${{val}}</b>`;
                         }}
                     }},
-                    plotOptions: {{ bar: {{ borderRadius: 4, borderWidth: 2, pointPadding: 0.1, groupPadding: 0.1, maxPointWidth: 35, dataLabels: {{ enabled: true, inside: false, crop: false, overflow: 'allow', style: {{ color: '#fff', textOutline: '2px #0f172a', fontWeight: 'bold', fontSize: '11px' }}, formatter: function() {{ return Highcharts.numberFormat(this.y, 2) + '%'; }} }} }} }},
+                    plotOptions: {{ bar: {{ borderRadius: 4, borderWidth: 0, pointPadding: 0.1, groupPadding: 0.1, maxPointWidth: 35, dataLabels: {{ enabled: true, inside: false, crop: false, overflow: 'allow', style: {{ color: '#fff', textOutline: '2px #0f172a', fontWeight: 'bold', fontSize: '11px' }}, formatter: function() {{ return Highcharts.numberFormat(this.y, 2) + '%'; }} }} }} }},
                     credits: {{ enabled: false }},
                     series: [{{ name: 'ROI %', data: [ {roi_data_js} ] }}]
                 }});
@@ -1274,10 +1280,10 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                         formatter: function() {{
                             const val = Highcharts.numberFormat(Math.abs(this.y), 2) + '%';
                             const sign = this.y >= 0 ? '▲ ' : '▼ ';
-                            return `<b>${{this.point.name}}</b><br/>24h Change: <b style="color:${{this.point.borderColor}}">${{sign}}${{val}}</b>`;
+                            return `<b>${{this.point.name}}</b><br/>24h Change: <b style="color:${{this.point.color}}">${{sign}}${{val}}</b>`;
                         }}
                     }},
-                    plotOptions: {{ bar: {{ borderRadius: 4, borderWidth: 2, pointPadding: 0.1, groupPadding: 0.1, maxPointWidth: 35, dataLabels: {{ enabled: true, inside: false, crop: false, overflow: 'allow', style: {{ color: '#fff', textOutline: '2px #0f172a', fontWeight: 'bold', fontSize: '11px' }}, formatter: function() {{ return (this.y >= 0 ? '+' : '') + Highcharts.numberFormat(this.y, 2) + '%'; }} }} }} }},
+                    plotOptions: {{ bar: {{ borderRadius: 4, borderWidth: 0, pointPadding: 0.1, groupPadding: 0.1, maxPointWidth: 35, dataLabels: {{ enabled: true, inside: false, crop: false, overflow: 'allow', style: {{ color: '#fff', textOutline: '2px #0f172a', fontWeight: 'bold', fontSize: '11px' }}, formatter: function() {{ return (this.y >= 0 ? '+' : '') + Highcharts.numberFormat(this.y, 2) + '%'; }} }} }} }},
                     credits: {{ enabled: false }},
                     series: [{{ name: '24h Change', data: [ {daily_data_js} ] }}]
                 }});
@@ -1308,25 +1314,25 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                 Highcharts.chart('inv-val-container', {{
                     chart: {{ type: 'column', backgroundColor: 'transparent', marginTop: 45, marginBottom: 35 }},
                     title: {{ text: 'Invested vs Current Value', align: 'left', x: 8, y: 24, style: {{ color: '#e2e8f0', fontSize: '13px', fontWeight: 'bold' }} }},
-                    xAxis: {{ categories: {inv_val_categories_js}, labels: {{ style: {{ color: '#94a3b8', fontWeight: 'bold', fontSize: '10px' }} }}, gridLineColor: 'rgba(255,255,255,0.05)', tickWidth: 0 }},
+                    xAxis: {{ type: 'category', categories: {inv_val_categories_js}, labels: {{ style: {{ color: '#94a3b8', fontWeight: 'bold', fontSize: '10px' }} }}, gridLineColor: 'rgba(255,255,255,0.05)', tickWidth: 0 }},
                     yAxis: {{ title: {{ text: null }}, labels: {{ style: {{ color: '#94a3b8', fontSize: '10px' }}, formatter: function() {{ return document.body.classList.contains('privacy-mode') ? '***' : formatAxisMoneyStr(this.value); }} }}, gridLineColor: 'rgba(255,255,255,0.05)', minPadding: 0.15, maxPadding: 0.15 }},
                     legend: {{ enabled: false }},
                     tooltip: {{
                         shared: true, backgroundColor: 'rgba(15, 23, 42, 0.95)', style: {{ color: '#fff' }}, borderColor: 'rgba(255,255,255,0.15)',
                         formatter: function() {{
-                            let s = '<b style="font-size: 13px;">' + this.x + '</b>';
+                            let s = '<b style="font-size: 13px;">' + this.points[0].key + '</b>';
                             const isPrivacy = document.body.classList.contains('privacy-mode');
                             this.points.forEach(function(point) {{
                                 let val = isPrivacy ? '***' : formatMoneyStr(point.y);
-                                s += '<br/>' + '<span style="color:'+ point.borderColor +'">\u25CF</span> ' + point.series.name + ': <b>' + val + '</b>';
+                                s += '<br/>' + '<span style="color:'+ point.color +'">\u25CF</span> ' + point.series.name + ': <b>' + val + '</b>';
                             }});
                             return s;
                         }}
                     }},
-                    plotOptions: {{ column: {{ borderRadius: 4, borderWidth: 2, maxPointWidth: 40, dataLabels: {{ enabled: true, inside: false, crop: false, overflow: 'allow', style: {{ color: '#fff', textOutline: '2px #0f172a', fontWeight: 'bold', fontSize: '11px' }}, formatter: function() {{ return document.body.classList.contains('privacy-mode') ? '***' : formatMoneyStr(this.y); }} }} }} }},
+                    plotOptions: {{ column: {{ borderRadius: 4, borderWidth: 0, maxPointWidth: 40, dataLabels: {{ enabled: true, inside: false, crop: false, overflow: 'allow', style: {{ color: '#fff', textOutline: '2px #0f172a', fontWeight: 'bold', fontSize: '11px' }}, formatter: function() {{ return document.body.classList.contains('privacy-mode') ? '***' : formatMoneyStr(this.y); }} }} }} }},
                     credits: {{ enabled: false }},
                     series: [
-                        {{ name: 'Invested', data: [{inv_data_js}], color: 'transparent', borderColor: '#64748b' }},
+                        {{ name: 'Invested', data: [{inv_data_js}] }},
                         {{ name: 'Current Value', data: [{val_data_js}] }}
                     ]
                 }});
@@ -1683,7 +1689,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
         .flip-card {{
             flex: 0 0 420px; 
             background-color: transparent;
-            height: 330px;
+            height: 310px;
             perspective: 1200px;
             cursor: pointer;
             scroll-snap-align: center; 
@@ -1869,7 +1875,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
         }}
         
         @media (max-width: 700px) {{
-            .flip-card {{ flex: 0 0 85vw; height: 320px; }}
+            .flip-card {{ flex: 0 0 85vw; height: 300px; }}
             .coin-grid {{ padding: 0 7.5vw; gap: 16px; }}
             
             .flip-card-front, .flip-card-back {{ padding: 12px 10px; }}
@@ -2191,8 +2197,8 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                             dailyChart.series[0].points.forEach(point => {{
                                 if (ticker24h[point.name] !== undefined) {{
                                     const val = ticker24h[point.name];
-                                    const color = val >= 0 ? 'rgba(0, 255, 157, 0.65)' : 'rgba(255, 77, 77, 0.65)'; 
-                                    point.update({{y: val, color: 'transparent', borderColor: val >= 0 ? '#00ff9d' : '#ff4d4d'}}, false);
+                                    const color = val >= 0 ? '#00ff9d99' : '#ff4d4d99'; 
+                                    point.update({{y: val, color: color}}, false);
                                 }}
                             }});
                             dailyChart.redraw(true);
@@ -2267,6 +2273,70 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
         window.chartCache = window.chartCache || {{}};
         const chartCache = window.chartCache;
         const refreshKey = '{st.session_state.refresh_key}';
+        
+        async function fetchAll24hChanges() {{
+            const cards = Array.from(document.querySelectorAll('.flip-card'));
+            if (cards.length === 0) return;
+            const tickers = cards.map(card => card.getAttribute('data-ticker'));
+            const symbolMap = {{
+                'BTC':'BTC','ETH':'ETH','SOL':'SOL','HBAR':'HBAR',
+                'XRP':'XRP','BNB':'BNB','TRX':'TRX','LINK':'LINK','SUI':'SUI'
+            }};
+            const mappedTickers = tickers.map(t => symbolMap[t.toUpperCase()] || t.toUpperCase());
+
+            const url = `https://min-api.cryptocompare.com/data/pricemultifull?fsyms=${{mappedTickers.join(',')}}&tsyms=USD`;
+            try {{
+                const resp = await fetch(url, {{ headers: {{ 'User-Agent': 'Mozilla/5.0' }} }});
+                const data = await resp.json();
+                
+                let init24h = {{}};
+
+                cards.forEach(card => {{
+                    const ticker = card.getAttribute('data-ticker');
+                    const sym = symbolMap[ticker.toUpperCase()] || ticker.toUpperCase();
+                    const changeSpan = card.querySelector(`#change-24h-${{ticker}}`);
+
+                    if (changeSpan && data.RAW && data.RAW[sym] && data.RAW[sym].USD && data.RAW[sym].USD.CHANGEPCT24HOUR !== undefined) {{
+                        const change = data.RAW[sym].USD.CHANGEPCT24HOUR;
+                        init24h[ticker] = change;
+                        const sign = change >= 0 ? '▲' : '▼';
+                        const color = change >= 0 ? '#00ff9d' : '#ff4d4d';
+                        changeSpan.innerHTML = `<span style="color:${{color}};">${{sign}} ${{Math.abs(change).toFixed(2)}}%</span>`;
+                    }} else if (changeSpan) {{
+                        changeSpan.innerHTML = `N/A`;
+                    }}
+                }});
+                
+                // Immediately push this initial fetch into the daily Highcharts graph
+                try {{
+                    let hcWin = window;
+                    if (window !== window.parent) {{
+                        const iframes = window.parent.document.querySelectorAll('iframe');
+                        for (let i = 0; i < iframes.length; i++) {{
+                            if (iframes[i].contentWindow && iframes[i].contentWindow.Highcharts) {{
+                                hcWin = iframes[i].contentWindow;
+                                break;
+                            }}
+                        }}
+                    }}
+                    if (hcWin && hcWin.Highcharts) {{
+                        const dailyC = hcWin.Highcharts.charts.find(c => c && c.renderTo.id === 'daily-container');
+                        if (dailyC && dailyC.series[0]) {{
+                            dailyC.series[0].points.forEach(pt => {{
+                                if (init24h[pt.name] !== undefined) {{
+                                    const val = init24h[pt.name];
+                                    pt.update({{y: val, color: val >= 0 ? '#00ff9d99' : '#ff4d4d99'}}, false);
+                                }}
+                            }});
+                            dailyC.redraw();
+                        }}
+                    }}
+                }} catch(e) {{}}
+                
+            }} catch(e) {{
+                console.error("Bulk 24h change error", e);
+            }}
+        }}
         
         async function fetchHistoricalData(ticker) {{
             const symbolMap = {{
