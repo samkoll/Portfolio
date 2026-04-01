@@ -1165,7 +1165,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                             const day = 24 * 3600 * 1000;
                             let newMin = min;
                             if (range === 'all') {{
-                                chart.xAxis[0].setExtremes(null, null);
+                                chart.xAxis[0].setExtremes(null, null, true, true);
                             }} else {{
                                 if (range === '1w') newMin = max - 7 * day;
                                 else if (range === '1m') newMin = max - 30 * day;
@@ -1174,7 +1174,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                                     const d = new Date(max);
                                     newMin = new Date(d.getFullYear(), 0, 1).getTime();
                                 }}
-                                chart.xAxis[0].setExtremes(Math.max(min, newMin), max);
+                                chart.xAxis[0].setExtremes(Math.max(min, newMin), max, true, true);
                             }}
                         }}
                     }});
@@ -1216,7 +1216,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                         const range = btn.getAttribute('data-range');
                         const chart = Highcharts.charts.find(c => c && c.renderTo.id === 'pnl-container');
                         if (chart) {{
-                            chart.series[0].setData(pnlDataMap[range], true, true, false);
+                            chart.series[0].setData(pnlDataMap[range], true, { duration: 500 }, true);
                         }}
                     }});
                 }});
@@ -1260,9 +1260,9 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                     series: [{{ name: '24h Change', data: [ {daily_data_js} ] }}]
                 }});
 
-                // Chart 4: Portfolio Allocation (Stacked Area)
+                // Chart 4: Portfolio Allocation (Stacked Area -> smooth areaspline)
                 Highcharts.chart('allocation-container', {{
-                    chart: {{ type: 'area', backgroundColor: 'transparent', marginTop: 45, marginBottom: 35 }},
+                    chart: {{ type: 'areaspline', backgroundColor: 'transparent', marginTop: 45, marginBottom: 35 }},
                     title: {{ text: 'Asset Allocation', align: 'left', x: 8, y: 24, style: {{ color: '#e2e8f0', fontSize: '13px', fontWeight: 'bold' }} }},
                     xAxis: {{ type: 'datetime', labels: {{ style: {{ color: '#94a3b8', fontSize: '10px' }} }}, gridLineColor: 'rgba(255,255,255,0.05)', tickWidth: 0, minorGridLineWidth: 0 }},
                     yAxis: {{ title: {{ text: null }}, labels: {{ formatter: function() {{ return this.value + '%'; }}, style: {{ color: '#94a3b8', fontSize: '10px' }} }}, gridLineColor: 'rgba(255,255,255,0.05)', max: 100 }},
@@ -1277,7 +1277,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                             return s;
                         }}
                     }},
-                    plotOptions: {{ area: {{ stacking: 'percent', lineWidth: 1, marker: {{ enabled: false, symbol: 'circle', radius: 2, states: {{ hover: {{ enabled: true }} }} }} }} }},
+                    plotOptions: {{ areaspline: {{ stacking: 'percent', fillOpacity: 0.25, lineWidth: 2, marker: {{ enabled: false, symbol: 'circle', radius: 2, states: {{ hover: {{ enabled: true }} }} }} }} }},
                     credits: {{ enabled: false }},
                     series: [{allocation_series_js}]
                 }});
@@ -1510,7 +1510,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                             }}
                             ['history-container', 'pnl-container', 'roi-container', 'daily-container', 'inv-val-container'].forEach(id => {{
                                 const hc = Highcharts.charts.find(c => c && c.renderTo.id === id);
-                                if (hc && hc.yAxis && hc.yAxis[0]) {{ hc.yAxis[0].isDirty = true; hc.redraw(); }}
+                                if (hc && hc.yAxis && hc.yAxis[0]) {{ hc.yAxis[0].isDirty = true; hc.redraw(true); }}
                             }});
                         }}
                     }} catch(e) {{}}
@@ -2077,7 +2077,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                                     point.update({{y: tickerValues[point.name]}}, false);
                                 }}
                             }});
-                            pieChart.redraw();
+                            pieChart.redraw(true);
                         }}
 
                         // 2. History Chart (Portfolio Value is series 0)
@@ -2087,7 +2087,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                                 const lastPoint = points[points.length - 1];
                                 lastPoint.update({{y: totalPortfolioValue}}, false);
                             }}
-                            histChart.redraw();
+                            histChart.redraw(true);
                         }}
 
                         // 3. PnL Bar Chart & Map
@@ -2099,7 +2099,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                                 }}
                             }});
                             // Note: pnlDataMap is scoped to the other iframe, but Highcharts series state is safe
-                            pnlChart.redraw();
+                            pnlChart.redraw(true);
                         }}
                         
                         // 4. ROI Chart
@@ -2109,7 +2109,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                                     point.update({{y: tickerRoi[point.name]}}, false);
                                 }}
                             }});
-                            roiChart.redraw();
+                            roiChart.redraw(true);
                         }}
                         
                         // 5. Daily 24h Chart
@@ -2121,7 +2121,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                                     point.update({{y: val, color: color}}, false);
                                 }}
                             }});
-                            dailyChart.redraw();
+                            dailyChart.redraw(true);
                         }}
 
                         // 6. Asset Allocation Chart
@@ -2135,7 +2135,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                                     }}
                                 }}
                             }});
-                            allocChart.redraw();
+                            allocChart.redraw(true);
                         }}
 
                         // 7. Invested vs Value Chart (Series 1 is 'Current Value')
@@ -2147,7 +2147,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                                     point.update({{y: tickerValues[ticker]}}, false);
                                 }}
                             }});
-                            invValChart.redraw();
+                            invValChart.redraw(true);
                         }}
                     }}
                 }} catch (e) {{
@@ -2250,7 +2250,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                                     pt.update({{y: val, color: val >= 0 ? '#00ff9d' : '#ff4d4d'}}, false);
                                 }}
                             }});
-                            dailyC.redraw();
+                            dailyC.redraw(true);
                         }}
                     }}
                 }} catch(e) {{}}
