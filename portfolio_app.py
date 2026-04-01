@@ -13,14 +13,14 @@ import streamlit.components.v1 as components
 # ====================== CONFIG ======================
 st.set_page_config(page_title="Portfolio", layout="wide", page_icon="📊")
 
-# ====================== SVG ICONS (DEFINED FIRST TO PREVENT ERRORS) ======================
-DASHBOARD_ICON = '''<svg xmlns="http://www.w3.org/2000/svg" width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="#00ff9d" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>'''
-CRYPTO_ICON = '''<svg xmlns="http://www.w3.org/2000/svg" width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="#00ff9d" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M14.5 8.5L9.5 13.5"/><path d="M9.5 8.5L14.5 13.5"/></svg>'''
-FIAT_ICON = '''<svg xmlns="http://www.w3.org/2000/svg" width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="#00ff9d" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M6 8h12"/><path d="M6 12h12"/><path d="M6 16h12"/></svg>'''
-EYE_CLOSED = '''<svg class="eye-closed" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>'''
-EYE_OPEN = '''<svg class="eye-open" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>'''
-EXTERNAL_LINK_ICON = '''<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>'''
-TV_ICON = '''<svg xmlns="http://www.w3.org/2000/svg" width="18" height="14" viewBox="0 0 28 21" fill="currentColor"><path d="M12 21H8V3h4v18zm1.5-6h3.5l3.5-4.5V21h-7v-6zM28 21h-4l-6.5-9L21 6l7 10v5z"/></svg>'''
+# ====================== SVG ICONS ======================
+DASHBOARD_ICON = '<svg xmlns="http://www.w3.org/2000/svg" width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="#00ff9d" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>'
+CRYPTO_ICON = '<svg xmlns="http://www.w3.org/2000/svg" width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="#00ff9d" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M14.5 8.5L9.5 13.5"/><path d="M9.5 8.5L14.5 13.5"/></svg>'
+FIAT_ICON = '<svg xmlns="http://www.w3.org/2000/svg" width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="#00ff9d" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M6 8h12"/><path d="M6 12h12"/><path d="M6 16h12"/></svg>'
+EYE_CLOSED = '<svg class="eye-closed" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>'
+EYE_OPEN = '<svg class="eye-open" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>'
+EXTERNAL_LINK_ICON = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>'
+TV_ICON = '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="14" viewBox="0 0 28 21" fill="currentColor"><path d="M12 21H8V3h4v18zm1.5-6h3.5l3.5-4.5V21h-7v-6zM28 21h-4l-6.5-9L21 6l7 10v5z"/></svg>'
 
 # ====================== SESSION STATE INITIALIZATION ======================
 if 'crypto_df' not in st.session_state: st.session_state.crypto_df = pd.DataFrame()
@@ -28,213 +28,205 @@ if 'fiat_df' not in st.session_state: st.session_state.fiat_df = pd.DataFrame()
 if 'crypto_table_version' not in st.session_state: st.session_state.crypto_table_version = 0
 if 'fiat_table_version' not in st.session_state: st.session_state.fiat_table_version = 0
 if 'ui_version' not in st.session_state: st.session_state.ui_version = 0
-if 'page' not in st.session_state: st.session_state.page = "Home"
-if 'anim_dir' not in st.session_state: st.session_state.anim_dir = "none"
 if 'last_known_prices' not in st.session_state: st.session_state.last_known_prices = {"USDC": 1.0}
 if 'refresh_key' not in st.session_state: st.session_state.refresh_key = random.randint(100000, 999999)
 if 'portfolio_cache' not in st.session_state: st.session_state.portfolio_cache = {}
 
 def glossy_header(title: str, icon_svg: str):
-    html = f"""<div class="glossy-header">{icon_svg}<span style="margin-left:12px;">{title}</span></div>"""
+    html = f'<div class="glossy-header">{icon_svg}<span style="margin-left:12px;">{title}</span></div>'
     st.markdown(html, unsafe_allow_html=True)
 
-# ====================== HIDDEN ROUTING CONTROLS ======================
-with st.sidebar:
-    nav_items = ["Home", "Crypto", "Fiat"]
-    curr_idx = nav_items.index(st.session_state.page) if st.session_state.page in nav_items else 0
-    
-    if st.button("Nav_Home", key="btn_home"):
-        st.session_state.anim_dir = "slide-in-left"
-        st.session_state.page = "Home"
-        st.rerun()
-    if st.button("Nav_Crypto", key="btn_crypto"):
-        st.session_state.anim_dir = "slide-in-right" if curr_idx < 1 else "slide-in-left"
-        st.session_state.page = "Crypto"
-        st.rerun()
-    if st.button("Nav_Fiat", key="btn_fiat"):
-        st.session_state.anim_dir = "slide-in-right"
-        st.session_state.page = "Fiat"
-        st.rerun()
-
-# ====================== GLOBAL ENGINE (BOTTOM NAV + SWIPING) ======================
-js_engine = f"""
-if (!window.mySwipeEngineLoaded) {{
-    window.mySwipeEngineLoaded = true;
-    const doc = window.parent ? window.parent.document : document;
-    const win = window.parent ? window.parent : window;
-    
-    if (!doc.getElementById('custom-bottom-nav-styles')) {{
-        const style = doc.createElement('style');
-        style.id = 'custom-bottom-nav-styles';
-        style.innerHTML = `
-            div[data-testid="stSidebar"] {{ display: none !important; }}
-            div[data-testid="collapsedControl"] {{ display: none !important; }}
-            header[data-testid="stHeader"] {{ display: none !important; }}
-            footer {{ display: none !important; }}
-            .stApp {{ padding-bottom: 85px !important; background: linear-gradient(180deg, #0f1724 0%, #0a0f1c 100%) !important; }}
-            
-            .bottom-nav-bar {{
-                position: fixed; bottom: 0; left: 0; width: 100vw; height: 75px;
-                background: rgba(15, 23, 42, 0.95); backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px);
-                border-top: 1px solid rgba(255,255,255,0.08); display: flex;
-                justify-content: space-around; align-items: center; z-index: 9999999;
-                padding-bottom: env(safe-area-inset-bottom); box-shadow: 0 -4px 20px rgba(0,0,0,0.4);
-            }}
-            .nav-item {{
-                display: flex; flex-direction: column; align-items: center; justify-content: center;
-                color: #64748b; font-size: 11px; font-weight: 600; cursor: pointer; flex: 1; height: 100%; transition: color 0.3s ease;
-                -webkit-tap-highlight-color: transparent;
-            }}
-            .nav-item.active {{ color: #00ff9d; }}
-            .nav-item svg {{ width: 24px; height: 24px; margin-bottom: 4px; stroke: currentColor; fill: none; transition: transform 0.2s ease; }}
-            .nav-item.active svg {{ transform: translateY(-2px); filter: drop-shadow(0 0 4px rgba(0,255,157,0.4)); }}
-        `;
-        doc.head.appendChild(style);
-    }}
-
-    if (!doc.getElementById('custom-bottom-nav')) {{
-        const nav = doc.createElement('div');
-        nav.id = 'custom-bottom-nav';
-        nav.innerHTML = `
-            <div class="bottom-nav-bar">
-                <div class="nav-item" id="nav-item-Home" onclick="clickStreamlitNav('Nav_Home')">
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
-                    Overview
-                </div>
-                <div class="nav-item" id="nav-item-Crypto" onclick="clickStreamlitNav('Nav_Crypto')">
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M14.5 8.5L9.5 13.5"/><path d="M9.5 8.5L14.5 13.5"/></svg>
-                    Crypto
-                </div>
-                <div class="nav-item" id="nav-item-Fiat" onclick="clickStreamlitNav('Nav_Fiat')">
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M6 8h12"/><path d="M6 12h12"/><path d="M6 16h12"/></svg>
-                    Fiat
-                </div>
-            </div>
-        `;
-        doc.body.appendChild(nav);
-
-        win.clickStreamlitNav = function(targetText) {{
-            const btns = doc.querySelectorAll('button p');
-            for (let p of btns) {{
-                if (p.innerText === targetText) {{ p.parentElement.click(); break; }}
-            }}
-        }};
-
-        let tsX = 0, tsY = 0;
-        doc.addEventListener('touchstart', e => {{
-            if (e.touches.length > 1) return;
-            const target = e.target;
-            if (target.closest('.charts-scroll-wrapper') || target.closest('.scroll-wrapper') || target.tagName === 'CANVAS') return;
-            tsX = e.touches[0].clientX; tsY = e.touches[0].clientY;
-        }}, {{passive: true}});
-
-        doc.addEventListener('touchend', e => {{
-            if (e.changedTouches.length > 1) return;
-            const target = e.target;
-            if (target.closest('.charts-scroll-wrapper') || target.closest('.scroll-wrapper') || target.tagName === 'CANVAS') return;
-            
-            const dX = tsX - e.changedTouches[0].clientX;
-            const dY = tsY - e.changedTouches[0].clientY;
-            
-            if (Math.abs(dX) > 60 && Math.abs(dX) > Math.abs(dY)) {{
-                const current = "{st.session_state.page}";
-                if (dX > 0) {{ // Swipe Left -> Go to Next
-                    if (current === "Home") win.clickStreamlitNav("Nav_Crypto");
-                    else if (current === "Crypto") win.clickStreamlitNav("Nav_Fiat");
-                }} else {{ // Swipe Right -> Go to Prev
-                    if (current === "Fiat") win.clickStreamlitNav("Nav_Crypto");
-                    else if (current === "Crypto") win.clickStreamlitNav("Nav_Home");
-                }}
-            }}
-        }}, {{passive: true}});
-    }}
-
-    // Update active nav state dynamically
-    const allItems = doc.querySelectorAll('.nav-item');
-    allItems.forEach(el => el.classList.remove('active'));
-    const activeItem = doc.getElementById('nav-item-{st.session_state.page}');
-    if (activeItem) activeItem.classList.add('active');
-}}
-"""
-encoded_js = json.dumps(js_engine)
-
-swipe_injector = f"""
-<script>
-(function() {{
-    const doc = window.parent.document;
-    if (!doc.getElementById('global-swipe-script')) {{
-        const script = doc.createElement('script');
-        script.id = 'global-swipe-script';
-        script.textContent = {encoded_js};
-        doc.head.appendChild(script);
-    }}
-}})();
-</script>
-"""
-components.html(swipe_injector, height=0, width=0)
-
-# ====================== GLOBAL CSS ANIMATIONS ======================
-anim_css = ""
-if st.session_state.anim_dir == 'slide-in-right':
-    anim_css = "@keyframes slideIn { from { transform: translateX(100vw); opacity: 0.5; } to { transform: translateX(0); opacity: 1; } }"
-elif st.session_state.anim_dir == 'slide-in-left':
-    anim_css = "@keyframes slideIn { from { transform: translateX(-100vw); opacity: 0.5; } to { transform: translateX(0); opacity: 1; } }"
-
-st.markdown(f"""
+# ====================== TRUE SPA CAROUSEL ARCHITECTURE ======================
+# This hides the sidebar and forces the 3 main st.containers to align horizontally
+st.markdown("""
 <style>
-div[data-testid="stMainBlockContainer"] {{ padding-left: 14px !important; padding-right: 14px !important; padding-top: 14px !important; max-width: 100% !important; animation: slideIn 0.35s cubic-bezier(0.25, 1, 0.5, 1) forwards; }}
-{anim_css}
-@media (min-width: 1200px) {{ div[data-testid="stMainBlockContainer"] {{ padding-left: 18px !important; padding-right: 18px !important; }} }}
-@media (max-width: 768px) {{ div[data-testid="stMainBlockContainer"] {{ padding-left: 8px !important; padding-right: 8px !important; }} }}
+/* Hide Sidebar & Header */
+[data-testid="stSidebar"], [data-testid="collapsedControl"], header[data-testid="stHeader"], footer { display: none !important; }
+
+html, body, .stApp {
+    overflow: hidden !important; 
+    background: linear-gradient(180deg, #0f1724 0%, #0a0f1c 100%) !important;
+}
+div[data-testid="stMainBlockContainer"] {
+    padding: 0 !important;
+    max-width: 100vw !important;
+    overflow: hidden !important;
+}
+
+/* Transform Streamlit's Main Block into a Horizontal Drag Carousel */
+div[data-testid="stMainBlockContainer"] > div > div[data-testid="stVerticalBlock"] {
+    display: flex !important;
+    flex-direction: row !important;
+    flex-wrap: nowrap !important;
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
+    scroll-snap-type: x mandatory !important;
+    scroll-behavior: smooth !important;
+    width: 100vw !important;
+    height: 100vh !important;
+    -webkit-overflow-scrolling: touch !important;
+    scrollbar-width: none; 
+}
+div[data-testid="stMainBlockContainer"] > div > div[data-testid="stVerticalBlock"]::-webkit-scrollbar { display: none; }
+
+/* The 3 Individual Pages (Containers) */
+div[data-testid="stMainBlockContainer"] > div > div[data-testid="stVerticalBlock"] > div[data-testid="stVerticalBlock"] {
+    min-width: 100vw !important;
+    max-width: 100vw !important;
+    flex: 0 0 100vw !important;
+    height: 100vh !important;
+    scroll-snap-align: start !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    padding: 20px 14px 120px 14px !important; /* Bottom padding prevents content from hiding behind floating nav */
+    box-sizing: border-box !important;
+}
+@media (min-width: 1200px) {
+    div[data-testid="stMainBlockContainer"] > div > div[data-testid="stVerticalBlock"] > div[data-testid="stVerticalBlock"] { padding-left: 24px !important; padding-right: 24px !important; }
+}
+
+/* FLOATING PILL BOTTOM NAVIGATION BAR */
+.bottom-nav-pill {
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 90%;
+    max-width: 450px;
+    height: 65px;
+    background: rgba(15, 23, 42, 0.85);
+    backdrop-filter: blur(15px);
+    -webkit-backdrop-filter: blur(15px);
+    border-radius: 35px;
+    border: 1px solid rgba(255,255,255,0.1);
+    display: flex;
+    justify-content: space-evenly;
+    align-items: center;
+    z-index: 999999;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+}
+.nav-item {
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    color: #64748b; font-size: 11px; font-weight: 600; cursor: pointer; flex: 1; height: 100%; transition: color 0.3s ease;
+    -webkit-tap-highlight-color: transparent;
+}
+.nav-item.active { color: #00ff9d; }
+.nav-item svg { width: 22px; height: 22px; margin-bottom: 4px; stroke: currentColor; fill: none; transition: transform 0.2s ease; }
+.nav-item.active svg { transform: translateY(-2px); filter: drop-shadow(0 0 4px rgba(0,255,157,0.4)); }
 
 /* Global UI Elements */
-.dashboard-wrapper {{ position: relative; z-index: 10; }}
-.glossy-header-label {{ cursor: pointer; display: block; position: relative; z-index: 3; -webkit-tap-highlight-color: transparent; }}
-.home-header {{ margin-bottom: 0 !important; padding-bottom: 30px !important; }}
-.pull-indicator {{ position: absolute; bottom: 8px; left: 50%; transform: translateX(-50%); color: #64748b; opacity: 0.8; transition: color 0.3s ease; }}
-.pull-indicator .eye-open {{ display: none; }}
-.pull-indicator .eye-closed {{ display: block; }}
-.dashboard-toggle:checked ~ .dashboard-wrapper .glossy-header-label .pull-indicator .eye-open {{ display: block; }}
-.dashboard-toggle:checked ~ .dashboard-wrapper .glossy-header-label .pull-indicator .eye-closed {{ display: none; }}
-.dashboard-toggle:checked ~ .dashboard-wrapper .glossy-header-label .pull-indicator {{ color: #ffffff; }}
+.dashboard-wrapper { position: relative; z-index: 10; }
+.glossy-header-label { cursor: pointer; display: block; position: relative; z-index: 3; -webkit-tap-highlight-color: transparent; }
+.home-header { margin-bottom: 0 !important; padding-bottom: 30px !important; }
+.pull-indicator { position: absolute; bottom: 8px; left: 50%; transform: translateX(-50%); color: #64748b; opacity: 0.8; transition: color 0.3s ease; }
+.pull-indicator .eye-open { display: none; }
+.pull-indicator .eye-closed { display: block; }
+.dashboard-toggle:checked ~ .dashboard-wrapper .glossy-header-label .pull-indicator .eye-open { display: block; }
+.dashboard-toggle:checked ~ .dashboard-wrapper .glossy-header-label .pull-indicator .eye-closed { display: none; }
+.dashboard-toggle:checked ~ .dashboard-wrapper .glossy-header-label .pull-indicator { color: #ffffff; }
 
-.stats-layer {{ position: relative; z-index: 1; margin-top: -60px !important; transition: margin-top 0.4s cubic-bezier(0.4, 0, 0.2, 1); margin-bottom: 24px; }}
-.dashboard-toggle:checked ~ .dashboard-wrapper .stats-layer {{ margin-top: 14px !important; }}
-.stats-layer-inner {{ display: grid !important; grid-template-columns: repeat(3, 1fr) !important; gap: 14px; width: 100%; }}
-.dash-value {{ font-size: clamp(14px, 2.5vw, 24px) !important; font-weight: 700; line-height: 1.05; color: #ffffff; position: absolute; top: 20px; left: 0; width: 100%; text-align: center; margin: 0; transition: opacity 0.3s ease; padding: 0 4px; box-sizing: border-box; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }}
-.dashboard-toggle:not(:checked) ~ .dashboard-wrapper .stats-layer .dash-value {{ opacity: 0; pointer-events: none; }}
-.dash-label {{ font-size: 11px !important; font-weight: 600; letter-spacing: 1.5px; text-transform: uppercase; color: #94a3b8; line-height: 1.2; position: absolute; bottom: 8px; left: 0; width: 100%; text-align: center; }}
+.stats-layer { position: relative; z-index: 1; margin-top: -60px !important; transition: margin-top 0.4s cubic-bezier(0.4, 0, 0.2, 1); margin-bottom: 24px; }
+.dashboard-toggle:checked ~ .dashboard-wrapper .stats-layer { margin-top: 14px !important; }
+.stats-layer-inner { display: grid !important; grid-template-columns: repeat(3, 1fr) !important; gap: 14px; width: 100%; }
+.dash-value { font-size: clamp(14px, 2.5vw, 24px) !important; font-weight: 700; line-height: 1.05; color: #ffffff; position: absolute; top: 20px; left: 0; width: 100%; text-align: center; margin: 0; transition: opacity 0.3s ease; padding: 0 4px; box-sizing: border-box; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.dashboard-toggle:not(:checked) ~ .dashboard-wrapper .stats-layer .dash-value { opacity: 0; pointer-events: none; }
+.dash-label { font-size: 11px !important; font-weight: 600; letter-spacing: 1.5px; text-transform: uppercase; color: #94a3b8; line-height: 1.2; position: absolute; bottom: 8px; left: 0; width: 100%; text-align: center; }
 
-.glossy-header {{ position: relative; overflow: hidden; background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); border: 1px solid rgba(255,255,255,0.05); border-radius: 18px; box-shadow: 0 10px 30px rgba(0,0,0,0.4); transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.4s ease, border-color 0.4s ease; padding: 32px 24px; min-height: 130px; font-size: 29px; font-weight: 700; letter-spacing: 1.5px; line-height: 1.1; display: flex; align-items: center; justify-content: center; gap: 16px; width: 100% !important; margin-bottom: 38px; }}
-.glossy-box {{ position: relative; overflow: hidden; background: linear-gradient(180deg, #162032 0%, #0f172a 100%); border: 1px solid rgba(255,255,255,0.05); border-radius: 18px; box-shadow: 0 8px 24px rgba(0,0,0,0.4); padding: 28px 30px; text-align: center; flex: 1; min-width: 220px; display: flex; flex-direction: column; justify-content: center; }}
-.glossy-box:not(.swapped) > div:first-child {{ font-size: 12px; font-weight: 600; letter-spacing: 1.5px; text-transform: uppercase; color: #94a3b8; margin-bottom: 6px; line-height: 1.2; }}
-.glossy-box:not(.swapped) > div:last-child {{ font-size: 27px; font-weight: 700; line-height: 1.05; color: #ffffff; }}
-.glossy-box.swapped {{ min-width: 0 !important; height: 80px !important; min-height: 80px !important; max-height: 80px !important; padding: 0; display: block; }}
+.glossy-header { position: relative; overflow: hidden; background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); border: 1px solid rgba(255,255,255,0.05); border-radius: 18px; box-shadow: 0 10px 30px rgba(0,0,0,0.4); transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.4s ease, border-color 0.4s ease; padding: 32px 24px; min-height: 130px; font-size: 29px; font-weight: 700; letter-spacing: 1.5px; line-height: 1.1; display: flex; align-items: center; justify-content: center; gap: 16px; width: 100% !important; margin-bottom: 38px; }
+.glossy-box { position: relative; overflow: hidden; background: linear-gradient(180deg, #162032 0%, #0f172a 100%); border: 1px solid rgba(255,255,255,0.05); border-radius: 18px; box-shadow: 0 8px 24px rgba(0,0,0,0.4); padding: 28px 30px; text-align: center; flex: 1; min-width: 220px; display: flex; flex-direction: column; justify-content: center; }
+.glossy-box:not(.swapped) > div:first-child { font-size: 12px; font-weight: 600; letter-spacing: 1.5px; text-transform: uppercase; color: #94a3b8; margin-bottom: 6px; line-height: 1.2; }
+.glossy-box:not(.swapped) > div:last-child { font-size: 27px; font-weight: 700; line-height: 1.05; color: #ffffff; }
+.glossy-box.swapped { min-width: 0 !important; height: 80px !important; min-height: 80px !important; max-height: 80px !important; padding: 0; display: block; }
 
-.usdc-banner {{ position: relative; overflow: hidden; background: rgba(15, 23, 42, 0.5); border: 1px solid rgba(39, 117, 202, 0.2); border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); padding: 10px 20px; width: 90%; max-width: 400px; margin: -15px auto 12px auto !important; display: flex; align-items: center; justify-content: space-between; }}
-.usdc-banner-left {{ display: flex; align-items: center; gap: 12px; }}
-.usdc-banner-left img {{ width: 28px; height: 28px; border-radius: 50%; object-fit: contain; opacity: 0.85; }}
-.usdc-banner-title {{ font-size: 1.05rem; font-weight: 600; color: #e2e8f0; display: flex; align-items: center; gap: 8px; }}
-.usdc-banner-subtitle {{ font-size: 0.75rem; font-weight: 500; color: #64748b; }}
-.usdc-banner-amount {{ font-size: 1.2rem; font-weight: 600; color: #e2e8f0; }}
-.dashboard-toggle:not(:checked) ~ .usdc-banner .usdc-banner-amount {{ font-size: 0 !important; }}
-.dashboard-toggle:not(:checked) ~ .usdc-banner .usdc-banner-amount::after {{ content: '***'; font-size: 1.2rem; color: #e2e8f0; }}
+/* Subdued and Smaller USDC Banner */
+.usdc-banner { position: relative; overflow: hidden; background: rgba(15, 23, 42, 0.5); border: 1px solid rgba(39, 117, 202, 0.2); border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); padding: 10px 20px; width: 90%; max-width: 400px; margin: -15px auto 12px auto !important; display: flex; align-items: center; justify-content: space-between; }
+.usdc-banner-left { display: flex; align-items: center; gap: 12px; }
+.usdc-banner-left img { width: 28px; height: 28px; border-radius: 50%; object-fit: contain; opacity: 0.85; }
+.usdc-banner-title { font-size: 1.05rem; font-weight: 600; color: #e2e8f0; display: flex; align-items: center; gap: 8px; }
+.usdc-banner-subtitle { font-size: 0.75rem; font-weight: 500; color: #64748b; }
+.usdc-banner-amount { font-size: 1.2rem; font-weight: 600; color: #e2e8f0; }
 
-button[aria-label="Step Up"], button[aria-label="Step Down"], button[data-testid="stNumberInputStepUp"], button[data-testid="stNumberInputStepDown"] {{ display: none !important; }}
-input[type="number"]::-webkit-inner-spin-button, input[type="number"]::-webkit-outer-spin-button {{ -webkit-appearance: none; margin: 0; }}
-input[type="number"] {{ -moz-appearance: textfield; }}
+/* Privacy Mode */
+.dashboard-toggle:not(:checked) ~ .usdc-banner .usdc-banner-amount { font-size: 0 !important; }
+.dashboard-toggle:not(:checked) ~ .usdc-banner .usdc-banner-amount::after { content: '***'; font-size: 1.2rem; color: #e2e8f0; }
 
-@media (max-width: 768px) {{
-    .glossy-header {{ min-height: 90px; font-size: 22px; padding: 20px 16px; margin-bottom: 24px; margin-top: 20px; }}
-    .stats-layer-inner {{ gap: 6px !important; }}
-    .dash-value {{ font-size: clamp(11px, 3.5vw, 15px) !important; top: 24px !important; }} 
-    .dash-label {{ font-size: clamp(8px, 2.5vw, 10px) !important; bottom: 8px !important; white-space: nowrap !important; letter-spacing: 0.5px !important; }}
-    .usdc-banner {{ padding: 8px 14px; width: 92%; margin-bottom: 24px !important; }}
-    .usdc-banner-amount {{ font-size: 1.1rem; }}
-}}
+button[aria-label="Step Up"], button[aria-label="Step Down"], button[data-testid="stNumberInputStepUp"], button[data-testid="stNumberInputStepDown"] { display: none !important; }
+input[type="number"]::-webkit-inner-spin-button, input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+input[type="number"] { -moz-appearance: textfield; }
+
+/* Transaction Row Styling */
+div[data-testid="stForm"]:has(.add-tx-card) { background: #0f172a !important; border: 1px solid rgba(255,255,255,0.05) !important; border-radius: 16px !important; padding: 24px !important; box-shadow: 0 4px 15px rgba(0,0,0,0.3) !important; margin-bottom: 24px !important; }
+div[data-testid="stForm"]:has(.add-tx-card) label { font-size: 0.85rem !important; color: #94a3b8 !important; padding-bottom: 2px !important; }
+div[data-testid="stForm"]:has(.add-tx-card) .stTextInput input, div[data-testid="stForm"]:has(.add-tx-card) .stNumberInput input, div[data-testid="stForm"]:has(.add-tx-card) .stDateInput input { background: rgba(255,255,255,0.03) !important; border: 1px solid rgba(255,255,255,0.1) !important; color: #fff !important; border-radius: 8px !important; margin-bottom: 0px !important; }
+div[data-testid="stForm"]:has(.add-tx-card) div[data-testid="stHorizontalBlock"]:has(> div[data-testid="column"]:nth-child(4)) { display: flex !important; gap: 12px !important; }
+div[data-testid="stForm"]:has(.add-tx-card) div[data-testid="stHorizontalBlock"]:has(> div[data-testid="column"]:nth-child(2):last-child) { display: flex !important; flex-direction: row !important; justify-content: space-between !important; align-items: center !important; margin-top: 12px !important; gap: 12px !important; }
+div[data-testid="stForm"]:has(.add-tx-card) div[data-testid="stHorizontalBlock"]:has(> div[data-testid="column"]:nth-child(2):last-child) > div[data-testid="column"]:nth-child(1) { flex: 0 0 auto !important; width: auto !important; }
+div[data-testid="stForm"]:has(.add-tx-card) div[data-testid="stHorizontalBlock"]:has(> div[data-testid="column"]:nth-child(2):last-child) > div[data-testid="column"]:nth-child(2) { flex: 1 1 auto !important; width: auto !important; }
+div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] { background: rgba(0,0,0,0.3) !important; padding: 6px !important; border-radius: 12px !important; display: flex !important; flex-direction: row !important; gap: 8px !important; align-items: center !important; margin: 0 !important; height: 48px !important; border: 1px solid rgba(255,255,255,0.05) !important; min-width: 200px !important; }
+div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label { margin: 0 !important; cursor: pointer !important; padding: 0 !important; border-radius: 8px !important; border: 1px solid transparent !important; transition: all 0.3s ease !important; background: transparent !important; flex: 1 !important; display: flex !important; justify-content: center !important; align-items: center !important; height: 100% !important; }
+div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label:hover { background: rgba(255,255,255,0.05) !important; }
+div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label > div:first-child { display: none !important; } 
+div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label p { font-weight: bold !important; font-size: 1.05rem !important; color: #94a3b8 !important; margin: 0 !important; padding: 0 !important; white-space: nowrap !important; line-height: 1 !important; }
+div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label:has(input:checked):first-child, div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label[aria-checked="true"]:first-child { background: rgba(0, 255, 157, 0.15) !important; border-color: #00ff9d !important; }
+div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label:has(input:checked):first-child p, div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label[aria-checked="true"]:first-child p { color: #00ff9d !important; }
+div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label:has(input:checked):last-child, div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label[aria-checked="true"]:last-child { background: rgba(255, 77, 77, 0.15) !important; border-color: #ff4d4d !important; }
+div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label:has(input:checked):last-child p, div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label[aria-checked="true"]:last-child p { color: #ff4d4d !important; }
+div[data-testid="stForm"]:has(.add-tx-card) .stButton { display: flex !important; justify-content: flex-end !important; align-items: center !important; margin: 0 !important; padding: 0 !important; width: 100% !important; }
+div[data-testid="stForm"]:has(.add-tx-card) .stButton > button { background: #1e2a44 !important; color: #e0e0e0 !important; padding: 0 24px !important; border-radius: 10px !important; font-size: 1.05rem !important; font-weight: 700 !important; box-shadow: 0 4px 15px rgba(0,0,0,0.25) !important; transition: all 0.3s ease !important; border: none !important; margin: 0 !important; width: auto !important; height: 48px !important; min-height: 48px !important; }
+div[data-testid="stForm"]:has(.add-tx-card) .stButton > button:hover { transform: translateY(-2px) !important; box-shadow: 0 8px 20px rgba(255, 255, 255, 0.2) !important; color: white !important; }
+div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row) { background: #0f172a !important; border: 1px solid rgba(255,255,255,0.05) !important; border-radius: 12px !important; padding: 12px 16px !important; margin-bottom: 12px !important; position: relative; z-index: 2; }
+div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row) > div { padding: 0 !important; } 
+div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row) div[data-testid="stButton"] button { background: rgba(255,255,255,0.05) !important; border-radius: 8px !important; border: none !important; height: 40px !important; width: 40px !important; display: flex !important; align-items: center !important; justify-content: center !important; padding: 0 !important; margin: 0 auto !important; font-size: 1.2rem !important; transition: all 0.2s !important; }
+div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row) div[data-testid="stButton"] button:hover { background: rgba(255,255,255,0.15) !important; transform: scale(1.05) !important; }
+@keyframes rollDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+div[data-testid="stForm"]:has(.edit-rollout) { animation: rollDown 0.3s ease forwards !important; background: rgba(0,0,0,0.2) !important; border-left: 3px solid #00ff9d !important; border-radius: 0 0 12px 12px !important; border-top: none !important; border-right: none !important; border-bottom: none !important; padding: 16px !important; margin-top: -24px !important; margin-bottom: 20px !important; position: relative; z-index: 1; box-shadow: inset 0 4px 10px rgba(0,0,0,0.15) !important; }
+div[data-testid="stVerticalBlockBorderWrapper"]:has(.del-warn) { border-color: rgba(255, 77, 77, 0.3) !important; background: rgba(15, 23, 42, 0.95) !important; border-radius: 12px !important; padding: 16px !important; text-align: center !important; margin-bottom: 12px !important; box-shadow: 0 4px 20px rgba(0,0,0,0.4) !important; }
+div[data-testid="stVerticalBlockBorderWrapper"]:has(.del-warn) .stButton > button { border-radius: 8px !important; font-weight: 600 !important; transition: all 0.2s !important; width: 100% !important; margin-top: 8px !important; padding: 6px 12px !important; }
+div[data-testid="stVerticalBlockBorderWrapper"]:has(.del-warn) div[data-testid="column"]:nth-child(1) .stButton > button { background: rgba(255, 77, 77, 0.1) !important; color: #ff4d4d !important; border: 1px solid rgba(255, 77, 77, 0.3) !important; }
+div[data-testid="stVerticalBlockBorderWrapper"]:has(.del-warn) div[data-testid="column"]:nth-child(1) .stButton > button:hover { background: #ff4d4d !important; color: white !important; }
+div[data-testid="stVerticalBlockBorderWrapper"]:has(.del-warn) div[data-testid="column"]:nth-child(2) .stButton > button { background: rgba(255, 255, 255, 0.05) !important; color: #cbd5e1 !important; border: 1px solid rgba(255, 255, 255, 0.1) !important; }
+div[data-testid="stVerticalBlockBorderWrapper"]:has(.del-warn) div[data-testid="column"]:nth-child(2) .stButton > button:hover { background: rgba(255, 255, 255, 0.15) !important; color: white !important; }
+
+/* Expanded Chart CSS Jailbreak */
+.stApp.chart-expanded-mode div[data-testid="stMainBlockContainer"] > div > div[data-testid="stVerticalBlock"] {
+    overflow: visible !important;
+    scroll-snap-type: none !important;
+}
+.stApp.chart-expanded-mode div[data-testid="stMainBlockContainer"] > div > div[data-testid="stVerticalBlock"] > div[data-testid="stVerticalBlock"] {
+    overflow: visible !important;
+    transform: none !important;
+}
+
+@media (max-width: 768px) {
+    .glossy-header { min-height: 90px; font-size: 22px; padding: 20px 16px; margin-bottom: 24px; margin-top: 20px; }
+    .stats-layer-inner { gap: 6px !important; }
+    .dash-value { font-size: clamp(11px, 3.5vw, 15px) !important; top: 24px !important; } 
+    .dash-label { font-size: clamp(8px, 2.5vw, 10px) !important; bottom: 8px !important; white-space: nowrap !important; letter-spacing: 0.5px !important; }
+    .usdc-banner { padding: 8px 14px; width: 92%; margin-bottom: 24px !important; }
+    .usdc-banner-amount { font-size: 1.1rem; }
+    
+    div[data-testid="stForm"]:has(.add-tx-card) div[data-testid="stHorizontalBlock"] { display: flex !important; flex-direction: row !important; flex-wrap: wrap !important; gap: 12px !important; }
+    div[data-testid="stForm"]:has(.add-tx-card) div[data-testid="stHorizontalBlock"]:has(> div[data-testid="column"]:nth-child(4)) > div[data-testid="column"] { min-width: calc(50% - 12px) !important; width: calc(50% - 12px) !important; flex: 1 1 calc(50% - 12px) !important; }
+    div[data-testid="stForm"]:has(.add-tx-card) input { padding: 6px !important; font-size: 0.95rem !important; }
+    div[data-testid="stForm"]:has(.add-tx-card) div[data-testid="stHorizontalBlock"]:has(> div[data-testid="column"]:nth-child(2):last-child) > div[data-testid="column"] { min-width: calc(50% - 12px) !important; width: calc(50% - 12px) !important; flex: 1 1 calc(50% - 12px) !important; }
+    div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] { min-width: 0 !important; width: 100% !important; }
+    div[data-testid="stForm"]:has(.add-tx-card) .stButton { display: flex !important; justify-content: flex-end !important; width: 100% !important; }
+    div[data-testid="stForm"]:has(.add-tx-card) .stButton > button { width: 100% !important; max-width: 120px !important; padding: 0 16px !important; }
+    div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row) > div > div[data-testid="stVerticalBlock"] > div[data-testid="stHorizontalBlock"] { display: flex !important; flex-direction: row !important; flex-wrap: nowrap !important; align-items: center !important; overflow: hidden !important; gap: 2px !important; }
+    div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row) div[data-testid="column"] { min-width: 0 !important; padding: 0 !important; width: auto !important; flex-shrink: 1 !important; }
+    div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row) > div > div[data-testid="stVerticalBlock"] > div[data-testid="stHorizontalBlock"] > div[data-testid="column"]:nth-child(1) { flex: 0 0 35px !important; width: 35px !important; }
+    div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row) > div > div[data-testid="stVerticalBlock"] > div[data-testid="stHorizontalBlock"] > div[data-testid="column"]:nth-child(2) { flex: 1 1 auto !important; overflow: hidden !important; text-align: left; }
+    div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row) > div > div[data-testid="stVerticalBlock"] > div[data-testid="stHorizontalBlock"] > div[data-testid="column"]:nth-child(3) { flex: 1.5 1 auto !important; overflow: hidden !important; text-align: center; }
+    div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row) > div > div[data-testid="stVerticalBlock"] > div[data-testid="stHorizontalBlock"] > div[data-testid="column"]:nth-child(4) { flex: 0 0 36px !important; width: 36px !important; }
+    div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row) > div > div[data-testid="stVerticalBlock"] > div[data-testid="stHorizontalBlock"] > div[data-testid="column"]:nth-child(5) { flex: 0 0 36px !important; width: 36px !important; }
+    div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row) div[data-testid="stButton"] button { width: 30px !important; height: 30px !important; font-size: 0.9rem !important; margin: 0 auto !important; }
+    .mobile-logo { width: 32px !important; height: 32px !important; margin-top: 0 !important; }
+    .mobile-tx-ticker { font-size: 0.95rem !important; margin-left: 2px !important;}
+    .mobile-tx-amount { font-size: 0.95rem !important; white-space: nowrap !important; }
+    .mobile-tx-sub { font-size: 0.7rem !important; white-space: nowrap !important; margin-left: 2px !important;}
+}
 </style>
 """, unsafe_allow_html=True)
-st.session_state.anim_dir = "none" # Reset animation trigger
 
 # ====================== DATA PREPARATION ENGINE ======================
 DATA_DIR = Path("data")
@@ -445,7 +437,6 @@ def format_holdings(val, ticker=None): return f"{float(val):,.6f}".replace(',', 
 def format_percent(val): return f"{float(val):.2f}%" if not pd.isna(val) else ""
 def format_price(val): return f"{float(val):.4f}" if abs(float(val)) < 1 else f"{float(val):,.2f}" if not pd.isna(val) else ""
 
-
 # ================== ZERO-LATENCY CACHE ARCHITECTURE ==================
 current_hash = f"{st.session_state.crypto_table_version}_{st.session_state.fiat_table_version}_{st.session_state.refresh_key}"
 
@@ -476,9 +467,72 @@ history_data_raw, allocation_series_js, pnl_df = vault['history_data_raw'], vaul
 usdc_row = df_port[df_port['Ticker'] == 'USDC'].iloc[0] if not df_port[df_port['Ticker'] == 'USDC'].empty else None
 usdc_holdings = usdc_row['Holdings'] if usdc_row is not None else 0
 
-# ====================== PAGE ROUTING ======================
-if st.session_state.page == "Home":
-    
+# ================== BOTTOM NAV & SCROLL ENGINE ==================
+st.markdown(f"""
+<div class="bottom-nav-pill">
+    <div class="nav-item" id="nav-btn-0" onclick="window.parent.scrollToPage(0)">
+        {DASHBOARD_ICON}<span>Overview</span>
+    </div>
+    <div class="nav-item" id="nav-btn-1" onclick="window.parent.scrollToPage(1)">
+        {CRYPTO_ICON}<span>Crypto</span>
+    </div>
+    <div class="nav-item" id="nav-btn-2" onclick="window.parent.scrollToPage(2)">
+        {FIAT_ICON}<span>Fiat</span>
+    </div>
+</div>
+""", unsafe_allow_html=True)
+
+# Bulletproof pure JS injection using a hidden img onerror to completely bypass Streamlit markdown stripping
+js_scroll_sync = """
+<img src="dummy" style="display:none;" onerror="
+if (!window.scrollEngineLoaded) {
+    window.scrollEngineLoaded = true;
+    const win = window.parent || window;
+    const doc = win.document;
+
+    let attachInt = setInterval(function() {
+        const master = doc.querySelector('div[data-testid=&quot;stMainBlockContainer&quot;] > div > div[data-testid=&quot;stVerticalBlock&quot;]');
+        if (master) {
+            clearInterval(attachInt);
+
+            const saved = win.localStorage.getItem('appScrollPos');
+            if (saved) master.scrollLeft = parseInt(saved);
+
+            master.addEventListener('scroll', function() {
+                clearTimeout(win.scrollTimeout);
+                win.scrollTimeout = setTimeout(function() {
+                    win.localStorage.setItem('appScrollPos', master.scrollLeft);
+                    const width = win.innerWidth;
+                    const idx = Math.round(master.scrollLeft / width);
+                    const items = doc.querySelectorAll('.nav-item');
+                    items.forEach(function(el, i) {
+                        if(i === idx) el.classList.add('active');
+                        else el.classList.remove('active');
+                    });
+                }, 50);
+            });
+
+            win.scrollToPage = function(idx) {
+                const width = win.innerWidth;
+                master.scrollTo({ left: width * idx, behavior: 'smooth' });
+            };
+            
+            const initWidth = win.innerWidth;
+            const initIdx = Math.round((saved ? parseInt(saved) : 0) / initWidth);
+            const items = doc.querySelectorAll('.nav-item');
+            items.forEach(function(el, i) {
+                if(i === initIdx) el.classList.add('active');
+                else el.classList.remove('active');
+            });
+        }
+    }, 100);
+}
+">
+"""
+st.markdown(js_scroll_sync, unsafe_allow_html=True)
+
+# ================== PAGE 1: HOME ==================
+with st.container():
     value_box_html = f"""
     <input type="checkbox" id="dash-toggle" class="dashboard-toggle" style="display:none;">
     <div class="dashboard-wrapper">
@@ -527,13 +581,21 @@ if st.session_state.page == "Home":
     roi_data_js = ",\n".join([f"{{ name: '{r['Ticker']}', y: {r['PnL %']}, color: '{get_ticker_color(r['Ticker'])}99' }}" for _, r in df_port[df_port['Ticker'] != 'USDC'].sort_values(by='PnL %', ascending=False).iterrows() if pd.notna(r['PnL %'])])
     daily_data_js = ",\n".join([f"{{ name: '{r['Ticker']}', y: 0, color: '#64748b99' }}" for _, r in df_port[df_port['Ticker'] != 'USDC'].iterrows()])
 
-    # Bulletproof HTML string with beautifully un-minified syntax and robust error boundaries around every chart
+    # Perfectly un-minified HTML with rock-solid Python injection points
     charts_html = f"""
     <!DOCTYPE html>
     <html>
     <head>
         <meta charset="UTF-8">
-        <script>window.pnlDataMap = {{ 'all': [{pnl_data_js_dict['all']}], '1y': [{pnl_data_js_dict['1y']}], '30d': [{pnl_data_js_dict['30d']}], '7d': [{pnl_data_js_dict['7d']}], '1d': [{pnl_data_js_dict['1d']}] }};</script>
+        <script>
+            window.pnlDataMap = {{
+                'all': [{pnl_data_js_dict['all']}],
+                '1y': [{pnl_data_js_dict['1y']}],
+                '30d': [{pnl_data_js_dict['30d']}],
+                '7d': [{pnl_data_js_dict['7d']}],
+                '1d': [{pnl_data_js_dict['1d']}]
+            }};
+        </script>
         <script src="https://code.highcharts.com/stock/highstock.js"></script>
         <script src="https://code.highcharts.com/stock/highcharts-3d.js"></script>
         <style>
@@ -558,15 +620,8 @@ if st.session_state.page == "Home":
             .chart-body {{ flex: 1; width: 100%; position: relative; }}
             #chart-overlay {{ visibility: hidden; opacity: 0; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(10, 15, 28, 0.85); z-index: 1000; backdrop-filter: blur(5px); -webkit-backdrop-filter: blur(5px); transition: opacity 0.4s ease, visibility 0.4s ease; }}
             #chart-overlay.active {{ visibility: visible; opacity: 1; }}
-            
-            /* CSS Jailbreak for the expanding charts */
             .expanded-chart {{ background: rgba(15, 23, 42, 0.98) !important; border: 1px solid rgba(255, 255, 255, 0.08) !important; box-shadow: 0 15px 50px rgba(0,0,0,0.9) !important; border-radius: 20px !important; }}
-            
-            @media (max-width: 768px) {{ 
-                .chart-placeholder {{ height: 320px !important; width: 90vw !important; flex: 0 0 90vw !important; }} 
-                .charts-flex {{ padding: 0 5vw; gap: 16px; }} 
-                .chart-controls button {{ padding: 3px 6px; font-size: 9px; }} 
-            }}
+            @media (max-width: 768px) {{ .chart-placeholder {{ height: 320px !important; width: 90vw !important; flex: 0 0 90vw !important; }} .charts-flex {{ padding: 0 5vw; gap: 16px; }} .chart-controls button {{ padding: 3px 6px; font-size: 9px; }} }}
         </style>
     </head>
     <body>
@@ -609,7 +664,11 @@ if st.session_state.page == "Home":
                     tooltip: {{ shared: true, backgroundColor: 'rgba(15, 23, 42, 0.95)', style: {{ color: '#fff' }}, borderColor: 'rgba(255,255,255,0.15)', formatter: function() {{ let s = '<b style="font-size: 11px; color:#cbd5e1;">' + Highcharts.dateFormat('%b %e, %Y', this.x) + '</b>'; const isPrivacy = document.body.classList.contains('privacy-mode'); this.points.forEach(function(point) {{ let val = isPrivacy ? '***' : formatMoneyStr(point.y); s += '<br/>' + '<span style="color:'+point.series.color+'">\u25CF</span> ' + point.series.name + ': <b style="font-size: 13px;">' + val + '</b>'; }}); return s; }} }},
                     plotOptions: {{ areaspline: {{ fillOpacity: 0.3, lineWidth: 2 }} }},
                     credits: {{ enabled: false }},
-                    series: [{{ name: 'Portfolio Value', data: [{hist_val_js}], color: '#00ff9d', fillColor: {{ linearGradient: {{ x1: 0, y1: 0, x2: 0, y2: 1 }}, stops: [ [0, 'rgba(0, 255, 157, 0.5)'], [1, 'rgba(0, 255, 157, 0.0)'] ] }}, zIndex: 3 }}, {{ name: 'BTC Benchmark', type: 'line', data: [{hist_btc_js}], color: '#f7931a', lineWidth: 2, zIndex: 2 }}, {{ name: 'Net Invested', type: 'line', data: [{hist_inv_js}], color: '#64748b', dashStyle: 'Dash', lineWidth: 2, zIndex: 1 }}]
+                    series: [
+                        {{ name: 'Portfolio Value', data: [{hist_val_js}], color: '#00ff9d', fillColor: {{ linearGradient: {{ x1: 0, y1: 0, x2: 0, y2: 1 }}, stops: [ [0, 'rgba(0, 255, 157, 0.5)'], [1, 'rgba(0, 255, 157, 0.0)'] ] }}, zIndex: 3 }}, 
+                        {{ name: 'BTC Benchmark', type: 'line', data: [{hist_btc_js}], color: '#f7931a', lineWidth: 2, zIndex: 2 }}, 
+                        {{ name: 'Net Invested', type: 'line', data: [{hist_inv_js}], color: '#64748b', dashStyle: 'Dash', lineWidth: 2, zIndex: 1 }}
+                    ]
                 }});
             }} catch(e) {{ console.error('History fail:', e); }}
             
@@ -712,7 +771,7 @@ if st.session_state.page == "Home":
             
             // The ultimate pure javascript jailbreak to expand charts perfectly across Streamlit's bounds
             function toggleExpandChart(wrapperId) {{
-                if (window.innerWidth > 768) return; // Mobile only
+                if (window.innerWidth > 768) return; 
                 const el = document.getElementById(wrapperId);
                 const overlay = document.getElementById('chart-overlay');
                 
@@ -738,6 +797,7 @@ if st.session_state.page == "Home":
                         parentIframe.style.height = '';
                         parentIframe.style.zIndex = '';
                         parentIframe.style.background = '';
+                        window.parent.document.querySelector('.stApp').classList.remove('chart-expanded-mode');
                     }}
                 }} else {{
                     // OPEN MECHANIC
@@ -748,7 +808,6 @@ if st.session_state.page == "Home":
                     overlay.classList.add('active'); 
                     el.classList.add('expanded-chart');
                     
-                    // Directly rip the element out of flow and center it natively
                     el.style.position = 'fixed';
                     el.style.top = '10vh';
                     el.style.left = '5vw';
@@ -758,7 +817,6 @@ if st.session_state.page == "Home":
                     el.style.transform = 'none';
                     el.style.transition = 'all 0.3s ease';
                     
-                    // Rip the iframe completely out of flow so it overlays the whole Streamlit app
                     if (parentIframe) {{
                         parentIframe.style.position = 'fixed';
                         parentIframe.style.top = '0';
@@ -767,9 +825,9 @@ if st.session_state.page == "Home":
                         parentIframe.style.height = '100vh';
                         parentIframe.style.zIndex = '999999';
                         parentIframe.style.background = 'rgba(10,15,28,0.98)';
+                        window.parent.document.querySelector('.stApp').classList.add('chart-expanded-mode');
                     }}
                     
-                    // Reflow Highcharts
                     setTimeout(() => {{
                         const hc = Highcharts.charts.find(c => c && c.renderTo.id === el.id.replace('-wrapper', '-container'));
                         if (hc) hc.reflow();
@@ -796,7 +854,9 @@ if st.session_state.page == "Home":
             setupDoubleTap('roi-wrapper'); setupDoubleTap('daily-wrapper'); setupDoubleTap('allocation-container'); setupDoubleTap('inv-val-container');
             
             document.getElementById('chart-overlay').addEventListener('click', () => {{
-                document.querySelectorAll('.expanded-chart').forEach(el => toggleExpandChart(el.id));
+                document.querySelectorAll('.expanded-chart').forEach(el => {{
+                    if (el.classList.contains('expanded-chart')) toggleExpandChart(el.id);
+                }});
             }});
             
             const chartScroll = document.getElementById('chartsScrollContainer');
@@ -824,482 +884,34 @@ if st.session_state.page == "Home":
                     }}
                 }} catch(e) {{}}
             }}, 200);
+            
+            // Constantly ensure charts auto-resize perfectly when you swipe back to the Home tab
+            setInterval(() => {{
+                Highcharts.charts.forEach(c => {{
+                    if (c && c.renderTo && c.renderTo.clientWidth > 0) {{ c.reflow(); }}
+                }});
+            }}, 500);
         </script>
     </body>
     </html>
     """
     components.html(charts_html, height=355, scrolling=False)
 
-    usdc_banner_html = f"""
-    <input type="checkbox" id="dash-toggle-usdc" class="dashboard-toggle" style="display:none;">
-    <div class="usdc-banner" style="--border: #2775ca;">
-    <div class="usdc-banner-left">
-    <img src="{get_ticker_logo('USDC')}" onerror="this.src='https://via.placeholder.com/42/1e2a44/ffffff?text=U';">
-    <div class="usdc-banner-title">USDC <span class="usdc-banner-subtitle">(Available Cash)</span></div>
-    </div>
-    <div class="usdc-banner-amount">{format_holdings(usdc_holdings, 'USDC')}</div>
-    </div>
-    """
-    st.markdown(usdc_banner_html, unsafe_allow_html=True)
+    st.markdown("<br><br>", unsafe_allow_html=True) # spacing
+    c1, c2 = st.columns(2)
+    with c1:
+        if st.button("🔄 Refresh Data", use_container_width=True):
+            st.session_state.refresh_key = random.randint(100000, 999999)
+            st.rerun()
+    with c2:
+        data = {"crypto": json.loads(st.session_state.crypto_df.to_json(orient="records")), "fiat": json.loads(st.session_state.fiat_df.to_json(orient="records"))}
+        st.download_button("💾 Backup JSON", json.dumps(data, indent=2), "portfolio_backup.json", "application/json", use_container_width=True)
 
-    cards_html = ""
-    for _, r in df_port.iterrows():
-        ticker = r['Ticker']
-        if ticker == 'USDC': continue
-        pnl = r['PnL']
-        pnl_color = "#00ff9d" if pnl > 0 else "#ff4d4d" if pnl < 0 else "#aaaaaa"
-        arrow = "▲" if pnl > 0 else "▼" if pnl < 0 else ""
-        border_color = get_ticker_color(ticker)
-        chart_color = get_chart_color(ticker)
-        logo_url = get_ticker_logo(ticker)
-        pnl_pct_formatted = format_percent(abs(r['PnL %'])) if pd.notna(r['PnL %']) else ""
-        live_price = r['Live']
-        avg_price = r['AVG']
-        
-        cards_html += f"""
-        <div class="flip-card" data-ticker="{ticker}" data-holdings="{r['Holdings']}" data-invested="{r['USDC']}" data-current-price="{live_price}" data-avg-price="{avg_price}" data-price-7d="{r.get('Price7d', live_price)}" data-price-30d="{r.get('Price30d', live_price)}" data-price-90d="{r.get('Price90d', live_price)}" data-price-ytd="{r.get('PriceYTD', live_price)}" data-refresh="{st.session_state.refresh_key}" data-border="{border_color}" data-chart-color="{chart_color}" data-logo="{logo_url}">
-            <div class="flip-card-inner">
-                <div class="flip-card-front">
-                    <div class="card-header" style="align-items: center; margin-bottom: 4px;">
-                        <div class="header-left-container">
-                            <div class="header-logo-row"><img src="{logo_url}" style="height:44px;width:44px;border-radius:50%;object-fit:contain;" onerror="this.src='https://via.placeholder.com/44/1e2a44/ffffff?text={ticker[0]}';"><span style="font-weight:700;font-size:1.3rem;margin-left:12px;color:#ffffff;">{ticker}</span></div>
-                        </div>
-                        <div class="header-right">
-                            <div class="stat-group" style="align-items: flex-end;"><div class="current-value" style="font-size: 1.4rem;">${format_price(live_price)}</div><div class="stat-label" style="font-size: 0.75rem; margin-top: 2px; color: #94a3b8;">Avg: <span class="privacy-val" style="color: #cbd5e1; font-weight: 600;">${format_price(avg_price)}</span></div></div>
-                        </div>
-                    </div>
-                    <div class="metrics-row">
-                        <div class="metric-col"><span class="metric-lbl">24H</span><span class="metric-val" id="change-24h-{ticker}">...</span></div>
-                        <div class="metric-col"><span class="metric-lbl">7D</span><span class="metric-val" id="change-7d-{ticker}">...</span></div>
-                        <div class="metric-col"><span class="metric-lbl">30D</span><span class="metric-val" id="change-30d-{ticker}">...</span></div>
-                        <div class="metric-col"><span class="metric-lbl">90D</span><span class="metric-val" id="change-90d-{ticker}">...</span></div>
-                        <div class="metric-col"><span class="metric-lbl">YTD</span><span class="metric-val" id="change-ytd-{ticker}">...</span></div>
-                    </div>
-                    <div class="card-content">
-                        <div class="label-value-row" style="margin-top:4px;"><span class="label">Holdings</span><span class="value privacy-val">{format_holdings(r['Holdings'], ticker)}</span></div>
-                        <div class="label-value-row"><span class="label">Invested</span><span class="value privacy-val">{format_money(r['USDC'])}</span></div>
-                        <div class="label-value-row"><span class="label">PnL</span><span class="value card-pnl privacy-val" style="color:{pnl_color};">{arrow} {format_money(abs(pnl) if pd.notna(pnl) else "")}</span></div>
-                        <div class="label-value-row"><span class="label">PnL %</span><span class="value card-pnl-pct privacy-val" style="color:{pnl_color};">{arrow} {pnl_pct_formatted}</span></div>
-                        <div class="label-value-row total"><span class="label">Value</span><span class="value total-value privacy-val">{format_money(r['Value'])}</span></div>
-                    </div>
-                </div>
-                <div class="flip-card-back">
-                    <a href="https://www.tradingview.com/chart/?symbol=BINANCE:{ticker}USDT" target="_blank" class="tv-external-btn" title="Open in TradingView App/Web to save drawings">{TV_ICON}<div style="margin-left: 6px; display:flex;">{EXTERNAL_LINK_ICON}</div></a>
-                    <div class="chart-container"><canvas id="chart-{ticker}"></canvas><div class="chart-loading" id="loading-{ticker}">Loading chart...</div></div>
-                </div>
-            </div>
-        </div>
-        """
-
-    full_html = f"""
-    <!DOCTYPE html>
-    <html>
-    <head>
-        <meta charset="UTF-8">
-        <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-        <style>
-            * {{ box-sizing: border-box; }}
-            html, body {{ margin: 0; padding: 0; width: 100%; overflow-x: hidden; background: transparent; font-family: system-ui, -apple-system, sans-serif; color: white; }}
-            body.privacy-mode .privacy-val {{ color: transparent !important; position: relative; }}
-            body.privacy-mode .privacy-val::after {{ content: '***'; position: absolute; right: 0; top: 0; color: #94a3b8; font-size: 1rem; font-weight: 700; }}
-            body.privacy-mode .total-value::after {{ color: #ffffff; font-size: 1.15rem; }}
-            .flip-card-front, .flip-card-back, .flip-card {{ outline: none; -webkit-tap-highlight-color: transparent; }}
-            .scroll-wrapper {{ width: 100%; overflow-y: hidden; overflow-x: auto; padding: 20px 0px 20px 0px; margin-bottom: 0px; scroll-snap-type: x mandatory; -webkit-overflow-scrolling: touch; scrollbar-width: none; -ms-overflow-style: none; }}
-            .scroll-wrapper::-webkit-scrollbar {{ display: none; }}
-            .coin-grid {{ display: flex; flex-direction: row; flex-wrap: nowrap; gap: 24px; width: max-content; padding: 0 24px; background: transparent !important; overflow: visible !important; }}
-            .flip-card {{ flex: 0 0 420px; background-color: transparent; height: 320px; perspective: 1200px; cursor: pointer; scroll-snap-align: center; }}
-            .flip-card-inner {{ position: relative; width: 100%; height: 100%; transition: transform 0.5s ease-in-out; transform-style: preserve-3d; border-radius: 18px; }}
-            .flip-card.flipped .flip-card-inner {{ transform: rotateY(180deg); }}
-            .flip-card-front, .flip-card-back {{ position: absolute; width: 100%; height: 100%; backface-visibility: hidden; border-radius: 18px; padding: 14px 18px; background: #0f172a; box-shadow: 0 8px 24px rgba(0,0,0,0.3); border: 2px solid transparent; overflow: hidden; display: flex; flex-direction: column; }}
-            .flip-card-back {{ transform: rotateY(180deg); padding: 24px 16px 16px 16px; }}
-            .tv-external-btn {{ position: absolute; top: 10px; left: 12px; color: #64748b; cursor: pointer; z-index: 20; transition: color 0.2s ease; padding: 4px; display: flex; align-items: center; justify-content: center; text-decoration: none; }}
-            .tv-external-btn:hover {{ color: #ffffff; }}
-            @media (hover: hover) and (pointer: fine) {{ .flip-card:hover .flip-card-front, .flip-card:hover .flip-card-back {{ border-color: var(--border); box-shadow: 0 12px 28px rgba(0,0,0,0.5), 0 0 12px var(--border); }} }}
-            .flip-card.touch-hover .flip-card-front, .flip-card.touch-hover .flip-card-back {{ border-color: var(--border); box-shadow: 0 12px 28px rgba(0,0,0,0.5), 0 0 12px var(--border); }}
-            .card-header {{ display: flex; justify-content: space-between; align-items: flex-start; width: 100%; }}
-            .header-left-container {{ display: flex; flex-direction: column; justify-content: flex-start; flex-shrink: 0; }}
-            .header-logo-row {{ display: flex; align-items: center; }}
-            .header-right {{ display: flex; flex-direction: column; align-items: flex-end; text-align: right; flex: 1; }}
-            .stat-group {{ display: flex; flex-direction: column; align-items: flex-end; }}
-            .stat-label {{ font-size: 0.7rem; color: #aaa; margin-bottom: 2px; font-weight: 500; }}
-            .current-value, .stat-value {{ font-size: 0.98rem; font-weight: 700; color: white; white-space: nowrap; }}
-            .metrics-row {{ display: flex; justify-content: space-between; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05); border-radius: 12px; padding: 8px 12px; margin-top: 14px; margin-bottom: 14px; }}
-            .metric-col {{ display: flex; flex-direction: column; align-items: center; gap: 4px; }}
-            .metric-lbl {{ font-size: 0.65rem; color: #94a3b8; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }}
-            .metric-val {{ font-size: 0.85rem; font-weight: 700; white-space: nowrap; }}
-            .card-content {{ display: flex; flex-direction: column; gap: 8px; }}
-            .label-value-row {{ display: flex; justify-content: space-between; align-items: center; font-size: 0.95rem; line-height: 1.3; }}
-            .label {{ color: #aaa; font-weight: 500; }}
-            .value {{ font-weight: 600; color: white; font-size: 1rem; }}
-            .total {{ font-size: 1.05rem; margin-top: 6px; border-top: 1px solid rgba(255,255,255,0.15); padding-top: 6px; }}
-            .total-value {{ font-size: 1.15rem; font-weight: 700; }}
-            .chart-container {{ position: relative; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; }}
-            canvas {{ position: absolute; top: 0; left: 0; width: 100% !important; height: 100% !important; }}
-            .chart-loading {{ position: absolute; color: #ccc; font-size: 0.85rem; z-index: 10; }}
-            @media (max-width: 700px) {{ .flip-card {{ flex: 0 0 85vw; height: 305px; }} .coin-grid {{ padding: 0 7.5vw; gap: 16px; }} .flip-card-front, .flip-card-back {{ padding: 12px 10px; }} .current-value, .stat-value {{ font-size: min(3.8vw, 0.95rem); letter-spacing: -0.3px; }} .stat-label {{ font-size: min(2.5vw, 0.65rem); }} .header-logo-row span {{ font-size: min(4vw, 1.1rem) !important; margin-left: 6px !important; }} .header-logo-row img {{ height: 32px !important; width: 32px !important; }} .metrics-row {{ padding: 6px 8px; }} .metric-val {{ font-size: 0.75rem; }} .metric-lbl {{ font-size: 0.55rem; }} }}
-        </style>
-    </head>
-    <body>
-    <div class="scroll-wrapper" id="scrollContainer"><div class="coin-grid">{cards_html}</div></div>
-    <script>
-        (function() {{
-            function closeAllOpenUI(e) {{
-                const isCardClick = e && e.target && typeof e.target.closest === 'function' && e.target.closest('.flip-card');
-                if (!isCardClick) {{ document.querySelectorAll('.flip-card.flipped').forEach(card => {{ card.classList.remove('flipped'); card.classList.remove('touch-hover'); }}); }}
-            }}
-            ['click', 'touchstart'].forEach(evt => {{ document.addEventListener(evt, (e) => {{ closeAllOpenUI(e); }}, {{ passive: true }}); }});
-
-            let lastDashState = null;
-            setInterval(() => {{
-                try {{
-                    const dt = window.parent.document.getElementById('dash-toggle');
-                    const dtUsdc = window.parent.document.getElementById('dash-toggle-usdc');
-                    if (dt) {{
-                        const isChecked = dt.checked;
-                        if (dtUsdc && dtUsdc.checked !== isChecked) dtUsdc.checked = isChecked;
-                        if (isChecked !== lastDashState) {{
-                            lastDashState = isChecked;
-                            if (isChecked) {{ document.body.classList.remove('privacy-mode'); localStorage.setItem('dashboardOpen', 'true'); }} 
-                            else {{ document.body.classList.add('privacy-mode'); localStorage.setItem('dashboardOpen', 'false'); }}
-                        }}
-                    }}
-                }} catch(e) {{}}
-            }}, 150);
-
-            try {{
-                const dt = window.parent.document.getElementById('dash-toggle');
-                const dtUsdc = window.parent.document.getElementById('dash-toggle-usdc');
-                if (dt) {{
-                    const saved = localStorage.getItem('dashboardOpen');
-                    if (saved === 'true') {{ dt.checked = true; if(dtUsdc) dtUsdc.checked = true; document.body.classList.remove('privacy-mode'); lastDashState = true; }} 
-                    else {{ dt.checked = false; if(dtUsdc) dtUsdc.checked = false; document.body.classList.add('privacy-mode'); lastDashState = false; }}
-                }}
-            }} catch(e) {{}}
-
-            try {{ ['click', 'touchstart'].forEach(evt => {{ window.parent.document.addEventListener(evt, (e) => {{ closeAllOpenUI(e); }}, {{ passive: true }}); }}); }} catch(err) {{}}
-
-            const scrollContainer = document.getElementById('scrollContainer');
-            if (scrollContainer) {{ scrollContainer.addEventListener('wheel', (evt) => {{ if (Math.abs(evt.deltaY) > Math.abs(evt.deltaX)) {{ evt.preventDefault(); scrollContainer.scrollBy({{ left: evt.deltaY > 0 ? 200 : -200, behavior: 'smooth' }}); }} }}, {{ passive: false }}); }}
-
-            function updateMetricUI(card, ticker, period, basePrice, currentPrice) {{
-                const span = card.querySelector(`#change-${{period}}-${{ticker}}`);
-                if (!span || !basePrice) return;
-                const change = ((currentPrice - basePrice) / basePrice) * 100;
-                const sign = change >= 0 ? '▲' : '▼';
-                const color = change >= 0 ? '#00ff9d' : '#ff4d4d';
-                span.innerHTML = `<span style="color:${{color}};">${{sign}} ${{Math.abs(change).toFixed(2)}}%</span>`;
-            }}
-
-            const usdcHoldings = {usdc_holdings};
-            async function updateLivePrices() {{
-                const cards = Array.from(document.querySelectorAll('.flip-card'));
-                if (cards.length === 0) return;
-                const tickers = cards.map(card => card.getAttribute('data-ticker'));
-                const symbolMap = {{ 'BTC':'BTC','ETH':'ETH','SOL':'SOL','HBAR':'HBAR','XRP':'XRP','BNB':'BNB','TRX':'TRX','LINK':'LINK','SUI':'SUI' }};
-                const mappedTickers = tickers.map(t => symbolMap[t.toUpperCase()] || t.toUpperCase());
-
-                const url = `https://min-api.cryptocompare.com/data/pricemultifull?fsyms=${{mappedTickers.join(',')}}&tsyms=USD`;
-                try {{
-                    const resp = await fetch(url, {{ headers: {{ 'User-Agent': 'Mozilla/5.0' }} }});
-                    const data = await resp.json();
-                    
-                    let totalCoinValue = 0; let totalCoinInvested = 0;
-                    let tickerValues = {{}}; let tickerDiffs = {{}}; let tickerRoi = {{}}; let ticker24h = {{}};
-                    
-                    cards.forEach(card => {{
-                        const ticker = card.getAttribute('data-ticker');
-                        const sym = symbolMap[ticker.toUpperCase()] || ticker.toUpperCase();
-                        const holdings = parseFloat(card.getAttribute('data-holdings'));
-                        const invested = parseFloat(card.getAttribute('data-invested'));
-                        let price = parseFloat(card.getAttribute('data-current-price'));
-                        const changeSpan = card.querySelector(`#change-24h-${{ticker}}`);
-
-                        if (data.RAW && data.RAW[sym] && data.RAW[sym].USD) {{
-                            const newPrice = data.RAW[sym].USD.PRICE;
-                            if (newPrice !== undefined) {{
-                                const oldVal = holdings * price;
-                                price = newPrice;
-                                card.setAttribute('data-current-price', price);
-                                
-                                const value = holdings * price;
-                                tickerValues[ticker] = value;
-                                tickerDiffs[ticker] = value - oldVal;
-                                
-                                const priceFmt = price < 1 ? price.toFixed(4) : price.toLocaleString('en-US', {{minimumFractionDigits: 2, maximumFractionDigits: 2}});
-                                const currentEl = card.querySelector('.current-value');
-                                if (currentEl) currentEl.innerText = '$' + priceFmt;
-                                
-                                const pnl = value - invested;
-                                const pnlPct = invested > 0 ? (pnl / invested) * 100 : 0;
-                                tickerRoi[ticker] = pnlPct;
-                                
-                                const valStr = '$' + value.toLocaleString('en-US', {{minimumFractionDigits: 2, maximumFractionDigits: 2}});
-                                const pnlStr = (pnl >= 0 ? '▲ $' : '▼ $') + Math.abs(pnl).toLocaleString('en-US', {{minimumFractionDigits: 2, maximumFractionDigits: 2}});
-                                const pnlPctStr = (pnl >= 0 ? '▲ ' : '▼ ') + Math.abs(pnlPct).toFixed(2) + '%';
-                                const color = pnl >= 0 ? '#00ff9d' : '#ff4d4d';
-                                
-                                const valEl = card.querySelector('.total-value');
-                                if (valEl) valEl.innerText = valStr;
-                                const pnlEl = card.querySelector('.card-pnl');
-                                if (pnlEl) {{ pnlEl.innerText = pnlStr; pnlEl.style.color = color; }}
-                                const pnlPctEl = card.querySelector('.card-pnl-pct');
-                                if (pnlPctEl) {{ pnlPctEl.innerText = pnlPctStr; pnlPctEl.style.color = color; }}
-                                
-                                const p7d = parseFloat(card.getAttribute('data-price-7d'));
-                                const p30d = parseFloat(card.getAttribute('data-price-30d'));
-                                const p90d = parseFloat(card.getAttribute('data-price-90d'));
-                                const pytd = parseFloat(card.getAttribute('data-price-ytd'));
-                                
-                                updateMetricUI(card, ticker, '7d', p7d, price);
-                                updateMetricUI(card, ticker, '30d', p30d, price);
-                                updateMetricUI(card, ticker, '90d', p90d, price);
-                                updateMetricUI(card, ticker, 'ytd', pytd, price);
-                                
-                                if (window.chartCache && window.chartCache[ticker] && window.chartCache[ticker].chartObj) {{
-                                    const chart = window.chartCache[ticker].chartObj;
-                                    const dataLen = chart.data.datasets[0].data.length;
-                                    if (dataLen > 0) {{ chart.data.datasets[0].data[dataLen - 1] = price; chart.update('none'); }}
-                                }}
-                            }}
-                            if (changeSpan && data.RAW[sym].USD.CHANGEPCT24HOUR !== undefined) {{
-                                const change = data.RAW[sym].USD.CHANGEPCT24HOUR;
-                                ticker24h[ticker] = change;
-                                const sign = change >= 0 ? '▲' : '▼';
-                                const color = change >= 0 ? '#00ff9d' : '#ff4d4d';
-                                changeSpan.innerHTML = `<span style="color:${{color}};">${{sign}} ${{Math.abs(change).toFixed(2)}}%</span>`;
-                            }}
-                        }} else if (changeSpan && changeSpan.innerText === '...') {{ changeSpan.innerHTML = `N/A`; }}
-                        totalCoinValue += (holdings * price);
-                        totalCoinInvested += invested;
-                    }});
-                    
-                    const totalPortfolioValue = totalCoinValue + usdcHoldings;
-                    const totalPnL = totalCoinValue - totalCoinInvested;
-                    const totalInvestedBase = totalPortfolioValue - totalPnL;
-                    const totalPnLPct = totalInvestedBase !== 0 ? (totalPnL / totalInvestedBase) * 100 : 0;
-                    
-                    const dashValStr = '$' + totalPortfolioValue.toLocaleString('en-US', {{minimumFractionDigits: 2, maximumFractionDigits: 2}});
-                    const dashPnlStr = (totalPnL >= 0 ? '▲ $' : '▼ $') + Math.abs(totalPnL).toLocaleString('en-US', {{minimumFractionDigits: 2, maximumFractionDigits: 2}});
-                    const dashPnlPctStr = (totalPnL >= 0 ? '▲ ' : '▼ ') + Math.abs(totalPnLPct).toFixed(2) + '%';
-                    const dashColor = totalPnL >= 0 ? '#00ff9d' : '#ff4d4d';
-                    
-                    const parentDoc = window.parent.document;
-                    const dValue = parentDoc.getElementById('dash-total-value');
-                    const dPnl = parentDoc.getElementById('dash-pnl');
-                    const dPnlPct = parentDoc.getElementById('dash-pnl-pct');
-                    
-                    if (dValue) dValue.innerText = dashValStr;
-                    if (dPnl) {{ dPnl.innerText = dashPnlStr; dPnl.style.color = dashColor; }}
-                    if (dPnlPct) {{ dPnlPct.innerText = dashPnlPctStr; dPnlPct.style.color = dashColor; }}
-
-                    try {{
-                        let hcWin = null;
-                        const iframes = window.parent.document.querySelectorAll('iframe');
-                        for (let i = 0; i < iframes.length; i++) {{ if (iframes[i].contentWindow && iframes[i].contentWindow.Highcharts) {{ hcWin = iframes[i].contentWindow; break; }} }}
-
-                        if (hcWin) {{
-                            const HC = hcWin.Highcharts;
-                            const pieChart = HC.charts.find(c => c && c.renderTo.id === 'pie-container');
-                            const histChart = HC.charts.find(c => c && c.renderTo.id === 'history-container');
-                            const pnlChart = HC.charts.find(c => c && c.renderTo.id === 'pnl-container');
-                            const roiChart = HC.charts.find(c => c && c.renderTo.id === 'roi-container');
-                            const dailyChart = HC.charts.find(c => c && c.renderTo.id === 'daily-container');
-                            const allocChart = HC.charts.find(c => c && c.renderTo.id === 'allocation-container');
-                            const invValChart = HC.charts.find(c => c && c.renderTo.id === 'inv-val-container');
-                            
-                            if (pieChart && pieChart.series[0]) {{ pieChart.series[0].points.forEach(point => {{ if (tickerValues[point.name] !== undefined) point.update({{y: tickerValues[point.name]}}, false); }}); pieChart.redraw(true); }}
-                            if (histChart && histChart.series[0]) {{ const points = histChart.series[0].points; if (points && points.length > 0) {{ points[points.length - 1].update({{y: totalPortfolioValue}}, false); }} histChart.redraw(true); }}
-                            if (pnlChart && pnlChart.series[0]) {{
-                                pnlChart.series[0].points.forEach(point => {{ if (tickerDiffs[point.name] !== undefined) point.update({{y: point.y + tickerDiffs[point.name]}}, false); }});
-                                if (typeof hcWin.pnlDataMap !== 'undefined') {{ Object.keys(hcWin.pnlDataMap).forEach(key => {{ hcWin.pnlDataMap[key].forEach(pt => {{ if (tickerDiffs[pt.name] !== undefined) pt.y += tickerDiffs[pt.name]; }}); }}); }}
-                                pnlChart.redraw(true);
-                            }}
-                            if (roiChart && roiChart.series[0]) {{ roiChart.series[0].points.forEach(point => {{ if (tickerRoi[point.name] !== undefined) point.update({{y: tickerRoi[point.name]}}, false); }}); roiChart.redraw(true); }}
-                            if (dailyChart && dailyChart.series[0]) {{ dailyChart.series[0].points.forEach(point => {{ if (ticker24h[point.name] !== undefined) {{ const val = ticker24h[point.name]; const color = val >= 0 ? 'rgba(0, 255, 157, 0.65)' : 'rgba(255, 77, 77, 0.65)'; point.update({{y: val, color: color}}, false); }} }}); dailyChart.redraw(true); }}
-                            if (allocChart) {{ allocChart.series.forEach(s => {{ if (tickerValues[s.name] !== undefined) {{ const points = s.points; if (points && points.length > 0) points[points.length - 1].update({{y: tickerValues[s.name]}}, false); }} }}); allocChart.redraw(true); }}
-                            if (invValChart && invValChart.series[1]) {{ invValChart.series[1].points.forEach(point => {{ if (tickerValues[point.name] !== undefined) point.update({{y: tickerValues[point.name]}}, false); }}); invValChart.redraw(true); }}
-                        }}
-                    }} catch (e) {{}}
-                }} catch (e) {{}}
-        }}
-        setInterval(updateLivePrices, 10000);
-        
-        function restoreFlippedState() {{
-            const saved = localStorage.getItem('flippedCards');
-            if (!saved) return;
-            const flippedTickers = JSON.parse(saved);
-            document.querySelectorAll('.flip-card').forEach(card => {{
-                const ticker = card.getAttribute('data-ticker');
-                if (flippedTickers.includes(ticker)) {{
-                    card.classList.add('flipped');
-                    card.classList.add('touch-hover');
-                    const currentPrice = parseFloat(card.getAttribute('data-current-price'));
-                    const avgPrice = parseFloat(card.getAttribute('data-avg-price'));
-                    const chartColor = card.getAttribute('data-chart-color');
-                    if (!chartCache[ticker] || !chartCache[ticker].chartObj) renderChart(card, ticker, currentPrice, avgPrice, chartColor);
-                }}
-            }});
-            localStorage.removeItem('flippedCards');
-        }}
-
-        const flipCards = document.querySelectorAll('.flip-card');
-        window.chartCache = window.chartCache || {{}};
-        const chartCache = window.chartCache;
-        const refreshKey = '{st.session_state.refresh_key}';
-        
-        async function fetchHistoricalData(ticker) {{
-            const symbolMap = {{ 'BTC':'BTC','ETH':'ETH','SOL':'SOL','HBAR':'HBAR','XRP':'XRP','BNB':'BNB','TRX':'TRX','LINK':'LINK','SUI':'SUI' }};
-            const sym = symbolMap[ticker.toUpperCase()];
-            if (!sym) return null;
-            const url = `https://min-api.cryptocompare.com/data/v2/histoday?fsym=${{sym}}&tsym=USD&limit=30`;
-            try {{
-                const resp = await fetch(url, {{ headers: {{ 'User-Agent': 'Mozilla/5.0' }} }});
-                const data = await resp.json();
-                if (data && data.Data && data.Data.Data) {{
-                    const ohlc = data.Data.Data;
-                    const labels = ohlc.map(d => {{ const dt = new Date(d.time * 1000); return `${{dt.getDate().toString().padStart(2,'0')}}/${{(dt.getMonth()+1).toString().padStart(2,'0')}}`; }});
-                    const prices = ohlc.map(d => d.close);
-                    return {{ labels, prices }};
-                }}
-                return null;
-            }} catch(e) {{ return null; }}
-        }}
-        
-        async function renderChart(card, ticker, currentPrice, avgPrice, chartColor) {{
-            const canvas = card.querySelector(`canvas#chart-${{ticker}}`);
-            const loadingDiv = card.querySelector(`.chart-loading`);
-            if (!canvas) return;
-            if (chartCache[ticker] && chartCache[ticker].chart) {{ if (loadingDiv) loadingDiv.style.display = 'none'; return; }}
-            if (loadingDiv) loadingDiv.style.display = 'block';
-            
-            const hist = await fetchHistoricalData(ticker);
-            if (!hist || hist.prices.length === 0) {{ if (loadingDiv) loadingDiv.innerText = 'Failed to load chart data'; return; }}
-            
-            hist.prices[hist.prices.length - 1] = currentPrice;
-            const ctx = canvas.getContext('2d');
-            if (chartCache[ticker] && chartCache[ticker].chartObj) chartCache[ticker].chartObj.destroy();
-            const datasets = [
-                {{ label: 'Close Price ($)', data: hist.prices, borderColor: chartColor, backgroundColor: chartColor + '20', borderWidth: 2, fill: true, tension: 0.2, pointRadius: 2, pointBackgroundColor: chartColor }},
-                {{ label: 'Avg Price ($)', data: new Array(hist.labels.length).fill(avgPrice), borderColor: '#ffaa00', borderWidth: 2, borderDash: [5, 5], fill: false, pointRadius: 0, type: 'line' }}
-            ];
-            
-            const newChart = new Chart(ctx, {{ type: 'line', data: {{ labels: hist.labels, datasets: datasets }}, options: {{ responsive: true, maintainAspectRatio: false, plugins: {{ legend: {{ display: false }}, tooltip: {{ mode: 'index', intersect: false }} }}, scales: {{ x: {{ ticks: {{ color: '#ccc', maxRotation: 45, autoSkip: true, maxTicksLimit: 6 }}, grid: {{ color: 'rgba(255,255,255,0.1)' }} }}, y: {{ position: 'right', ticks: {{ color: '#ccc' }}, grid: {{ color: 'rgba(255,255,255,0.1)' }} }} }} }} }});
-            chartCache[ticker] = {{ chartObj: newChart, data: hist }};
-            if (loadingDiv) loadingDiv.style.display = 'none';
-        }}
-        
-        flipCards.forEach(card => {{
-            const ticker = card.getAttribute('data-ticker');
-            const currentPrice = parseFloat(card.getAttribute('data-current-price'));
-            const avgPrice = parseFloat(card.getAttribute('data-avg-price'));
-            const chartColor = card.getAttribute('data-chart-color');
-            const border = card.getAttribute('data-border');
-            card.style.setProperty('--border', border);
-            
-            const p7d = parseFloat(card.getAttribute('data-price-7d'));
-            const p30d = parseFloat(card.getAttribute('data-price-30d'));
-            const p90d = parseFloat(card.getAttribute('data-price-90d'));
-            const pytd = parseFloat(card.getAttribute('data-price-ytd'));
-            
-            updateMetricUI(card, ticker, '7d', p7d, currentPrice);
-            updateMetricUI(card, ticker, '30d', p30d, currentPrice);
-            updateMetricUI(card, ticker, '90d', p90d, currentPrice);
-            updateMetricUI(card, ticker, 'ytd', pytd, currentPrice);
-            
-            const front = card.querySelector('.flip-card-front');
-            front.addEventListener('click', (e) => {{
-                e.stopPropagation();
-                if (!card.classList.contains('flipped')) {{
-                    card.classList.add('flipped');
-                    card.classList.add('touch-hover');
-                    if (!chartCache[ticker] || !chartCache[ticker].chartObj) renderChart(card, ticker, currentPrice, avgPrice, chartColor);
-                }}
-            }});
-            
-            const backDiv = card.querySelector('.flip-card-back');
-            backDiv.addEventListener('click', (e) => {{ card.classList.remove('flipped'); card.classList.remove('touch-hover'); }});
-            
-            const extBtn = card.querySelector('.tv-external-btn');
-            if (extBtn) extBtn.addEventListener('click', (e) => e.stopPropagation());
-        }});
-        
-        updateLivePrices();
-        restoreFlippedState();
-        
-        if (window.oldRefreshKey && window.oldRefreshKey !== refreshKey) {{
-            for (let key in chartCache) if (chartCache[key].chartObj) chartCache[key].chartObj.destroy();
-            window.chartCache = {{}};
-        }}
-        window.oldRefreshKey = refreshKey;
-    }})();
-    </script>
-    </body>
-    </html>
-    """
-    components.html(full_html, height=380, scrolling=False)
 
 # ================== PAGE 2: CRYPTO ==================
-elif st.session_state.page == "Crypto":
+with st.container():
     glossy_header("Crypto Transactions", CRYPTO_ICON)
-
-    st.markdown("""
-    <style>
-    div[data-testid="stForm"]:has(.add-tx-card) { background: #0f172a !important; border: 1px solid rgba(255,255,255,0.05) !important; border-radius: 16px !important; padding: 24px !important; box-shadow: 0 4px 15px rgba(0,0,0,0.3) !important; margin-bottom: 24px !important; }
-    div[data-testid="stForm"]:has(.add-tx-card) label { font-size: 0.85rem !important; color: #94a3b8 !important; padding-bottom: 2px !important; }
-    div[data-testid="stForm"]:has(.add-tx-card) .stTextInput input, div[data-testid="stForm"]:has(.add-tx-card) .stNumberInput input, div[data-testid="stForm"]:has(.add-tx-card) .stDateInput input { background: rgba(255,255,255,0.03) !important; border: 1px solid rgba(255,255,255,0.1) !important; color: #fff !important; border-radius: 8px !important; margin-bottom: 0px !important; }
-    div[data-testid="stForm"]:has(.add-tx-card) div[data-testid="stHorizontalBlock"]:has(> div[data-testid="column"]:nth-child(4)) { display: flex !important; gap: 12px !important; }
-    div[data-testid="stForm"]:has(.add-tx-card) div[data-testid="stHorizontalBlock"]:has(> div[data-testid="column"]:nth-child(2):last-child) { display: flex !important; flex-direction: row !important; justify-content: space-between !important; align-items: center !important; margin-top: 12px !important; gap: 12px !important; }
-    div[data-testid="stForm"]:has(.add-tx-card) div[data-testid="stHorizontalBlock"]:has(> div[data-testid="column"]:nth-child(2):last-child) > div[data-testid="column"]:nth-child(1) { flex: 0 0 auto !important; width: auto !important; }
-    div[data-testid="stForm"]:has(.add-tx-card) div[data-testid="stHorizontalBlock"]:has(> div[data-testid="column"]:nth-child(2):last-child) > div[data-testid="column"]:nth-child(2) { flex: 1 1 auto !important; width: auto !important; }
-    div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] { background: rgba(0,0,0,0.3) !important; padding: 6px !important; border-radius: 12px !important; display: flex !important; flex-direction: row !important; gap: 8px !important; align-items: center !important; margin: 0 !important; height: 48px !important; border: 1px solid rgba(255,255,255,0.05) !important; min-width: 200px !important; }
-    div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label { margin: 0 !important; cursor: pointer !important; padding: 0 !important; border-radius: 8px !important; border: 1px solid transparent !important; transition: all 0.3s ease !important; background: transparent !important; flex: 1 !important; display: flex !important; justify-content: center !important; align-items: center !important; height: 100% !important; }
-    div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label:hover { background: rgba(255,255,255,0.05) !important; }
-    div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label > div:first-child { display: none !important; } 
-    div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label p { font-weight: bold !important; font-size: 1.05rem !important; color: #94a3b8 !important; margin: 0 !important; padding: 0 !important; white-space: nowrap !important; line-height: 1 !important; }
-    div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label:has(input:checked):first-child, div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label[aria-checked="true"]:first-child { background: rgba(0, 255, 157, 0.15) !important; border-color: #00ff9d !important; }
-    div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label:has(input:checked):first-child p, div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label[aria-checked="true"]:first-child p { color: #00ff9d !important; }
-    div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label:has(input:checked):last-child, div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label[aria-checked="true"]:last-child { background: rgba(255, 77, 77, 0.15) !important; border-color: #ff4d4d !important; }
-    div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label:has(input:checked):last-child p, div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label[aria-checked="true"]:last-child p { color: #ff4d4d !important; }
-    div[data-testid="stForm"]:has(.add-tx-card) .stButton { display: flex !important; justify-content: flex-end !important; align-items: center !important; margin: 0 !important; padding: 0 !important; width: 100% !important; }
-    div[data-testid="stForm"]:has(.add-tx-card) .stButton > button { background: #1e2a44 !important; color: #e0e0e0 !important; padding: 0 24px !important; border-radius: 10px !important; font-size: 1.05rem !important; font-weight: 700 !important; box-shadow: 0 4px 15px rgba(0,0,0,0.25) !important; transition: all 0.3s ease !important; border: none !important; margin: 0 !important; width: auto !important; height: 48px !important; min-height: 48px !important; }
-    div[data-testid="stForm"]:has(.add-tx-card) .stButton > button:hover { transform: translateY(-2px) !important; box-shadow: 0 8px 20px rgba(255, 255, 255, 0.2) !important; color: white !important; }
-    div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row) { background: #0f172a !important; border: 1px solid rgba(255,255,255,0.05) !important; border-radius: 12px !important; padding: 12px 16px !important; margin-bottom: 12px !important; position: relative; z-index: 2; }
-    div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row) > div { padding: 0 !important; } 
-    div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row) div[data-testid="stButton"] button { background: rgba(255,255,255,0.05) !important; border-radius: 8px !important; border: none !important; height: 40px !important; width: 40px !important; display: flex !important; align-items: center !important; justify-content: center !important; padding: 0 !important; margin: 0 auto !important; font-size: 1.2rem !important; transition: all 0.2s !important; }
-    div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row) div[data-testid="stButton"] button:hover { background: rgba(255,255,255,0.15) !important; transform: scale(1.05) !important; }
-    @keyframes rollDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
-    div[data-testid="stForm"]:has(.edit-rollout) { animation: rollDown 0.3s ease forwards !important; background: rgba(0,0,0,0.2) !important; border-left: 3px solid #00ff9d !important; border-radius: 0 0 12px 12px !important; border-top: none !important; border-right: none !important; border-bottom: none !important; padding: 16px !important; margin-top: -24px !important; margin-bottom: 20px !important; position: relative; z-index: 1; box-shadow: inset 0 4px 10px rgba(0,0,0,0.15) !important; }
-    div[data-testid="stVerticalBlockBorderWrapper"]:has(.del-warn) { border-color: rgba(255, 77, 77, 0.3) !important; background: rgba(15, 23, 42, 0.95) !important; border-radius: 12px !important; padding: 16px !important; text-align: center !important; margin-bottom: 12px !important; box-shadow: 0 4px 20px rgba(0,0,0,0.4) !important; }
-    div[data-testid="stVerticalBlockBorderWrapper"]:has(.del-warn) .stButton > button { border-radius: 8px !important; font-weight: 600 !important; transition: all 0.2s !important; width: 100% !important; margin-top: 8px !important; padding: 6px 12px !important; }
-    div[data-testid="stVerticalBlockBorderWrapper"]:has(.del-warn) div[data-testid="column"]:nth-child(1) .stButton > button { background: rgba(255, 77, 77, 0.1) !important; color: #ff4d4d !important; border: 1px solid rgba(255, 77, 77, 0.3) !important; }
-    div[data-testid="stVerticalBlockBorderWrapper"]:has(.del-warn) div[data-testid="column"]:nth-child(1) .stButton > button:hover { background: #ff4d4d !important; color: white !important; }
-    div[data-testid="stVerticalBlockBorderWrapper"]:has(.del-warn) div[data-testid="column"]:nth-child(2) .stButton > button { background: rgba(255, 255, 255, 0.05) !important; color: #cbd5e1 !important; border: 1px solid rgba(255, 255, 255, 0.1) !important; }
-    div[data-testid="stVerticalBlockBorderWrapper"]:has(.del-warn) div[data-testid="column"]:nth-child(2) .stButton > button:hover { background: rgba(255, 255, 255, 0.15) !important; color: white !important; }
-
-    @media (max-width: 768px) {
-        div[data-testid="stForm"]:has(.add-tx-card) div[data-testid="stHorizontalBlock"] { display: flex !important; flex-direction: row !important; flex-wrap: wrap !important; gap: 12px !important; }
-        div[data-testid="stForm"]:has(.add-tx-card) div[data-testid="stHorizontalBlock"]:has(> div[data-testid="column"]:nth-child(4)) > div[data-testid="column"] { min-width: calc(50% - 12px) !important; width: calc(50% - 12px) !important; flex: 1 1 calc(50% - 12px) !important; }
-        div[data-testid="stForm"]:has(.add-tx-card) input { padding: 6px !important; font-size: 0.95rem !important; }
-        div[data-testid="stForm"]:has(.add-tx-card) div[data-testid="stHorizontalBlock"]:has(> div[data-testid="column"]:nth-child(2):last-child) > div[data-testid="column"] { min-width: calc(50% - 12px) !important; width: calc(50% - 12px) !important; flex: 1 1 calc(50% - 12px) !important; }
-        div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] { min-width: 0 !important; width: 100% !important; }
-        div[data-testid="stForm"]:has(.add-tx-card) .stButton { display: flex !important; justify-content: flex-end !important; width: 100% !important; }
-        div[data-testid="stForm"]:has(.add-tx-card) .stButton > button { width: 100% !important; max-width: 120px !important; padding: 0 16px !important; }
-        div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row) > div > div[data-testid="stVerticalBlock"] > div[data-testid="stHorizontalBlock"] { display: flex !important; flex-direction: row !important; flex-wrap: nowrap !important; align-items: center !important; overflow: hidden !important; gap: 2px !important; }
-        div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row) div[data-testid="column"] { min-width: 0 !important; padding: 0 !important; width: auto !important; flex-shrink: 1 !important; }
-        div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row) > div > div[data-testid="stVerticalBlock"] > div[data-testid="stHorizontalBlock"] > div[data-testid="column"]:nth-child(1) { flex: 0 0 35px !important; width: 35px !important; }
-        div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row) > div > div[data-testid="stVerticalBlock"] > div[data-testid="stHorizontalBlock"] > div[data-testid="column"]:nth-child(2) { flex: 1 1 auto !important; overflow: hidden !important; text-align: left; }
-        div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row) > div > div[data-testid="stVerticalBlock"] > div[data-testid="stHorizontalBlock"] > div[data-testid="column"]:nth-child(3) { flex: 1.5 1 auto !important; overflow: hidden !important; text-align: center; }
-        div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row) > div > div[data-testid="stVerticalBlock"] > div[data-testid="stHorizontalBlock"] > div[data-testid="column"]:nth-child(4) { flex: 0 0 36px !important; width: 36px !important; }
-        div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row) > div > div[data-testid="stVerticalBlock"] > div[data-testid="stHorizontalBlock"] > div[data-testid="column"]:nth-child(5) { flex: 0 0 36px !important; width: 36px !important; }
-        div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row) div[data-testid="stButton"] button { width: 30px !important; height: 30px !important; font-size: 0.9rem !important; margin: 0 auto !important; }
-        .mobile-logo { width: 32px !important; height: 32px !important; margin-top: 0 !important; }
-        .mobile-tx-ticker { font-size: 0.95rem !important; margin-left: 2px !important;}
-        .mobile-tx-amount { font-size: 0.95rem !important; white-space: nowrap !important; }
-        .mobile-tx-sub { font-size: 0.7rem !important; white-space: nowrap !important; margin-left: 2px !important;}
-    }
-    </style>
-    """, unsafe_allow_html=True)
-
+    
     with st.form("add_crypto", border=False):
         st.markdown("<div class='add-tx-card'></div><h3 style='text-align: center; color: white; margin-top: 0px; margin-bottom: 10px;'>New Transaction</h3>", unsafe_allow_html=True)
         
@@ -1410,7 +1022,7 @@ elif st.session_state.page == "Crypto":
                                 st.rerun()
 
 # ================== PAGE 3: FIAT ==================
-elif st.session_state.page == "Fiat":
+with st.container():
     total_czk = pd.to_numeric(st.session_state.fiat_df['CZK'], errors='coerce').fillna(0).sum()
     total_eur = pd.to_numeric(st.session_state.fiat_df['EUR'], errors='coerce').fillna(0).sum()
     total_usdc = pd.to_numeric(st.session_state.fiat_df['USDC'], errors='coerce').fillna(0).sum()
