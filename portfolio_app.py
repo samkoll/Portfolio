@@ -228,7 +228,7 @@ div[data-testid="stMainBlockContainer"] {
     padding: 10px 20px;
     width: 90%; 
     max-width: 400px; 
-    margin: 0 auto 24px auto; 
+    margin: 0 auto 0 auto; /* Removed Bottom Margin */
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -536,10 +536,8 @@ def build_portfolio_history(crypto_df, fiat_df, last_prices, refresh_key):
         if coin not in prices_df.columns:
             prices_df[coin] = live_p
         
-        # Inject precise live price directly into the end of history for precise 1D PnL calculation
         prices_df.loc[date_range[-1], coin] = live_p
     
-    # Calculate PnL Tracking Dataframe
     pnl_df = pd.DataFrame()
     if not crypto.empty and not crypto_assets.empty:
         invested_daily = crypto_assets.groupby(['Date', 'Ticker'])['USDC'].sum().unstack(fill_value=0)
@@ -623,7 +621,6 @@ def get_ticker_color(ticker: str) -> str:
     if ticker in known:
         return known[ticker]
     
-    # Fallback dynamic color
     c = f"#{hashlib.md5(ticker.encode()).hexdigest()[:6]}"
     if c == '#000000': 
         return '#ffffff'
@@ -914,6 +911,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
         <html>
         <head>
             <meta charset="UTF-8">
+            <script>window.pnlDataMap = {{ 'all': [{pnl_data_js_dict['all']}], '1y': [{pnl_data_js_dict['1y']}], '30d': [{pnl_data_js_dict['30d']}], '7d': [{pnl_data_js_dict['7d']}], '1d': [{pnl_data_js_dict['1d']}] }};</script>
             <script src="https://code.highcharts.com/stock/highstock.js"></script>
             <script src="https://code.highcharts.com/stock/highcharts-3d.js"></script>
             <style>
@@ -923,7 +921,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                     width: 100%;
                     overflow-y: hidden;
                     overflow-x: auto;
-                    padding: 6px 0px 6px 0px; 
+                    padding: 24px 0px 32px 0px; 
                     margin-bottom: 0px; 
                     scroll-snap-type: x mandatory;
                     -webkit-overflow-scrolling: touch;
@@ -1209,19 +1207,11 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                 }});
 
                 // Chart 3: Winners & Losers (PnL Bar)
-                const pnlDataMap = {{
-                    'all': [{pnl_data_js_dict['all']}],
-                    '1y': [{pnl_data_js_dict['1y']}],
-                    '30d': [{pnl_data_js_dict['30d']}],
-                    '7d': [{pnl_data_js_dict['7d']}],
-                    '1d': [{pnl_data_js_dict['1d']}]
-                }};
-
                 Highcharts.chart('pnl-container', {{
                     chart: {{ type: 'bar', backgroundColor: 'transparent', marginTop: 15, marginBottom: 25 }},
                     title: {{ text: null }},
                     xAxis: {{ type: 'category', labels: {{ style: {{ color: '#94a3b8', fontWeight: 'bold' }} }}, gridLineColor: 'rgba(255,255,255,0.05)', tickWidth: 0, lineWidth: 0 }},
-                    yAxis: {{ title: {{ text: null }}, labels: {{ enabled: false }}, gridLineColor: 'rgba(255,255,255,0.05)', minPadding: 0.15, maxPadding: 0.15 }},
+                    yAxis: {{ title: {{ text: null }}, labels: {{ enabled: false }}, gridLineColor: 'rgba(255,255,255,0.05)', minPadding: 0.25, maxPadding: 0.25 }},
                     legend: {{ enabled: false }},
                     tooltip: {{
                         backgroundColor: 'rgba(15, 23, 42, 0.95)', style: {{ color: '#fff' }}, borderColor: 'rgba(255,255,255,0.15)',
@@ -1231,9 +1221,9 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                             return `<b>${{this.point.name}}</b><br/>PnL: <b style="color:${{this.point.color}}">${{val}}</b>`;
                         }}
                     }},
-                    plotOptions: {{ bar: {{ borderRadius: 4, borderWidth: 0, pointPadding: 0.1, groupPadding: 0.1, maxPointWidth: 35, dataLabels: {{ enabled: true, inside: false, crop: false, overflow: 'allow', style: {{ color: '#fff', textOutline: '2px #0f172a', fontWeight: 'bold', fontSize: '11px' }}, formatter: function() {{ return document.body.classList.contains('privacy-mode') ? '***' : formatMoneyStr(this.y); }} }} }} }},
+                    plotOptions: {{ bar: {{ borderRadius: 4, borderWidth: 0, pointPadding: 0.1, groupPadding: 0.1, maxPointWidth: 35, shadow: {{ color: 'rgba(0,0,0,0.3)', offsetX: 1, offsetY: 2, width: 4 }}, dataLabels: {{ enabled: true, inside: false, crop: false, overflow: 'allow', style: {{ color: '#fff', textOutline: '2px #0f172a', fontWeight: 'bold', fontSize: '11px' }}, formatter: function() {{ return document.body.classList.contains('privacy-mode') ? '***' : formatMoneyStr(this.y); }} }} }} }},
                     credits: {{ enabled: false }},
-                    series: [{{ name: 'PnL', data: pnlDataMap['all'] }}]
+                    series: [{{ name: 'PnL', data: window.pnlDataMap['all'] }}]
                 }});
 
                 document.querySelectorAll('.pnl-controls button').forEach(btn => {{
@@ -1243,8 +1233,8 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                         btn.classList.add('active');
                         const range = btn.getAttribute('data-range');
                         const chart = Highcharts.charts.find(c => c && c.renderTo.id === 'pnl-container');
-                        if (chart) {{
-                            chart.series[0].setData(pnlDataMap[range], true, {{ duration: 500 }}, true);
+                        if (chart && window.pnlDataMap[range]) {{
+                            chart.series[0].setData(window.pnlDataMap[range], true, {{ duration: 500 }}, true);
                         }}
                     }});
                 }});
@@ -1254,7 +1244,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                     chart: {{ type: 'bar', backgroundColor: 'transparent', marginTop: 15, marginBottom: 25 }},
                     title: {{ text: null }},
                     xAxis: {{ type: 'category', labels: {{ style: {{ color: '#94a3b8', fontWeight: 'bold' }} }}, gridLineColor: 'rgba(255,255,255,0.05)', tickWidth: 0, lineWidth: 0 }},
-                    yAxis: {{ title: {{ text: null }}, labels: {{ enabled: false }}, gridLineColor: 'rgba(255,255,255,0.05)', minPadding: 0.15, maxPadding: 0.15 }},
+                    yAxis: {{ title: {{ text: null }}, labels: {{ enabled: false }}, gridLineColor: 'rgba(255,255,255,0.05)', minPadding: 0.25, maxPadding: 0.25 }},
                     legend: {{ enabled: false }},
                     tooltip: {{
                         backgroundColor: 'rgba(15, 23, 42, 0.95)', style: {{ color: '#fff' }}, borderColor: 'rgba(255,255,255,0.15)',
@@ -1263,7 +1253,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                             return `<b>${{this.point.name}}</b><br/>ROI: <b style="color:${{this.point.color}}">${{val}}</b>`;
                         }}
                     }},
-                    plotOptions: {{ bar: {{ borderRadius: 4, borderWidth: 0, pointPadding: 0.1, groupPadding: 0.1, maxPointWidth: 35, dataLabels: {{ enabled: true, inside: false, crop: false, overflow: 'allow', style: {{ color: '#fff', textOutline: '2px #0f172a', fontWeight: 'bold', fontSize: '11px' }}, formatter: function() {{ return Highcharts.numberFormat(this.y, 2) + '%'; }} }} }} }},
+                    plotOptions: {{ bar: {{ borderRadius: 4, borderWidth: 0, pointPadding: 0.1, groupPadding: 0.1, maxPointWidth: 35, shadow: {{ color: 'rgba(0,0,0,0.3)', offsetX: 1, offsetY: 2, width: 4 }}, dataLabels: {{ enabled: true, inside: false, crop: false, overflow: 'allow', style: {{ color: '#fff', textOutline: '2px #0f172a', fontWeight: 'bold', fontSize: '11px' }}, formatter: function() {{ return Highcharts.numberFormat(this.y, 2) + '%'; }} }} }} }},
                     credits: {{ enabled: false }},
                     series: [{{ name: 'ROI %', data: [ {roi_data_js} ] }}]
                 }});
@@ -1273,7 +1263,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                     chart: {{ type: 'bar', backgroundColor: 'transparent', marginTop: 15, marginBottom: 25 }},
                     title: {{ text: null }},
                     xAxis: {{ type: 'category', labels: {{ style: {{ color: '#94a3b8', fontWeight: 'bold' }} }}, gridLineColor: 'rgba(255,255,255,0.05)', tickWidth: 0, lineWidth: 0 }},
-                    yAxis: {{ title: {{ text: null }}, labels: {{ enabled: false }}, gridLineColor: 'rgba(255,255,255,0.05)', minPadding: 0.15, maxPadding: 0.15 }},
+                    yAxis: {{ title: {{ text: null }}, labels: {{ enabled: false }}, gridLineColor: 'rgba(255,255,255,0.05)', minPadding: 0.25, maxPadding: 0.25 }},
                     legend: {{ enabled: false }},
                     tooltip: {{
                         backgroundColor: 'rgba(15, 23, 42, 0.95)', style: {{ color: '#fff' }}, borderColor: 'rgba(255,255,255,0.15)',
@@ -1283,7 +1273,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                             return `<b>${{this.point.name}}</b><br/>24h Change: <b style="color:${{this.point.color}}">${{sign}}${{val}}</b>`;
                         }}
                     }},
-                    plotOptions: {{ bar: {{ borderRadius: 4, borderWidth: 0, pointPadding: 0.1, groupPadding: 0.1, maxPointWidth: 35, dataLabels: {{ enabled: true, inside: false, crop: false, overflow: 'allow', style: {{ color: '#fff', textOutline: '2px #0f172a', fontWeight: 'bold', fontSize: '11px' }}, formatter: function() {{ return (this.y >= 0 ? '+' : '') + Highcharts.numberFormat(this.y, 2) + '%'; }} }} }} }},
+                    plotOptions: {{ bar: {{ borderRadius: 4, borderWidth: 0, pointPadding: 0.1, groupPadding: 0.1, maxPointWidth: 35, shadow: {{ color: 'rgba(0,0,0,0.3)', offsetX: 1, offsetY: 2, width: 4 }}, dataLabels: {{ enabled: true, inside: false, crop: false, overflow: 'allow', style: {{ color: '#fff', textOutline: '2px #0f172a', fontWeight: 'bold', fontSize: '11px' }}, formatter: function() {{ return (this.y >= 0 ? '+' : '') + Highcharts.numberFormat(this.y, 2) + '%'; }} }} }} }},
                     credits: {{ enabled: false }},
                     series: [{{ name: '24h Change', data: [ {daily_data_js} ] }}]
                 }});
@@ -1552,7 +1542,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
         # ================== 3. SUBDUED USDC BANNER ==================
         usdc_banner_html = f"""
 <input type="checkbox" id="dash-toggle-usdc" class="dashboard-toggle" style="display:none;">
-<div class="usdc-banner" style="--border: #2775ca;">
+<div class="usdc-banner" style="--border: #2775ca; margin: 0 auto 0 auto !important;">
 <div class="usdc-banner-left">
 <img src="{get_ticker_logo('USDC')}" onerror="this.src='https://via.placeholder.com/42/1e2a44/ffffff?text=U';">
 <div class="usdc-banner-title">USDC <span class="usdc-banner-subtitle">(Available Cash)</span></div>
@@ -1664,7 +1654,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
             width: 100%;
             overflow-y: hidden;
             overflow-x: auto;
-            padding: 24px 0px 32px 0px;
+            padding: 12px 0px 20px 0px;
             margin-bottom: 20px;
             scroll-snap-type: x mandatory; 
             -webkit-overflow-scrolling: touch;
@@ -1689,7 +1679,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
         .flip-card {{
             flex: 0 0 420px; 
             background-color: transparent;
-            height: 310px;
+            height: 320px;
             perspective: 1200px;
             cursor: pointer;
             scroll-snap-align: center; 
