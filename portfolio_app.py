@@ -2,15 +2,16 @@ import streamlit as st
 import pandas as pd
 from datetime import datetime, timedelta, date
 import time
-import streamlit.components.v1 as components
 import requests
 import json
 from pathlib import Path
 import hashlib
 import random
 from concurrent.futures import ThreadPoolExecutor
+import streamlit.components.v1 as components
 
 # ====================== CONFIG ======================
+# Replaced "logo.png" with an emoji to fix the Missing File MediaHandler error
 st.set_page_config(page_title="Portfolio", layout="wide", page_icon="📊")
 
 # ====================== GLOBAL CSS & SWIPE ANIMATIONS ======================
@@ -785,137 +786,131 @@ with st.sidebar:
         st.download_button("Download JSON", json.dumps(data, indent=2), "portfolio_backup.json", "application/json")
 
 # ====================== GLOBAL DRAG & SWIPE LISTENER ======================
-swipe_js = r"""
-<script>
-(function() {
-    const doc = window.parent.document;
+# Bulletproof inline script injection that completely bypasses Streamlit React DOM lifecycle & String Escaping bugs
+swipe_js = """
+<img src="dummy_bypass" style="display:none;" onerror="
+if (!window.mySwipeEngineLoaded) {
+    window.mySwipeEngineLoaded = true;
+    const doc = window.parent ? window.parent.document : document;
+    const win = window.parent ? window.parent : window;
     
-    // Inject permanently into parent head so it never dies on Streamlit reruns
-    if (!doc.getElementById('global-swipe-script')) {
-        const script = doc.createElement('script');
-        script.id = 'global-swipe-script';
-        script.innerHTML = `
-            let touchstartX = 0;
-            let touchstartY = 0;
-            let isDragging = false;
-            let isHorizontalSwipe = null;
-            let mainContainer = null;
-            window.lastSeenPage = null;
+    let touchstartX = 0;
+    let touchstartY = 0;
+    let isDragging = false;
+    let isHorizontalSwipe = null;
+    let mainContainer = null;
+    win.lastSeenPage = null;
 
-            function isIgnoredTarget(target) {
-                if (!target || !target.closest) return false;
-                return target.closest('.charts-scroll-wrapper') || target.closest('.scroll-wrapper');
+    function isIgnored(t) {
+        if (!t || !t.closest) return false;
+        return t.closest('.charts-scroll-wrapper') || t.closest('.scroll-wrapper');
+    }
+
+    const observer = new MutationObserver(function() {
+        const activeBtn = doc.querySelector('.nav-btn-wrapper[data-active=&quot;true&quot;]');
+        const activePage = activeBtn ? activeBtn.getAttribute('data-key') : null;
+        if (activePage && activePage !== win.lastSeenPage) {
+            win.lastSeenPage = activePage;
+            mainContainer = doc.querySelector('div[data-testid=&quot;stMainBlockContainer&quot;]');
+            if (mainContainer) {
+                mainContainer.style.transform = '';
+                mainContainer.style.transition = '';
+            }
+        }
+    });
+    observer.observe(doc.body, { childList: true, subtree: true });
+
+    doc.addEventListener('touchstart', function(e) {
+        mainContainer = doc.querySelector('div[data-testid=&quot;stMainBlockContainer&quot;]');
+        if (e.touches.length > 1 || isIgnored(e.target) || !mainContainer) return;
+        
+        touchstartX = e.touches[0].clientX;
+        touchstartY = e.touches[0].clientY;
+        isDragging = true;
+        isHorizontalSwipe = null;
+        
+        mainContainer.style.animation = 'none';
+        mainContainer.style.transition = 'none';
+    }, {passive: true});
+
+    doc.addEventListener('touchmove', function(e) {
+        if (!isDragging || !mainContainer) return;
+        
+        const currentX = e.touches[0].clientX;
+        const currentY = e.touches[0].clientY;
+        const deltaX = currentX - touchstartX;
+        const deltaY = currentY - touchstartY;
+
+        if (isHorizontalSwipe === null) {
+            if (Math.abs(deltaX) > 10 && Math.abs(deltaX) > Math.abs(deltaY)) {
+                isHorizontalSwipe = true;
+            } else if (Math.abs(deltaY) > 10) {
+                isHorizontalSwipe = false;
+                isDragging = false;
+            }
+        }
+
+        if (isHorizontalSwipe) {
+            let activeBtn = doc.querySelector('.nav-btn-wrapper[data-active=&quot;true&quot;]');
+            let activePage = activeBtn ? activeBtn.getAttribute('data-key') : 'Home';
+            const pages = ['Home', 'Crypto Transactions', 'Fiat Transactions'];
+            let currentIndex = pages.indexOf(activePage);
+            
+            let actualDelta = deltaX;
+            if ((actualDelta > 0 && currentIndex === 0) || 
+                (actualDelta < 0 && currentIndex === pages.length - 1)) {
+                actualDelta = actualDelta * 0.25; 
+            }
+            
+            mainContainer.style.transform = 'translateX(' + actualDelta + 'px)';
+        }
+    }, {passive: true});
+
+    doc.addEventListener('touchend', function(e) {
+        if (!isDragging || !mainContainer || isHorizontalSwipe === false) return;
+        isDragging = false;
+        
+        if (isHorizontalSwipe) {
+            const currentX = e.changedTouches[0].clientX;
+            const deltaX = currentX - touchstartX;
+            const threshold = win.innerWidth * 0.20; 
+            
+            let activeBtn = doc.querySelector('.nav-btn-wrapper[data-active=&quot;true&quot;]');
+            let activePage = activeBtn ? activeBtn.getAttribute('data-key') : 'Home';
+            const pages = ['Home', 'Crypto Transactions', 'Fiat Transactions'];
+            let currentIndex = pages.indexOf(activePage);
+            
+            let targetPage = null;
+            
+            if (deltaX < -threshold && currentIndex < pages.length - 1) {
+                targetPage = pages[currentIndex + 1];
+                mainContainer.style.transition = 'transform 0.25s ease-out';
+                mainContainer.style.transform = 'translateX(-100vw)';
+            } else if (deltaX > threshold && currentIndex > 0) {
+                targetPage = pages[currentIndex - 1];
+                mainContainer.style.transition = 'transform 0.25s ease-out';
+                mainContainer.style.transform = 'translateX(100vw)';
+            } else {
+                mainContainer.style.transition = 'transform 0.3s ease-out';
+                mainContainer.style.transform = 'translateX(0)';
             }
 
-            // Immediately snaps container back to center the exact millisecond Streamlit loads the new page
-            const observer = new MutationObserver(() => {
-                const activeBtn = document.querySelector('.nav-btn-wrapper[data-active="true"]');
-                const activePage = activeBtn ? activeBtn.getAttribute('data-key') : null;
-                if (activePage && activePage !== window.lastSeenPage) {
-                    window.lastSeenPage = activePage;
-                    mainContainer = document.querySelector('div[data-testid="stMainBlockContainer"]');
-                    if (mainContainer) {
-                        mainContainer.style.transform = '';
-                        mainContainer.style.transition = '';
+            if (targetPage) {
+                const wrappers = doc.querySelectorAll('.nav-btn-wrapper');
+                wrappers.forEach(function(w) {
+                    if (w.getAttribute('data-key') === targetPage) {
+                        const btn = w.querySelector('button');
+                        if (btn) setTimeout(function() { btn.click(); }, 50); 
                     }
-                }
-            });
-            observer.observe(document.body, { childList: true, subtree: true });
-
-            document.addEventListener('touchstart', e => {
-                mainContainer = document.querySelector('div[data-testid="stMainBlockContainer"]');
-                if (e.touches.length > 1 || isIgnoredTarget(e.target) || !mainContainer) return;
-                
-                touchstartX = e.touches[0].clientX;
-                touchstartY = e.touches[0].clientY;
-                isDragging = true;
-                isHorizontalSwipe = null;
-                
-                mainContainer.style.animation = 'none';
-                mainContainer.style.transition = 'none';
-            }, {passive: true});
-
-            document.addEventListener('touchmove', e => {
-                if (!isDragging || !mainContainer) return;
-                
-                const currentX = e.touches[0].clientX;
-                const currentY = e.touches[0].clientY;
-                const deltaX = currentX - touchstartX;
-                const deltaY = currentY - touchstartY;
-
-                if (isHorizontalSwipe === null) {
-                    if (Math.abs(deltaX) > 10 && Math.abs(deltaX) > Math.abs(deltaY)) {
-                        isHorizontalSwipe = true;
-                    } else if (Math.abs(deltaY) > 10) {
-                        isHorizontalSwipe = false;
-                        isDragging = false;
-                    }
-                }
-
-                if (isHorizontalSwipe) {
-                    let activeBtn = document.querySelector('.nav-btn-wrapper[data-active="true"]');
-                    let activePage = activeBtn ? activeBtn.getAttribute('data-key') : "Home";
-                    const pages = ["Home", "Crypto Transactions", "Fiat Transactions"];
-                    let currentIndex = pages.indexOf(activePage);
-                    
-                    let actualDelta = deltaX;
-                    if ((actualDelta > 0 && currentIndex === 0) || 
-                        (actualDelta < 0 && currentIndex === pages.length - 1)) {
-                        actualDelta = actualDelta * 0.25; 
-                    }
-                    
-                    mainContainer.style.transform = \`translateX(${actualDelta}px)\`;
-                }
-            }, {passive: true});
-
-            document.addEventListener('touchend', e => {
-                if (!isDragging || !mainContainer || isHorizontalSwipe === false) return;
-                isDragging = false;
-                
-                if (isHorizontalSwipe) {
-                    const currentX = e.changedTouches[0].clientX;
-                    const deltaX = currentX - touchstartX;
-                    const threshold = window.innerWidth * 0.20; 
-                    
-                    let activeBtn = document.querySelector('.nav-btn-wrapper[data-active="true"]');
-                    let activePage = activeBtn ? activeBtn.getAttribute('data-key') : "Home";
-                    const pages = ["Home", "Crypto Transactions", "Fiat Transactions"];
-                    let currentIndex = pages.indexOf(activePage);
-                    
-                    let targetPage = null;
-                    
-                    if (deltaX < -threshold && currentIndex < pages.length - 1) {
-                        targetPage = pages[currentIndex + 1];
-                        mainContainer.style.transition = 'transform 0.25s ease-out';
-                        mainContainer.style.transform = \`translateX(-100vw)\`;
-                    } else if (deltaX > threshold && currentIndex > 0) {
-                        targetPage = pages[currentIndex - 1];
-                        mainContainer.style.transition = 'transform 0.25s ease-out';
-                        mainContainer.style.transform = \`translateX(100vw)\`;
-                    } else {
-                        mainContainer.style.transition = 'transform 0.3s ease-out';
-                        mainContainer.style.transform = \`translateX(0)\`;
-                    }
-
-                    if (targetPage) {
-                        const wrappers = document.querySelectorAll('.nav-btn-wrapper');
-                        wrappers.forEach(w => {
-                            if (w.getAttribute('data-key') === targetPage) {
-                                const btn = w.querySelector('button');
-                                if (btn) setTimeout(() => btn.click(), 50); 
-                            }
-                        });
-                    }
-                }
-                isHorizontalSwipe = null;
-            }, {passive: true});
-        `;
-        doc.head.appendChild(script);
-    }
-})();
-</script>
+                });
+            }
+        }
+        isHorizontalSwipe = null;
+    }, {passive: true});
+}
+">
 """
-components.html(swipe_js, height=0, width=0)
+st.markdown(swipe_js, unsafe_allow_html=True)
 
 # ====================== MAIN CONTENT ======================
 main_container = st.empty()
