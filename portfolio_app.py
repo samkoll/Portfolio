@@ -41,6 +41,7 @@ div[data-testid="stMainBlockContainer"] {
 div[data-testid="stMainBlockContainer"] > div > div[data-testid="stVerticalBlock"] {
     display: flex !important;
     flex-direction: row !important;
+    flex-wrap: nowrap !important;
     overflow-x: auto !important;
     overflow-y: hidden !important;
     scroll-snap-type: x mandatory !important;
@@ -74,19 +75,19 @@ div[data-testid="stMainBlockContainer"] > div > div[data-testid="stVerticalBlock
 }
 
 /* Inner padding for the pages */
-div[data-testid="stMainBlockContainer"] > div > div[data-testid="stVerticalBlock"] > div.element-container:nth-child(1) > div,
-div[data-testid="stMainBlockContainer"] > div > div[data-testid="stVerticalBlock"] > div.element-container:nth-child(2) > div,
-div[data-testid="stMainBlockContainer"] > div > div[data-testid="stVerticalBlock"] > div.element-container:nth-child(3) > div {
+div[data-testid="stMainBlockContainer"] > div > div[data-testid="stVerticalBlock"] > div.element-container:nth-child(1) > div > div[data-testid="stVerticalBlock"],
+div[data-testid="stMainBlockContainer"] > div > div[data-testid="stVerticalBlock"] > div.element-container:nth-child(2) > div > div[data-testid="stVerticalBlock"],
+div[data-testid="stMainBlockContainer"] > div > div[data-testid="stVerticalBlock"] > div.element-container:nth-child(3) > div > div[data-testid="stVerticalBlock"] {
     padding: 14px 14px 100px 14px !important;
     min-height: 100%;
 }
 
 /* Hide the bottom nav Streamlit wrapper (4th element) from flex layout */
-div[data-testid="stMainBlockContainer"] > div > div[data-testid="stVerticalBlock"] > div.element-container:nth-child(4) {
+div[data-testid="stMainBlockContainer"] > div > div[data-testid="stVerticalBlock"] > div.element-container:last-child {
     flex: 0 0 0 !important;
     width: 0 !important;
     height: 0 !important;
-    overflow: visible !important;
+    overflow: hidden !important;
     margin: 0 !important;
     padding: 0 !important;
 }
@@ -770,11 +771,9 @@ if 'refresh_key' not in st.session_state:
 if 'portfolio_cache' not in st.session_state:
     st.session_state.portfolio_cache = {}
 
-
 def glossy_header(title: str, icon_svg: str):
     html = f"""<div class="glossy-header">{icon_svg}<span style="margin-left:12px;">{title}</span></div>"""
     st.markdown(html, unsafe_allow_html=True)
-
 
 # ================== GLOBAL DATA FETCHING (Runs once per refresh) ==================
 current_hash = f"{st.session_state.crypto_table_version}_{st.session_state.fiat_table_version}_{st.session_state.refresh_key}"
@@ -830,7 +829,6 @@ usdc_holdings = usdc_row['Holdings'] if usdc_row is not None else 0
 page_home = st.container()
 page_crypto = st.container()
 page_fiat = st.container()
-
 
 # -------------------------------------------------------------------------
 # PAGE 1: OVERVIEW (HOME)
@@ -1573,20 +1571,6 @@ with page_home:
     """
     components.html(full_html, height=380, scrolling=False)
 
-    # 5. BACKUP & REFRESH BUTTONS
-    st.markdown("<br><br>", unsafe_allow_html=True)
-    with st.expander("⚙️ Settings & Backup"):
-        if st.button("🔄 Refresh All Prices & Charts", use_container_width=True):
-            st.session_state.refresh_key = random.randint(100000, 999999)
-            st.session_state.ui_version += 1
-            st.rerun()
-        
-        backup_data = {
-            "crypto": json.loads(st.session_state.crypto_df.to_json(orient="records")),
-            "fiat": json.loads(st.session_state.fiat_df.to_json(orient="records"))
-        }
-        st.download_button("💾 Download Backup JSON", json.dumps(backup_data, indent=2), "portfolio_backup.json", "application/json", use_container_width=True)
-
 # -------------------------------------------------------------------------
 # PAGE 2: CRYPTO TRANSACTIONS
 # -------------------------------------------------------------------------
@@ -2015,93 +1999,108 @@ with page_fiat:
             st.session_state.ui_version += 1
             st.rerun()
 
-
 # ====================== PERSISTENT BOTTOM NAVIGATION ======================
+# Injects a fixed bottom nav bar natively into the parent window overlaying the app.
 bottom_nav_html = """
-<style>
-.bottom-nav-wrapper {
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    width: 100vw;
-    height: 70px;
-    background: rgba(15, 23, 42, 0.98);
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
-    border-top: 1px solid rgba(255,255,255,0.08);
-    display: flex;
-    justify-content: space-around;
-    align-items: center;
-    z-index: 99999;
-    padding-bottom: env(safe-area-inset-bottom);
-    box-shadow: 0 -4px 20px rgba(0,0,0,0.5);
-}
-.nav-item {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    color: #64748b;
-    width: 33.33%;
-    height: 100%;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    -webkit-tap-highlight-color: transparent;
-    user-select: none;
-}
-.nav-item:hover { color: #94a3b8; }
-.nav-item.active { color: #00ff9d; }
-.nav-item svg {
-    width: 24px;
-    height: 24px;
-    margin-bottom: 4px;
-    stroke: currentColor;
-    fill: none;
-    stroke-width: 2;
-    stroke-linecap: round;
-    stroke-linejoin: round;
-    transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-}
-.nav-item.active svg {
-    transform: scale(1.15);
-    filter: drop-shadow(0 0 5px rgba(0,255,157,0.4));
-}
-.nav-item span {
-    font-size: 11px;
-    font-weight: 700;
-    letter-spacing: 0.5px;
-}
-</style>
-
-<div class="bottom-nav-wrapper" id="custom-bottom-nav">
-    <div class="nav-item active" data-idx="0">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
-        <span>Overview</span>
-    </div>
-    <div class="nav-item" data-idx="1">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M14.5 8.5L9.5 13.5"/><path d="M9.5 8.5L14.5 13.5"/></svg>
-        <span>Crypto</span>
-    </div>
-    <div class="nav-item" data-idx="2">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M6 8h12"/><path d="M6 12h12"/><path d="M6 16h12"/></svg>
-        <span>Fiat</span>
-    </div>
-</div>
-
 <script>
 (function() {
     const parentDoc = window.parent.document;
+    let nav = parentDoc.getElementById('custom-bottom-nav');
     
-    function initSwipeable() {
+    // Inject the native fixed navigation bar if it doesn't exist
+    if (!nav) {
+        nav = parentDoc.createElement('div');
+        nav.id = 'custom-bottom-nav';
+        nav.innerHTML = `
+            <style>
+            #custom-bottom-nav {
+                position: fixed;
+                bottom: 0;
+                left: 0;
+                width: 100vw;
+                height: 70px;
+                background: rgba(15, 23, 42, 0.98);
+                backdrop-filter: blur(10px);
+                -webkit-backdrop-filter: blur(10px);
+                border-top: 1px solid rgba(255,255,255,0.08);
+                display: flex;
+                justify-content: space-around;
+                align-items: center;
+                z-index: 999999;
+                padding-bottom: env(safe-area-inset-bottom);
+                box-shadow: 0 -4px 20px rgba(0,0,0,0.5);
+            }
+            .nav-item {
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                color: #64748b;
+                width: 33.33%;
+                height: 100%;
+                cursor: pointer;
+                transition: all 0.3s ease;
+                -webkit-tap-highlight-color: transparent;
+                user-select: none;
+            }
+            .nav-item:hover { color: #94a3b8; }
+            .nav-item.active { color: #00ff9d; }
+            .nav-item svg {
+                width: 24px;
+                height: 24px;
+                margin-bottom: 4px;
+                stroke: currentColor;
+                fill: none;
+                stroke-width: 2;
+                stroke-linecap: round;
+                stroke-linejoin: round;
+                transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            }
+            .nav-item.active svg {
+                transform: scale(1.15);
+                filter: drop-shadow(0 0 5px rgba(0,255,157,0.4));
+            }
+            .nav-item span {
+                font-size: 11px;
+                font-weight: 700;
+                letter-spacing: 0.5px;
+            }
+            </style>
+            <div class="nav-item active" data-idx="0">
+                <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+                <span>Overview</span>
+            </div>
+            <div class="nav-item" data-idx="1">
+                <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M14.5 8.5L9.5 13.5"/><path d="M9.5 8.5L14.5 13.5"/></svg>
+                <span>Crypto</span>
+            </div>
+            <div class="nav-item" data-idx="2">
+                <svg viewBox="0 0 24 24"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M6 8h12"/><path d="M6 12h12"/><path d="M6 16h12"/></svg>
+                <span>Fiat</span>
+            </div>
+        `;
+        parentDoc.body.appendChild(nav);
+    }
+
+    // Re-bind functionality every time Streamlit re-evaluates the DOM
+    function bindSwipeable() {
         const scroller = parentDoc.querySelector('div[data-testid="stMainBlockContainer"] > div > div[data-testid="stVerticalBlock"]');
         if(!scroller) {
-            requestAnimationFrame(initSwipeable);
+            setTimeout(bindSwipeable, 50);
             return;
         }
 
-        const navItems = document.querySelectorAll('.nav-item');
+        const navItems = nav.querySelectorAll('.nav-item');
         
-        // Restore scroll position securely
+        // Remove old listeners to prevent stacking
+        navItems.forEach(item => {
+            const clone = item.cloneNode(true);
+            item.parentNode.replaceChild(clone, item);
+        });
+        
+        const freshNavItems = nav.querySelectorAll('.nav-item');
+        
+        // Restore scroll position securely to prevent flashing
         const savedIdx = localStorage.getItem('activeSwipePage') || 0;
         scroller.style.scrollBehavior = 'auto'; // Disable smooth scroll instantly
         scroller.scrollLeft = savedIdx * scroller.clientWidth;
@@ -2115,13 +2114,13 @@ bottom_nav_html = """
             const idx = Math.round(scroller.scrollLeft / width);
             localStorage.setItem('activeSwipePage', idx);
             
-            navItems.forEach((item, i) => {
+            freshNavItems.forEach((item, i) => {
                 if (i === idx) item.classList.add('active');
                 else item.classList.remove('active');
             });
         }, {passive: true});
 
-        navItems.forEach(item => {
+        freshNavItems.forEach(item => {
             item.addEventListener('click', () => {
                 const idx = parseInt(item.getAttribute('data-idx'));
                 const width = scroller.clientWidth;
@@ -2130,7 +2129,7 @@ bottom_nav_html = """
         });
     }
     
-    initSwipeable();
+    bindSwipeable();
 })();
 </script>
 """
