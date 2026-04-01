@@ -14,7 +14,8 @@ import streamlit.components.v1 as components
 # ====================== CONFIG ======================
 st.set_page_config(page_title="Portfolio", layout="wide", page_icon="📊")
 
-# ====================== SAFE FLOAT SANITIZER ======================
+# ====================== SAFE MATH SANITIZER ======================
+# Absolutely prevents NaNs from corrupting arrays and crashing charts
 def safe_float(val):
     try:
         f = float(val)
@@ -44,44 +45,44 @@ if 'refresh_key' not in st.session_state: st.session_state.refresh_key = random.
 if 'portfolio_cache' not in st.session_state: st.session_state.portfolio_cache = {}
 
 def glossy_header(title: str, icon_svg: str):
-    html = f'<div class="glossy-header">{icon_svg}<span style="margin-left:12px;">{title}</span></div>'
-    st.markdown(html, unsafe_allow_html=True)
+    st.markdown(f'<div class="glossy-header">{icon_svg}<span style="margin-left:12px;">{title}</span></div>', unsafe_allow_html=True)
 
 # ====================== HIDDEN STEALTH ROUTING ======================
-# Sidebar is preserved but physically hidden far off-screen by CSS so the JS can click these buttons.
-with st.sidebar:
-    curr_idx = ["Home", "Crypto Transactions", "Fiat Transactions"].index(st.session_state.page) if st.session_state.page in ["Home", "Crypto Transactions", "Fiat Transactions"] else 0
-    
-    if st.button("Nav_Home", key="btn_home"):
-        st.session_state.page_anim_dir = "slide-in-left"
-        st.session_state.page = "Home"
-        st.rerun()
-    if st.button("Nav_Crypto", key="btn_crypto"):
-        st.session_state.page_anim_dir = "slide-in-right" if curr_idx < 1 else "slide-in-left"
-        st.session_state.page = "Crypto Transactions"
-        st.rerun()
-    if st.button("Nav_Fiat", key="btn_fiat"):
-        st.session_state.page_anim_dir = "slide-in-right"
-        st.session_state.page = "Fiat Transactions"
-        st.rerun()
+# This physically renders the buttons but completely hides them visually from the screen.
+# JavaScript searches for the exact text (e.g. "Nav_Crypto") and clicks them instantly.
+st.markdown("<div id='hidden-nav-routing' style='position: fixed; top: -10000px; left: -10000px; width: 1px; height: 1px; overflow: hidden; z-index: -10;'>", unsafe_allow_html=True)
+curr_idx = ["Home", "Crypto Transactions", "Fiat Transactions"].index(st.session_state.page) if st.session_state.page in ["Home", "Crypto Transactions", "Fiat Transactions"] else 0
+
+if st.button("Nav_Home", key="btn_home_hidden"):
+    st.session_state.page_anim_dir = "slide-in-left"
+    st.session_state.page = "Home"
+    st.rerun()
+if st.button("Nav_Crypto", key="btn_crypto_hidden"):
+    st.session_state.page_anim_dir = "slide-in-right" if curr_idx < 1 else "slide-in-left"
+    st.session_state.page = "Crypto Transactions"
+    st.rerun()
+if st.button("Nav_Fiat", key="btn_fiat_hidden"):
+    st.session_state.page_anim_dir = "slide-in-right"
+    st.session_state.page = "Fiat Transactions"
+    st.rerun()
+st.markdown("</div>", unsafe_allow_html=True)
 
 # ====================== GLOBAL CSS STYLES & ANIMATIONS ======================
 anim_css = ""
 if st.session_state.page_anim_dir == 'slide-in-right':
-    anim_css = "div[data-testid='stMainBlockContainer'] { animation: slideInFromRight 0.35s cubic-bezier(0.25, 1, 0.5, 1) forwards; }"
+    anim_css = "div[data-testid='stMainBlockContainer'] { animation: slideInFromRight 0.3s cubic-bezier(0.25, 1, 0.5, 1) forwards; }"
 elif st.session_state.page_anim_dir == 'slide-in-left':
-    anim_css = "div[data-testid='stMainBlockContainer'] { animation: slideInFromLeft 0.35s cubic-bezier(0.25, 1, 0.5, 1) forwards; }"
+    anim_css = "div[data-testid='stMainBlockContainer'] { animation: slideInFromLeft 0.3s cubic-bezier(0.25, 1, 0.5, 1) forwards; }"
 st.session_state.page_anim_dir = 'none' 
 
 st.markdown(f"""
 <style>
 /* Animations */
-@keyframes slideInFromRight {{ 0% {{ transform: translateX(100vw); opacity: 0.5; }} 100% {{ transform: translateX(0); opacity: 1; }} }}
-@keyframes slideInFromLeft {{ 0% {{ transform: translateX(-100vw); opacity: 0.5; }} 100% {{ transform: translateX(0); opacity: 1; }} }}
+@keyframes slideInFromRight {{ 0% {{ transform: translateX(50vw); opacity: 0; }} 100% {{ transform: translateX(0); opacity: 1; }} }}
+@keyframes slideInFromLeft {{ 0% {{ transform: translateX(-50vw); opacity: 0; }} 100% {{ transform: translateX(0); opacity: 1; }} }}
 
-/* HIDDEN NATIVE ROUTING: Sidebar is not "display: none", it is pushed infinitely left so it remains clickable */
-[data-testid="stSidebar"] {{ position: fixed !important; left: -9999px !important; width: 0 !important; visibility: visible !important; }}
-[data-testid="collapsedControl"], header[data-testid="stHeader"], footer {{ display: none !important; }}
+/* Hide Native Sidebar */
+[data-testid="stSidebar"], [data-testid="collapsedControl"], header[data-testid="stHeader"], footer {{ display: none !important; }}
 
 html, body, .stApp {{ overflow-x: hidden !important; background: linear-gradient(180deg, #0f1724 0%, #0a0f1c 100%) !important; }}
 div[data-testid="stMainBlockContainer"] {{
@@ -92,12 +93,12 @@ div[data-testid="stMainBlockContainer"] {{
 @media (min-width: 1200px) {{ div[data-testid="stMainBlockContainer"] {{ padding-left: 18px !important; padding-right: 18px !important; }} }}
 @media (max-width: 768px) {{ div[data-testid="stMainBlockContainer"] {{ padding-left: 8px !important; padding-right: 8px !important; }} }}
 
-/* BOTTOM NAVIGATION BAR */
-.bottom-nav-bar {{
-    position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); width: 85%; max-width: 400px; height: 65px;
+/* BOTTOM NAVIGATION PILL */
+.bottom-nav-pill {{
+    position: fixed; bottom: 25px; left: 50%; transform: translateX(-50%); width: 85%; max-width: 380px; height: 65px;
     background: rgba(15, 23, 42, 0.95); backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px);
-    border-radius: 35px; border: 1px solid rgba(255,255,255,0.1); display: flex;
-    justify-content: space-evenly; align-items: center; z-index: 999998; box-shadow: 0 10px 30px rgba(0,0,0,0.6);
+    border-radius: 35px; border: 1px solid rgba(255,255,255,0.1); display: flex; justify-content: space-evenly; align-items: center;
+    z-index: 999998; box-shadow: 0 10px 30px rgba(0,0,0,0.6);
 }}
 .nav-item {{
     display: flex; flex-direction: column; align-items: center; justify-content: center;
@@ -108,7 +109,7 @@ div[data-testid="stMainBlockContainer"] {{
 .nav-item svg {{ width: 22px; height: 22px; margin-bottom: 4px; stroke: currentColor; fill: none; transition: transform 0.2s ease; }}
 .nav-item.active svg {{ transform: translateY(-2px); filter: drop-shadow(0 0 4px rgba(0,255,157,0.4)); }}
 
-/* Global UI Elements */
+/* Dashboard Overview Styles */
 .dashboard-wrapper {{ position: relative; z-index: 10; }}
 .glossy-header-label {{ cursor: pointer; display: block; position: relative; z-index: 3; -webkit-tap-highlight-color: transparent; }}
 .home-header {{ margin-bottom: 0 !important; padding-bottom: 30px !important; }}
@@ -138,75 +139,18 @@ div[data-testid="stMainBlockContainer"] {{
 .usdc-banner-title {{ font-size: 1.05rem; font-weight: 600; color: #e2e8f0; display: flex; align-items: center; gap: 8px; }}
 .usdc-banner-subtitle {{ font-size: 0.75rem; font-weight: 500; color: #64748b; }}
 .usdc-banner-amount {{ font-size: 1.2rem; font-weight: 600; color: #e2e8f0; }}
-
 .dashboard-toggle:not(:checked) ~ .usdc-banner .usdc-banner-amount {{ font-size: 0 !important; }}
 .dashboard-toggle:not(:checked) ~ .usdc-banner .usdc-banner-amount::after {{ content: '***'; font-size: 1.2rem; color: #e2e8f0; }}
 
-button[aria-label="Step Up"], button[aria-label="Step Down"], button[data-testid="stNumberInputStepUp"], button[data-testid="stNumberInputStepDown"] {{ display: none !important; }}
 input[type="number"]::-webkit-inner-spin-button, input[type="number"]::-webkit-outer-spin-button {{ -webkit-appearance: none; margin: 0; }}
 input[type="number"] {{ -moz-appearance: textfield; }}
 
-/* Transaction Row Styling */
-div[data-testid="stForm"]:has(.add-tx-card) {{ background: #0f172a !important; border: 1px solid rgba(255,255,255,0.05) !important; border-radius: 16px !important; padding: 24px !important; box-shadow: 0 4px 15px rgba(0,0,0,0.3) !important; margin-bottom: 24px !important; }}
-div[data-testid="stForm"]:has(.add-tx-card) label {{ font-size: 0.85rem !important; color: #94a3b8 !important; padding-bottom: 2px !important; }}
-div[data-testid="stForm"]:has(.add-tx-card) .stTextInput input, div[data-testid="stForm"]:has(.add-tx-card) .stNumberInput input, div[data-testid="stForm"]:has(.add-tx-card) .stDateInput input {{ background: rgba(255,255,255,0.03) !important; border: 1px solid rgba(255,255,255,0.1) !important; color: #fff !important; border-radius: 8px !important; margin-bottom: 0px !important; }}
-div[data-testid="stForm"]:has(.add-tx-card) div[data-testid="stHorizontalBlock"]:has(> div[data-testid="column"]:nth-child(4)) {{ display: flex !important; gap: 12px !important; }}
-div[data-testid="stForm"]:has(.add-tx-card) div[data-testid="stHorizontalBlock"]:has(> div[data-testid="column"]:nth-child(2):last-child) {{ display: flex !important; flex-direction: row !important; justify-content: space-between !important; align-items: center !important; margin-top: 12px !important; gap: 12px !important; }}
-div[data-testid="stForm"]:has(.add-tx-card) div[data-testid="stHorizontalBlock"]:has(> div[data-testid="column"]:nth-child(2):last-child) > div[data-testid="column"]:nth-child(1) {{ flex: 0 0 auto !important; width: auto !important; }}
-div[data-testid="stForm"]:has(.add-tx-card) div[data-testid="stHorizontalBlock"]:has(> div[data-testid="column"]:nth-child(2):last-child) > div[data-testid="column"]:nth-child(2) {{ flex: 1 1 auto !important; width: auto !important; }}
-div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] {{ background: rgba(0,0,0,0.3) !important; padding: 6px !important; border-radius: 12px !important; display: flex !important; flex-direction: row !important; gap: 8px !important; align-items: center !important; margin: 0 !important; height: 48px !important; border: 1px solid rgba(255,255,255,0.05) !important; min-width: 200px !important; }}
-div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label {{ margin: 0 !important; cursor: pointer !important; padding: 0 !important; border-radius: 8px !important; border: 1px solid transparent !important; transition: all 0.3s ease !important; background: transparent !important; flex: 1 !important; display: flex !important; justify-content: center !important; align-items: center !important; height: 100% !important; }}
-div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label:hover {{ background: rgba(255,255,255,0.05) !important; }}
-div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label > div:first-child {{ display: none !important; }} 
-div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label p {{ font-weight: bold !important; font-size: 1.05rem !important; color: #94a3b8 !important; margin: 0 !important; padding: 0 !important; white-space: nowrap !important; line-height: 1 !important; }}
-div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label:has(input:checked):first-child, div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label[aria-checked="true"]:first-child {{ background: rgba(0, 255, 157, 0.15) !important; border-color: #00ff9d !important; }}
-div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label:has(input:checked):first-child p, div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label[aria-checked="true"]:first-child p {{ color: #00ff9d !important; }}
-div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label:has(input:checked):last-child, div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label[aria-checked="true"]:last-child {{ background: rgba(255, 77, 77, 0.15) !important; border-color: #ff4d4d !important; }}
-div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label:has(input:checked):last-child p, div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label[aria-checked="true"]:last-child p {{ color: #ff4d4d !important; }}
-div[data-testid="stForm"]:has(.add-tx-card) .stButton {{ display: flex !important; justify-content: flex-end !important; align-items: center !important; margin: 0 !important; padding: 0 !important; width: 100% !important; }}
-div[data-testid="stForm"]:has(.add-tx-card) .stButton > button {{ background: #1e2a44 !important; color: #e0e0e0 !important; padding: 0 24px !important; border-radius: 10px !important; font-size: 1.05rem !important; font-weight: 700 !important; box-shadow: 0 4px 15px rgba(0,0,0,0.25) !important; transition: all 0.3s ease !important; border: none !important; margin: 0 !important; width: auto !important; height: 48px !important; min-height: 48px !important; }}
-div[data-testid="stForm"]:has(.add-tx-card) .stButton > button:hover {{ transform: translateY(-2px) !important; box-shadow: 0 8px 20px rgba(255, 255, 255, 0.2) !important; color: white !important; }}
-div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row) {{ background: #0f172a !important; border: 1px solid rgba(255,255,255,0.05) !important; border-radius: 12px !important; padding: 12px 16px !important; margin-bottom: 12px !important; position: relative; z-index: 2; }}
-div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row) > div {{ padding: 0 !important; }} 
-div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row) div[data-testid="stButton"] button {{ background: rgba(255,255,255,0.05) !important; border-radius: 8px !important; border: none !important; height: 40px !important; width: 40px !important; display: flex !important; align-items: center !important; justify-content: center !important; padding: 0 !important; margin: 0 auto !important; font-size: 1.2rem !important; transition: all 0.2s !important; }}
-div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row) div[data-testid="stButton"] button:hover {{ background: rgba(255,255,255,0.15) !important; transform: scale(1.05) !important; }}
-@keyframes rollDown {{ from {{ opacity: 0; transform: translateY(-10px); }} to {{ opacity: 1; transform: translateY(0); }} }}
-div[data-testid="stForm"]:has(.edit-rollout) {{ animation: rollDown 0.3s ease forwards !important; background: rgba(0,0,0,0.2) !important; border-left: 3px solid #00ff9d !important; border-radius: 0 0 12px 12px !important; border-top: none !important; border-right: none !important; border-bottom: none !important; padding: 16px !important; margin-top: -24px !important; margin-bottom: 20px !important; position: relative; z-index: 1; box-shadow: inset 0 4px 10px rgba(0,0,0,0.15) !important; }}
-div[data-testid="stVerticalBlockBorderWrapper"]:has(.del-warn) {{ border-color: rgba(255, 77, 77, 0.3) !important; background: rgba(15, 23, 42, 0.95) !important; border-radius: 12px !important; padding: 16px !important; text-align: center !important; margin-bottom: 12px !important; box-shadow: 0 4px 20px rgba(0,0,0,0.4) !important; }}
-div[data-testid="stVerticalBlockBorderWrapper"]:has(.del-warn) .stButton > button {{ border-radius: 8px !important; font-weight: 600 !important; transition: all 0.2s !important; width: 100% !important; margin-top: 8px !important; padding: 6px 12px !important; }}
-div[data-testid="stVerticalBlockBorderWrapper"]:has(.del-warn) div[data-testid="column"]:nth-child(1) .stButton > button {{ background: rgba(255, 77, 77, 0.1) !important; color: #ff4d4d !important; border: 1px solid rgba(255, 77, 77, 0.3) !important; }}
-div[data-testid="stVerticalBlockBorderWrapper"]:has(.del-warn) div[data-testid="column"]:nth-child(1) .stButton > button:hover {{ background: #ff4d4d !important; color: white !important; }}
-div[data-testid="stVerticalBlockBorderWrapper"]:has(.del-warn) div[data-testid="column"]:nth-child(2) .stButton > button {{ background: rgba(255, 255, 255, 0.05) !important; color: #cbd5e1 !important; border: 1px solid rgba(255, 255, 255, 0.1) !important; }}
-div[data-testid="stVerticalBlockBorderWrapper"]:has(.del-warn) div[data-testid="column"]:nth-child(2) .stButton > button:hover {{ background: rgba(255, 255, 255, 0.15) !important; color: white !important; }}
-
 @media (max-width: 768px) {{
     .glossy-header {{ margin-top: 24px !important; margin-bottom: 24px !important; padding: 20px 16px !important; font-size: 22px !important; min-height: 90px; }}
-    .home-header {{ margin-bottom: 0 !important; }}
-    div[data-testid="stForm"]:has(.add-tx-card) div[data-testid="stHorizontalBlock"] {{ display: flex !important; flex-direction: row !important; flex-wrap: wrap !important; gap: 12px !important; }}
-    div[data-testid="stForm"]:has(.add-tx-card) div[data-testid="stHorizontalBlock"]:has(> div[data-testid="column"]:nth-child(4)) > div[data-testid="column"] {{ min-width: calc(50% - 12px) !important; width: calc(50% - 12px) !important; flex: 1 1 calc(50% - 12px) !important; }}
-    div[data-testid="stForm"]:has(.add-tx-card) input {{ padding: 6px !important; font-size: 0.95rem !important; }}
-    div[data-testid="stForm"]:has(.add-tx-card) div[data-testid="stHorizontalBlock"]:has(> div[data-testid="column"]:nth-child(2):last-child) > div[data-testid="column"] {{ min-width: calc(50% - 12px) !important; width: calc(50% - 12px) !important; flex: 1 1 calc(50% - 12px) !important; }}
-    div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] {{ min-width: 0 !important; width: 100% !important; }}
-    div[data-testid="stForm"]:has(.add-tx-card) .stButton {{ display: flex !important; justify-content: flex-end !important; width: 100% !important; }}
-    div[data-testid="stForm"]:has(.add-tx-card) .stButton > button {{ width: 100% !important; max-width: 120px !important; padding: 0 16px !important; }}
-    div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row) > div > div[data-testid="stVerticalBlock"] > div[data-testid="stHorizontalBlock"] {{ display: flex !important; flex-direction: row !important; flex-wrap: nowrap !important; align-items: center !important; overflow: hidden !important; gap: 2px !important; }}
-    div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row) div[data-testid="column"] {{ min-width: 0 !important; padding: 0 !important; width: auto !important; flex-shrink: 1 !important; }}
-    div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row) > div > div[data-testid="stVerticalBlock"] > div[data-testid="stHorizontalBlock"] > div[data-testid="column"]:nth-child(1) {{ flex: 0 0 35px !important; width: 35px !important; }}
-    div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row) > div > div[data-testid="stVerticalBlock"] > div[data-testid="stHorizontalBlock"] > div[data-testid="column"]:nth-child(2) {{ flex: 1 1 auto !important; overflow: hidden !important; text-align: left; }}
-    div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row) > div > div[data-testid="stVerticalBlock"] > div[data-testid="stHorizontalBlock"] > div[data-testid="column"]:nth-child(3) {{ flex: 1.5 1 auto !important; overflow: hidden !important; text-align: center; }}
-    div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row) > div > div[data-testid="stVerticalBlock"] > div[data-testid="stHorizontalBlock"] > div[data-testid="column"]:nth-child(4) {{ flex: 0 0 36px !important; width: 36px !important; }}
-    div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row) > div > div[data-testid="stVerticalBlock"] > div[data-testid="stHorizontalBlock"] > div[data-testid="column"]:nth-child(5) {{ flex: 0 0 36px !important; width: 36px !important; }}
-    div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row) div[data-testid="stButton"] button {{ width: 30px !important; height: 30px !important; font-size: 0.9rem !important; margin: 0 auto !important; }}
-    .mobile-logo {{ width: 32px !important; height: 32px !important; margin-top: 0 !important; }}
-    .mobile-tx-ticker {{ font-size: 0.95rem !important; margin-left: 2px !important;}}
-    .mobile-tx-amount {{ font-size: 0.95rem !important; white-space: nowrap !important; }}
-    .mobile-tx-sub {{ font-size: 0.7rem !important; white-space: nowrap !important; margin-left: 2px !important;}}
     .stats-layer-inner {{ gap: 6px !important; }}
-    .stats-layer {{ margin-top: -60px !important; margin-bottom: 18px; }} 
-    .glossy-box.swapped {{ height: 80px !important; min-height: 80px !important; max-height: 80px !important; padding: 0 !important; min-width: 0 !important; }}
     .dash-value {{ font-size: clamp(11px, 3.5vw, 15px) !important; top: 24px !important; }} 
     .dash-label {{ font-size: clamp(8px, 2.5vw, 10px) !important; bottom: 8px !important; white-space: nowrap !important; letter-spacing: 0.5px !important; }}
-    .usdc-banner {{ padding: 8px 14px; width: 92%; margin: -12px auto 12px auto !important; }}
+    .usdc-banner {{ padding: 8px 14px; width: 92%; margin-bottom: 24px !important; }}
     .usdc-banner-amount {{ font-size: 1.1rem; }}
 }}
 </style>
@@ -214,7 +158,7 @@ div[data-testid="stVerticalBlockBorderWrapper"]:has(.del-warn) div[data-testid="
 
 # ====================== RENDER BOTTOM NAV BAR ======================
 st.markdown(f"""
-<div class="bottom-nav-bar">
+<div class="bottom-nav-pill">
     <div class="nav-item {'active' if st.session_state.page == 'Home' else ''}" onclick="window.parent.navTo('Nav_Home')">
         {DASHBOARD_ICON}<span>Overview</span>
     </div>
@@ -228,15 +172,17 @@ st.markdown(f"""
 """, unsafe_allow_html=True)
 
 # ====================== GLOBAL SWIPE & ROUTING ENGINE ======================
-# Finds and clicks the hidden Streamlit sidebar buttons by exactly matching their inner HTML text.
 js_engine = f"""
 if (!window.swipeListenerActive) {{
     window.swipeListenerActive = true;
     const doc = window.parent.document;
     
+    // Finds and clicks the hidden Streamlit buttons based on exact inner text
     window.parent.navTo = function(btnKey) {{
-        const btns = Array.from(doc.querySelectorAll('button p'));
-        const target = btns.find(p => p.textContent.includes(btnKey));
+        const container = doc.getElementById('hidden-nav-routing');
+        if (!container) return;
+        const btns = Array.from(container.querySelectorAll('button p'));
+        const target = btns.find(p => p.textContent && p.textContent.includes(btnKey));
         if (target) target.parentElement.click();
     }};
     
@@ -256,7 +202,8 @@ if (!window.swipeListenerActive) {{
         const dX = tsX - e.changedTouches[0].clientX;
         const dY = tsY - e.changedTouches[0].clientY;
         
-        if (Math.abs(dX) > 60 && Math.abs(dX) > Math.abs(dY)) {{
+        // Strict horizontal gesture filter
+        if (Math.abs(dX) > 60 && Math.abs(dX) > Math.abs(dY) * 1.5) {{
             const current = "{st.session_state.page}";
             if (dX > 0) {{ 
                 if (current === 'Home') window.parent.navTo('Nav_Crypto');
@@ -270,21 +217,7 @@ if (!window.swipeListenerActive) {{
 }}
 """
 encoded_js = json.dumps(js_engine)
-
-swipe_injector = f"""
-<script>
-(function() {{
-    const doc = window.parent.document;
-    if (!doc.getElementById('global-swipe-script')) {{
-        const script = doc.createElement('script');
-        script.id = 'global-swipe-script';
-        script.textContent = {encoded_js};
-        doc.head.appendChild(script);
-    }}
-}})();
-</script>
-"""
-components.html(swipe_injector, height=0, width=0)
+components.html(f"<script>(function() {{ const doc = window.parent.document; if (!doc.getElementById('global-swipe-script')) {{ const script = doc.createElement('script'); script.id = 'global-swipe-script'; script.textContent = {encoded_js}; doc.head.appendChild(script); }} }})();</script>", height=0, width=0)
 
 # ====================== DATA PREPARATION ENGINE ======================
 DATA_DIR = Path("data")
@@ -472,7 +405,7 @@ def calculate_portfolio(crypto_df, fiat_df, live_prices, base_prices):
     if crypto_df.empty: return pd.DataFrame(columns=['Ticker','Holdings','USDC','AVG','Live','PnL','PnL %','Value','Price7d','Price30d','Price90d','PriceYTD']), 0, 0, 0
     
     crypto_df = crypto_df.copy()
-    crypto_df['Ticker'] = crypto_df['Ticker'].astype(str).str.upper()
+    crypto_df['Ticker'] = crypto_df['Ticker'].astype(str).str.upper().str.strip()
     crypto_df['USDC'] = pd.to_numeric(crypto_df['USDC'], errors='coerce').fillna(0.0)
     crypto_df['Amount'] = pd.to_numeric(crypto_df['Amount'], errors='coerce').fillna(0.0)
     
@@ -543,10 +476,8 @@ history_data_raw, allocation_series_js, pnl_df = vault['history_data_raw'], vaul
 usdc_row = df_port[df_port['Ticker'] == 'USDC'].iloc[0] if not df_port[df_port['Ticker'] == 'USDC'].empty else None
 usdc_holdings = usdc_row['Holdings'] if usdc_row is not None else 0
 
-
-# ====================== PAGE ROUTING ======================
+# ====================== PAGE 1: HOME ======================
 if st.session_state.page == "Home":
-    
     value_box_html = f"""
     <input type="checkbox" id="dash-toggle" class="dashboard-toggle" style="display:none;">
     <div class="dashboard-wrapper">
@@ -595,7 +526,6 @@ if st.session_state.page == "Home":
     roi_data_js = ",\n".join([f"{{ name: '{r['Ticker']}', y: {safe_float(r['PnL %'])}, color: '{get_ticker_color(r['Ticker'])}99' }}" for _, r in df_port[df_port['Ticker'] != 'USDC'].sort_values(by='PnL %', ascending=False).iterrows() if pd.notna(r['PnL %'])])
     daily_data_js = ",\n".join([f"{{ name: '{r['Ticker']}', y: 0, color: '#64748b99' }}" for _, r in df_port[df_port['Ticker'] != 'USDC'].iterrows()])
 
-    # All JSON data variables cleanly injected to prevent Python curly-brace string collisions
     data_script = f"""
     <script>
         window.pnlDataMap = {{
@@ -648,7 +578,7 @@ if st.session_state.page == "Home":
             #chart-overlay { visibility: hidden; opacity: 0; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(10, 15, 28, 0.85); z-index: 1000; backdrop-filter: blur(5px); -webkit-backdrop-filter: blur(5px); transition: opacity 0.4s ease, visibility 0.4s ease; }
             #chart-overlay.active { visibility: visible; opacity: 1; }
             
-            /* Clean CSS bounds-stretching for Double Tap */
+            /* Native Horizontal Width Expansion - Restored to the 3k line version! */
             .expanded-chart { width: 90vw !important; flex: 0 0 90vw !important; max-width: 100vw; }
             .expanded-chart .chart-box { background: rgba(15, 23, 42, 0.98) !important; border: 1px solid rgba(255, 255, 255, 0.15) !important; box-shadow: 0 15px 40px rgba(0,0,0,0.5) !important; }
 
@@ -660,7 +590,6 @@ if st.session_state.page == "Home":
         </style>
     </head>
     <body>
-        <div id="chart-overlay"></div>
         <div class="charts-scroll-wrapper" id="chartsScrollContainer">
             <div class="charts-flex">
                 <div class="chart-placeholder" data-type="pie" id="pie-wrapper"><div id="pie-container" class="chart-box"></div></div>
@@ -686,7 +615,7 @@ if st.session_state.page == "Home":
                     credits: { enabled: false },
                     series: [{ name: 'Holdings', data: window.pieData }]
                 });
-            } catch(e) { console.error('Pie fail:', e); }
+            } catch(e) {}
             
             try {
                 Highcharts.stockChart('history-container', {
@@ -705,7 +634,7 @@ if st.session_state.page == "Home":
                         { name: 'Net Invested', type: 'line', data: window.histInvData, color: '#64748b', dashStyle: 'Dash', lineWidth: 2, zIndex: 1 }
                     ]
                 });
-            } catch(e) { console.error('History fail:', e); }
+            } catch(e) {}
             
             document.querySelectorAll('.hist-controls button').forEach(btn => {
                 btn.addEventListener('click', (e) => {
@@ -735,7 +664,7 @@ if st.session_state.page == "Home":
                     credits: { enabled: false },
                     series: [{ name: 'PnL', data: window.pnlDataMap['all'] }]
                 });
-            } catch(e) { console.error('PnL fail:', e); }
+            } catch(e) {}
             
             document.querySelectorAll('.pnl-controls button').forEach(btn => {
                 btn.addEventListener('click', (e) => {
@@ -757,7 +686,7 @@ if st.session_state.page == "Home":
                     credits: { enabled: false },
                     series: [{ name: 'ROI %', data: window.roiData }]
                 });
-            } catch(e) { console.error('ROI fail:', e); }
+            } catch(e) {}
             
             try {
                 Highcharts.chart('daily-container', {
@@ -771,7 +700,7 @@ if st.session_state.page == "Home":
                     credits: { enabled: false },
                     series: [{ name: '24h Change', data: window.dailyData }]
                 });
-            } catch(e) { console.error('Daily fail:', e); }
+            } catch(e) {}
             
             try {
                 Highcharts.chart('allocation-container', {
@@ -785,7 +714,7 @@ if st.session_state.page == "Home":
                     credits: { enabled: false },
                     series: window.allocationData
                 });
-            } catch(e) { console.error('Alloc fail:', e); }
+            } catch(e) {}
 
             try {
                 Highcharts.chart('inv-val-container', {
@@ -797,61 +726,25 @@ if st.session_state.page == "Home":
                     tooltip: { shared: true, backgroundColor: 'rgba(15, 23, 42, 0.95)', style: { color: '#fff' }, borderColor: 'rgba(255,255,255,0.15)', formatter: function() { let s = '<b style="font-size: 13px;">' + this.points[0].key + '</b>'; const isPrivacy = document.body.classList.contains('privacy-mode'); this.points.forEach(function(point) { let val = isPrivacy ? '***' : formatMoneyStr(point.y); s += '<br/>' + '<span style="color:'+ point.color +'">\u25CF</span> ' + point.series.name + ': <b>' + val + '</b>'; }); return s; } },
                     plotOptions: { column: { borderRadius: 4, borderWidth: 0, maxPointWidth: 40, dataLabels: { enabled: true, inside: false, crop: false, overflow: 'allow', style: { color: '#fff', textOutline: '2px #0f172a', fontWeight: 'bold', fontSize: '11px' }, formatter: function() { return document.body.classList.contains('privacy-mode') ? '***' : formatMoneyStr(this.y); } } } },
                     credits: { enabled: false },
-                    series: [
-                        { name: 'Invested', data: window.invData },
-                        { name: 'Current Value', data: window.valData }
-                    ]
+                    series: [ { name: 'Invested', data: window.invData }, { name: 'Current Value', data: window.valData } ]
                 });
-            } catch(e) { console.error('InvVal fail:', e); }
+            } catch(e) {}
             
-            // Beautiful Inline Width Expansion on Double Tap
+            // Restored the PERFECT horizontal flex-expansion for Double Tap!
             function toggleExpandChart(wrapperId) {
                 const el = document.getElementById(wrapperId);
-                const overlay = document.getElementById('chart-overlay');
                 
-                let parentIframe = null;
-                try {
-                    const iframes = window.parent.document.querySelectorAll('iframe');
-                    for (let ifr of iframes) { if (ifr.contentWindow === window) parentIframe = ifr; }
-                } catch(e) {}
-
                 if (el.classList.contains('expanded-chart')) {
-                    overlay.classList.remove('active');
                     el.classList.remove('expanded-chart');
-                    
-                    if (parentIframe) {
-                        const wrapper = parentIframe.closest('div[data-testid="stElementContainer"]');
-                        if (wrapper) wrapper.style.cssText = '';
-                    }
-                    
                 } else {
                     document.querySelectorAll('.expanded-chart').forEach(c => c.classList.remove('expanded-chart'));
-                    
-                    if (window.innerWidth <= 768) {
-                        overlay.classList.add('active');
-                    }
-                    
                     el.classList.add('expanded-chart');
-                    
-                    if (parentIframe && window.innerWidth <= 768) {
-                        const wrapper = parentIframe.closest('div[data-testid="stElementContainer"]');
-                        if (wrapper) {
-                            wrapper.style.position = 'fixed';
-                            wrapper.style.top = '0';
-                            wrapper.style.left = '0';
-                            wrapper.style.width = '100vw';
-                            wrapper.style.height = '100vh';
-                            wrapper.style.zIndex = '999999';
-                        }
-                    }
+                    setTimeout(() => { el.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' }); }, 50);
                 }
                 
                 setTimeout(() => {
                     const hc = Highcharts.charts.find(c => c && c.renderTo.id === el.id.replace('-wrapper', '-container').replace('-placeholder', '-container'));
-                    if (hc) {
-                        hc.setSize(null, null);
-                        hc.reflow();
-                    }
+                    if (hc) { hc.setSize(null, null); hc.reflow(); }
                 }, 300);
             }
 
@@ -873,11 +766,7 @@ if st.session_state.page == "Home":
             setupDoubleTap('pie-wrapper'); setupDoubleTap('history-wrapper'); setupDoubleTap('pnl-wrapper'); 
             setupDoubleTap('roi-wrapper'); setupDoubleTap('daily-wrapper'); setupDoubleTap('alloc-wrapper'); setupDoubleTap('inv-wrapper');
             
-            document.getElementById('chart-overlay').addEventListener('click', () => {
-                document.querySelectorAll('.expanded-chart').forEach(el => toggleExpandChart(el.id));
-            });
-            
-            // PC Mouse Wheel Scroll for Charts
+            // Restored PC mouse wheel horizontal scrolling
             const chartScroll = document.getElementById('chartsScrollContainer');
             if (chartScroll) {
                 chartScroll.addEventListener('wheel', (evt) => {
@@ -1083,6 +972,7 @@ if st.session_state.page == "Home":
                     const data = await resp.json();
                     
                     let totalCoinValue = 0; let totalCoinInvested = 0;
+                    let tickerValues = {{}}; let tickerDiffs = {{}}; let tickerRoi = {{}}; let ticker24h = {{}};
                     
                     cards.forEach(card => {{
                         const ticker = card.getAttribute('data-ticker');
@@ -1095,16 +985,21 @@ if st.session_state.page == "Home":
                         if (data.RAW && data.RAW[sym] && data.RAW[sym].USD) {{
                             const newPrice = data.RAW[sym].USD.PRICE;
                             if (newPrice !== undefined) {{
+                                const oldVal = holdings * price;
                                 price = newPrice;
                                 card.setAttribute('data-current-price', price);
                                 
                                 const value = holdings * price;
+                                tickerValues[ticker] = value;
+                                tickerDiffs[ticker] = value - oldVal;
+                                
                                 const priceFmt = price < 1 ? price.toFixed(4) : price.toLocaleString('en-US', {{minimumFractionDigits: 2, maximumFractionDigits: 2}});
                                 const currentEl = card.querySelector('.current-value');
                                 if (currentEl) currentEl.innerText = '$' + priceFmt;
                                 
                                 const pnl = value - invested;
                                 const pnlPct = invested > 0 ? (pnl / invested) * 100 : 0;
+                                tickerRoi[ticker] = pnlPct;
                                 
                                 const valStr = '$' + value.toLocaleString('en-US', {{minimumFractionDigits: 2, maximumFractionDigits: 2}});
                                 const pnlStr = (pnl >= 0 ? '▲ $' : '▼ $') + Math.abs(pnl).toLocaleString('en-US', {{minimumFractionDigits: 2, maximumFractionDigits: 2}});
@@ -1136,6 +1031,7 @@ if st.session_state.page == "Home":
                             }}
                             if (changeSpan && data.RAW[sym].USD.CHANGEPCT24HOUR !== undefined) {{
                                 const change = data.RAW[sym].USD.CHANGEPCT24HOUR;
+                                ticker24h[ticker] = change;
                                 const sign = change >= 0 ? '▲' : '▼';
                                 const color = change >= 0 ? '#00ff9d' : '#ff4d4d';
                                 changeSpan.innerHTML = `<span style="color:${{color}};">${{sign}} ${{Math.abs(change).toFixed(2)}}%</span>`;
@@ -1238,6 +1134,16 @@ if st.session_state.page == "Home":
             const chartColor = card.getAttribute('data-chart-color');
             const border = card.getAttribute('data-border');
             card.style.setProperty('--border', border);
+            
+            const p7d = parseFloat(card.getAttribute('data-price-7d'));
+            const p30d = parseFloat(card.getAttribute('data-price-30d'));
+            const p90d = parseFloat(card.getAttribute('data-price-90d'));
+            const pytd = parseFloat(card.getAttribute('data-price-ytd'));
+            
+            updateMetricUI(card, ticker, '7d', p7d, currentPrice);
+            updateMetricUI(card, ticker, '30d', p30d, currentPrice);
+            updateMetricUI(card, ticker, '90d', p90d, currentPrice);
+            updateMetricUI(card, ticker, 'ytd', pytd, currentPrice);
             
             const front = card.querySelector('.flip-card-front');
             front.addEventListener('click', (e) => {{
