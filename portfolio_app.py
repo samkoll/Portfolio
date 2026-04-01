@@ -11,269 +11,219 @@ from concurrent.futures import ThreadPoolExecutor
 import streamlit.components.v1 as components
 
 # ====================== CONFIG ======================
+# Using an emoji instead of a file prevents silent background crashing
 st.set_page_config(page_title="Portfolio", layout="wide", page_icon="📊")
 
-# ====================== GLOBAL CSS & TAB STYLES ======================
-st.markdown("""
-<style>
-html, body, .stApp {
-    overflow-x: hidden !important;
-    background: linear-gradient(180deg, #0f1724 0%, #0a0f1c 100%) !important;
-}
-.main .block-container,
-div[data-testid="stMainBlockContainer"] {
-    padding-left: 14px !important;
-    padding-right: 14px !important;
-    padding-top: 14px !important;
-    max-width: 100% !important;
-}
-@media (min-width: 1200px) {
-    div[data-testid="stMainBlockContainer"] { padding-left: 18px !important; padding-right: 18px !important; }
-}
-@media (max-width: 768px) {
-    div[data-testid="stMainBlockContainer"] { padding-left: 8px !important; padding-right: 8px !important; }
-}
+# ====================== SESSION STATE INITIALIZATION ======================
+if 'crypto_df' not in st.session_state: st.session_state.crypto_df = pd.DataFrame()
+if 'fiat_df' not in st.session_state: st.session_state.fiat_df = pd.DataFrame()
+if 'crypto_table_version' not in st.session_state: st.session_state.crypto_table_version = 0
+if 'fiat_table_version' not in st.session_state: st.session_state.fiat_table_version = 0
+if 'ui_version' not in st.session_state: st.session_state.ui_version = 0
+if 'page' not in st.session_state: st.session_state.page = "Home"
+if 'anim_dir' not in st.session_state: st.session_state.anim_dir = "none"
+if 'last_known_prices' not in st.session_state: st.session_state.last_known_prices = {"USDC": 1.0}
+if 'refresh_key' not in st.session_state: st.session_state.refresh_key = random.randint(100000, 999999)
+if 'portfolio_cache' not in st.session_state: st.session_state.portfolio_cache = {}
 
-/* ==============================================================
-   BEAUTIFUL NATIVE TABS AS TOP NAVIGATION BAR
-   ============================================================== */
-div[data-testid="stTabs"] {
-    margin-top: -10px;
-}
-div[data-baseweb="tab-list"] {
-    gap: 8px;
-    background: rgba(15, 23, 42, 0.6);
-    padding: 8px;
-    border-radius: 16px;
-    border: 1px solid rgba(255,255,255,0.05);
-    justify-content: space-between;
-}
-button[data-baseweb="tab"] {
-    flex: 1;
-    background: transparent !important;
-    border: none !important;
-    border-radius: 10px !important;
-    padding: 12px 0 !important;
-    color: #94a3b8 !important;
-    font-size: 0.95rem !important;
-    font-weight: 600 !important;
-    transition: all 0.3s ease !important;
-    display: flex;
-    justify-content: center;
-}
-button[data-baseweb="tab"][aria-selected="true"] {
-    background: rgba(0, 255, 157, 0.15) !important;
-    color: #00ff9d !important;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-}
-/* Hide the active border underline */
-div[data-baseweb="tab-border"] { display: none !important; }
-div[data-baseweb="tab-highlight"] { display: none !important; }
-
-div[data-baseweb="tab-panel"] {
-    padding: 16px 0 !important;
-    animation: tabFadeIn 0.3s ease-out forwards;
-}
-@keyframes tabFadeIn {
-    from { opacity: 0; transform: translateY(10px); }
-    to { opacity: 1; transform: translateY(0); }
-}
-
-/* Dashboard Pullable Drawer Styles */
-.dashboard-wrapper { position: relative; z-index: 10; }
-.glossy-header-label { cursor: pointer; display: block; position: relative; z-index: 3; -webkit-tap-highlight-color: transparent; }
-.home-header { margin-bottom: 0 !important; padding-bottom: 30px !important; }
-.pull-indicator { position: absolute; bottom: 8px; left: 50%; transform: translateX(-50%); color: #64748b; opacity: 0.8; transition: color 0.3s ease; }
-@media (hover: hover) and (pointer: fine) { .glossy-header-label:hover .pull-indicator { color: #cbd5e1; } }
-.pull-indicator .eye-open { display: none; }
-.pull-indicator .eye-closed { display: block; }
-.dashboard-toggle:checked ~ .dashboard-wrapper .glossy-header-label .pull-indicator .eye-open { display: block; }
-.dashboard-toggle:checked ~ .dashboard-wrapper .glossy-header-label .pull-indicator .eye-closed { display: none; }
-.dashboard-toggle:checked ~ .dashboard-wrapper .glossy-header-label .pull-indicator { color: #ffffff; }
-
-.stats-layer { position: relative; z-index: 1; margin-top: -60px !important; transition: margin-top 0.4s cubic-bezier(0.4, 0, 0.2, 1); margin-bottom: 24px; }
-.dashboard-toggle:checked ~ .dashboard-wrapper .stats-layer { margin-top: 14px !important; }
-.stats-layer-inner { display: grid !important; grid-template-columns: repeat(3, 1fr) !important; gap: 14px; width: 100%; }
-
-.dash-value { font-size: clamp(14px, 2.5vw, 24px) !important; font-weight: 700; line-height: 1.05; color: #ffffff; position: absolute; top: 20px; left: 0; width: 100%; text-align: center; margin: 0; transition: opacity 0.3s ease; padding: 0 4px; box-sizing: border-box; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.dashboard-toggle:not(:checked) ~ .dashboard-wrapper .stats-layer .dash-value { opacity: 0; pointer-events: none; }
-.dash-label { font-size: 11px !important; font-weight: 600; letter-spacing: 1.5px; text-transform: uppercase; color: #94a3b8; line-height: 1.2; position: absolute; bottom: 8px; left: 0; width: 100%; text-align: center; }
-
-.glossy-header { position: relative; overflow: hidden; background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); border: 1px solid rgba(255,255,255,0.05); border-radius: 18px; box-shadow: 0 10px 30px rgba(0,0,0,0.4); transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.4s ease, border-color 0.4s ease; padding: 32px 24px; min-height: 130px; font-size: 29px; font-weight: 700; letter-spacing: 1.5px; line-height: 1.1; display: flex; align-items: center; justify-content: center; gap: 16px; width: 100% !important; margin-bottom: 38px; }
-@media (hover: hover) and (pointer: fine) { .glossy-header-label:hover .glossy-header { transform: translateY(-4px) scale(1.01); box-shadow: 0 15px 40px rgba(0, 0, 0, 0.5); border-color: rgba(255, 255, 255, 0.15); } }
-.dashboard-toggle:checked ~ .dashboard-wrapper .glossy-header { transform: translateY(-4px) scale(1.01); box-shadow: 0 15px 40px rgba(0, 0, 0, 0.5); border-color: rgba(255, 255, 255, 0.15); }
-
-.glossy-box { position: relative; overflow: hidden; background: linear-gradient(180deg, #162032 0%, #0f172a 100%); border: 1px solid rgba(255,255,255,0.05); border-radius: 18px; box-shadow: 0 8px 24px rgba(0,0,0,0.4); padding: 28px 30px; text-align: center; flex: 1; min-width: 220px; display: flex; flex-direction: column; justify-content: center; }
-.glossy-box:not(.swapped) > div:first-child { font-size: 12px; font-weight: 600; letter-spacing: 1.5px; text-transform: uppercase; color: #94a3b8; margin-bottom: 6px; line-height: 1.2; }
-.glossy-box:not(.swapped) > div:last-child { font-size: 27px; font-weight: 700; line-height: 1.05; color: #ffffff; }
-.glossy-box.swapped { min-width: 0 !important; height: 80px !important; min-height: 80px !important; max-height: 80px !important; padding: 0; display: block; }
-
-/* Subdued and Smaller USDC Banner */
-.usdc-banner { position: relative; overflow: hidden; background: rgba(15, 23, 42, 0.5); border: 1px solid rgba(39, 117, 202, 0.2); border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); padding: 10px 20px; width: 90%; max-width: 400px; margin: -15px auto 12px auto !important; display: flex; align-items: center; justify-content: space-between; }
-.usdc-banner-left { display: flex; align-items: center; gap: 12px; }
-.usdc-banner-left img { width: 28px; height: 28px; border-radius: 50%; object-fit: contain; opacity: 0.85; }
-.usdc-banner-title { font-size: 1.05rem; font-weight: 600; color: #e2e8f0; display: flex; align-items: center; gap: 8px; }
-.usdc-banner-subtitle { font-size: 0.75rem; font-weight: 500; color: #64748b; }
-.usdc-banner-amount { font-size: 1.2rem; font-weight: 600; color: #e2e8f0; }
-
-/* Native CSS Privacy Mode for USDC Banner */
-.dashboard-toggle:not(:checked) ~ .usdc-banner .usdc-banner-amount { font-size: 0 !important; }
-.dashboard-toggle:not(:checked) ~ .usdc-banner .usdc-banner-amount::after { content: '***'; font-size: 1.2rem; color: #e2e8f0; }
-
-button[aria-label="Step Up"], button[aria-label="Step Down"], button[data-testid="stNumberInputStepUp"], button[data-testid="stNumberInputStepDown"] { display: none !important; }
-input[type="number"]::-webkit-inner-spin-button, input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
-input[type="number"] { -moz-appearance: textfield; }
-
-/* Transaction Row Styling */
-div[data-testid="stForm"]:has(.add-tx-card) { background: #0f172a !important; border: 1px solid rgba(255,255,255,0.05) !important; border-radius: 16px !important; padding: 24px !important; box-shadow: 0 4px 15px rgba(0,0,0,0.3) !important; margin-bottom: 24px !important; }
-div[data-testid="stForm"]:has(.add-tx-card) label { font-size: 0.85rem !important; color: #94a3b8 !important; padding-bottom: 2px !important; }
-div[data-testid="stForm"]:has(.add-tx-card) .stTextInput input, div[data-testid="stForm"]:has(.add-tx-card) .stNumberInput input, div[data-testid="stForm"]:has(.add-tx-card) .stDateInput input { background: rgba(255,255,255,0.03) !important; border: 1px solid rgba(255,255,255,0.1) !important; color: #fff !important; border-radius: 8px !important; margin-bottom: 0px !important; }
-div[data-testid="stForm"]:has(.add-tx-card) div[data-testid="stHorizontalBlock"]:has(> div[data-testid="column"]:nth-child(4)) { display: flex !important; gap: 12px !important; }
-div[data-testid="stForm"]:has(.add-tx-card) div[data-testid="stHorizontalBlock"]:has(> div[data-testid="column"]:nth-child(2):last-child) { display: flex !important; flex-direction: row !important; justify-content: space-between !important; align-items: center !important; margin-top: 12px !important; gap: 12px !important; }
-div[data-testid="stForm"]:has(.add-tx-card) div[data-testid="stHorizontalBlock"]:has(> div[data-testid="column"]:nth-child(2):last-child) > div[data-testid="column"]:nth-child(1) { flex: 0 0 auto !important; width: auto !important; }
-div[data-testid="stForm"]:has(.add-tx-card) div[data-testid="stHorizontalBlock"]:has(> div[data-testid="column"]:nth-child(2):last-child) > div[data-testid="column"]:nth-child(2) { flex: 1 1 auto !important; width: auto !important; }
-div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] { background: rgba(0,0,0,0.3) !important; padding: 6px !important; border-radius: 12px !important; display: flex !important; flex-direction: row !important; gap: 8px !important; align-items: center !important; margin: 0 !important; height: 48px !important; border: 1px solid rgba(255,255,255,0.05) !important; min-width: 200px !important; }
-div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label { margin: 0 !important; cursor: pointer !important; padding: 0 !important; border-radius: 8px !important; border: 1px solid transparent !important; transition: all 0.3s ease !important; background: transparent !important; flex: 1 !important; display: flex !important; justify-content: center !important; align-items: center !important; height: 100% !important; }
-div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label:hover { background: rgba(255,255,255,0.05) !important; }
-div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label > div:first-child { display: none !important; } 
-div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label p { font-weight: bold !important; font-size: 1.05rem !important; color: #94a3b8 !important; margin: 0 !important; padding: 0 !important; white-space: nowrap !important; line-height: 1 !important; }
-div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label:has(input:checked):first-child, div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label[aria-checked="true"]:first-child { background: rgba(0, 255, 157, 0.15) !important; border-color: #00ff9d !important; }
-div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label:has(input:checked):first-child p, div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label[aria-checked="true"]:first-child p { color: #00ff9d !important; }
-div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label:has(input:checked):last-child, div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label[aria-checked="true"]:last-child { background: rgba(255, 77, 77, 0.15) !important; border-color: #ff4d4d !important; }
-div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label:has(input:checked):last-child p, div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label[aria-checked="true"]:last-child p { color: #ff4d4d !important; }
-div[data-testid="stForm"]:has(.add-tx-card) .stButton { display: flex !important; justify-content: flex-end !important; align-items: center !important; margin: 0 !important; padding: 0 !important; width: 100% !important; }
-div[data-testid="stForm"]:has(.add-tx-card) .stButton > button { background: #1e2a44 !important; color: #e0e0e0 !important; padding: 0 24px !important; border-radius: 10px !important; font-size: 1.05rem !important; font-weight: 700 !important; box-shadow: 0 4px 15px rgba(0,0,0,0.25) !important; transition: all 0.3s ease !important; border: none !important; margin: 0 !important; width: auto !important; height: 48px !important; min-height: 48px !important; }
-div[data-testid="stForm"]:has(.add-tx-card) .stButton > button:hover { transform: translateY(-2px) !important; box-shadow: 0 8px 20px rgba(255, 255, 255, 0.2) !important; color: white !important; }
-div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row) { background: #0f172a !important; border: 1px solid rgba(255,255,255,0.05) !important; border-radius: 12px !important; padding: 12px 16px !important; margin-bottom: 12px !important; position: relative; z-index: 2; }
-div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row) > div { padding: 0 !important; } 
-div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row) div[data-testid="stButton"] button { background: rgba(255,255,255,0.05) !important; border-radius: 8px !important; border: none !important; height: 40px !important; width: 40px !important; display: flex !important; align-items: center !important; justify-content: center !important; padding: 0 !important; margin: 0 auto !important; font-size: 1.2rem !important; transition: all 0.2s !important; }
-div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row) div[data-testid="stButton"] button:hover { background: rgba(255,255,255,0.15) !important; transform: scale(1.05) !important; }
-@keyframes rollDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
-div[data-testid="stForm"]:has(.edit-rollout) { animation: rollDown 0.3s ease forwards !important; background: rgba(0,0,0,0.2) !important; border-left: 3px solid #00ff9d !important; border-radius: 0 0 12px 12px !important; border-top: none !important; border-right: none !important; border-bottom: none !important; padding: 16px !important; margin-top: -24px !important; margin-bottom: 20px !important; position: relative; z-index: 1; box-shadow: inset 0 4px 10px rgba(0,0,0,0.15) !important; }
-div[data-testid="stVerticalBlockBorderWrapper"]:has(.del-warn) { border-color: rgba(255, 77, 77, 0.3) !important; background: rgba(15, 23, 42, 0.95) !important; border-radius: 12px !important; padding: 16px !important; text-align: center !important; margin-bottom: 12px !important; box-shadow: 0 4px 20px rgba(0,0,0,0.4) !important; }
-div[data-testid="stVerticalBlockBorderWrapper"]:has(.del-warn) .stButton > button { border-radius: 8px !important; font-weight: 600 !important; transition: all 0.2s !important; width: 100% !important; margin-top: 8px !important; padding: 6px 12px !important; }
-div[data-testid="stVerticalBlockBorderWrapper"]:has(.del-warn) div[data-testid="column"]:nth-child(1) .stButton > button { background: rgba(255, 77, 77, 0.1) !important; color: #ff4d4d !important; border: 1px solid rgba(255, 77, 77, 0.3) !important; }
-div[data-testid="stVerticalBlockBorderWrapper"]:has(.del-warn) div[data-testid="column"]:nth-child(1) .stButton > button:hover { background: #ff4d4d !important; color: white !important; }
-div[data-testid="stVerticalBlockBorderWrapper"]:has(.del-warn) div[data-testid="column"]:nth-child(2) .stButton > button { background: rgba(255, 255, 255, 0.05) !important; color: #cbd5e1 !important; border: 1px solid rgba(255, 255, 255, 0.1) !important; }
-div[data-testid="stVerticalBlockBorderWrapper"]:has(.del-warn) div[data-testid="column"]:nth-child(2) .stButton > button:hover { background: rgba(255, 255, 255, 0.15) !important; color: white !important; }
-
-@media (max-width: 768px) {
-    .glossy-header { margin-top: 24px !important; margin-bottom: 24px !important; padding: 20px 16px !important; font-size: 22px !important; min-height: 90px; }
-    .home-header { margin-bottom: 0 !important; }
-    div[data-testid="stForm"]:has(.add-tx-card) div[data-testid="stHorizontalBlock"] { display: flex !important; flex-direction: row !important; flex-wrap: wrap !important; gap: 12px !important; }
-    div[data-testid="stForm"]:has(.add-tx-card) div[data-testid="stHorizontalBlock"]:has(> div[data-testid="column"]:nth-child(4)) > div[data-testid="column"] { min-width: calc(50% - 12px) !important; width: calc(50% - 12px) !important; flex: 1 1 calc(50% - 12px) !important; }
-    div[data-testid="stForm"]:has(.add-tx-card) input { padding: 6px !important; font-size: 0.95rem !important; }
-    div[data-testid="stForm"]:has(.add-tx-card) div[data-testid="stHorizontalBlock"]:has(> div[data-testid="column"]:nth-child(2):last-child) > div[data-testid="column"] { min-width: calc(50% - 12px) !important; width: calc(50% - 12px) !important; flex: 1 1 calc(50% - 12px) !important; }
-    div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] { min-width: 0 !important; width: 100% !important; }
-    div[data-testid="stForm"]:has(.add-tx-card) .stButton { display: flex !important; justify-content: flex-end !important; width: 100% !important; }
-    div[data-testid="stForm"]:has(.add-tx-card) .stButton > button { width: 100% !important; max-width: 120px !important; padding: 0 16px !important; }
-    div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row) > div > div[data-testid="stVerticalBlock"] > div[data-testid="stHorizontalBlock"] { display: flex !important; flex-direction: row !important; flex-wrap: nowrap !important; align-items: center !important; overflow: hidden !important; gap: 2px !important; }
-    div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row) div[data-testid="column"] { min-width: 0 !important; padding: 0 !important; width: auto !important; flex-shrink: 1 !important; }
-    div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row) > div > div[data-testid="stVerticalBlock"] > div[data-testid="stHorizontalBlock"] > div[data-testid="column"]:nth-child(1) { flex: 0 0 35px !important; width: 35px !important; }
-    div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row) > div > div[data-testid="stVerticalBlock"] > div[data-testid="stHorizontalBlock"] > div[data-testid="column"]:nth-child(2) { flex: 1 1 auto !important; overflow: hidden !important; text-align: left; }
-    div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row) > div > div[data-testid="stVerticalBlock"] > div[data-testid="stHorizontalBlock"] > div[data-testid="column"]:nth-child(3) { flex: 1.5 1 auto !important; overflow: hidden !important; text-align: center; }
-    div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row) > div > div[data-testid="stVerticalBlock"] > div[data-testid="stHorizontalBlock"] > div[data-testid="column"]:nth-child(4) { flex: 0 0 36px !important; width: 36px !important; }
-    div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row) > div > div[data-testid="stVerticalBlock"] > div[data-testid="stHorizontalBlock"] > div[data-testid="column"]:nth-child(5) { flex: 0 0 36px !important; width: 36px !important; }
-    div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row) div[data-testid="stButton"] button { width: 30px !important; height: 30px !important; font-size: 0.9rem !important; margin: 0 auto !important; }
-    .mobile-logo { width: 32px !important; height: 32px !important; margin-top: 0 !important; }
-    .mobile-tx-ticker { font-size: 0.95rem !important; margin-left: 2px !important;}
-    .mobile-tx-amount { font-size: 0.95rem !important; white-space: nowrap !important; }
-    .mobile-tx-sub { font-size: 0.7rem !important; white-space: nowrap !important; margin-left: 2px !important;}
-    .stats-layer-inner { gap: 6px !important; }
-    .stats-layer { margin-top: -60px !important; margin-bottom: 18px; } 
-    .glossy-box.swapped { height: 80px !important; min-height: 80px !important; max-height: 80px !important; padding: 0 !important; min-width: 0 !important; }
-    .dash-value { font-size: clamp(11px, 3.5vw, 15px) !important; top: 24px !important; } 
-    .dash-label { font-size: clamp(8px, 2.5vw, 10px) !important; bottom: 8px !important; white-space: nowrap !important; letter-spacing: 0.5px !important; }
-    .usdc-banner { padding: 8px 14px; width: 92%; margin: -12px auto 12px auto !important; }
-    .usdc-banner-left img { width: 24px; height: 24px; }
-    .usdc-banner-title { font-size: 0.95rem; }
-    .usdc-banner-subtitle { font-size: 0.7rem; }
-    .usdc-banner-amount { font-size: 1.1rem; }
-}
-</style>
-""", unsafe_allow_html=True)
-
-# ====================== GLOBAL DRAG & SWIPE LISTENER ======================
-js_engine = """
-if (!window.mySwipeEngineLoaded) {
-    window.mySwipeEngineLoaded = true;
-    const doc = window.parent ? window.parent.document : document;
+# ====================== HIDDEN ROUTING CONTROLS ======================
+# These native buttons are hidden but handle the safe Python routing when the JS clicks them
+with st.sidebar:
+    nav_items = ["Home", "Crypto", "Fiat"]
+    curr_idx = nav_items.index(st.session_state.page) if st.session_state.page in nav_items else 0
     
-    let touchstartX = 0;
-    let touchstartY = 0;
+    if st.button("Nav_Home", key="btn_home"):
+        st.session_state.anim_dir = "slide-in-left"
+        st.session_state.page = "Home"
+        st.rerun()
+    if st.button("Nav_Crypto", key="btn_crypto"):
+        st.session_state.anim_dir = "slide-in-right" if curr_idx < 1 else "slide-in-left"
+        st.session_state.page = "Crypto"
+        st.rerun()
+    if st.button("Nav_Fiat", key="btn_fiat"):
+        st.session_state.anim_dir = "slide-in-right"
+        st.session_state.page = "Fiat"
+        st.rerun()
 
-    doc.addEventListener('touchstart', function(e) {
-        if (e.touches.length > 1) return;
-        // Ignore swipes directly on charts or scrollable grid items
-        if (e.target.closest('.charts-scroll-wrapper') || e.target.closest('.scroll-wrapper') || e.target.closest('canvas')) return;
-        touchstartX = e.touches[0].clientX;
-        touchstartY = e.touches[0].clientY;
-    }, {passive: true});
-
-    doc.addEventListener('touchend', function(e) {
-        if (e.changedTouches.length > 1) return;
-        if (e.target.closest('.charts-scroll-wrapper') || e.target.closest('.scroll-wrapper') || e.target.closest('canvas')) return;
-
-        const endX = e.changedTouches[0].clientX;
-        const endY = e.changedTouches[0].clientY;
-        const deltaX = endX - touchstartX;
-        const deltaY = endY - touchstartY;
-
-        // Ensure we swiped far enough horizontally, and not vertically
-        if (Math.abs(deltaX) > 80 && Math.abs(deltaX) > Math.abs(deltaY)) {
-            // Find Streamlit's native Tab buttons
-            const tabs = Array.from(doc.querySelectorAll('button[data-baseweb="tab"]'));
-            if (!tabs.length) return;
-            
-            const activeIdx = tabs.findIndex(t => t.getAttribute('aria-selected') === 'true');
-            if (deltaX < 0 && activeIdx < tabs.length - 1) {
-                tabs[activeIdx + 1].click(); // Swipe Left -> Load Next Page
-            } else if (deltaX > 0 && activeIdx > 0) {
-                tabs[activeIdx - 1].click(); // Swipe Right -> Load Prev Page
-            }
-        }
-    }, {passive: true});
-}
-"""
-encoded_js = json.dumps(js_engine)
-
-swipe_injector = f"""
+# ====================== GLOBAL ENGINE (BOTTOM NAV + SWIPING) ======================
+# Bypasses Streamlit DOM interference entirely to render the bottom nav and global touch logic
+js_engine = f"""
 <script>
 (function() {{
     const doc = window.parent.document;
-    if (!doc.getElementById('global-swipe-script')) {{
-        const script = doc.createElement('script');
-        script.id = 'global-swipe-script';
-        script.textContent = {encoded_js};
-        doc.head.appendChild(script);
+    const win = window.parent;
+    
+    if (!doc.getElementById('custom-bottom-nav-styles')) {{
+        const style = doc.createElement('style');
+        style.id = 'custom-bottom-nav-styles';
+        style.innerHTML = `
+            div[data-testid="stSidebar"] {{ display: none !important; }}
+            div[data-testid="collapsedControl"] {{ display: none !important; }}
+            header[data-testid="stHeader"] {{ display: none !important; }}
+            footer {{ display: none !important; }}
+            .stApp {{ padding-bottom: 85px !important; background: linear-gradient(180deg, #0f1724 0%, #0a0f1c 100%) !important; }}
+            
+            .bottom-nav-bar {{
+                position: fixed; bottom: 0; left: 0; width: 100vw; height: 75px;
+                background: rgba(15, 23, 42, 0.95); backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px);
+                border-top: 1px solid rgba(255,255,255,0.08); display: flex;
+                justify-content: space-around; align-items: center; z-index: 9999999;
+                padding-bottom: env(safe-area-inset-bottom); box-shadow: 0 -4px 20px rgba(0,0,0,0.4);
+            }}
+            .nav-item {{
+                display: flex; flex-direction: column; align-items: center; justify-content: center;
+                color: #64748b; font-size: 11px; font-weight: 600; cursor: pointer; flex: 1; height: 100%; transition: color 0.3s ease;
+                -webkit-tap-highlight-color: transparent;
+            }}
+            .nav-item.active {{ color: #00ff9d; }}
+            .nav-item svg {{ width: 24px; height: 24px; margin-bottom: 4px; stroke: currentColor; fill: none; transition: transform 0.2s ease; }}
+            .nav-item.active svg {{ transform: translateY(-2px); filter: drop-shadow(0 0 4px rgba(0,255,157,0.4)); }}
+        `;
+        doc.head.appendChild(style);
     }}
+
+    if (!doc.getElementById('custom-bottom-nav')) {{
+        const nav = doc.createElement('div');
+        nav.id = 'custom-bottom-nav';
+        nav.innerHTML = `
+            <div class="bottom-nav-bar">
+                <div class="nav-item" id="nav-item-Home" onclick="clickStreamlitNav('Nav_Home')">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+                    Overview
+                </div>
+                <div class="nav-item" id="nav-item-Crypto" onclick="clickStreamlitNav('Nav_Crypto')">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M14.5 8.5L9.5 13.5"/><path d="M9.5 8.5L14.5 13.5"/></svg>
+                    Crypto
+                </div>
+                <div class="nav-item" id="nav-item-Fiat" onclick="clickStreamlitNav('Nav_Fiat')">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M6 8h12"/><path d="M6 12h12"/><path d="M6 16h12"/></svg>
+                    Fiat
+                </div>
+            </div>
+        `;
+        doc.body.appendChild(nav);
+
+        win.clickStreamlitNav = function(targetText) {{
+            const btns = doc.querySelectorAll('button p');
+            for (let p of btns) {{
+                if (p.innerText === targetText) {{ p.parentElement.click(); break; }}
+            }}
+        }};
+
+        let tsX = 0, tsY = 0;
+        doc.addEventListener('touchstart', e => {{
+            if (e.touches.length > 1) return;
+            const target = e.target;
+            if (target.closest('.charts-scroll-wrapper') || target.closest('.scroll-wrapper') || target.tagName === 'CANVAS') return;
+            tsX = e.touches[0].clientX; tsY = e.touches[0].clientY;
+        }}, {{passive: true}});
+
+        doc.addEventListener('touchend', e => {{
+            if (e.changedTouches.length > 1) return;
+            const target = e.target;
+            if (target.closest('.charts-scroll-wrapper') || target.closest('.scroll-wrapper') || target.tagName === 'CANVAS') return;
+            
+            const dX = tsX - e.changedTouches[0].clientX;
+            const dY = tsY - e.changedTouches[0].clientY;
+            
+            if (Math.abs(dX) > 60 && Math.abs(dX) > Math.abs(dY)) {{
+                const current = "{st.session_state.page}";
+                if (dX > 0) {{ // Swipe Left (Finger moves left -> Go to Next)
+                    if (current === "Home") win.clickStreamlitNav("Nav_Crypto");
+                    else if (current === "Crypto") win.clickStreamlitNav("Nav_Fiat");
+                }} else {{ // Swipe Right (Finger moves right -> Go to Prev)
+                    if (current === "Fiat") win.clickStreamlitNav("Nav_Crypto");
+                    else if (current === "Crypto") win.clickStreamlitNav("Nav_Home");
+                }}
+            }}
+        }}, {{passive: true}});
+    }}
+
+    // Update active nav state dynamically
+    const allItems = doc.querySelectorAll('.nav-item');
+    allItems.forEach(el => el.classList.remove('active'));
+    const activeItem = doc.getElementById('nav-item-{st.session_state.page}');
+    if (activeItem) activeItem.classList.add('active');
 }})();
 </script>
 """
-components.html(swipe_injector, height=0, width=0)
+components.html(js_engine, height=0, width=0)
 
-# ====================== SVG ICONS ======================
-DASHBOARD_ICON = '''<svg xmlns="http://www.w3.org/2000/svg" width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="#00ff9d" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>'''
-CRYPTO_ICON = '''<svg xmlns="http://www.w3.org/2000/svg" width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="#00ff9d" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M14.5 8.5L9.5 13.5"/><path d="M9.5 8.5L14.5 13.5"/></svg>'''
-FIAT_ICON = '''<svg xmlns="http://www.w3.org/2000/svg" width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="#00ff9d" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M6 8h12"/><path d="M6 12h12"/><path d="M6 16h12"/></svg>'''
-EYE_CLOSED = '''<svg class="eye-closed" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>'''
-EYE_OPEN = '''<svg class="eye-open" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>'''
-EXTERNAL_LINK_ICON = '''<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>'''
-TV_ICON = '''<svg xmlns="http://www.w3.org/2000/svg" width="18" height="14" viewBox="0 0 28 21" fill="currentColor"><path d="M12 21H8V3h4v18zm1.5-6h3.5l3.5-4.5V21h-7v-6zM28 21h-4l-6.5-9L21 6l7 10v5z"/></svg>'''
+# ====================== GLOBAL CSS ANIMATIONS ======================
+anim_css = ""
+if st.session_state.anim_dir == 'slide-in-right':
+    anim_css = "@keyframes slideIn { from { transform: translateX(100vw); opacity: 0.5; } to { transform: translateX(0); opacity: 1; } }"
+elif st.session_state.anim_dir == 'slide-in-left':
+    anim_css = "@keyframes slideIn { from { transform: translateX(-100vw); opacity: 0.5; } to { transform: translateX(0); opacity: 1; } }"
 
+st.markdown(f"""
+<style>
+div[data-testid="stMainBlockContainer"] {{ padding-left: 14px !important; padding-right: 14px !important; padding-top: 14px !important; max-width: 100% !important; animation: slideIn 0.35s cubic-bezier(0.25, 1, 0.5, 1) forwards; }}
+{anim_css}
+@media (min-width: 1200px) {{ div[data-testid="stMainBlockContainer"] {{ padding-left: 18px !important; padding-right: 18px !important; }} }}
+@media (max-width: 768px) {{ div[data-testid="stMainBlockContainer"] {{ padding-left: 8px !important; padding-right: 8px !important; }} }}
+
+/* Global UI Elements */
+.dashboard-wrapper {{ position: relative; z-index: 10; }}
+.glossy-header-label {{ cursor: pointer; display: block; position: relative; z-index: 3; -webkit-tap-highlight-color: transparent; }}
+.home-header {{ margin-bottom: 0 !important; padding-bottom: 30px !important; }}
+.pull-indicator {{ position: absolute; bottom: 8px; left: 50%; transform: translateX(-50%); color: #64748b; opacity: 0.8; transition: color 0.3s ease; }}
+.pull-indicator .eye-open {{ display: none; }}
+.pull-indicator .eye-closed {{ display: block; }}
+.dashboard-toggle:checked ~ .dashboard-wrapper .glossy-header-label .pull-indicator .eye-open {{ display: block; }}
+.dashboard-toggle:checked ~ .dashboard-wrapper .glossy-header-label .pull-indicator .eye-closed {{ display: none; }}
+.dashboard-toggle:checked ~ .dashboard-wrapper .glossy-header-label .pull-indicator {{ color: #ffffff; }}
+
+.stats-layer {{ position: relative; z-index: 1; margin-top: -60px !important; transition: margin-top 0.4s cubic-bezier(0.4, 0, 0.2, 1); margin-bottom: 24px; }}
+.dashboard-toggle:checked ~ .dashboard-wrapper .stats-layer {{ margin-top: 14px !important; }}
+.stats-layer-inner {{ display: grid !important; grid-template-columns: repeat(3, 1fr) !important; gap: 14px; width: 100%; }}
+.dash-value {{ font-size: clamp(14px, 2.5vw, 24px) !important; font-weight: 700; line-height: 1.05; color: #ffffff; position: absolute; top: 20px; left: 0; width: 100%; text-align: center; margin: 0; transition: opacity 0.3s ease; padding: 0 4px; box-sizing: border-box; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }}
+.dashboard-toggle:not(:checked) ~ .dashboard-wrapper .stats-layer .dash-value {{ opacity: 0; pointer-events: none; }}
+.dash-label {{ font-size: 11px !important; font-weight: 600; letter-spacing: 1.5px; text-transform: uppercase; color: #94a3b8; line-height: 1.2; position: absolute; bottom: 8px; left: 0; width: 100%; text-align: center; }}
+
+.glossy-header {{ position: relative; overflow: hidden; background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); border: 1px solid rgba(255,255,255,0.05); border-radius: 18px; box-shadow: 0 10px 30px rgba(0,0,0,0.4); transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.4s ease, border-color 0.4s ease; padding: 32px 24px; min-height: 130px; font-size: 29px; font-weight: 700; letter-spacing: 1.5px; line-height: 1.1; display: flex; align-items: center; justify-content: center; gap: 16px; width: 100% !important; margin-bottom: 38px; }}
+.glossy-box {{ position: relative; overflow: hidden; background: linear-gradient(180deg, #162032 0%, #0f172a 100%); border: 1px solid rgba(255,255,255,0.05); border-radius: 18px; box-shadow: 0 8px 24px rgba(0,0,0,0.4); padding: 28px 30px; text-align: center; flex: 1; min-width: 220px; display: flex; flex-direction: column; justify-content: center; }}
+.glossy-box:not(.swapped) > div:first-child {{ font-size: 12px; font-weight: 600; letter-spacing: 1.5px; text-transform: uppercase; color: #94a3b8; margin-bottom: 6px; line-height: 1.2; }}
+.glossy-box:not(.swapped) > div:last-child {{ font-size: 27px; font-weight: 700; line-height: 1.05; color: #ffffff; }}
+.glossy-box.swapped {{ min-width: 0 !important; height: 80px !important; min-height: 80px !important; max-height: 80px !important; padding: 0; display: block; }}
+
+.usdc-banner {{ position: relative; overflow: hidden; background: rgba(15, 23, 42, 0.5); border: 1px solid rgba(39, 117, 202, 0.2); border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); padding: 10px 20px; width: 90%; max-width: 400px; margin: -15px auto 12px auto !important; display: flex; align-items: center; justify-content: space-between; }}
+.usdc-banner-left {{ display: flex; align-items: center; gap: 12px; }}
+.usdc-banner-left img {{ width: 28px; height: 28px; border-radius: 50%; object-fit: contain; opacity: 0.85; }}
+.usdc-banner-title {{ font-size: 1.05rem; font-weight: 600; color: #e2e8f0; display: flex; align-items: center; gap: 8px; }}
+.usdc-banner-subtitle {{ font-size: 0.75rem; font-weight: 500; color: #64748b; }}
+.usdc-banner-amount {{ font-size: 1.2rem; font-weight: 600; color: #e2e8f0; }}
+.dashboard-toggle:not(:checked) ~ .usdc-banner .usdc-banner-amount {{ font-size: 0 !important; }}
+.dashboard-toggle:not(:checked) ~ .usdc-banner .usdc-banner-amount::after {{ content: '***'; font-size: 1.2rem; color: #e2e8f0; }}
+
+button[aria-label="Step Up"], button[aria-label="Step Down"], button[data-testid="stNumberInputStepUp"], button[data-testid="stNumberInputStepDown"] {{ display: none !important; }}
+input[type="number"]::-webkit-inner-spin-button, input[type="number"]::-webkit-outer-spin-button {{ -webkit-appearance: none; margin: 0; }}
+input[type="number"] {{ -moz-appearance: textfield; }}
+
+@media (max-width: 768px) {{
+    .glossy-header {{ min-height: 90px; font-size: 22px; padding: 20px 16px; margin-bottom: 24px; margin-top: 20px; }}
+    .stats-layer-inner {{ gap: 6px !important; }}
+    .dash-value {{ font-size: clamp(11px, 3.5vw, 15px) !important; top: 24px !important; }} 
+    .dash-label {{ font-size: clamp(8px, 2.5vw, 10px) !important; bottom: 8px !important; white-space: nowrap !important; letter-spacing: 0.5px !important; }}
+    .usdc-banner {{ padding: 8px 14px; width: 92%; margin-bottom: 24px !important; }}
+    .usdc-banner-amount {{ font-size: 1.1rem; }}
+}}
+</style>
+""", unsafe_allow_html=True)
+st.session_state.anim_dir = "none" # Reset animation trigger
+
+# ====================== DATA PREPARATION ENGINE ======================
 DATA_DIR = Path("data")
 DATA_DIR.mkdir(exist_ok=True)
 CRYPTO_JSON = DATA_DIR / "crypto_transactions.json"
 FIAT_JSON = DATA_DIR / "fiat_transactions.json"
 
-# ====================== DATA LOGIC ======================
 def format_datum(datum_val):
     if pd.isna(datum_val) or datum_val == "": return ""
     try: return (datetime(1899, 12, 30) + timedelta(days=int(float(datum_val)))).strftime("%d.%m.%Y")
     except: return str(datum_val)
 
 def date_to_excel_serial(selected_date: date) -> int: return (selected_date - datetime(1899, 12, 30).date()).days
-
 def parse_excel_date(x):
     try: return (datetime(1899, 12, 30) + timedelta(days=int(float(x)))).date()
     except: return datetime.now().date()
@@ -288,9 +238,6 @@ def get_initial_crypto_df():
         {"Datum": 46099, "USDC": 50.0, "Ticker": "BTC", "Amount": 0.00067193, "Price": 74412.51321},
         {"Datum": 46099, "USDC": 15.0, "Ticker": "ETH", "Amount": 0.00642259, "Price": 2335.506392},
         {"Datum": 46099, "USDC": 10.0, "Ticker": "SOL", "Amount": 0.1055771, "Price": 94.71750976},
-        {"Datum": 46100, "USDC": 50.0, "Ticker": "BTC", "Amount": 0.00071602, "Price": 69830.45166},
-        {"Datum": 46100, "USDC": 15.0, "Ticker": "ETH", "Amount": 0.00707709, "Price": 2119.515224},
-        {"Datum": 46100, "USDC": 10.0, "Ticker": "SOL", "Amount": 0.11363518, "Price": 88.00091662},
     ])
 
 def get_initial_fiat_df():
@@ -311,6 +258,9 @@ def load_or_init_fiat():
 
 def save_crypto(df): df.to_json(CRYPTO_JSON, orient="records", indent=2)
 def save_fiat(df): df.to_json(FIAT_JSON, orient="records", indent=2)
+
+if st.session_state.crypto_df.empty: st.session_state.crypto_df = load_or_init_crypto()
+if st.session_state.fiat_df.empty: st.session_state.fiat_df = load_or_init_fiat()
 
 CRYPTOCOMPARE_SYMBOL_MAP = {'BTC': 'BTC', 'ETH': 'ETH', 'SOL': 'SOL', 'HBAR': 'HBAR', 'XRP': 'XRP', 'BNB': 'BNB', 'TRX': 'TRX', 'LINK': 'LINK', 'SUI': 'SUI', 'USDC': 'USDC'}
 
@@ -354,7 +304,6 @@ def fetch_all_historical_data(coins_tuple: tuple, limit: int, refresh_key: int):
         if data and 'Data' in data and 'Data' in data['Data']:
             return coin, {datetime.fromtimestamp(d['time']).date(): float(d['close']) for d in data['Data']['Data']}
         return coin, {}
-
     with ThreadPoolExecutor(max_workers=5) as executor:
         for coin, hist in executor.map(fetch_coin, coins_tuple):
             if hist: prices_dict[coin] = hist
@@ -374,20 +323,12 @@ def get_base_prices(prices_dict, coins):
 
 def build_portfolio_history(crypto_df, fiat_df, last_prices, hist_dict):
     if crypto_df.empty and fiat_df.empty: return [], "", pd.DataFrame()
-
     fiat = fiat_df.copy()
-    if not fiat.empty:
-        fiat['Date'] = fiat['Datum'].apply(parse_excel_date)
-        daily_fiat_usdc = fiat.groupby('Date')['USDC'].sum()
-    else: daily_fiat_usdc = pd.Series(dtype=float)
-
+    daily_fiat_usdc = fiat.groupby(fiat['Datum'].apply(parse_excel_date))['USDC'].sum() if not fiat.empty else pd.Series(dtype=float)
     crypto = crypto_df.copy()
-    if not crypto.empty:
-        crypto['Date'] = crypto['Datum'].apply(parse_excel_date)
-        daily_crypto_spent = crypto[crypto['Ticker'].str.upper() != 'USDC'].groupby('Date')['USDC'].sum()
-    else: daily_crypto_spent = pd.Series(dtype=float)
+    daily_crypto_spent = crypto[crypto['Ticker'].str.upper() != 'USDC'].groupby(crypto['Datum'].apply(parse_excel_date))['USDC'].sum() if not crypto.empty else pd.Series(dtype=float)
 
-    all_dates = sorted(set(daily_fiat_usdc.index) | set(crypto['Date'].dropna() if not crypto.empty else []))
+    all_dates = sorted(set(daily_fiat_usdc.index) | set(crypto['Datum'].apply(parse_excel_date).dropna() if not crypto.empty else []))
     if not all_dates: return [], "", pd.DataFrame()
     
     min_date = min(all_dates)
@@ -402,6 +343,7 @@ def build_portfolio_history(crypto_df, fiat_df, last_prices, hist_dict):
     if not crypto.empty:
         crypto_assets = crypto[crypto['Ticker'].str.upper() != 'USDC']
         if not crypto_assets.empty:
+            crypto_assets['Date'] = crypto_assets['Datum'].apply(parse_excel_date)
             cum_holdings = crypto_assets.groupby(['Date', 'Ticker'])['Amount'].sum().unstack(fill_value=0).reindex(date_range, fill_value=0).fillna(0).cumsum()
             coins = crypto_assets['Ticker'].unique()
         else: cum_holdings, coins = pd.DataFrame(index=date_range), []
@@ -478,19 +420,9 @@ def format_money(val): return f"${float(val):,.2f}" if float(val) >= 0 else f"-$
 def format_holdings(val, ticker=None): return f"{float(val):,.6f}".replace(',', '.') if ticker == "BTC" else f"{float(val):,.4f}".replace(',', '.') if not pd.isna(val) else ""
 def format_percent(val): return f"{float(val):.2f}%" if not pd.isna(val) else ""
 def format_price(val): return f"{float(val):.4f}" if abs(float(val)) < 1 else f"{float(val):,.2f}" if not pd.isna(val) else ""
-
-# ====================== SESSION STATE ======================
-if 'crypto_df' not in st.session_state: st.session_state.crypto_df = load_or_init_crypto()
-if 'fiat_df' not in st.session_state: st.session_state.fiat_df = load_or_init_fiat()
-if 'crypto_table_version' not in st.session_state: st.session_state.crypto_table_version = 0
-if 'fiat_table_version' not in st.session_state: st.session_state.fiat_table_version = 0
-if 'last_known_prices' not in st.session_state: st.session_state.last_known_prices = {"USDC": 1.0}
-if 'refresh_key' not in st.session_state: st.session_state.refresh_key = random.randint(100000, 999999)
-if 'portfolio_cache' not in st.session_state: st.session_state.portfolio_cache = {}
-
 def glossy_header(title: str, icon_svg: str): st.markdown(f"""<div class="glossy-header">{icon_svg}<span style="margin-left:12px;">{title}</span></div>""", unsafe_allow_html=True)
 
-# ================== GLOBAL CALCULATIONS ==================
+# ================== ZERO-LATENCY CACHE ARCHITECTURE ==================
 current_hash = f"{st.session_state.crypto_table_version}_{st.session_state.fiat_table_version}_{st.session_state.refresh_key}"
 
 if st.session_state.portfolio_cache.get('hash') != current_hash:
@@ -520,12 +452,9 @@ history_data_raw, allocation_series_js, pnl_df = vault['history_data_raw'], vaul
 usdc_row = df_port[df_port['Ticker'] == 'USDC'].iloc[0] if not df_port[df_port['Ticker'] == 'USDC'].empty else None
 usdc_holdings = usdc_row['Holdings'] if usdc_row is not None else 0
 
-
-# ================== NATIVE TAB ARCHITECTURE ==================
-tab_home, tab_crypto, tab_fiat = st.tabs(["Overview", "Crypto", "Fiat"])
-
-# ================== PAGE 1: HOME ==================
-with tab_home:
+# ====================== PAGE ROUTING ======================
+if st.session_state.page == "Home":
+    
     value_box_html = f"""
     <input type="checkbox" id="dash-toggle" class="dashboard-toggle" style="display:none;">
     <div class="dashboard-wrapper">
@@ -574,7 +503,7 @@ with tab_home:
     roi_data_js = ",\n".join([f"{{ name: '{r['Ticker']}', y: {r['PnL %']}, color: '{get_ticker_color(r['Ticker'])}99' }}" for _, r in df_port[df_port['Ticker'] != 'USDC'].sort_values(by='PnL %', ascending=False).iterrows() if pd.notna(r['PnL %'])])
     daily_data_js = ",\n".join([f"{{ name: '{r['Ticker']}', y: 0, color: '#64748b99' }}" for _, r in df_port[df_port['Ticker'] != 'USDC'].iterrows()])
 
-    # We un-minified the Highcharts code entirely to ensure Double Tap triggers properly and is readable
+    # Bulletproof HTML string with beautifully un-minified syntax and robust error boundaries around every chart
     charts_html = f"""
     <!DOCTYPE html>
     <html>
@@ -585,32 +514,10 @@ with tab_home:
         <script src="https://code.highcharts.com/stock/highcharts-3d.js"></script>
         <style>
             body {{ margin: 0; padding: 0; background: transparent; overflow: hidden; font-family: system-ui, sans-serif; }}
-            
-            .charts-scroll-wrapper {{
-                width: 100%;
-                overflow-y: hidden;
-                overflow-x: auto;
-                padding: 6px 0px 6px 0px; 
-                margin-bottom: 0px; 
-                scroll-snap-type: x mandatory;
-                -webkit-overflow-scrolling: touch;
-                scrollbar-width: none; 
-                -ms-overflow-style: none;
-            }}
-            .charts-scroll-wrapper::-webkit-scrollbar {{
-                display: none;
-            }}
-            .charts-flex {{
-                display: flex;
-                flex-direction: row;
-                flex-wrap: nowrap;
-                gap: 24px;
-                width: max-content;
-                padding: 0 24px;
-            }}
-            
+            .charts-scroll-wrapper {{ width: 100%; overflow-y: hidden; overflow-x: auto; padding: 6px 0px 6px 0px; margin-bottom: 0px; scroll-snap-type: x mandatory; -webkit-overflow-scrolling: touch; scrollbar-width: none; -ms-overflow-style: none; }}
+            .charts-scroll-wrapper::-webkit-scrollbar {{ display: none; }}
+            .charts-flex {{ display: flex; flex-direction: row; flex-wrap: nowrap; gap: 24px; width: max-content; padding: 0 24px; }}
             .chart-placeholder {{ scroll-snap-align: center; }}
-            
             .chart-placeholder[data-type="pie"] {{ width: 350px; flex: 0 0 350px; height: 340px; }}
             .chart-placeholder[data-type="history"] {{ width: 600px; flex: 0 0 600px; height: 340px; }}
             .chart-placeholder[data-type="pnl"] {{ width: 400px; flex: 0 0 400px; height: 340px; }}
@@ -618,553 +525,251 @@ with tab_home:
             .chart-placeholder[data-type="allocation"] {{ width: 600px; flex: 0 0 600px; height: 340px; }}
             .chart-placeholder[data-type="inv-val"] {{ width: 500px; flex: 0 0 500px; height: 340px; }}
             .chart-placeholder[data-type="daily"] {{ width: 400px; flex: 0 0 400px; height: 340px; }}
+            .chart-box {{ width: 100%; height: 100%; background: rgba(15, 23, 42, 0.4); border: 1px solid rgba(255,255,255,0.05); border-radius: 16px; box-shadow: 0 4px 15px rgba(0,0,0,0.2); touch-action: pan-x pan-y; will-change: transform; position: relative; display: flex; flex-direction: column; }}
+            .chart-header {{ display: flex; justify-content: space-between; align-items: center; padding: 12px 16px 0 16px; width: 100%; box-sizing: border-box; }}
+            .chart-title {{ color: #e2e8f0; font-size: 13px; font-weight: bold; white-space: nowrap; }}
+            .chart-controls {{ display: flex; gap: 4px; }}
+            .chart-controls button {{ background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1); color: #94a3b8; border-radius: 4px; padding: 3px 8px; font-size: 10px; cursor: pointer; font-weight: bold; transition: all 0.2s; }}
+            .chart-controls button.active {{ background: rgba(0, 255, 157, 0.15); color: #00ff9d; border-color: #00ff9d; }}
+            .chart-body {{ flex: 1; width: 100%; position: relative; }}
+            #chart-overlay {{ visibility: hidden; opacity: 0; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(10, 15, 28, 0.85); z-index: 1000; backdrop-filter: blur(5px); -webkit-backdrop-filter: blur(5px); transition: opacity 0.4s ease, visibility 0.4s ease; }}
+            #chart-overlay.active {{ visibility: visible; opacity: 1; }}
             
-            .chart-box {{
-                width: 100%;
-                height: 100%;
-                background: rgba(15, 23, 42, 0.4);
-                border: 1px solid rgba(255,255,255,0.05);
-                border-radius: 16px;
-                box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-                touch-action: pan-x pan-y; 
-                will-change: transform; 
-                position: relative;
-                display: flex;
-                flex-direction: column;
-            }}
+            /* CSS Jailbreak for the expanding charts */
+            .expanded-chart {{ background: rgba(15, 23, 42, 0.98) !important; border: 1px solid rgba(255, 255, 255, 0.08) !important; box-shadow: 0 15px 50px rgba(0,0,0,0.9) !important; border-radius: 20px !important; }}
             
-            .chart-header {{
-                display: flex;
-                justify-content: space-between;
-                align-items: center;
-                padding: 12px 16px 0 16px;
-                width: 100%;
-                box-sizing: border-box;
-            }}
-            .chart-title {{
-                color: #e2e8f0;
-                font-size: 13px;
-                font-weight: bold;
-                white-space: nowrap;
-            }}
-            .chart-controls {{
-                display: flex;
-                gap: 4px;
-            }}
-            .chart-controls button {{
-                background: rgba(0,0,0,0.3);
-                border: 1px solid rgba(255,255,255,0.1);
-                color: #94a3b8;
-                border-radius: 4px;
-                padding: 3px 8px;
-                font-size: 10px;
-                cursor: pointer;
-                font-weight: bold;
-                transition: all 0.2s;
-            }}
-            .chart-controls button.active {{
-                background: rgba(0, 255, 157, 0.15);
-                color: #00ff9d;
-                border-color: #00ff9d;
-            }}
-            .chart-body {{
-                flex: 1;
-                width: 100%;
-                position: relative;
-            }}
-
-            #chart-overlay {{
-                visibility: hidden;
-                opacity: 0;
-                position: fixed;
-                top: 0; left: 0; width: 100%; height: 100%;
-                background: rgba(10, 15, 28, 0.85); 
-                z-index: 1000;
-                backdrop-filter: blur(5px);
-                -webkit-backdrop-filter: blur(5px);
-                transition: opacity 0.4s ease, visibility 0.4s ease;
-            }}
-            #chart-overlay.active {{
-                visibility: visible;
-                opacity: 1;
-            }}
-            
-            .expanded-chart {{
-                background: rgba(15, 23, 42, 0.98) !important;
-                border: 1px solid rgba(255, 255, 255, 0.08) !important; 
-                box-shadow: 0 15px 50px rgba(0,0,0,0.9) !important;
-                border-radius: 20px !important;
-            }}
-
-            @media (max-width: 768px) {{
-                .chart-placeholder {{ 
-                    height: 320px !important;
-                    width: 90vw !important; 
-                    flex: 0 0 90vw !important; 
-                }}
-                .charts-flex {{ 
-                    padding: 0 5vw;
-                    gap: 16px; 
-                }}
-                .chart-controls button {{
-                    padding: 3px 6px;
-                    font-size: 9px;
-                }}
+            @media (max-width: 768px) {{ 
+                .chart-placeholder {{ height: 320px !important; width: 90vw !important; flex: 0 0 90vw !important; }} 
+                .charts-flex {{ padding: 0 5vw; gap: 16px; }} 
+                .chart-controls button {{ padding: 3px 6px; font-size: 9px; }} 
             }}
         </style>
     </head>
     <body>
         <div id="chart-overlay"></div>
-        
         <div class="charts-scroll-wrapper" id="chartsScrollContainer">
             <div class="charts-flex">
-                <div class="chart-placeholder" data-type="pie">
-                    <div id="pie-container" class="chart-box"></div>
-                </div>
-                
-                <div class="chart-placeholder" data-type="history">
-                    <div id="history-wrapper" class="chart-box">
-                        <div class="chart-header">
-                            <div class="chart-title">Historical Performance</div>
-                            <div class="chart-controls hist-controls">
-                                <button class="active" data-range="all">All</button>
-                                <button data-range="1w">1W</button>
-                                <button data-range="1m">1M</button>
-                                <button data-range="1y">1Y</button>
-                                <button data-range="ytd">YTD</button>
-                            </div>
-                        </div>
-                        <div id="history-container" class="chart-body"></div>
-                    </div>
-                </div>
-                
-                <div class="chart-placeholder" data-type="pnl">
-                    <div id="pnl-wrapper" class="chart-box">
-                        <div class="chart-header">
-                            <div class="chart-title">Winners & Losers ($)</div>
-                            <div class="chart-controls pnl-controls">
-                                <button class="active" data-range="all">All</button>
-                                <button data-range="1d">Today</button>
-                                <button data-range="7d">1W</button>
-                                <button data-range="30d">1M</button>
-                                <button data-range="1y">1Y</button>
-                            </div>
-                        </div>
-                        <div id="pnl-container" class="chart-body"></div>
-                    </div>
-                </div>
-                
-                <div class="chart-placeholder" data-type="roi">
-                    <div id="roi-wrapper" class="chart-box">
-                        <div class="chart-header">
-                            <div class="chart-title">ROI (%) by Asset</div>
-                        </div>
-                        <div id="roi-container" class="chart-body"></div>
-                    </div>
-                </div>
-                
-                <div class="chart-placeholder" data-type="daily">
-                    <div id="daily-wrapper" class="chart-box">
-                        <div class="chart-header">
-                            <div class="chart-title">24h Market Movers (%)</div>
-                        </div>
-                        <div id="daily-container" class="chart-body"></div>
-                    </div>
-                </div>
-                
-                <div class="chart-placeholder" data-type="allocation">
-                    <div id="allocation-container" class="chart-box"></div>
-                </div>
-                
-                <div class="chart-placeholder" data-type="inv-val">
-                    <div id="inv-val-container" class="chart-box"></div>
-                </div>
+                <div class="chart-placeholder" data-type="pie"><div id="pie-container" class="chart-box"></div></div>
+                <div class="chart-placeholder" data-type="history"><div id="history-wrapper" class="chart-box"><div class="chart-header"><div class="chart-title">Historical Performance</div><div class="chart-controls hist-controls"><button class="active" data-range="all">All</button><button data-range="1w">1W</button><button data-range="1m">1M</button><button data-range="1y">1Y</button><button data-range="ytd">YTD</button></div></div><div id="history-container" class="chart-body"></div></div></div>
+                <div class="chart-placeholder" data-type="pnl"><div id="pnl-wrapper" class="chart-box"><div class="chart-header"><div class="chart-title">Winners & Losers ($)</div><div class="chart-controls pnl-controls"><button class="active" data-range="all">All</button><button data-range="1d">Today</button><button data-range="7d">1W</button><button data-range="30d">1M</button><button data-range="1y">1Y</button></div></div><div id="pnl-container" class="chart-body"></div></div></div>
+                <div class="chart-placeholder" data-type="roi"><div id="roi-wrapper" class="chart-box"><div class="chart-header"><div class="chart-title">ROI (%) by Asset</div></div><div id="roi-container" class="chart-body"></div></div></div>
+                <div class="chart-placeholder" data-type="daily"><div id="daily-wrapper" class="chart-box"><div class="chart-header"><div class="chart-title">24h Market Movers (%)</div></div><div id="daily-container" class="chart-body"></div></div></div>
+                <div class="chart-placeholder" data-type="allocation"><div id="allocation-container" class="chart-box"></div></div>
+                <div class="chart-placeholder" data-type="inv-val"><div id="inv-val-container" class="chart-box"></div></div>
             </div>
         </div>
-        
         <script>
             Highcharts.setOptions({{ global: {{ useUTC: false }} }});
+            function formatMoneyStr(val) {{ return val < 0 ? '-$' + Highcharts.numberFormat(Math.abs(val), 2) : '$' + Highcharts.numberFormat(val, 2); }}
+            function formatAxisMoneyStr(val) {{ return val < 0 ? '-$' + Highcharts.numberFormat(Math.abs(val), 0) : '$' + Highcharts.numberFormat(val, 0); }}
             
-            function formatMoneyStr(val) {{
-                return val < 0 ? '-$' + Highcharts.numberFormat(Math.abs(val), 2) : '$' + Highcharts.numberFormat(val, 2);
-            }}
+            try {{
+                Highcharts.chart('pie-container', {{
+                    chart: {{ type: 'pie', options3d: {{ enabled: true, alpha: 55, beta: 0 }}, backgroundColor: 'transparent', margin: [0, 0, 0, 0] }},
+                    title: {{ text: 'Current Holdings', style: {{ color: '#e2e8f0', fontSize: '13px', fontWeight: 'bold' }}, align: 'left', x: 16, y: 24 }},
+                    tooltip: {{ formatter: function() {{ const isPrivacy = document.body.classList.contains('privacy-mode'); if (isPrivacy) return '<b>' + this.point.name + '</b><br/>' + this.point.percentage.toFixed(1) + '%'; return '<b>' + this.point.name + '</b><br/>' + formatMoneyStr(this.point.y) + '<br/>' + this.point.percentage.toFixed(1) + '%'; }}, backgroundColor: 'rgba(15, 23, 42, 0.95)', style: {{ color: '#fff' }}, borderWidth: 1, borderColor: 'rgba(255,255,255,0.15)' }},
+                    plotOptions: {{ pie: {{ allowPointSelect: true, cursor: 'pointer', depth: 40, innerSize: '40%', size: '65%', dataLabels: {{ enabled: true, format: '<b>{{point.name}}</b><br>{{point.percentage:.1f}}%', style: {{ color: '#e2e8f0', textOutline: 'none', fontSize: '10px', fontWeight: '600' }}, connectorColor: 'rgba(255,255,255,0.2)', distance: 10, padding: 0 }}, borderWidth: 0 }} }},
+                    credits: {{ enabled: false }},
+                    series: [{{ name: 'Holdings', data: [{pie_data_js}] }}]
+                }});
+            }} catch(e) {{ console.error('Pie fail:', e); }}
             
-            function formatAxisMoneyStr(val) {{
-                return val < 0 ? '-$' + Highcharts.numberFormat(Math.abs(val), 0) : '$' + Highcharts.numberFormat(val, 0);
-            }}
-
-            Highcharts.chart('pie-container', {{
-                chart: {{ type: 'pie', options3d: {{ enabled: true, alpha: 55, beta: 0 }}, backgroundColor: 'transparent', margin: [0, 0, 0, 0] }},
-                title: {{ text: 'Current Holdings', style: {{ color: '#e2e8f0', fontSize: '13px', fontWeight: 'bold' }}, align: 'left', x: 16, y: 24 }},
-                tooltip: {{
-                    formatter: function() {{
-                        const isPrivacy = document.body.classList.contains('privacy-mode');
-                        if (isPrivacy) return '<b>' + this.point.name + '</b><br/>' + this.point.percentage.toFixed(1) + '%';
-                        return '<b>' + this.point.name + '</b><br/>' + formatMoneyStr(this.point.y) + '<br/>' + this.point.percentage.toFixed(1) + '%';
-                    }},
-                    backgroundColor: 'rgba(15, 23, 42, 0.95)', style: {{ color: '#fff' }}, borderWidth: 1, borderColor: 'rgba(255,255,255,0.15)'
-                }},
-                plotOptions: {{ pie: {{ allowPointSelect: true, cursor: 'pointer', depth: 40, innerSize: '40%', size: '65%', dataLabels: {{ enabled: true, format: '<b>{{point.name}}</b><br>{{point.percentage:.1f}}%', style: {{ color: '#e2e8f0', textOutline: 'none', fontSize: '10px', fontWeight: '600' }}, connectorColor: 'rgba(255,255,255,0.2)', distance: 10, padding: 0 }}, borderWidth: 0 }} }},
-                credits: {{ enabled: false }},
-                series: [{{ name: 'Holdings', data: [{pie_data_js}] }}]
-            }});
-            
-            Highcharts.stockChart('history-container', {{
-                chart: {{ type: 'areaspline', backgroundColor: 'transparent', marginTop: 25, marginBottom: 35 }}, 
-                rangeSelector: {{ enabled: false }}, 
-                navigator: {{ enabled: false }},
-                scrollbar: {{ enabled: false }},
-                title: {{ text: null }},
-                legend: {{ enabled: true, itemStyle: {{ color: '#94a3b8', fontSize: '11px', fontWeight: 'normal' }}, itemHoverStyle: {{ color: '#ffffff' }}, verticalAlign: 'top', align: 'center', y: -10 }},
-                xAxis: {{ gridLineColor: 'rgba(255,255,255,0.05)', tickWidth: 0, minorGridLineWidth: 0 }},
-                yAxis: {{ opposite: false, title: {{ text: null }}, labels: {{ style: {{ color: '#94a3b8', fontSize: '10px' }}, align: 'right', formatter: function() {{ return document.body.classList.contains('privacy-mode') ? '***' : formatAxisMoneyStr(this.value); }} }}, gridLineColor: 'rgba(255,255,255,0.05)' }},
-                tooltip: {{
-                    shared: true, backgroundColor: 'rgba(15, 23, 42, 0.95)', style: {{ color: '#fff' }}, borderColor: 'rgba(255,255,255,0.15)',
-                    formatter: function() {{
-                        let s = '<b style="font-size: 11px; color:#cbd5e1;">' + Highcharts.dateFormat('%b %e, %Y', this.x) + '</b>';
-                        const isPrivacy = document.body.classList.contains('privacy-mode');
-                        this.points.forEach(function(point) {{
-                            let val = isPrivacy ? '***' : formatMoneyStr(point.y);
-                            s += '<br/>' + '<span style="color:'+point.series.color+'">\u25CF</span> ' + point.series.name + ': <b style="font-size: 13px;">' + val + '</b>';
-                        }});
-                        return s;
-                    }}
-                }},
-                plotOptions: {{ areaspline: {{ fillOpacity: 0.3, lineWidth: 2 }} }},
-                credits: {{ enabled: false }},
-                series: [{{ name: 'Portfolio Value', data: [{hist_val_js}], color: '#00ff9d', fillColor: {{ linearGradient: {{ x1: 0, y1: 0, x2: 0, y2: 1 }}, stops: [ [0, 'rgba(0, 255, 157, 0.5)'], [1, 'rgba(0, 255, 157, 0.0)'] ] }}, zIndex: 3 }}, 
-                         {{ name: 'BTC Benchmark', type: 'line', data: [{hist_btc_js}], color: '#f7931a', lineWidth: 2, zIndex: 2 }}, 
-                         {{ name: 'Net Invested', type: 'line', data: [{hist_inv_js}], color: '#64748b', dashStyle: 'Dash', lineWidth: 2, zIndex: 1 }}]
-            }});
+            try {{
+                Highcharts.stockChart('history-container', {{
+                    chart: {{ type: 'areaspline', backgroundColor: 'transparent', marginTop: 25, marginBottom: 35 }}, 
+                    rangeSelector: {{ enabled: false }}, navigator: {{ enabled: false }}, scrollbar: {{ enabled: false }},
+                    title: {{ text: null }},
+                    legend: {{ enabled: true, itemStyle: {{ color: '#94a3b8', fontSize: '11px', fontWeight: 'normal' }}, itemHoverStyle: {{ color: '#ffffff' }}, verticalAlign: 'top', align: 'center', y: -10 }},
+                    xAxis: {{ gridLineColor: 'rgba(255,255,255,0.05)', tickWidth: 0, minorGridLineWidth: 0 }},
+                    yAxis: {{ opposite: false, title: {{ text: null }}, labels: {{ style: {{ color: '#94a3b8', fontSize: '10px' }}, align: 'right', formatter: function() {{ return document.body.classList.contains('privacy-mode') ? '***' : formatAxisMoneyStr(this.value); }} }}, gridLineColor: 'rgba(255,255,255,0.05)' }},
+                    tooltip: {{ shared: true, backgroundColor: 'rgba(15, 23, 42, 0.95)', style: {{ color: '#fff' }}, borderColor: 'rgba(255,255,255,0.15)', formatter: function() {{ let s = '<b style="font-size: 11px; color:#cbd5e1;">' + Highcharts.dateFormat('%b %e, %Y', this.x) + '</b>'; const isPrivacy = document.body.classList.contains('privacy-mode'); this.points.forEach(function(point) {{ let val = isPrivacy ? '***' : formatMoneyStr(point.y); s += '<br/>' + '<span style="color:'+point.series.color+'">\u25CF</span> ' + point.series.name + ': <b style="font-size: 13px;">' + val + '</b>'; }}); return s; }} }},
+                    plotOptions: {{ areaspline: {{ fillOpacity: 0.3, lineWidth: 2 }} }},
+                    credits: {{ enabled: false }},
+                    series: [{{ name: 'Portfolio Value', data: [{hist_val_js}], color: '#00ff9d', fillColor: {{ linearGradient: {{ x1: 0, y1: 0, x2: 0, y2: 1 }}, stops: [ [0, 'rgba(0, 255, 157, 0.5)'], [1, 'rgba(0, 255, 157, 0.0)'] ] }}, zIndex: 3 }}, {{ name: 'BTC Benchmark', type: 'line', data: [{hist_btc_js}], color: '#f7931a', lineWidth: 2, zIndex: 2 }}, {{ name: 'Net Invested', type: 'line', data: [{hist_inv_js}], color: '#64748b', dashStyle: 'Dash', lineWidth: 2, zIndex: 1 }}]
+                }});
+            }} catch(e) {{ console.error('History fail:', e); }}
             
             document.querySelectorAll('.hist-controls button').forEach(btn => {{
                 btn.addEventListener('click', (e) => {{
-                    e.stopPropagation();
-                    document.querySelectorAll('.hist-controls button').forEach(b => b.classList.remove('active'));
-                    btn.classList.add('active');
-                    const range = btn.getAttribute('data-range');
-                    const chart = Highcharts.charts.find(c => c && c.renderTo.id === 'history-container');
+                    e.stopPropagation(); document.querySelectorAll('.hist-controls button').forEach(b => b.classList.remove('active')); btn.classList.add('active');
+                    const range = btn.getAttribute('data-range'); const chart = Highcharts.charts.find(c => c && c.renderTo.id === 'history-container');
                     if (chart) {{
-                        const max = chart.xAxis[0].dataMax;
-                        const min = chart.xAxis[0].dataMin;
-                        const day = 24 * 3600 * 1000;
-                        let newMin = min;
-                        if (range === 'all') {{
-                            chart.xAxis[0].setExtremes(null, null, true, true);
-                        }} else {{
-                            if (range === '1w') newMin = max - 7 * day;
-                            else if (range === '1m') newMin = max - 30 * day;
-                            else if (range === '1y') newMin = max - 365 * day;
-                            else if (range === 'ytd') {{
-                                const d = new Date(max);
-                                newMin = new Date(d.getFullYear(), 0, 1).getTime();
-                            }}
+                        const max = chart.xAxis[0].dataMax; const min = chart.xAxis[0].dataMin; const day = 24 * 3600 * 1000; let newMin = min;
+                        if (range === 'all') {{ chart.xAxis[0].setExtremes(null, null, true, true); }}
+                        else {{
+                            if (range === '1w') newMin = max - 7 * day; else if (range === '1m') newMin = max - 30 * day; else if (range === '1y') newMin = max - 365 * day;
+                            else if (range === 'ytd') {{ const d = new Date(max); newMin = new Date(d.getFullYear(), 0, 1).getTime(); }}
                             chart.xAxis[0].setExtremes(Math.max(min, newMin), max, true, true);
                         }}
                     }}
                 }});
             }});
 
-            Highcharts.chart('pnl-container', {{
-                chart: {{ type: 'bar', backgroundColor: 'transparent', marginTop: 15, marginBottom: 25 }},
-                title: {{ text: null }},
-                xAxis: {{ type: 'category', labels: {{ style: {{ color: '#94a3b8', fontWeight: 'bold' }} }}, gridLineColor: 'rgba(255,255,255,0.05)', tickWidth: 0, lineWidth: 0 }},
-                yAxis: {{ title: {{ text: null }}, labels: {{ enabled: false }}, gridLineColor: 'rgba(255,255,255,0.05)', minPadding: 0.25, maxPadding: 0.25 }},
-                legend: {{ enabled: false }},
-                tooltip: {{
-                    backgroundColor: 'rgba(15, 23, 42, 0.95)', style: {{ color: '#fff' }}, borderColor: 'rgba(255,255,255,0.15)',
-                    formatter: function() {{
-                        const isPrivacy = document.body.classList.contains('privacy-mode');
-                        const val = isPrivacy ? '***' : formatMoneyStr(this.y);
-                        return `<b>${{this.point.name}}</b><br/>PnL: <b style="color:${{this.point.color}}">${{val}}</b>`;
-                    }}
-                }},
-                plotOptions: {{ bar: {{ borderRadius: 4, borderWidth: 0, pointPadding: 0.1, groupPadding: 0.1, maxPointWidth: 35, shadow: {{ color: 'rgba(0,0,0,0.3)', offsetX: 1, offsetY: 2, width: 4 }}, dataLabels: {{ enabled: true, inside: false, crop: false, overflow: 'allow', style: {{ color: '#fff', textOutline: '2px #0f172a', fontWeight: 'bold', fontSize: '11px' }}, formatter: function() {{ return document.body.classList.contains('privacy-mode') ? '***' : formatMoneyStr(this.y); }} }} }} }},
-                credits: {{ enabled: false }},
-                series: [{{ name: 'PnL', data: window.pnlDataMap['all'] }}]
-            }});
+            try {{
+                Highcharts.chart('pnl-container', {{
+                    chart: {{ type: 'bar', backgroundColor: 'transparent', marginTop: 15, marginBottom: 25 }},
+                    title: {{ text: null }},
+                    xAxis: {{ type: 'category', labels: {{ style: {{ color: '#94a3b8', fontWeight: 'bold' }} }}, gridLineColor: 'rgba(255,255,255,0.05)', tickWidth: 0, lineWidth: 0 }},
+                    yAxis: {{ title: {{ text: null }}, labels: {{ enabled: false }}, gridLineColor: 'rgba(255,255,255,0.05)', minPadding: 0.25, maxPadding: 0.25 }},
+                    legend: {{ enabled: false }},
+                    tooltip: {{ backgroundColor: 'rgba(15, 23, 42, 0.95)', style: {{ color: '#fff' }}, borderColor: 'rgba(255,255,255,0.15)', formatter: function() {{ const isPrivacy = document.body.classList.contains('privacy-mode'); const val = isPrivacy ? '***' : formatMoneyStr(this.y); return `<b>${{this.point.name}}</b><br/>PnL: <b style="color:${{this.point.color}}">${{val}}</b>`; }} }},
+                    plotOptions: {{ bar: {{ borderRadius: 4, borderWidth: 0, pointPadding: 0.1, groupPadding: 0.1, maxPointWidth: 35, shadow: {{ color: 'rgba(0,0,0,0.3)', offsetX: 1, offsetY: 2, width: 4 }}, dataLabels: {{ enabled: true, inside: false, crop: false, overflow: 'allow', style: {{ color: '#fff', textOutline: '2px #0f172a', fontWeight: 'bold', fontSize: '11px' }}, formatter: function() {{ return document.body.classList.contains('privacy-mode') ? '***' : formatMoneyStr(this.y); }} }} }} }},
+                    credits: {{ enabled: false }},
+                    series: [{{ name: 'PnL', data: window.pnlDataMap['all'] }}]
+                }});
+            }} catch(e) {{ console.error('PnL fail:', e); }}
             
             document.querySelectorAll('.pnl-controls button').forEach(btn => {{
                 btn.addEventListener('click', (e) => {{
-                    e.stopPropagation(); 
-                    document.querySelectorAll('.pnl-controls button').forEach(b => b.classList.remove('active'));
-                    btn.classList.add('active');
-                    const range = btn.getAttribute('data-range');
-                    const chart = Highcharts.charts.find(c => c && c.renderTo.id === 'pnl-container');
-                    if (chart && window.pnlDataMap[range]) {{
-                        chart.series[0].setData(window.pnlDataMap[range], true, {{ duration: 500 }}, true);
-                    }}
+                    e.stopPropagation(); document.querySelectorAll('.pnl-controls button').forEach(b => b.classList.remove('active')); btn.classList.add('active');
+                    const range = btn.getAttribute('data-range'); const chart = Highcharts.charts.find(c => c && c.renderTo.id === 'pnl-container');
+                    if (chart && window.pnlDataMap[range]) {{ chart.series[0].setData(window.pnlDataMap[range], true, {{ duration: 500 }}, true); }}
                 }});
             }});
             
-            Highcharts.chart('roi-container', {{
-                chart: {{ type: 'bar', backgroundColor: 'transparent', marginTop: 15, marginBottom: 25 }},
-                title: {{ text: null }},
-                xAxis: {{ type: 'category', labels: {{ style: {{ color: '#94a3b8', fontWeight: 'bold' }} }}, gridLineColor: 'rgba(255,255,255,0.05)', tickWidth: 0, lineWidth: 0 }},
-                yAxis: {{ title: {{ text: null }}, labels: {{ enabled: false }}, gridLineColor: 'rgba(255,255,255,0.05)', minPadding: 0.25, maxPadding: 0.25 }},
-                legend: {{ enabled: false }},
-                tooltip: {{
-                    backgroundColor: 'rgba(15, 23, 42, 0.95)', style: {{ color: '#fff' }}, borderColor: 'rgba(255,255,255,0.15)',
-                    formatter: function() {{
-                        const val = Highcharts.numberFormat(this.y, 2) + '%';
-                        return `<b>${{this.point.name}}</b><br/>ROI: <b style="color:${{this.point.color}}">${{val}}</b>`;
-                    }}
-                }},
-                plotOptions: {{ bar: {{ borderRadius: 4, borderWidth: 0, pointPadding: 0.1, groupPadding: 0.1, maxPointWidth: 35, shadow: {{ color: 'rgba(0,0,0,0.3)', offsetX: 1, offsetY: 2, width: 4 }}, dataLabels: {{ enabled: true, inside: false, crop: false, overflow: 'allow', style: {{ color: '#fff', textOutline: '2px #0f172a', fontWeight: 'bold', fontSize: '11px' }}, formatter: function() {{ return Highcharts.numberFormat(this.y, 2) + '%'; }} }} }} }},
-                credits: {{ enabled: false }},
-                series: [{{ name: 'ROI %', data: [ {roi_data_js} ] }}]
-            }});
-            
-            Highcharts.chart('daily-container', {{
-                chart: {{ type: 'bar', backgroundColor: 'transparent', marginTop: 15, marginBottom: 25 }},
-                title: {{ text: null }},
-                xAxis: {{ type: 'category', labels: {{ style: {{ color: '#94a3b8', fontWeight: 'bold' }} }}, gridLineColor: 'rgba(255,255,255,0.05)', tickWidth: 0, lineWidth: 0 }},
-                yAxis: {{ title: {{ text: null }}, labels: {{ enabled: false }}, gridLineColor: 'rgba(255,255,255,0.05)', minPadding: 0.25, maxPadding: 0.25 }},
-                legend: {{ enabled: false }},
-                tooltip: {{
-                    backgroundColor: 'rgba(15, 23, 42, 0.95)', style: {{ color: '#fff' }}, borderColor: 'rgba(255,255,255,0.15)',
-                    formatter: function() {{
-                        const val = Highcharts.numberFormat(Math.abs(this.y), 2) + '%';
-                        const sign = this.y >= 0 ? '▲ ' : '▼ ';
-                        return `<b>${{this.point.name}}</b><br/>24h Change: <b style="color:${{this.point.color}}">${{sign}}${{val}}</b>`;
-                    }}
-                }},
-                plotOptions: {{ bar: {{ borderRadius: 4, borderWidth: 0, pointPadding: 0.1, groupPadding: 0.1, maxPointWidth: 35, shadow: {{ color: 'rgba(0,0,0,0.3)', offsetX: 1, offsetY: 2, width: 4 }}, dataLabels: {{ enabled: true, inside: false, crop: false, overflow: 'allow', style: {{ color: '#fff', textOutline: '2px #0f172a', fontWeight: 'bold', fontSize: '11px' }}, formatter: function() {{ return (this.y >= 0 ? '+' : '') + Highcharts.numberFormat(this.y, 2) + '%'; }} }} }} }},
-                credits: {{ enabled: false }},
-                series: [{{ name: '24h Change', data: [ {daily_data_js} ] }}]
-            }});
-            
-            Highcharts.chart('allocation-container', {{
-                chart: {{ type: 'areaspline', backgroundColor: 'transparent', marginTop: 45, marginBottom: 35 }},
-                title: {{ text: 'Asset Allocation', align: 'left', x: 8, y: 24, style: {{ color: '#e2e8f0', fontSize: '13px', fontWeight: 'bold' }} }},
-                xAxis: {{ type: 'datetime', labels: {{ style: {{ color: '#94a3b8', fontSize: '10px' }} }}, gridLineColor: 'rgba(255,255,255,0.05)', tickWidth: 0, minorGridLineWidth: 0 }},
-                yAxis: {{ title: {{ text: null }}, labels: {{ formatter: function() {{ return this.value + '%'; }}, style: {{ color: '#94a3b8', fontSize: '10px' }} }}, gridLineColor: 'rgba(255,255,255,0.05)', max: 100 }},
-                legend: {{ enabled: false }},
-                tooltip: {{
-                    shared: true, backgroundColor: 'rgba(15, 23, 42, 0.95)', style: {{ color: '#fff' }}, borderColor: 'rgba(255,255,255,0.15)',
-                    formatter: function() {{
-                        let s = '<b style="font-size: 11px; color:#cbd5e1;">' + Highcharts.dateFormat('%b %e, %Y', this.x) + '</b>';
-                        this.points.forEach(function(point) {{
-                            s += '<br/>' + '<span style="color:'+point.series.color+'">\u25CF</span> ' + point.series.name + ': <b>' + Highcharts.numberFormat(point.percentage, 1) + '%</b>';
-                        }});
-                        return s;
-                    }}
-                }},
-                plotOptions: {{ areaspline: {{ stacking: 'percent', fillOpacity: 0.25, lineWidth: 2, marker: {{ enabled: false, symbol: 'circle', radius: 2, states: {{ hover: {{ enabled: true }} }} }} }} }},
-                credits: {{ enabled: false }},
-                series: [{allocation_series_js}]
-            }});
-
-            Highcharts.chart('inv-val-container', {{
-                chart: {{ type: 'column', backgroundColor: 'transparent', marginTop: 45, marginBottom: 35 }},
-                title: {{ text: 'Invested vs Current Value', align: 'left', x: 8, y: 24, style: {{ color: '#e2e8f0', fontSize: '13px', fontWeight: 'bold' }} }},
-                xAxis: {{ type: 'category', categories: {inv_val_categories_js}, labels: {{ style: {{ color: '#94a3b8', fontWeight: 'bold', fontSize: '10px' }} }}, gridLineColor: 'rgba(255,255,255,0.05)', tickWidth: 0 }},
-                yAxis: {{ title: {{ text: null }}, labels: {{ style: {{ color: '#94a3b8', fontSize: '10px' }}, formatter: function() {{ return document.body.classList.contains('privacy-mode') ? '***' : formatAxisMoneyStr(this.value); }} }}, gridLineColor: 'rgba(255,255,255,0.05)', minPadding: 0.15, maxPadding: 0.15 }},
-                legend: {{ enabled: false }},
-                tooltip: {{
-                    shared: true, backgroundColor: 'rgba(15, 23, 42, 0.95)', style: {{ color: '#fff' }}, borderColor: 'rgba(255,255,255,0.15)',
-                    formatter: function() {{
-                        let s = '<b style="font-size: 13px;">' + this.points[0].key + '</b>';
-                        const isPrivacy = document.body.classList.contains('privacy-mode');
-                        this.points.forEach(function(point) {{
-                            let val = isPrivacy ? '***' : formatMoneyStr(point.y);
-                            s += '<br/>' + '<span style="color:'+ point.color +'">\u25CF</span> ' + point.series.name + ': <b>' + val + '</b>';
-                        }});
-                        return s;
-                    }}
-                }},
-                plotOptions: {{ column: {{ borderRadius: 4, borderWidth: 0, maxPointWidth: 40, dataLabels: {{ enabled: true, inside: false, crop: false, overflow: 'allow', style: {{ color: '#fff', textOutline: '2px #0f172a', fontWeight: 'bold', fontSize: '11px' }}, formatter: function() {{ return document.body.classList.contains('privacy-mode') ? '***' : formatMoneyStr(this.y); }} }} }} }},
-                credits: {{ enabled: false }},
-                series: [
-                    {{ name: 'Invested', data: [{inv_data_js}] }},
-                    {{ name: 'Current Value', data: [{val_data_js}] }}
-                ]
-            }});
-            
-            // INJECT THE CSS TO ALLOW THE TAB CONTAINER TO OVERFLOW AND BREAK FULL SCREEN
             try {{
-                if (window !== window.parent && window.parent.document) {{
-                    if (!window.parent.document.getElementById('chart-fullscreen-css')) {{
-                        const style = window.parent.document.createElement('style');
-                        style.id = 'chart-fullscreen-css';
-                        style.innerHTML = `
-                            iframe.fullscreen-mode {{
-                                position: fixed !important;
-                                top: 0 !important;
-                                left: 0 !important;
-                                width: 100vw !important;
-                                height: 100vh !important;
-                                max-width: 100vw !important;
-                                max-height: 100vh !important;
-                                z-index: 9999999 !important;
-                                border: none !important;
-                                background: rgba(10, 15, 28, 0.95) !important;
-                            }}
-                            .stApp.chart-expanded-mode [data-baseweb="tab-panel"],
-                            .stApp.chart-expanded-mode [data-testid="stMainBlockContainer"],
-                            .stApp.chart-expanded-mode div[data-testid="stVerticalBlock"] {{
-                                transform: none !important;
-                                z-index: 999999 !important;
-                                overflow: visible !important;
-                                clip-path: none !important;
-                            }}
-                        `;
-                        window.parent.document.head.appendChild(style);
-                    }}
-                }}
-            }} catch(e) {{}}
-
-            function toggleExpandChart(wrapperId) {{
-                // BLOCK PC COMPLETELY - Only runs on Mobile
-                if (window.innerWidth > 768) return;
+                Highcharts.chart('roi-container', {{
+                    chart: {{ type: 'bar', backgroundColor: 'transparent', marginTop: 15, marginBottom: 25 }},
+                    title: {{ text: null }},
+                    xAxis: {{ type: 'category', labels: {{ style: {{ color: '#94a3b8', fontWeight: 'bold' }} }}, gridLineColor: 'rgba(255,255,255,0.05)', tickWidth: 0, lineWidth: 0 }},
+                    yAxis: {{ title: {{ text: null }}, labels: {{ enabled: false }}, gridLineColor: 'rgba(255,255,255,0.05)', minPadding: 0.25, maxPadding: 0.25 }},
+                    legend: {{ enabled: false }},
+                    tooltip: {{ backgroundColor: 'rgba(15, 23, 42, 0.95)', style: {{ color: '#fff' }}, borderColor: 'rgba(255,255,255,0.15)', formatter: function() {{ const val = Highcharts.numberFormat(this.y, 2) + '%'; return `<b>${{this.point.name}}</b><br/>ROI: <b style="color:${{this.point.color}}">${{val}}</b>`; }} }},
+                    plotOptions: {{ bar: {{ borderRadius: 4, borderWidth: 0, pointPadding: 0.1, groupPadding: 0.1, maxPointWidth: 35, shadow: {{ color: 'rgba(0,0,0,0.3)', offsetX: 1, offsetY: 2, width: 4 }}, dataLabels: {{ enabled: true, inside: false, crop: false, overflow: 'allow', style: {{ color: '#fff', textOutline: '2px #0f172a', fontWeight: 'bold', fontSize: '11px' }}, formatter: function() {{ return Highcharts.numberFormat(this.y, 2) + '%'; }} }} }} }},
+                    credits: {{ enabled: false }},
+                    series: [{{ name: 'ROI %', data: [ {roi_data_js} ] }}]
+                }});
+            }} catch(e) {{ console.error('ROI fail:', e); }}
             
+            try {{
+                Highcharts.chart('daily-container', {{
+                    chart: {{ type: 'bar', backgroundColor: 'transparent', marginTop: 15, marginBottom: 25 }},
+                    title: {{ text: null }},
+                    xAxis: {{ type: 'category', labels: {{ style: {{ color: '#94a3b8', fontWeight: 'bold' }} }}, gridLineColor: 'rgba(255,255,255,0.05)', tickWidth: 0, lineWidth: 0 }},
+                    yAxis: {{ title: {{ text: null }}, labels: {{ enabled: false }}, gridLineColor: 'rgba(255,255,255,0.05)', minPadding: 0.25, maxPadding: 0.25 }},
+                    legend: {{ enabled: false }},
+                    tooltip: {{ backgroundColor: 'rgba(15, 23, 42, 0.95)', style: {{ color: '#fff' }}, borderColor: 'rgba(255,255,255,0.15)', formatter: function() {{ const val = Highcharts.numberFormat(Math.abs(this.y), 2) + '%'; const sign = this.y >= 0 ? '▲ ' : '▼ '; return `<b>${{this.point.name}}</b><br/>24h Change: <b style="color:${{this.point.color}}">${{sign}}${{val}}</b>`; }} }},
+                    plotOptions: {{ bar: {{ borderRadius: 4, borderWidth: 0, pointPadding: 0.1, groupPadding: 0.1, maxPointWidth: 35, shadow: {{ color: 'rgba(0,0,0,0.3)', offsetX: 1, offsetY: 2, width: 4 }}, dataLabels: {{ enabled: true, inside: false, crop: false, overflow: 'allow', style: {{ color: '#fff', textOutline: '2px #0f172a', fontWeight: 'bold', fontSize: '11px' }}, formatter: function() {{ return (this.y >= 0 ? '+' : '') + Highcharts.numberFormat(this.y, 2) + '%'; }} }} }} }},
+                    credits: {{ enabled: false }},
+                    series: [{{ name: '24h Change', data: [ {daily_data_js} ] }}]
+                }});
+            }} catch(e) {{ console.error('Daily fail:', e); }}
+            
+            try {{
+                Highcharts.chart('allocation-container', {{
+                    chart: {{ type: 'areaspline', backgroundColor: 'transparent', marginTop: 45, marginBottom: 35 }},
+                    title: {{ text: 'Asset Allocation', align: 'left', x: 8, y: 24, style: {{ color: '#e2e8f0', fontSize: '13px', fontWeight: 'bold' }} }},
+                    xAxis: {{ type: 'datetime', labels: {{ style: {{ color: '#94a3b8', fontSize: '10px' }} }}, gridLineColor: 'rgba(255,255,255,0.05)', tickWidth: 0, minorGridLineWidth: 0 }},
+                    yAxis: {{ title: {{ text: null }}, labels: {{ formatter: function() {{ return this.value + '%'; }}, style: {{ color: '#94a3b8', fontSize: '10px' }} }}, gridLineColor: 'rgba(255,255,255,0.05)', max: 100 }},
+                    legend: {{ enabled: false }},
+                    tooltip: {{ shared: true, backgroundColor: 'rgba(15, 23, 42, 0.95)', style: {{ color: '#fff' }}, borderColor: 'rgba(255,255,255,0.15)', formatter: function() {{ let s = '<b style="font-size: 11px; color:#cbd5e1;">' + Highcharts.dateFormat('%b %e, %Y', this.x) + '</b>'; this.points.forEach(function(point) {{ s += '<br/>' + '<span style="color:'+point.series.color+'">\u25CF</span> ' + point.series.name + ': <b>' + Highcharts.numberFormat(point.percentage, 1) + '%</b>'; }}); return s; }} }},
+                    plotOptions: {{ areaspline: {{ stacking: 'percent', fillOpacity: 0.25, lineWidth: 2, marker: {{ enabled: false, symbol: 'circle', radius: 2, states: {{ hover: {{ enabled: true }} }} }} }} }},
+                    credits: {{ enabled: false }},
+                    series: [{allocation_series_js}]
+                }});
+            }} catch(e) {{ console.error('Alloc fail:', e); }}
+
+            try {{
+                Highcharts.chart('inv-val-container', {{
+                    chart: {{ type: 'column', backgroundColor: 'transparent', marginTop: 45, marginBottom: 35 }},
+                    title: {{ text: 'Invested vs Current Value', align: 'left', x: 8, y: 24, style: {{ color: '#e2e8f0', fontSize: '13px', fontWeight: 'bold' }} }},
+                    xAxis: {{ type: 'category', categories: {inv_val_categories_js}, labels: {{ style: {{ color: '#94a3b8', fontWeight: 'bold', fontSize: '10px' }} }}, gridLineColor: 'rgba(255,255,255,0.05)', tickWidth: 0 }},
+                    yAxis: {{ title: {{ text: null }}, labels: {{ style: {{ color: '#94a3b8', fontSize: '10px' }}, formatter: function() {{ return document.body.classList.contains('privacy-mode') ? '***' : formatAxisMoneyStr(this.value); }} }}, gridLineColor: 'rgba(255,255,255,0.05)', minPadding: 0.15, maxPadding: 0.15 }},
+                    legend: {{ enabled: false }},
+                    tooltip: {{ shared: true, backgroundColor: 'rgba(15, 23, 42, 0.95)', style: {{ color: '#fff' }}, borderColor: 'rgba(255,255,255,0.15)', formatter: function() {{ let s = '<b style="font-size: 13px;">' + this.points[0].key + '</b>'; const isPrivacy = document.body.classList.contains('privacy-mode'); this.points.forEach(function(point) {{ let val = isPrivacy ? '***' : formatMoneyStr(point.y); s += '<br/>' + '<span style="color:'+ point.color +'">\u25CF</span> ' + point.series.name + ': <b>' + val + '</b>'; }}); return s; }} }},
+                    plotOptions: {{ column: {{ borderRadius: 4, borderWidth: 0, maxPointWidth: 40, dataLabels: {{ enabled: true, inside: false, crop: false, overflow: 'allow', style: {{ color: '#fff', textOutline: '2px #0f172a', fontWeight: 'bold', fontSize: '11px' }}, formatter: function() {{ return document.body.classList.contains('privacy-mode') ? '***' : formatMoneyStr(this.y); }} }} }} }},
+                    credits: {{ enabled: false }},
+                    series: [ {{ name: 'Invested', data: [{inv_data_js}] }}, {{ name: 'Current Value', data: [{val_data_js}] }} ]
+                }});
+            }} catch(e) {{ console.error('InvVal fail:', e); }}
+            
+            // The ultimate pure javascript jailbreak to expand charts perfectly across Streamlit's bounds
+            function toggleExpandChart(wrapperId) {{
+                if (window.innerWidth > 768) return; // Mobile only
                 const el = document.getElementById(wrapperId);
                 const overlay = document.getElementById('chart-overlay');
-                const wrapper = document.getElementById('chartsScrollContainer');
-
+                
                 let parentIframe = null;
                 try {{
                     const iframes = window.parent.document.querySelectorAll('iframe');
                     for (let ifr of iframes) {{ if (ifr.contentWindow === window) parentIframe = ifr; }}
                 }} catch(e) {{}}
-                
-                const screenW = window.parent ? window.parent.innerWidth : window.innerWidth;
-                const screenH = window.parent ? window.parent.innerHeight : window.innerHeight;
-                
+
                 if (el.classList.contains('expanded-chart')) {{
-                    // ==========================================
-                    // CLOSING MECHANICS 
-                    // ==========================================
+                    // CLOSE MECHANIC
                     overlay.classList.remove('active');
-                    
-                    const origTop = parseFloat(el.getAttribute('data-orig-top')) || 0;
-                    const origLeft = parseFloat(el.getAttribute('data-orig-left')) || 0;
-                    
                     el.classList.remove('expanded-chart');
+                    el.style.cssText = ''; 
                     
-                    el.style.transition = 'transform 0.4s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.4s ease, box-shadow 0.4s ease';
-                    el.style.transform = `translate(${{origLeft}}px, ${{origTop}}px) scale(1)`;
-
-                    const finishClose = (e) => {{
-                        if (e && e.propertyName !== 'transform') return;
-                        el.removeEventListener('transitionend', finishClose);
-                        clearTimeout(el._closeTimeout);
-                        
-                        if (parentIframe) {{
-                            parentIframe.classList.remove('fullscreen-mode');
-                            window.parent.document.querySelector('.stApp').classList.remove('chart-expanded-mode');
-                        }}
-                        el.style.cssText = ''; 
-                        wrapper.style.overflowX = 'auto'; // Restore scroll snapping
-                        
-                        document.querySelectorAll('.chart-box').forEach(c => {{
-                            c.style.opacity = '1';
-                            c.style.pointerEvents = 'auto';
-                        }});
-                    }};
-                    el.addEventListener('transitionend', finishClose);
-                    el._closeTimeout = setTimeout(() => {{ finishClose(); }}, 450); 
-
-                    return;
-                }}
-                
-                // ==========================================
-                // OPENING MECHANICS 
-                // ==========================================
-                
-                document.querySelectorAll('.chart-box').forEach(c => {{
-                    if (c.id !== wrapperId) {{
-                        c.style.transition = 'opacity 0.15s ease';
-                        c.style.opacity = '0';
-                        c.style.pointerEvents = 'none';
+                    document.querySelectorAll('.chart-box').forEach(c => c.style.opacity = '1');
+                    
+                    if (parentIframe) {{
+                        parentIframe.style.position = '';
+                        parentIframe.style.top = '';
+                        parentIframe.style.left = '';
+                        parentIframe.style.width = '';
+                        parentIframe.style.height = '';
+                        parentIframe.style.zIndex = '';
+                        parentIframe.style.background = '';
                     }}
-                }});
-                
-                const chartRect = el.getBoundingClientRect();
-                let visualTop = chartRect.top;
-                let visualLeft = chartRect.left;
-                
-                if (parentIframe) {{
-                    const iframeRect = parentIframe.getBoundingClientRect();
-                    visualTop += iframeRect.top;
-                    visualLeft += iframeRect.left;
+                }} else {{
+                    // OPEN MECHANIC
+                    document.querySelectorAll('.chart-box').forEach(c => {{
+                        if (c.id !== wrapperId) c.style.opacity = '0';
+                    }});
+                    
+                    overlay.classList.add('active'); 
+                    el.classList.add('expanded-chart');
+                    
+                    // Directly rip the element out of flow and center it natively
+                    el.style.position = 'fixed';
+                    el.style.top = '10vh';
+                    el.style.left = '5vw';
+                    el.style.width = '90vw';
+                    el.style.height = '75vh';
+                    el.style.zIndex = '9999999';
+                    el.style.transform = 'none';
+                    el.style.transition = 'all 0.3s ease';
+                    
+                    // Rip the iframe completely out of flow so it overlays the whole Streamlit app
+                    if (parentIframe) {{
+                        parentIframe.style.position = 'fixed';
+                        parentIframe.style.top = '0';
+                        parentIframe.style.left = '0';
+                        parentIframe.style.width = '100vw';
+                        parentIframe.style.height = '100vh';
+                        parentIframe.style.zIndex = '999999';
+                        parentIframe.style.background = 'rgba(10,15,28,0.98)';
+                    }}
+                    
+                    // Reflow Highcharts
+                    setTimeout(() => {{
+                        const hc = Highcharts.charts.find(c => c && c.renderTo.id === el.id.replace('-wrapper', '-container'));
+                        if (hc) hc.reflow();
+                    }}, 350);
                 }}
-
-                if (parentIframe) {{
-                    parentIframe.classList.add('fullscreen-mode');
-                    window.parent.document.querySelector('.stApp').classList.add('chart-expanded-mode');
-                }}
-                
-                overlay.classList.add('active'); 
-                wrapper.style.overflowX = 'visible';
-
-                const origW = chartRect.width;
-                const origH = chartRect.height;
-                
-                let targetW = screenW * 0.95;
-                let targetH = screenH * 0.70;
-                
-                const maxScaleX = targetW / origW;
-                const maxScaleY = targetH / origH;
-                const targetScale = Math.min(maxScaleX, maxScaleY);
-                
-                const scaledW = origW * targetScale;
-                const scaledH = origH * targetScale;
-                const centerLeft = (screenW - scaledW) / 2;
-                const centerTop = (screenH - scaledH) / 2;
-
-                el.setAttribute('data-orig-top', visualTop);
-                el.setAttribute('data-orig-left', visualLeft);
-
-                el.style.position = 'fixed';
-                el.style.top = '0px';
-                el.style.left = '0px';
-                el.style.width = origW + 'px';
-                el.style.height = origH + 'px';
-                el.style.margin = '0';
-                el.style.zIndex = '1001';
-                el.style.transformOrigin = 'top left'; 
-                el.style.transition = 'none';
-                el.style.transform = `translate(${{visualLeft}}px, ${{visualTop}}px) scale(1)`;
-                
-                void el.offsetWidth; // Force Reflow
-
-                el.classList.add('expanded-chart');
-                el.style.transition = 'transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.4s ease, box-shadow 0.4s ease';
-                el.style.transform = `translate(${{centerLeft}}px, ${{centerTop}}px) scale(${{targetScale}})`;
             }}
 
             function setupDoubleTap(elementId) {{
                 const el = document.getElementById(elementId);
                 if (!el) return;
                 let lastTap = 0;
-
                 el.addEventListener('touchend', function(e) {{
                     const currentTime = new Date().getTime();
                     const tapLength = currentTime - lastTap;
                     if (tapLength < 400 && tapLength > 0) {{
                         toggleExpandChart(elementId);
-                        e.preventDefault(); 
-                        e.stopPropagation();
+                        e.preventDefault(); e.stopPropagation();
                     }}
                     lastTap = currentTime;
                 }});
             }}
 
-            setupDoubleTap('pie-container');
-            setupDoubleTap('history-wrapper');
-            setupDoubleTap('pnl-wrapper');
-            setupDoubleTap('roi-wrapper');
-            setupDoubleTap('daily-wrapper');
-            setupDoubleTap('allocation-container');
-            setupDoubleTap('inv-val-container');
-
+            setupDoubleTap('pie-container'); setupDoubleTap('history-wrapper'); setupDoubleTap('pnl-wrapper'); 
+            setupDoubleTap('roi-wrapper'); setupDoubleTap('daily-wrapper'); setupDoubleTap('allocation-container'); setupDoubleTap('inv-val-container');
+            
             document.getElementById('chart-overlay').addEventListener('click', () => {{
-                document.querySelectorAll('.expanded-chart').forEach(el => {{
-                    if (el.classList.contains('expanded-chart')) {{
-                        toggleExpandChart(el.id);
-                    }}
-                }});
+                document.querySelectorAll('.expanded-chart').forEach(el => toggleExpandChart(el.id));
             }});
             
             const chartScroll = document.getElementById('chartsScrollContainer');
@@ -1182,13 +787,9 @@ with tab_home:
                     const saved = localStorage.getItem('dashboardOpen');
                     const isPrivacy = (saved === 'false');
                     const currentlyPrivacy = document.body.classList.contains('privacy-mode');
-                    
                     if (isPrivacy !== currentlyPrivacy) {{
-                        if (isPrivacy) {{
-                            document.body.classList.add('privacy-mode');
-                        }} else {{
-                            document.body.classList.remove('privacy-mode');
-                        }}
+                        if (isPrivacy) document.body.classList.add('privacy-mode');
+                        else document.body.classList.remove('privacy-mode');
                         ['history-container', 'pnl-container', 'roi-container', 'daily-container', 'inv-val-container'].forEach(id => {{
                             const hc = Highcharts.charts.find(c => c && c.renderTo.id === id);
                             if (hc && hc.yAxis && hc.yAxis[0]) {{ hc.yAxis[0].isDirty = true; hc.redraw(true); }}
@@ -1196,13 +797,6 @@ with tab_home:
                     }}
                 }} catch(e) {{}}
             }}, 200);
-            
-            // Constantly ensure charts auto-resize perfectly when you swipe to the Home tab
-            setInterval(() => {{
-                Highcharts.charts.forEach(c => {{
-                    if (c && c.renderTo && c.renderTo.clientWidth > 0) {{ c.reflow(); }}
-                }});
-            }}, 500);
         </script>
     </body>
     </html>
@@ -1618,7 +1212,9 @@ with tab_home:
     components.html(full_html, height=380, scrolling=False)
 
 # ================== PAGE 2: CRYPTO ==================
-with tab_crypto:
+elif st.session_state.page == "Crypto":
+    glossy_header("Crypto Transactions", CRYPTO_ICON)
+
     st.markdown("""
     <style>
     div[data-testid="stForm"]:has(.add-tx-card) { background: #0f172a !important; border: 1px solid rgba(255,255,255,0.05) !important; border-radius: 16px !important; padding: 24px !important; box-shadow: 0 4px 15px rgba(0,0,0,0.3) !important; margin-bottom: 24px !important; }
@@ -1787,12 +1383,14 @@ with tab_crypto:
                                 st.rerun()
 
 # ================== PAGE 3: FIAT ==================
-with tab_fiat:
+elif st.session_state.page == "Fiat":
     total_czk = pd.to_numeric(st.session_state.fiat_df['CZK'], errors='coerce').fillna(0).sum()
     total_eur = pd.to_numeric(st.session_state.fiat_df['EUR'], errors='coerce').fillna(0).sum()
     total_usdc = pd.to_numeric(st.session_state.fiat_df['USDC'], errors='coerce').fillna(0).sum()
     fees_eur = pd.to_numeric(st.session_state.fiat_df['Fee'], errors='coerce').fillna(0).sum()
     fees_czk = (pd.to_numeric(st.session_state.fiat_df['Fee'], errors='coerce').fillna(0) * pd.to_numeric(st.session_state.fiat_df['CZK/EUR'], errors='coerce').fillna(0)).sum()
+
+    glossy_header("Fiat Transactions", FIAT_ICON)
 
     summary_html = f"""
     <div style="display:flex;flex-wrap:wrap;justify-content:center;gap:12px;margin-bottom:30px;">
