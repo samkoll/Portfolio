@@ -13,7 +13,7 @@ from concurrent.futures import ThreadPoolExecutor
 # ====================== CONFIG ======================
 st.set_page_config(page_title="Portfolio", layout="wide", page_icon="logo.png")
 
-# ====================== GLOBAL CSS ======================
+# ====================== GLOBAL CSS & SWIPE ANIMATIONS ======================
 st.markdown("""
 <style>
 html, body, .stApp {
@@ -754,6 +754,8 @@ with st.sidebar:
     page_order = {key: i for i, (_, key) in enumerate(nav_items)}
 
     for label, key in nav_items:
+        # We give the buttons specific classes so JS can auto-click them on swipe
+        st.markdown(f"<div class='nav-btn-wrapper' data-key='{key}'>", unsafe_allow_html=True)
         if st.button(label, key=f"nav_{key}", use_container_width=True):
             curr_idx = page_order.get(st.session_state.page, 0)
             new_idx = page_order.get(key, 0)
@@ -768,6 +770,7 @@ with st.sidebar:
             st.session_state.page = key
             st.session_state.ui_version += 1
             st.rerun()
+        st.markdown("</div>", unsafe_allow_html=True)
             
     st.divider()
     if st.button("🔄 Refresh All Prices & Charts", use_container_width=True):
@@ -779,6 +782,75 @@ with st.sidebar:
         data = {"crypto": json.loads(st.session_state.crypto_df.to_json(orient="records")),
                 "fiat": json.loads(st.session_state.fiat_df.to_json(orient="records"))}
         st.download_button("Download JSON", json.dumps(data, indent=2), "portfolio_backup.json", "application/json")
+
+# ====================== GLOBAL SWIPE LISTENER ======================
+# This JS snippet tracks your finger across the whole screen and triggers the next/prev page slide.
+swipe_js = f"""
+<script>
+(function() {{
+    const doc = window.parent.document;
+    if (doc.getElementById('global-swipe-listener')) return;
+    
+    const scriptTag = doc.createElement('div');
+    scriptTag.id = 'global-swipe-listener';
+    doc.body.appendChild(scriptTag);
+
+    let touchstartX = 0;
+    let touchendX = 0;
+    let touchstartY = 0;
+    let touchendY = 0;
+
+    doc.addEventListener('touchstart', e => {{
+        touchstartX = e.changedTouches[0].screenX;
+        touchstartY = e.changedTouches[0].screenY;
+    }}, {{passive: true}});
+
+    doc.addEventListener('touchend', e => {{
+        touchendX = e.changedTouches[0].screenX;
+        touchendY = e.changedTouches[0].screenY;
+        
+        // Ensure they aren't just scrolling up and down
+        if (Math.abs(touchendY - touchstartY) > 100) return;
+
+        // Ensure they aren't swiping horizontally inside the highcharts/cards scroll areas
+        if (e.target.closest('.charts-scroll-wrapper') || e.target.closest('.scroll-wrapper')) return;
+
+        checkDirection();
+    }}, {{passive: true}});
+
+    function checkDirection() {{
+        const threshold = 120; // Needs a definitive, long swipe
+        const swipeLeft = touchstartX - touchendX > threshold;
+        const swipeRight = touchendX - touchstartX > threshold;
+        
+        if (!swipeLeft && !swipeRight) return;
+
+        const currentPage = "{st.session_state.page}";
+        const pages = ["Home", "Crypto Transactions", "Fiat Transactions"];
+        let currentIndex = pages.indexOf(currentPage);
+        
+        let targetPage = null;
+        if (swipeLeft && currentIndex < pages.length - 1) {{
+            targetPage = pages[currentIndex + 1];
+        }} else if (swipeRight && currentIndex > 0) {{
+            targetPage = pages[currentIndex - 1];
+        }}
+
+        if (targetPage) {{
+            // Find the hidden wrapper we injected in Python sidebar and click the button inside
+            const wrappers = doc.querySelectorAll('.nav-btn-wrapper');
+            wrappers.forEach(w => {{
+                if (w.getAttribute('data-key') === targetPage) {{
+                    const btn = w.querySelector('button');
+                    if (btn) btn.click();
+                }}
+            }});
+        }}
+    }}
+}})();
+</script>
+"""
+components.html(swipe_js, height=0, width=0)
 
 # ====================== MAIN CONTENT ======================
 main_container = st.empty()
@@ -792,9 +864,9 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
     # --- DYNAMIC ANIMATION INJECTION ---
     anim_css = ""
     if st.session_state.page_anim_dir == 'slide-in-from-right':
-        anim_css = "div[data-testid='stMainBlockContainer'] { animation: slideInFromRight 0.5s cubic-bezier(0.25, 1, 0.5, 1) forwards; }"
+        anim_css = "div[data-testid='stMainBlockContainer'] { animation: slideInFromRight 0.4s cubic-bezier(0.25, 1, 0.5, 1) forwards; }"
     elif st.session_state.page_anim_dir == 'slide-in-from-left':
-        anim_css = "div[data-testid='stMainBlockContainer'] { animation: slideInFromLeft 0.5s cubic-bezier(0.25, 1, 0.5, 1) forwards; }"
+        anim_css = "div[data-testid='stMainBlockContainer'] { animation: slideInFromLeft 0.4s cubic-bezier(0.25, 1, 0.5, 1) forwards; }"
 
     if anim_css:
         st.markdown(f"<style>{anim_css}</style>", unsafe_allow_html=True)
@@ -804,8 +876,6 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
     if st.session_state.page == "Home":
 
         # ================== ZERO-LATENCY CACHE ARCHITECTURE ==================
-        # This completely skips ALL pandas recalculations and dictionary loops when you simply swap pages.
-        # It guarantees the page swap will occur instantly without blocking the server thread.
         current_hash = f"{st.session_state.crypto_table_version}_{st.session_state.fiat_table_version}_{st.session_state.refresh_key}"
 
         if st.session_state.portfolio_cache.get('hash') != current_hash:
