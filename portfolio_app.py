@@ -13,333 +13,13 @@ from concurrent.futures import ThreadPoolExecutor
 # ====================== CONFIG ======================
 st.set_page_config(page_title="Portfolio", layout="wide", page_icon="logo.png", initial_sidebar_state="collapsed")
 
-# ====================== GLOBAL CSS ======================
-st.markdown("""
-<style>
-/* 1. HIDE SIDEBAR & DEFAULT STREAMLIT MARGINS */
-[data-testid="stSidebar"] { display: none !important; }
-[data-testid="collapsedControl"] { display: none !important; }
-
-html, body {
-    overflow: hidden !important;
-    position: fixed;
-    width: 100%;
-    height: 100%;
-}
-
-.stApp {
-    background: linear-gradient(180deg, #0f1724 0%, #0a0f1c 100%) !important;
-    overflow: hidden !important;
-}
-
-div[data-testid="stMainBlockContainer"] {
-    padding: 0 !important;
-    max-width: 100% !important;
-}
-
-/* 2. MASTER HORIZONTAL SCROLLER */
-div[data-testid="stMainBlockContainer"] > div > div[data-testid="stVerticalBlock"] {
-    display: flex !important;
-    flex-direction: row !important;
-    flex-wrap: nowrap !important;
-    overflow-x: auto !important;
-    overflow-y: hidden !important;
-    scroll-snap-type: x mandatory !important;
-    scroll-behavior: smooth !important;
-    height: 100dvh !important;
-    width: 100vw !important;
-    gap: 0 !important;
-    -ms-overflow-style: none;
-    scrollbar-width: none;
-}
-div[data-testid="stMainBlockContainer"] > div > div[data-testid="stVerticalBlock"]::-webkit-scrollbar {
-    display: none;
-}
-
-/* 3. PAGE CONTAINERS (The first 3 element-containers are our pages) */
-div[data-testid="stMainBlockContainer"] > div > div[data-testid="stVerticalBlock"] > div.element-container:nth-child(1),
-div[data-testid="stMainBlockContainer"] > div > div[data-testid="stVerticalBlock"] > div.element-container:nth-child(2),
-div[data-testid="stMainBlockContainer"] > div > div[data-testid="stVerticalBlock"] > div.element-container:nth-child(3) {
-    flex: 0 0 100vw !important;
-    width: 100vw !important;
-    height: 100dvh !important;
-    overflow-y: auto !important;
-    overflow-x: hidden !important;
-    scroll-snap-align: start !important;
-    padding: 0 !important;
-    -ms-overflow-style: none;
-    scrollbar-width: none;
-}
-div[data-testid="stMainBlockContainer"] > div > div[data-testid="stVerticalBlock"] > div.element-container::-webkit-scrollbar {
-    display: none;
-}
-
-/* Inner padding for the pages */
-div[data-testid="stMainBlockContainer"] > div > div[data-testid="stVerticalBlock"] > div.element-container:nth-child(1) > div > div[data-testid="stVerticalBlock"],
-div[data-testid="stMainBlockContainer"] > div > div[data-testid="stVerticalBlock"] > div.element-container:nth-child(2) > div > div[data-testid="stVerticalBlock"],
-div[data-testid="stMainBlockContainer"] > div > div[data-testid="stVerticalBlock"] > div.element-container:nth-child(3) > div > div[data-testid="stVerticalBlock"] {
-    padding: 14px 14px 100px 14px !important;
-    min-height: 100%;
-}
-
-/* Hide the bottom nav Streamlit wrapper (4th element) from flex layout */
-div[data-testid="stMainBlockContainer"] > div > div[data-testid="stVerticalBlock"] > div.element-container:last-child {
-    flex: 0 0 0 !important;
-    width: 0 !important;
-    height: 0 !important;
-    overflow: hidden !important;
-    margin: 0 !important;
-    padding: 0 !important;
-}
-
-/* Dashboard Pullable Drawer Styles */
-.dashboard-wrapper {
-    position: relative;
-    z-index: 10;
-}
-.glossy-header-label {
-    cursor: pointer;
-    display: block;
-    position: relative;
-    z-index: 3;
-    -webkit-tap-highlight-color: transparent;
-}
-.home-header {
-    margin-bottom: 0 !important;
-    padding-bottom: 30px !important;
-}
-.pull-indicator {
-    position: absolute;
-    bottom: 8px;
-    left: 50%;
-    transform: translateX(-50%);
-    color: #64748b;
-    opacity: 0.8;
-    transition: color 0.3s ease;
-}
-@media (hover: hover) and (pointer: fine) {
-    .glossy-header-label:hover .pull-indicator {
-        color: #cbd5e1;
-    }
-}
-.pull-indicator .eye-open { display: none; }
-.pull-indicator .eye-closed { display: block; }
-
-.dashboard-toggle:checked ~ .dashboard-wrapper .glossy-header-label .pull-indicator .eye-open { display: block; }
-.dashboard-toggle:checked ~ .dashboard-wrapper .glossy-header-label .pull-indicator .eye-closed { display: none; }
-.dashboard-toggle:checked ~ .dashboard-wrapper .glossy-header-label .pull-indicator { color: #ffffff; }
-
-.stats-layer {
-    position: relative;
-    z-index: 1;
-    margin-top: -60px !important; 
-    transition: margin-top 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-    margin-bottom: 24px;
-}
-.dashboard-toggle:checked ~ .dashboard-wrapper .stats-layer {
-    margin-top: 14px !important;
-}
-
-/* Force 3 columns globally without wrapping */
-.stats-layer-inner {
-    display: grid !important;
-    grid-template-columns: repeat(3, 1fr) !important;
-    gap: 14px;
-    width: 100%;
-}
-
-/* Tucked Text Fade Out */
-.dash-value {
-    font-size: clamp(14px, 2.5vw, 24px) !important;
-    font-weight: 700;
-    line-height: 1.05;
-    color: #ffffff;
-    position: absolute;
-    top: 20px;
-    left: 0;
-    width: 100%;
-    text-align: center;
-    margin: 0;
-    transition: opacity 0.3s ease;
-    padding: 0 4px;
-    box-sizing: border-box;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-.dashboard-toggle:not(:checked) ~ .dashboard-wrapper .stats-layer .dash-value {
-    opacity: 0;
-    pointer-events: none;
-}
-
-.dash-label {
-    font-size: 11px !important;
-    font-weight: 600;
-    letter-spacing: 1.5px;
-    text-transform: uppercase;
-    color: #94a3b8;
-    line-height: 1.2;
-    position: absolute;
-    bottom: 8px;
-    left: 0;
-    width: 100%;
-    text-align: center;
-}
-
-.glossy-header {
-    position: relative;
-    overflow: hidden;
-    background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
-    border: 1px solid rgba(255,255,255,0.05);
-    border-radius: 18px;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.4);
-    transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.4s ease, border-color 0.4s ease;
-    padding: 32px 24px;
-    min-height: 130px;
-    font-size: 29px;
-    font-weight: 700;
-    letter-spacing: 1.5px;
-    line-height: 1.1;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 16px;
-    width: 100% !important;
-    margin-top: 68px;
-    margin-bottom: 38px;
-}
-
-/* PC Hover and Sync with Dashboard Toggle */
-@media (hover: hover) and (pointer: fine) {
-    .glossy-header-label:hover .glossy-header {
-        transform: translateY(-4px) scale(1.01);
-        box-shadow: 0 15px 40px rgba(0, 0, 0, 0.5);
-        border-color: rgba(255, 255, 255, 0.15);
-    }
-}
-.dashboard-toggle:checked ~ .dashboard-wrapper .glossy-header {
-    transform: translateY(-4px) scale(1.01);
-    box-shadow: 0 15px 40px rgba(0, 0, 0, 0.5);
-    border-color: rgba(255, 255, 255, 0.15);
-}
-
-.glossy-box {
-    position: relative;
-    overflow: hidden;
-    background: linear-gradient(180deg, #162032 0%, #0f172a 100%);
-    border: 1px solid rgba(255,255,255,0.05);
-    border-radius: 18px;
-    box-shadow: 0 8px 24px rgba(0,0,0,0.4);
-    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-    padding: 28px 30px;
-    text-align: center;
-    flex: 1;
-    min-width: 220px;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-}
-
-.glossy-box:not(.swapped) > div:first-child {
-    font-size: 12px;
-    font-weight: 600;
-    letter-spacing: 1.5px;
-    text-transform: uppercase;
-    color: #94a3b8;
-    margin-bottom: 6px;
-    line-height: 1.2;
-}
-.glossy-box:not(.swapped) > div:last-child {
-    font-size: 27px;
-    font-weight: 700;
-    line-height: 1.05;
-    color: #ffffff;
-}
-
-.glossy-box.swapped {
-    min-width: 0 !important;
-    height: 80px !important;
-    min-height: 80px !important;
-    max-height: 80px !important;
-    padding: 0;
-    display: block;
-}
-
-/* Subdued and Smaller USDC Banner */
-.usdc-banner {
-    position: relative;
-    overflow: hidden;
-    background: rgba(15, 23, 42, 0.5);
-    border: 1px solid rgba(39, 117, 202, 0.2);
-    border-radius: 12px;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-    padding: 10px 20px;
-    width: 90%; 
-    max-width: 400px; 
-    margin: -15px auto 12px auto !important;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-}
-.usdc-banner-left {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-}
-.usdc-banner-left img {
-    width: 28px;
-    height: 28px;
-    border-radius: 50%;
-    object-fit: contain;
-    opacity: 0.85;
-}
-.usdc-banner-title {
-    font-size: 1.05rem;
-    font-weight: 600;
-    color: #e2e8f0;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-}
-.usdc-banner-subtitle {
-    font-size: 0.75rem;
-    font-weight: 500;
-    color: #64748b;
-}
-.usdc-banner-amount {
-    font-size: 1.2rem;
-    font-weight: 600;
-    color: #e2e8f0;
-}
-
-/* Native CSS Privacy Mode for USDC Banner */
-.dashboard-toggle:not(:checked) ~ .usdc-banner .usdc-banner-amount {
-    font-size: 0 !important;
-}
-.dashboard-toggle:not(:checked) ~ .usdc-banner .usdc-banner-amount::after {
-    content: '***';
-    font-size: 1.2rem;
-    color: #e2e8f0;
-}
-
-/* GLOBALLY HIDE NUMBER INPUT STEP BUTTONS (+ / -) */
-button[aria-label="Step Up"],
-button[aria-label="Step Down"],
-button[data-testid="stNumberInputStepUp"],
-button[data-testid="stNumberInputStepDown"] {
-    display: none !important;
-}
-input[type="number"]::-webkit-inner-spin-button, 
-input[type="number"]::-webkit-outer-spin-button { 
-    -webkit-appearance: none; 
-    margin: 0; 
-}
-input[type="number"] {
-    -moz-appearance: textfield;
-}
-
-</style>
-""", unsafe_allow_html=True)
+# ====================== CORE CONTAINERS ======================
+# By defining these FIRST, they are guaranteed to be the first 4 elements in the Streamlit DOM.
+# This allows our Javascript layout enforcer to target them perfectly.
+page_home = st.container()
+page_crypto = st.container()
+page_fiat = st.container()
+hidden_scripts = st.container()
 
 # ====================== SVG ICONS ======================
 DASHBOARD_ICON = '''<svg xmlns="http://www.w3.org/2000/svg" width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="#00ff9d" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>'''
@@ -438,11 +118,10 @@ def get_with_retry(url: str, headers: dict, timeout: int = 12, retries: int = 4)
             data = resp.json()
             if isinstance(data, dict) and data.get('Response') == 'Error':
                 msg = data.get('Message', '').lower()
-                # If rate limit hit, sleep and let it organically retry
                 if 'rate limit' in msg:
                     time.sleep(1.5 ** attempt)
                     continue
-                return None  # Fast fail only if invalid symbol
+                return None
             return data
         except Exception:
             if attempt == retries - 1:
@@ -484,7 +163,6 @@ def fetch_all_historical_data(coins_tuple: tuple, limit: int, refresh_key: int):
             return coin, {datetime.fromtimestamp(d['time']).date(): float(d['close']) for d in data['Data']['Data']}
         return coin, {}
 
-    # Strict pool limit ensures we don't trigger the API's rate limits, avoiding the flatline bug
     with ThreadPoolExecutor(max_workers=5) as executor:
         results = executor.map(fetch_coin, coins_tuple)
         for coin, hist in results:
@@ -501,10 +179,8 @@ def get_base_prices(prices_dict, coins):
         hist = prices_dict.get(coin, {})
         if not hist: continue
         
-        # Sort chronologically, strictly avoiding timezone matching bugs
         sorted_dates = sorted(hist.keys())
         prices = [hist[d] for d in sorted_dates]
-        
         if not prices: continue
 
         def get_p(days_back):
@@ -577,7 +253,6 @@ def build_portfolio_history(crypto_df, fiat_df, last_prices, hist_dict):
         
     for coin in fetch_coins:
         live_p = last_prices.get(coin, 0.0)
-        # Prevents mathematical flatline if BTC network response ever failed completely
         if live_p == 0.0 and coin == 'BTC':
             live_p = 65000.0 
             
@@ -601,7 +276,6 @@ def build_portfolio_history(crypto_df, fiat_df, last_prices, hist_dict):
 
     total_portfolio_value = daily_crypto_value + cum_unused_usdc
 
-    # Re-calculate BTC Benchmark properly tracking historical prices without dividing by constant flatline
     if 'BTC' in prices_df.columns and not prices_df['BTC'].empty and prices_df['BTC'].sum() > 0:
         btc_prices = prices_df['BTC'].replace(0, 1) 
         btc_bought = daily_fiat_usdc / btc_prices
@@ -775,7 +449,8 @@ def glossy_header(title: str, icon_svg: str):
     html = f"""<div class="glossy-header">{icon_svg}<span style="margin-left:12px;">{title}</span></div>"""
     st.markdown(html, unsafe_allow_html=True)
 
-# ================== GLOBAL DATA FETCHING (Runs once per refresh) ==================
+
+# ================== GLOBAL DATA FETCHING ==================
 current_hash = f"{st.session_state.crypto_table_version}_{st.session_state.fiat_table_version}_{st.session_state.refresh_key}"
 
 if st.session_state.portfolio_cache.get('hash') != current_hash:
@@ -824,11 +499,6 @@ pnl_df = vault['pnl_df']
 
 usdc_row = df_port[df_port['Ticker'] == 'USDC'].iloc[0] if not df_port[df_port['Ticker'] == 'USDC'].empty else None
 usdc_holdings = usdc_row['Holdings'] if usdc_row is not None else 0
-
-# ====================== 3 SWIPEABLE PAGE CONTAINERS ======================
-page_home = st.container()
-page_crypto = st.container()
-page_fiat = st.container()
 
 # -------------------------------------------------------------------------
 # PAGE 1: OVERVIEW (HOME)
@@ -1999,138 +1669,215 @@ with page_fiat:
             st.session_state.ui_version += 1
             st.rerun()
 
-# ====================== PERSISTENT BOTTOM NAVIGATION ======================
-# Injects a fixed bottom nav bar natively into the parent window overlaying the app.
-bottom_nav_html = """
-<script>
-(function() {
-    const parentDoc = window.parent.document;
-    let nav = parentDoc.getElementById('custom-bottom-nav');
-    
-    // Inject the native fixed navigation bar if it doesn't exist
-    if (!nav) {
-        nav = parentDoc.createElement('div');
-        nav.id = 'custom-bottom-nav';
-        nav.innerHTML = `
-            <style>
-            #custom-bottom-nav {
-                position: fixed;
-                bottom: 0;
-                left: 0;
-                width: 100vw;
-                height: 70px;
-                background: rgba(15, 23, 42, 0.98);
-                backdrop-filter: blur(10px);
-                -webkit-backdrop-filter: blur(10px);
-                border-top: 1px solid rgba(255,255,255,0.08);
-                display: flex;
-                justify-content: space-around;
-                align-items: center;
-                z-index: 999999;
-                padding-bottom: env(safe-area-inset-bottom);
-                box-shadow: 0 -4px 20px rgba(0,0,0,0.5);
+# -------------------------------------------------------------------------
+# HIDDEN SCRIPTS: CSS AND LAYOUT ENFORCER
+# -------------------------------------------------------------------------
+with hidden_scripts:
+    # We define the JS that actually alters the layout dynamically to guarantee the flex row
+    js_layout_enforcer = """
+    <script>
+    (function() {
+        const parentDoc = window.parent.document;
+        
+        // --- 1. Force the layout into horizontal mode safely ---
+        function enforceLayout() {
+            const mainBlock = parentDoc.querySelector('div[data-testid="stMainBlockContainer"]');
+            if (!mainBlock) {
+                requestAnimationFrame(enforceLayout);
+                return;
             }
-            .nav-item {
-                display: flex;
-                flex-direction: column;
-                align-items: center;
-                justify-content: center;
-                color: #64748b;
-                width: 33.33%;
-                height: 100%;
-                cursor: pointer;
-                transition: all 0.3s ease;
-                -webkit-tap-highlight-color: transparent;
-                user-select: none;
-            }
-            .nav-item:hover { color: #94a3b8; }
-            .nav-item.active { color: #00ff9d; }
-            .nav-item svg {
-                width: 24px;
-                height: 24px;
-                margin-bottom: 4px;
-                stroke: currentColor;
-                fill: none;
-                stroke-width: 2;
-                stroke-linecap: round;
-                stroke-linejoin: round;
-                transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            }
-            .nav-item.active svg {
-                transform: scale(1.15);
-                filter: drop-shadow(0 0 5px rgba(0,255,157,0.4));
-            }
-            .nav-item span {
-                font-size: 11px;
-                font-weight: 700;
-                letter-spacing: 0.5px;
-            }
-            </style>
-            <div class="nav-item active" data-idx="0">
-                <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
-                <span>Overview</span>
-            </div>
-            <div class="nav-item" data-idx="1">
-                <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M14.5 8.5L9.5 13.5"/><path d="M9.5 8.5L14.5 13.5"/></svg>
-                <span>Crypto</span>
-            </div>
-            <div class="nav-item" data-idx="2">
-                <svg viewBox="0 0 24 24"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M6 8h12"/><path d="M6 12h12"/><path d="M6 16h12"/></svg>
-                <span>Fiat</span>
-            </div>
-        `;
-        parentDoc.body.appendChild(nav);
-    }
+            
+            // Remove defaults
+            mainBlock.style.padding = '0';
+            mainBlock.style.maxWidth = '100%';
+            
+            const verticalBlock = mainBlock.querySelector('div[data-testid="stVerticalBlock"]');
+            if (verticalBlock) {
+                // Force horizontal swiping
+                verticalBlock.style.display = 'flex';
+                verticalBlock.style.flexDirection = 'row';
+                verticalBlock.style.flexWrap = 'nowrap';
+                verticalBlock.style.overflowX = 'auto';
+                verticalBlock.style.overflowY = 'hidden';
+                verticalBlock.style.scrollSnapType = 'x mandatory';
+                verticalBlock.style.scrollBehavior = 'smooth';
+                verticalBlock.style.height = '100dvh';
+                verticalBlock.style.width = '100vw';
+                
+                // Add global CSS to hide default scrollbars
+                if (!parentDoc.getElementById('hide-scrollbar-style')) {
+                    const style = parentDoc.createElement('style');
+                    style.id = 'hide-scrollbar-style';
+                    style.innerHTML = `
+                        div[data-testid="stMainBlockContainer"] div[data-testid="stVerticalBlock"]::-webkit-scrollbar { display: none !important; }
+                        html, body { overflow: hidden !important; position: fixed; width: 100%; height: 100%; }
+                    `;
+                    parentDoc.head.appendChild(style);
+                }
 
-    // Re-bind functionality every time Streamlit re-evaluates the DOM
-    function bindSwipeable() {
-        const scroller = parentDoc.querySelector('div[data-testid="stMainBlockContainer"] > div > div[data-testid="stVerticalBlock"]');
-        if(!scroller) {
-            setTimeout(bindSwipeable, 50);
-            return;
+                // Map exactly the 4 children: [Page 1, Page 2, Page 3, Scripts]
+                const children = Array.from(verticalBlock.children);
+                children.forEach((child, index) => {
+                    if (index < 3) {
+                        child.style.flex = '0 0 100vw';
+                        child.style.width = '100vw';
+                        child.style.minWidth = '100vw';
+                        child.style.height = '100dvh';
+                        child.style.overflowY = 'auto';
+                        child.style.overflowX = 'hidden';
+                        child.style.scrollSnapAlign = 'start';
+                        
+                        const innerBlock = child.querySelector('div[data-testid="stVerticalBlock"]');
+                        if (innerBlock) {
+                            innerBlock.style.padding = '14px 14px 100px 14px'; // 100px buffer for bottom nav
+                        }
+                    } else {
+                        // The scripts container takes exactly 0 space
+                        child.style.flex = '0 0 0px';
+                        child.style.width = '0px';
+                        child.style.height = '0px';
+                        child.style.overflow = 'hidden';
+                        child.style.visibility = 'hidden';
+                        child.style.margin = '0';
+                        child.style.padding = '0';
+                    }
+                });
+            }
+        }
+        
+        // Let it run a few times to ensure dynamic Streamlit renders are caught
+        let layoutAttempts = 0;
+        function tryEnforce() {
+            enforceLayout();
+            layoutAttempts++;
+            if (layoutAttempts < 15) {
+                setTimeout(tryEnforce, 100);
+            }
+        }
+        tryEnforce();
+
+        // --- 2. Build and bind the Navigation Bar natively ---
+        let nav = parentDoc.getElementById('custom-bottom-nav');
+        if (!nav) {
+            nav = parentDoc.createElement('div');
+            nav.id = 'custom-bottom-nav';
+            nav.innerHTML = `
+                <style>
+                #custom-bottom-nav {
+                    position: fixed;
+                    bottom: 0;
+                    left: 0;
+                    width: 100vw;
+                    height: 70px;
+                    background: rgba(15, 23, 42, 0.98);
+                    backdrop-filter: blur(10px);
+                    -webkit-backdrop-filter: blur(10px);
+                    border-top: 1px solid rgba(255,255,255,0.08);
+                    display: flex;
+                    justify-content: space-around;
+                    align-items: center;
+                    z-index: 999999;
+                    padding-bottom: env(safe-area-inset-bottom);
+                    box-shadow: 0 -4px 20px rgba(0,0,0,0.5);
+                }
+                .nav-item {
+                    display: flex;
+                    flex-direction: column;
+                    align-items: center;
+                    justify-content: center;
+                    color: #64748b;
+                    width: 33.33%;
+                    height: 100%;
+                    cursor: pointer;
+                    transition: all 0.3s ease;
+                    -webkit-tap-highlight-color: transparent;
+                    user-select: none;
+                }
+                .nav-item:hover { color: #94a3b8; }
+                .nav-item.active { color: #00ff9d; }
+                .nav-item svg {
+                    width: 24px;
+                    height: 24px;
+                    margin-bottom: 4px;
+                    stroke: currentColor;
+                    fill: none;
+                    stroke-width: 2;
+                    stroke-linecap: round;
+                    stroke-linejoin: round;
+                    transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+                }
+                .nav-item.active svg {
+                    transform: scale(1.15);
+                    filter: drop-shadow(0 0 5px rgba(0,255,157,0.4));
+                }
+                .nav-item span {
+                    font-size: 11px;
+                    font-weight: 700;
+                    letter-spacing: 0.5px;
+                }
+                </style>
+                <div class="nav-item active" data-idx="0">
+                    <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+                    <span>Overview</span>
+                </div>
+                <div class="nav-item" data-idx="1">
+                    <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M14.5 8.5L9.5 13.5"/><path d="M9.5 8.5L14.5 13.5"/></svg>
+                    <span>Crypto</span>
+                </div>
+                <div class="nav-item" data-idx="2">
+                    <svg viewBox="0 0 24 24"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M6 8h12"/><path d="M6 12h12"/><path d="M6 16h12"/></svg>
+                    <span>Fiat</span>
+                </div>
+            `;
+            parentDoc.body.appendChild(nav);
         }
 
-        const navItems = nav.querySelectorAll('.nav-item');
-        
-        // Remove old listeners to prevent stacking
-        navItems.forEach(item => {
-            const clone = item.cloneNode(true);
-            item.parentNode.replaceChild(clone, item);
-        });
-        
-        const freshNavItems = nav.querySelectorAll('.nav-item');
-        
-        // Restore scroll position securely to prevent flashing
-        const savedIdx = localStorage.getItem('activeSwipePage') || 0;
-        scroller.style.scrollBehavior = 'auto'; // Disable smooth scroll instantly
-        scroller.scrollLeft = savedIdx * scroller.clientWidth;
-        
-        // Re-enable smooth behavior slightly after setup
-        setTimeout(() => { scroller.style.scrollBehavior = 'smooth'; }, 100);
+        // --- 3. Bind Swipe Logic ---
+        function bindSwipeable() {
+            const scroller = parentDoc.querySelector('div[data-testid="stMainBlockContainer"] > div > div[data-testid="stVerticalBlock"]');
+            if(!scroller) {
+                setTimeout(bindSwipeable, 50);
+                return;
+            }
 
-        scroller.addEventListener('scroll', () => {
-            const width = scroller.clientWidth;
-            if(width === 0) return;
-            const idx = Math.round(scroller.scrollLeft / width);
-            localStorage.setItem('activeSwipePage', idx);
+            // Remove old listeners to prevent stacking bugs
+            const navItems = nav.querySelectorAll('.nav-item');
+            navItems.forEach(item => {
+                const clone = item.cloneNode(true);
+                item.parentNode.replaceChild(clone, item);
+            });
+            const freshNavItems = nav.querySelectorAll('.nav-item');
             
-            freshNavItems.forEach((item, i) => {
-                if (i === idx) item.classList.add('active');
-                else item.classList.remove('active');
-            });
-        }, {passive: true});
+            // Restore scroll position securely to prevent flashing
+            const savedIdx = localStorage.getItem('activeSwipePage') || 0;
+            scroller.style.scrollBehavior = 'auto'; // Disable smooth scroll instantly
+            scroller.scrollLeft = savedIdx * scroller.clientWidth;
+            setTimeout(() => { scroller.style.scrollBehavior = 'smooth'; }, 100);
 
-        freshNavItems.forEach(item => {
-            item.addEventListener('click', () => {
-                const idx = parseInt(item.getAttribute('data-idx'));
+            // Scroll listener updates active icon
+            scroller.onscroll = function() {
                 const width = scroller.clientWidth;
-                scroller.scrollTo({ left: idx * width, behavior: 'smooth' });
+                if(width === 0) return;
+                const idx = Math.round(scroller.scrollLeft / width);
+                localStorage.setItem('activeSwipePage', idx);
+                
+                freshNavItems.forEach((item, i) => {
+                    if (i === idx) item.classList.add('active');
+                    else item.classList.remove('active');
+                });
+            };
+
+            // Click listener scrolls horizontally
+            freshNavItems.forEach(item => {
+                item.onclick = function() {
+                    const idx = parseInt(this.getAttribute('data-idx'));
+                    scroller.scrollTo({ left: idx * scroller.clientWidth, behavior: 'smooth' });
+                };
             });
-        });
-    }
-    
-    bindSwipeable();
-})();
-</script>
-"""
-components.html(bottom_nav_html, height=0)
+        }
+        
+        bindSwipeable();
+    })();
+    </script>
+    """
+    components.html(js_layout_enforcer, height=0)
