@@ -15,7 +15,6 @@ import streamlit.components.v1 as components
 st.set_page_config(page_title="Portfolio", layout="wide", page_icon="📊")
 
 # ====================== SAFE FLOAT SANITIZER ======================
-# Absolutely prevents NaNs from corrupting Javascript data arrays and crashing charts
 def safe_float(val):
     try:
         f = float(val)
@@ -48,202 +47,197 @@ def glossy_header(title: str, icon_svg: str):
     html = f'<div class="glossy-header">{icon_svg}<span style="margin-left:12px;">{title}</span></div>'
     st.markdown(html, unsafe_allow_html=True)
 
-# ====================== HIDDEN SIDEBAR ROUTING ======================
+# ====================== HIDDEN STEALTH ROUTING ======================
+# Sidebar is preserved but physically hidden far off-screen by CSS so the JS can click these buttons.
 with st.sidebar:
-    st.markdown("<div class='nav-btn-home'>", unsafe_allow_html=True)
+    curr_idx = ["Home", "Crypto Transactions", "Fiat Transactions"].index(st.session_state.page) if st.session_state.page in ["Home", "Crypto Transactions", "Fiat Transactions"] else 0
+    
     if st.button("Nav_Home", key="btn_home"):
         st.session_state.page_anim_dir = "slide-in-left"
         st.session_state.page = "Home"
         st.rerun()
-    st.markdown("</div>", unsafe_allow_html=True)
-
-    st.markdown("<div class='nav-btn-crypto'>", unsafe_allow_html=True)
     if st.button("Nav_Crypto", key="btn_crypto"):
-        st.session_state.page_anim_dir = "slide-in-right" if st.session_state.page == "Home" else "slide-in-left"
+        st.session_state.page_anim_dir = "slide-in-right" if curr_idx < 1 else "slide-in-left"
         st.session_state.page = "Crypto Transactions"
         st.rerun()
-    st.markdown("</div>", unsafe_allow_html=True)
-
-    st.markdown("<div class='nav-btn-fiat'>", unsafe_allow_html=True)
     if st.button("Nav_Fiat", key="btn_fiat"):
         st.session_state.page_anim_dir = "slide-in-right"
         st.session_state.page = "Fiat Transactions"
         st.rerun()
-    st.markdown("</div>", unsafe_allow_html=True)
 
-# ====================== ANIMATIONS ======================
+# ====================== GLOBAL CSS STYLES & ANIMATIONS ======================
 anim_css = ""
 if st.session_state.page_anim_dir == 'slide-in-right':
-    anim_css = "<style>div[data-testid='stMainBlockContainer'] { animation: slideInFromRight 0.35s cubic-bezier(0.25, 1, 0.5, 1) forwards; } @keyframes slideInFromRight { 0% { transform: translateX(100vw); opacity: 0.5; } 100% { transform: translateX(0); opacity: 1; } }</style>"
+    anim_css = "div[data-testid='stMainBlockContainer'] { animation: slideInFromRight 0.35s cubic-bezier(0.25, 1, 0.5, 1) forwards; }"
 elif st.session_state.page_anim_dir == 'slide-in-left':
-    anim_css = "<style>div[data-testid='stMainBlockContainer'] { animation: slideInFromLeft 0.35s cubic-bezier(0.25, 1, 0.5, 1) forwards; } @keyframes slideInFromLeft { 0% { transform: translateX(-100vw); opacity: 0.5; } 100% { transform: translateX(0); opacity: 1; } }</style>"
-st.session_state.page_anim_dir = 'none'
+    anim_css = "div[data-testid='stMainBlockContainer'] { animation: slideInFromLeft 0.35s cubic-bezier(0.25, 1, 0.5, 1) forwards; }"
+st.session_state.page_anim_dir = 'none' 
 
-if anim_css:
-    st.markdown(anim_css, unsafe_allow_html=True)
-
-# ====================== GLOBAL CSS STYLES ======================
-st.markdown("""
+st.markdown(f"""
 <style>
-/* Hide Streamlit Native Nav */
-[data-testid="stSidebar"], [data-testid="collapsedControl"], header[data-testid="stHeader"], footer { display: none !important; }
+/* Animations */
+@keyframes slideInFromRight {{ 0% {{ transform: translateX(100vw); opacity: 0.5; }} 100% {{ transform: translateX(0); opacity: 1; }} }}
+@keyframes slideInFromLeft {{ 0% {{ transform: translateX(-100vw); opacity: 0.5; }} 100% {{ transform: translateX(0); opacity: 1; }} }}
 
-html, body, .stApp { overflow-x: hidden !important; background: linear-gradient(180deg, #0f1724 0%, #0a0f1c 100%) !important; }
-div[data-testid="stMainBlockContainer"] {
+/* HIDDEN NATIVE ROUTING: Sidebar is not "display: none", it is pushed infinitely left so it remains clickable */
+[data-testid="stSidebar"] {{ position: fixed !important; left: -9999px !important; width: 0 !important; visibility: visible !important; }}
+[data-testid="collapsedControl"], header[data-testid="stHeader"], footer {{ display: none !important; }}
+
+html, body, .stApp {{ overflow-x: hidden !important; background: linear-gradient(180deg, #0f1724 0%, #0a0f1c 100%) !important; }}
+div[data-testid="stMainBlockContainer"] {{
     padding-left: 14px !important; padding-right: 14px !important; padding-top: 14px !important; padding-bottom: 90px !important;
     max-width: 100% !important;
-}
-@media (min-width: 1200px) { div[data-testid="stMainBlockContainer"] { padding-left: 18px !important; padding-right: 18px !important; } }
-@media (max-width: 768px) { div[data-testid="stMainBlockContainer"] { padding-left: 8px !important; padding-right: 8px !important; } }
+}}
+{anim_css}
+@media (min-width: 1200px) {{ div[data-testid="stMainBlockContainer"] {{ padding-left: 18px !important; padding-right: 18px !important; }} }}
+@media (max-width: 768px) {{ div[data-testid="stMainBlockContainer"] {{ padding-left: 8px !important; padding-right: 8px !important; }} }}
 
 /* BOTTOM NAVIGATION BAR */
-.bottom-nav-bar {
-    position: fixed; bottom: 15px; left: 50%; transform: translateX(-50%); width: 90%; max-width: 400px; height: 65px;
+.bottom-nav-bar {{
+    position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); width: 85%; max-width: 400px; height: 65px;
     background: rgba(15, 23, 42, 0.95); backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px);
-    border-top: 1px solid rgba(255,255,255,0.08); display: flex;
-    justify-content: space-around; align-items: center; z-index: 999999;
-    border-radius: 35px; box-shadow: 0 10px 30px rgba(0,0,0,0.6);
-}
-.nav-item {
+    border-radius: 35px; border: 1px solid rgba(255,255,255,0.1); display: flex;
+    justify-content: space-evenly; align-items: center; z-index: 999998; box-shadow: 0 10px 30px rgba(0,0,0,0.6);
+}}
+.nav-item {{
     display: flex; flex-direction: column; align-items: center; justify-content: center;
     color: #64748b; font-size: 11px; font-weight: 600; cursor: pointer; flex: 1; height: 100%; transition: color 0.3s ease;
     -webkit-tap-highlight-color: transparent;
-}
-.nav-item.active { color: #00ff9d; }
-.nav-item svg { width: 24px; height: 24px; margin-bottom: 4px; stroke: currentColor; fill: none; transition: transform 0.2s ease; }
-.nav-item.active svg { transform: translateY(-2px); filter: drop-shadow(0 0 4px rgba(0,255,157,0.4)); }
+}}
+.nav-item.active {{ color: #00ff9d; }}
+.nav-item svg {{ width: 22px; height: 22px; margin-bottom: 4px; stroke: currentColor; fill: none; transition: transform 0.2s ease; }}
+.nav-item.active svg {{ transform: translateY(-2px); filter: drop-shadow(0 0 4px rgba(0,255,157,0.4)); }}
 
 /* Global UI Elements */
-.dashboard-wrapper { position: relative; z-index: 10; }
-.glossy-header-label { cursor: pointer; display: block; position: relative; z-index: 3; -webkit-tap-highlight-color: transparent; }
-.home-header { margin-bottom: 0 !important; padding-bottom: 30px !important; }
-.pull-indicator { position: absolute; bottom: 8px; left: 50%; transform: translateX(-50%); color: #64748b; opacity: 0.8; transition: color 0.3s ease; }
-.pull-indicator .eye-open { display: none; }
-.pull-indicator .eye-closed { display: block; }
-.dashboard-toggle:checked ~ .dashboard-wrapper .glossy-header-label .pull-indicator .eye-open { display: block; }
-.dashboard-toggle:checked ~ .dashboard-wrapper .glossy-header-label .pull-indicator .eye-closed { display: none; }
-.dashboard-toggle:checked ~ .dashboard-wrapper .glossy-header-label .pull-indicator { color: #ffffff; }
+.dashboard-wrapper {{ position: relative; z-index: 10; }}
+.glossy-header-label {{ cursor: pointer; display: block; position: relative; z-index: 3; -webkit-tap-highlight-color: transparent; }}
+.home-header {{ margin-bottom: 0 !important; padding-bottom: 30px !important; }}
+.pull-indicator {{ position: absolute; bottom: 8px; left: 50%; transform: translateX(-50%); color: #64748b; opacity: 0.8; transition: color 0.3s ease; }}
+.pull-indicator .eye-open {{ display: none; }}
+.pull-indicator .eye-closed {{ display: block; }}
+.dashboard-toggle:checked ~ .dashboard-wrapper .glossy-header-label .pull-indicator .eye-open {{ display: block; }}
+.dashboard-toggle:checked ~ .dashboard-wrapper .glossy-header-label .pull-indicator .eye-closed {{ display: none; }}
+.dashboard-toggle:checked ~ .dashboard-wrapper .glossy-header-label .pull-indicator {{ color: #ffffff; }}
 
-.stats-layer { position: relative; z-index: 1; margin-top: -60px !important; transition: margin-top 0.4s cubic-bezier(0.4, 0, 0.2, 1); margin-bottom: 24px; }
-.dashboard-toggle:checked ~ .dashboard-wrapper .stats-layer { margin-top: 14px !important; }
-.stats-layer-inner { display: grid !important; grid-template-columns: repeat(3, 1fr) !important; gap: 14px; width: 100%; }
-.dash-value { font-size: clamp(14px, 2.5vw, 24px) !important; font-weight: 700; line-height: 1.05; color: #ffffff; position: absolute; top: 20px; left: 0; width: 100%; text-align: center; margin: 0; transition: opacity 0.3s ease; padding: 0 4px; box-sizing: border-box; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.dashboard-toggle:not(:checked) ~ .dashboard-wrapper .stats-layer .dash-value { opacity: 0; pointer-events: none; }
-.dash-label { font-size: 11px !important; font-weight: 600; letter-spacing: 1.5px; text-transform: uppercase; color: #94a3b8; line-height: 1.2; position: absolute; bottom: 8px; left: 0; width: 100%; text-align: center; }
+.stats-layer {{ position: relative; z-index: 1; margin-top: -60px !important; transition: margin-top 0.4s cubic-bezier(0.4, 0, 0.2, 1); margin-bottom: 24px; }}
+.dashboard-toggle:checked ~ .dashboard-wrapper .stats-layer {{ margin-top: 14px !important; }}
+.stats-layer-inner {{ display: grid !important; grid-template-columns: repeat(3, 1fr) !important; gap: 14px; width: 100%; }}
+.dash-value {{ font-size: clamp(14px, 2.5vw, 24px) !important; font-weight: 700; line-height: 1.05; color: #ffffff; position: absolute; top: 20px; left: 0; width: 100%; text-align: center; margin: 0; transition: opacity 0.3s ease; padding: 0 4px; box-sizing: border-box; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }}
+.dashboard-toggle:not(:checked) ~ .dashboard-wrapper .stats-layer .dash-value {{ opacity: 0; pointer-events: none; }}
+.dash-label {{ font-size: 11px !important; font-weight: 600; letter-spacing: 1.5px; text-transform: uppercase; color: #94a3b8; line-height: 1.2; position: absolute; bottom: 8px; left: 0; width: 100%; text-align: center; }}
 
-.glossy-header { position: relative; overflow: hidden; background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); border: 1px solid rgba(255,255,255,0.05); border-radius: 18px; box-shadow: 0 10px 30px rgba(0,0,0,0.4); transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.4s ease, border-color 0.4s ease; padding: 32px 24px; min-height: 130px; font-size: 29px; font-weight: 700; letter-spacing: 1.5px; line-height: 1.1; display: flex; align-items: center; justify-content: center; gap: 16px; width: 100% !important; margin-bottom: 38px; }
-.glossy-box { position: relative; overflow: hidden; background: linear-gradient(180deg, #162032 0%, #0f172a 100%); border: 1px solid rgba(255,255,255,0.05); border-radius: 18px; box-shadow: 0 8px 24px rgba(0,0,0,0.4); padding: 28px 30px; text-align: center; flex: 1; min-width: 220px; display: flex; flex-direction: column; justify-content: center; }
-.glossy-box:not(.swapped) > div:first-child { font-size: 12px; font-weight: 600; letter-spacing: 1.5px; text-transform: uppercase; color: #94a3b8; margin-bottom: 6px; line-height: 1.2; }
-.glossy-box:not(.swapped) > div:last-child { font-size: 27px; font-weight: 700; line-height: 1.05; color: #ffffff; }
-.glossy-box.swapped { min-width: 0 !important; height: 80px !important; min-height: 80px !important; max-height: 80px !important; padding: 0; display: block; }
+.glossy-header {{ position: relative; overflow: hidden; background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); border: 1px solid rgba(255,255,255,0.05); border-radius: 18px; box-shadow: 0 10px 30px rgba(0,0,0,0.4); transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.4s ease, border-color 0.4s ease; padding: 32px 24px; min-height: 130px; font-size: 29px; font-weight: 700; letter-spacing: 1.5px; line-height: 1.1; display: flex; align-items: center; justify-content: center; gap: 16px; width: 100% !important; margin-bottom: 38px; }}
+.glossy-box {{ position: relative; overflow: hidden; background: linear-gradient(180deg, #162032 0%, #0f172a 100%); border: 1px solid rgba(255,255,255,0.05); border-radius: 18px; box-shadow: 0 8px 24px rgba(0,0,0,0.4); padding: 28px 30px; text-align: center; flex: 1; min-width: 220px; display: flex; flex-direction: column; justify-content: center; }}
+.glossy-box:not(.swapped) > div:first-child {{ font-size: 12px; font-weight: 600; letter-spacing: 1.5px; text-transform: uppercase; color: #94a3b8; margin-bottom: 6px; line-height: 1.2; }}
+.glossy-box:not(.swapped) > div:last-child {{ font-size: 27px; font-weight: 700; line-height: 1.05; color: #ffffff; }}
+.glossy-box.swapped {{ min-width: 0 !important; height: 80px !important; min-height: 80px !important; max-height: 80px !important; padding: 0; display: block; }}
 
-.usdc-banner { position: relative; overflow: hidden; background: rgba(15, 23, 42, 0.5); border: 1px solid rgba(39, 117, 202, 0.2); border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); padding: 10px 20px; width: 90%; max-width: 400px; margin: -15px auto 12px auto !important; display: flex; align-items: center; justify-content: space-between; }
-.usdc-banner-left { display: flex; align-items: center; gap: 12px; }
-.usdc-banner-left img { width: 28px; height: 28px; border-radius: 50%; object-fit: contain; opacity: 0.85; }
-.usdc-banner-title { font-size: 1.05rem; font-weight: 600; color: #e2e8f0; display: flex; align-items: center; gap: 8px; }
-.usdc-banner-subtitle { font-size: 0.75rem; font-weight: 500; color: #64748b; }
-.usdc-banner-amount { font-size: 1.2rem; font-weight: 600; color: #e2e8f0; }
+.usdc-banner {{ position: relative; overflow: hidden; background: rgba(15, 23, 42, 0.5); border: 1px solid rgba(39, 117, 202, 0.2); border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); padding: 10px 20px; width: 90%; max-width: 400px; margin: -15px auto 12px auto !important; display: flex; align-items: center; justify-content: space-between; }}
+.usdc-banner-left {{ display: flex; align-items: center; gap: 12px; }}
+.usdc-banner-left img {{ width: 28px; height: 28px; border-radius: 50%; object-fit: contain; opacity: 0.85; }}
+.usdc-banner-title {{ font-size: 1.05rem; font-weight: 600; color: #e2e8f0; display: flex; align-items: center; gap: 8px; }}
+.usdc-banner-subtitle {{ font-size: 0.75rem; font-weight: 500; color: #64748b; }}
+.usdc-banner-amount {{ font-size: 1.2rem; font-weight: 600; color: #e2e8f0; }}
 
-.dashboard-toggle:not(:checked) ~ .usdc-banner .usdc-banner-amount { font-size: 0 !important; }
-.dashboard-toggle:not(:checked) ~ .usdc-banner .usdc-banner-amount::after { content: '***'; font-size: 1.2rem; color: #e2e8f0; }
+.dashboard-toggle:not(:checked) ~ .usdc-banner .usdc-banner-amount {{ font-size: 0 !important; }}
+.dashboard-toggle:not(:checked) ~ .usdc-banner .usdc-banner-amount::after {{ content: '***'; font-size: 1.2rem; color: #e2e8f0; }}
 
-button[aria-label="Step Up"], button[aria-label="Step Down"], button[data-testid="stNumberInputStepUp"], button[data-testid="stNumberInputStepDown"] { display: none !important; }
-input[type="number"]::-webkit-inner-spin-button, input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
-input[type="number"] { -moz-appearance: textfield; }
+button[aria-label="Step Up"], button[aria-label="Step Down"], button[data-testid="stNumberInputStepUp"], button[data-testid="stNumberInputStepDown"] {{ display: none !important; }}
+input[type="number"]::-webkit-inner-spin-button, input[type="number"]::-webkit-outer-spin-button {{ -webkit-appearance: none; margin: 0; }}
+input[type="number"] {{ -moz-appearance: textfield; }}
 
 /* Transaction Row Styling */
-div[data-testid="stForm"]:has(.add-tx-card) { background: #0f172a !important; border: 1px solid rgba(255,255,255,0.05) !important; border-radius: 16px !important; padding: 24px !important; box-shadow: 0 4px 15px rgba(0,0,0,0.3) !important; margin-bottom: 24px !important; }
-div[data-testid="stForm"]:has(.add-tx-card) label { font-size: 0.85rem !important; color: #94a3b8 !important; padding-bottom: 2px !important; }
-div[data-testid="stForm"]:has(.add-tx-card) .stTextInput input, div[data-testid="stForm"]:has(.add-tx-card) .stNumberInput input, div[data-testid="stForm"]:has(.add-tx-card) .stDateInput input { background: rgba(255,255,255,0.03) !important; border: 1px solid rgba(255,255,255,0.1) !important; color: #fff !important; border-radius: 8px !important; margin-bottom: 0px !important; }
-div[data-testid="stForm"]:has(.add-tx-card) div[data-testid="stHorizontalBlock"]:has(> div[data-testid="column"]:nth-child(4)) { display: flex !important; gap: 12px !important; }
-div[data-testid="stForm"]:has(.add-tx-card) div[data-testid="stHorizontalBlock"]:has(> div[data-testid="column"]:nth-child(2):last-child) { display: flex !important; flex-direction: row !important; justify-content: space-between !important; align-items: center !important; margin-top: 12px !important; gap: 12px !important; }
-div[data-testid="stForm"]:has(.add-tx-card) div[data-testid="stHorizontalBlock"]:has(> div[data-testid="column"]:nth-child(2):last-child) > div[data-testid="column"]:nth-child(1) { flex: 0 0 auto !important; width: auto !important; }
-div[data-testid="stForm"]:has(.add-tx-card) div[data-testid="stHorizontalBlock"]:has(> div[data-testid="column"]:nth-child(2):last-child) > div[data-testid="column"]:nth-child(2) { flex: 1 1 auto !important; width: auto !important; }
-div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] { background: rgba(0,0,0,0.3) !important; padding: 6px !important; border-radius: 12px !important; display: flex !important; flex-direction: row !important; gap: 8px !important; align-items: center !important; margin: 0 !important; height: 48px !important; border: 1px solid rgba(255,255,255,0.05) !important; min-width: 200px !important; }
-div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label { margin: 0 !important; cursor: pointer !important; padding: 0 !important; border-radius: 8px !important; border: 1px solid transparent !important; transition: all 0.3s ease !important; background: transparent !important; flex: 1 !important; display: flex !important; justify-content: center !important; align-items: center !important; height: 100% !important; }
-div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label:hover { background: rgba(255,255,255,0.05) !important; }
-div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label > div:first-child { display: none !important; } 
-div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label p { font-weight: bold !important; font-size: 1.05rem !important; color: #94a3b8 !important; margin: 0 !important; padding: 0 !important; white-space: nowrap !important; line-height: 1 !important; }
-div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label:has(input:checked):first-child, div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label[aria-checked="true"]:first-child { background: rgba(0, 255, 157, 0.15) !important; border-color: #00ff9d !important; }
-div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label:has(input:checked):first-child p, div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label[aria-checked="true"]:first-child p { color: #00ff9d !important; }
-div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label:has(input:checked):last-child, div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label[aria-checked="true"]:last-child { background: rgba(255, 77, 77, 0.15) !important; border-color: #ff4d4d !important; }
-div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label:has(input:checked):last-child p, div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label[aria-checked="true"]:last-child p { color: #ff4d4d !important; }
-div[data-testid="stForm"]:has(.add-tx-card) .stButton { display: flex !important; justify-content: flex-end !important; align-items: center !important; margin: 0 !important; padding: 0 !important; width: 100% !important; }
-div[data-testid="stForm"]:has(.add-tx-card) .stButton > button { background: #1e2a44 !important; color: #e0e0e0 !important; padding: 0 24px !important; border-radius: 10px !important; font-size: 1.05rem !important; font-weight: 700 !important; box-shadow: 0 4px 15px rgba(0,0,0,0.25) !important; transition: all 0.3s ease !important; border: none !important; margin: 0 !important; width: auto !important; height: 48px !important; min-height: 48px !important; }
-div[data-testid="stForm"]:has(.add-tx-card) .stButton > button:hover { transform: translateY(-2px) !important; box-shadow: 0 8px 20px rgba(255, 255, 255, 0.2) !important; color: white !important; }
-div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row) { background: #0f172a !important; border: 1px solid rgba(255,255,255,0.05) !important; border-radius: 12px !important; padding: 12px 16px !important; margin-bottom: 12px !important; position: relative; z-index: 2; }
-div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row) > div { padding: 0 !important; } 
-div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row) div[data-testid="stButton"] button { background: rgba(255,255,255,0.05) !important; border-radius: 8px !important; border: none !important; height: 40px !important; width: 40px !important; display: flex !important; align-items: center !important; justify-content: center !important; padding: 0 !important; margin: 0 auto !important; font-size: 1.2rem !important; transition: all 0.2s !important; }
-div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row) div[data-testid="stButton"] button:hover { background: rgba(255,255,255,0.15) !important; transform: scale(1.05) !important; }
-@keyframes rollDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
-div[data-testid="stForm"]:has(.edit-rollout) { animation: rollDown 0.3s ease forwards !important; background: rgba(0,0,0,0.2) !important; border-left: 3px solid #00ff9d !important; border-radius: 0 0 12px 12px !important; border-top: none !important; border-right: none !important; border-bottom: none !important; padding: 16px !important; margin-top: -24px !important; margin-bottom: 20px !important; position: relative; z-index: 1; box-shadow: inset 0 4px 10px rgba(0,0,0,0.15) !important; }
-div[data-testid="stVerticalBlockBorderWrapper"]:has(.del-warn) { border-color: rgba(255, 77, 77, 0.3) !important; background: rgba(15, 23, 42, 0.95) !important; border-radius: 12px !important; padding: 16px !important; text-align: center !important; margin-bottom: 12px !important; box-shadow: 0 4px 20px rgba(0,0,0,0.4) !important; }
-div[data-testid="stVerticalBlockBorderWrapper"]:has(.del-warn) .stButton > button { border-radius: 8px !important; font-weight: 600 !important; transition: all 0.2s !important; width: 100% !important; margin-top: 8px !important; padding: 6px 12px !important; }
-div[data-testid="stVerticalBlockBorderWrapper"]:has(.del-warn) div[data-testid="column"]:nth-child(1) .stButton > button { background: rgba(255, 77, 77, 0.1) !important; color: #ff4d4d !important; border: 1px solid rgba(255, 77, 77, 0.3) !important; }
-div[data-testid="stVerticalBlockBorderWrapper"]:has(.del-warn) div[data-testid="column"]:nth-child(1) .stButton > button:hover { background: #ff4d4d !important; color: white !important; }
-div[data-testid="stVerticalBlockBorderWrapper"]:has(.del-warn) div[data-testid="column"]:nth-child(2) .stButton > button { background: rgba(255, 255, 255, 0.05) !important; color: #cbd5e1 !important; border: 1px solid rgba(255, 255, 255, 0.1) !important; }
-div[data-testid="stVerticalBlockBorderWrapper"]:has(.del-warn) div[data-testid="column"]:nth-child(2) .stButton > button:hover { background: rgba(255, 255, 255, 0.15) !important; color: white !important; }
+div[data-testid="stForm"]:has(.add-tx-card) {{ background: #0f172a !important; border: 1px solid rgba(255,255,255,0.05) !important; border-radius: 16px !important; padding: 24px !important; box-shadow: 0 4px 15px rgba(0,0,0,0.3) !important; margin-bottom: 24px !important; }}
+div[data-testid="stForm"]:has(.add-tx-card) label {{ font-size: 0.85rem !important; color: #94a3b8 !important; padding-bottom: 2px !important; }}
+div[data-testid="stForm"]:has(.add-tx-card) .stTextInput input, div[data-testid="stForm"]:has(.add-tx-card) .stNumberInput input, div[data-testid="stForm"]:has(.add-tx-card) .stDateInput input {{ background: rgba(255,255,255,0.03) !important; border: 1px solid rgba(255,255,255,0.1) !important; color: #fff !important; border-radius: 8px !important; margin-bottom: 0px !important; }}
+div[data-testid="stForm"]:has(.add-tx-card) div[data-testid="stHorizontalBlock"]:has(> div[data-testid="column"]:nth-child(4)) {{ display: flex !important; gap: 12px !important; }}
+div[data-testid="stForm"]:has(.add-tx-card) div[data-testid="stHorizontalBlock"]:has(> div[data-testid="column"]:nth-child(2):last-child) {{ display: flex !important; flex-direction: row !important; justify-content: space-between !important; align-items: center !important; margin-top: 12px !important; gap: 12px !important; }}
+div[data-testid="stForm"]:has(.add-tx-card) div[data-testid="stHorizontalBlock"]:has(> div[data-testid="column"]:nth-child(2):last-child) > div[data-testid="column"]:nth-child(1) {{ flex: 0 0 auto !important; width: auto !important; }}
+div[data-testid="stForm"]:has(.add-tx-card) div[data-testid="stHorizontalBlock"]:has(> div[data-testid="column"]:nth-child(2):last-child) > div[data-testid="column"]:nth-child(2) {{ flex: 1 1 auto !important; width: auto !important; }}
+div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] {{ background: rgba(0,0,0,0.3) !important; padding: 6px !important; border-radius: 12px !important; display: flex !important; flex-direction: row !important; gap: 8px !important; align-items: center !important; margin: 0 !important; height: 48px !important; border: 1px solid rgba(255,255,255,0.05) !important; min-width: 200px !important; }}
+div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label {{ margin: 0 !important; cursor: pointer !important; padding: 0 !important; border-radius: 8px !important; border: 1px solid transparent !important; transition: all 0.3s ease !important; background: transparent !important; flex: 1 !important; display: flex !important; justify-content: center !important; align-items: center !important; height: 100% !important; }}
+div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label:hover {{ background: rgba(255,255,255,0.05) !important; }}
+div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label > div:first-child {{ display: none !important; }} 
+div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label p {{ font-weight: bold !important; font-size: 1.05rem !important; color: #94a3b8 !important; margin: 0 !important; padding: 0 !important; white-space: nowrap !important; line-height: 1 !important; }}
+div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label:has(input:checked):first-child, div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label[aria-checked="true"]:first-child {{ background: rgba(0, 255, 157, 0.15) !important; border-color: #00ff9d !important; }}
+div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label:has(input:checked):first-child p, div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label[aria-checked="true"]:first-child p {{ color: #00ff9d !important; }}
+div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label:has(input:checked):last-child, div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label[aria-checked="true"]:last-child {{ background: rgba(255, 77, 77, 0.15) !important; border-color: #ff4d4d !important; }}
+div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label:has(input:checked):last-child p, div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label[aria-checked="true"]:last-child p {{ color: #ff4d4d !important; }}
+div[data-testid="stForm"]:has(.add-tx-card) .stButton {{ display: flex !important; justify-content: flex-end !important; align-items: center !important; margin: 0 !important; padding: 0 !important; width: 100% !important; }}
+div[data-testid="stForm"]:has(.add-tx-card) .stButton > button {{ background: #1e2a44 !important; color: #e0e0e0 !important; padding: 0 24px !important; border-radius: 10px !important; font-size: 1.05rem !important; font-weight: 700 !important; box-shadow: 0 4px 15px rgba(0,0,0,0.25) !important; transition: all 0.3s ease !important; border: none !important; margin: 0 !important; width: auto !important; height: 48px !important; min-height: 48px !important; }}
+div[data-testid="stForm"]:has(.add-tx-card) .stButton > button:hover {{ transform: translateY(-2px) !important; box-shadow: 0 8px 20px rgba(255, 255, 255, 0.2) !important; color: white !important; }}
+div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row) {{ background: #0f172a !important; border: 1px solid rgba(255,255,255,0.05) !important; border-radius: 12px !important; padding: 12px 16px !important; margin-bottom: 12px !important; position: relative; z-index: 2; }}
+div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row) > div {{ padding: 0 !important; }} 
+div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row) div[data-testid="stButton"] button {{ background: rgba(255,255,255,0.05) !important; border-radius: 8px !important; border: none !important; height: 40px !important; width: 40px !important; display: flex !important; align-items: center !important; justify-content: center !important; padding: 0 !important; margin: 0 auto !important; font-size: 1.2rem !important; transition: all 0.2s !important; }}
+div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row) div[data-testid="stButton"] button:hover {{ background: rgba(255,255,255,0.15) !important; transform: scale(1.05) !important; }}
+@keyframes rollDown {{ from {{ opacity: 0; transform: translateY(-10px); }} to {{ opacity: 1; transform: translateY(0); }} }}
+div[data-testid="stForm"]:has(.edit-rollout) {{ animation: rollDown 0.3s ease forwards !important; background: rgba(0,0,0,0.2) !important; border-left: 3px solid #00ff9d !important; border-radius: 0 0 12px 12px !important; border-top: none !important; border-right: none !important; border-bottom: none !important; padding: 16px !important; margin-top: -24px !important; margin-bottom: 20px !important; position: relative; z-index: 1; box-shadow: inset 0 4px 10px rgba(0,0,0,0.15) !important; }}
+div[data-testid="stVerticalBlockBorderWrapper"]:has(.del-warn) {{ border-color: rgba(255, 77, 77, 0.3) !important; background: rgba(15, 23, 42, 0.95) !important; border-radius: 12px !important; padding: 16px !important; text-align: center !important; margin-bottom: 12px !important; box-shadow: 0 4px 20px rgba(0,0,0,0.4) !important; }}
+div[data-testid="stVerticalBlockBorderWrapper"]:has(.del-warn) .stButton > button {{ border-radius: 8px !important; font-weight: 600 !important; transition: all 0.2s !important; width: 100% !important; margin-top: 8px !important; padding: 6px 12px !important; }}
+div[data-testid="stVerticalBlockBorderWrapper"]:has(.del-warn) div[data-testid="column"]:nth-child(1) .stButton > button {{ background: rgba(255, 77, 77, 0.1) !important; color: #ff4d4d !important; border: 1px solid rgba(255, 77, 77, 0.3) !important; }}
+div[data-testid="stVerticalBlockBorderWrapper"]:has(.del-warn) div[data-testid="column"]:nth-child(1) .stButton > button:hover {{ background: #ff4d4d !important; color: white !important; }}
+div[data-testid="stVerticalBlockBorderWrapper"]:has(.del-warn) div[data-testid="column"]:nth-child(2) .stButton > button {{ background: rgba(255, 255, 255, 0.05) !important; color: #cbd5e1 !important; border: 1px solid rgba(255, 255, 255, 0.1) !important; }}
+div[data-testid="stVerticalBlockBorderWrapper"]:has(.del-warn) div[data-testid="column"]:nth-child(2) .stButton > button:hover {{ background: rgba(255, 255, 255, 0.15) !important; color: white !important; }}
 
-@media (max-width: 768px) {
-    .glossy-header { margin-top: 24px !important; margin-bottom: 24px !important; padding: 20px 16px !important; font-size: 22px !important; min-height: 90px; }
-    .home-header { margin-bottom: 0 !important; }
-    div[data-testid="stForm"]:has(.add-tx-card) div[data-testid="stHorizontalBlock"] { display: flex !important; flex-direction: row !important; flex-wrap: wrap !important; gap: 12px !important; }
-    div[data-testid="stForm"]:has(.add-tx-card) div[data-testid="stHorizontalBlock"]:has(> div[data-testid="column"]:nth-child(4)) > div[data-testid="column"] { min-width: calc(50% - 12px) !important; width: calc(50% - 12px) !important; flex: 1 1 calc(50% - 12px) !important; }
-    div[data-testid="stForm"]:has(.add-tx-card) input { padding: 6px !important; font-size: 0.95rem !important; }
-    div[data-testid="stForm"]:has(.add-tx-card) div[data-testid="stHorizontalBlock"]:has(> div[data-testid="column"]:nth-child(2):last-child) > div[data-testid="column"] { min-width: calc(50% - 12px) !important; width: calc(50% - 12px) !important; flex: 1 1 calc(50% - 12px) !important; }
-    div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] { min-width: 0 !important; width: 100% !important; }
-    div[data-testid="stForm"]:has(.add-tx-card) .stButton { display: flex !important; justify-content: flex-end !important; width: 100% !important; }
-    div[data-testid="stForm"]:has(.add-tx-card) .stButton > button { width: 100% !important; max-width: 120px !important; padding: 0 16px !important; }
-    div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row) > div > div[data-testid="stVerticalBlock"] > div[data-testid="stHorizontalBlock"] { display: flex !important; flex-direction: row !important; flex-wrap: nowrap !important; align-items: center !important; overflow: hidden !important; gap: 2px !important; }
-    div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row) div[data-testid="column"] { min-width: 0 !important; padding: 0 !important; width: auto !important; flex-shrink: 1 !important; }
-    div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row) > div > div[data-testid="stVerticalBlock"] > div[data-testid="stHorizontalBlock"] > div[data-testid="column"]:nth-child(1) { flex: 0 0 35px !important; width: 35px !important; }
-    div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row) > div > div[data-testid="stVerticalBlock"] > div[data-testid="stHorizontalBlock"] > div[data-testid="column"]:nth-child(2) { flex: 1 1 auto !important; overflow: hidden !important; text-align: left; }
-    div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row) > div > div[data-testid="stVerticalBlock"] > div[data-testid="stHorizontalBlock"] > div[data-testid="column"]:nth-child(3) { flex: 1.5 1 auto !important; overflow: hidden !important; text-align: center; }
-    div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row) > div > div[data-testid="stVerticalBlock"] > div[data-testid="stHorizontalBlock"] > div[data-testid="column"]:nth-child(4) { flex: 0 0 36px !important; width: 36px !important; }
-    div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row) > div > div[data-testid="stVerticalBlock"] > div[data-testid="stHorizontalBlock"] > div[data-testid="column"]:nth-child(5) { flex: 0 0 36px !important; width: 36px !important; }
-    div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row) div[data-testid="stButton"] button { width: 30px !important; height: 30px !important; font-size: 0.9rem !important; margin: 0 auto !important; }
-    .mobile-logo { width: 32px !important; height: 32px !important; margin-top: 0 !important; }
-    .mobile-tx-ticker { font-size: 0.95rem !important; margin-left: 2px !important;}
-    .mobile-tx-amount { font-size: 0.95rem !important; white-space: nowrap !important; }
-    .mobile-tx-sub { font-size: 0.7rem !important; white-space: nowrap !important; margin-left: 2px !important;}
-    .stats-layer-inner { gap: 6px !important; }
-    .stats-layer { margin-top: -60px !important; margin-bottom: 18px; } 
-    .glossy-box.swapped { height: 80px !important; min-height: 80px !important; max-height: 80px !important; padding: 0 !important; min-width: 0 !important; }
-    .dash-value { font-size: clamp(11px, 3.5vw, 15px) !important; top: 24px !important; } 
-    .dash-label { font-size: clamp(8px, 2.5vw, 10px) !important; bottom: 8px !important; white-space: nowrap !important; letter-spacing: 0.5px !important; }
-    .usdc-banner { padding: 8px 14px; width: 92%; margin: -12px auto 12px auto !important; }
-    .usdc-banner-amount { font-size: 1.1rem; }
-}
+@media (max-width: 768px) {{
+    .glossy-header {{ margin-top: 24px !important; margin-bottom: 24px !important; padding: 20px 16px !important; font-size: 22px !important; min-height: 90px; }}
+    .home-header {{ margin-bottom: 0 !important; }}
+    div[data-testid="stForm"]:has(.add-tx-card) div[data-testid="stHorizontalBlock"] {{ display: flex !important; flex-direction: row !important; flex-wrap: wrap !important; gap: 12px !important; }}
+    div[data-testid="stForm"]:has(.add-tx-card) div[data-testid="stHorizontalBlock"]:has(> div[data-testid="column"]:nth-child(4)) > div[data-testid="column"] {{ min-width: calc(50% - 12px) !important; width: calc(50% - 12px) !important; flex: 1 1 calc(50% - 12px) !important; }}
+    div[data-testid="stForm"]:has(.add-tx-card) input {{ padding: 6px !important; font-size: 0.95rem !important; }}
+    div[data-testid="stForm"]:has(.add-tx-card) div[data-testid="stHorizontalBlock"]:has(> div[data-testid="column"]:nth-child(2):last-child) > div[data-testid="column"] {{ min-width: calc(50% - 12px) !important; width: calc(50% - 12px) !important; flex: 1 1 calc(50% - 12px) !important; }}
+    div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] {{ min-width: 0 !important; width: 100% !important; }}
+    div[data-testid="stForm"]:has(.add-tx-card) .stButton {{ display: flex !important; justify-content: flex-end !important; width: 100% !important; }}
+    div[data-testid="stForm"]:has(.add-tx-card) .stButton > button {{ width: 100% !important; max-width: 120px !important; padding: 0 16px !important; }}
+    div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row) > div > div[data-testid="stVerticalBlock"] > div[data-testid="stHorizontalBlock"] {{ display: flex !important; flex-direction: row !important; flex-wrap: nowrap !important; align-items: center !important; overflow: hidden !important; gap: 2px !important; }}
+    div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row) div[data-testid="column"] {{ min-width: 0 !important; padding: 0 !important; width: auto !important; flex-shrink: 1 !important; }}
+    div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row) > div > div[data-testid="stVerticalBlock"] > div[data-testid="stHorizontalBlock"] > div[data-testid="column"]:nth-child(1) {{ flex: 0 0 35px !important; width: 35px !important; }}
+    div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row) > div > div[data-testid="stVerticalBlock"] > div[data-testid="stHorizontalBlock"] > div[data-testid="column"]:nth-child(2) {{ flex: 1 1 auto !important; overflow: hidden !important; text-align: left; }}
+    div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row) > div > div[data-testid="stVerticalBlock"] > div[data-testid="stHorizontalBlock"] > div[data-testid="column"]:nth-child(3) {{ flex: 1.5 1 auto !important; overflow: hidden !important; text-align: center; }}
+    div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row) > div > div[data-testid="stVerticalBlock"] > div[data-testid="stHorizontalBlock"] > div[data-testid="column"]:nth-child(4) {{ flex: 0 0 36px !important; width: 36px !important; }}
+    div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row) > div > div[data-testid="stVerticalBlock"] > div[data-testid="stHorizontalBlock"] > div[data-testid="column"]:nth-child(5) {{ flex: 0 0 36px !important; width: 36px !important; }}
+    div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row) div[data-testid="stButton"] button {{ width: 30px !important; height: 30px !important; font-size: 0.9rem !important; margin: 0 auto !important; }}
+    .mobile-logo {{ width: 32px !important; height: 32px !important; margin-top: 0 !important; }}
+    .mobile-tx-ticker {{ font-size: 0.95rem !important; margin-left: 2px !important;}}
+    .mobile-tx-amount {{ font-size: 0.95rem !important; white-space: nowrap !important; }}
+    .mobile-tx-sub {{ font-size: 0.7rem !important; white-space: nowrap !important; margin-left: 2px !important;}}
+    .stats-layer-inner {{ gap: 6px !important; }}
+    .stats-layer {{ margin-top: -60px !important; margin-bottom: 18px; }} 
+    .glossy-box.swapped {{ height: 80px !important; min-height: 80px !important; max-height: 80px !important; padding: 0 !important; min-width: 0 !important; }}
+    .dash-value {{ font-size: clamp(11px, 3.5vw, 15px) !important; top: 24px !important; }} 
+    .dash-label {{ font-size: clamp(8px, 2.5vw, 10px) !important; bottom: 8px !important; white-space: nowrap !important; letter-spacing: 0.5px !important; }}
+    .usdc-banner {{ padding: 8px 14px; width: 92%; margin: -12px auto 12px auto !important; }}
+    .usdc-banner-amount {{ font-size: 1.1rem; }}
+}}
 </style>
 """, unsafe_allow_html=True)
 
 # ====================== RENDER BOTTOM NAV BAR ======================
 st.markdown(f"""
 <div class="bottom-nav-bar">
-    <div class="nav-item {'active' if st.session_state.page == 'Home' else ''}" onclick="window.parent.navTo('nav-btn-home')">
+    <div class="nav-item {'active' if st.session_state.page == 'Home' else ''}" onclick="window.parent.navTo('Nav_Home')">
         {DASHBOARD_ICON}<span>Overview</span>
     </div>
-    <div class="nav-item {'active' if st.session_state.page == 'Crypto Transactions' else ''}" onclick="window.parent.navTo('nav-btn-crypto')">
+    <div class="nav-item {'active' if st.session_state.page == 'Crypto Transactions' else ''}" onclick="window.parent.navTo('Nav_Crypto')">
         {CRYPTO_ICON}<span>Crypto</span>
     </div>
-    <div class="nav-item {'active' if st.session_state.page == 'Fiat Transactions' else ''}" onclick="window.parent.navTo('nav-btn-fiat')">
+    <div class="nav-item {'active' if st.session_state.page == 'Fiat Transactions' else ''}" onclick="window.parent.navTo('Nav_Fiat')">
         {FIAT_ICON}<span>Fiat</span>
     </div>
 </div>
 """, unsafe_allow_html=True)
 
 # ====================== GLOBAL SWIPE & ROUTING ENGINE ======================
+# Finds and clicks the hidden Streamlit sidebar buttons by exactly matching their inner HTML text.
 js_engine = f"""
 if (!window.swipeListenerActive) {{
     window.swipeListenerActive = true;
     const doc = window.parent.document;
     
-    window.parent.navTo = function(targetClass) {{
-        const container = doc.querySelector('.' + targetClass);
-        if (container) {{
-            const btn = container.querySelector('button');
-            if (btn) btn.click();
-        }}
+    window.parent.navTo = function(btnKey) {{
+        const btns = Array.from(doc.querySelectorAll('button p'));
+        const target = btns.find(p => p.textContent.includes(btnKey));
+        if (target) target.parentElement.click();
     }};
     
     let tsX = 0, tsY = 0;
@@ -265,11 +259,11 @@ if (!window.swipeListenerActive) {{
         if (Math.abs(dX) > 60 && Math.abs(dX) > Math.abs(dY)) {{
             const current = "{st.session_state.page}";
             if (dX > 0) {{ 
-                if (current === 'Home') window.parent.navTo('nav-btn-crypto');
-                else if (current === 'Crypto Transactions') window.parent.navTo('nav-btn-fiat');
+                if (current === 'Home') window.parent.navTo('Nav_Crypto');
+                else if (current === 'Crypto Transactions') window.parent.navTo('Nav_Fiat');
             }} else {{ 
-                if (current === 'Fiat Transactions') window.parent.navTo('nav-btn-crypto');
-                else if (current === 'Crypto Transactions') window.parent.navTo('nav-btn-home');
+                if (current === 'Fiat Transactions') window.parent.navTo('Nav_Crypto');
+                else if (current === 'Crypto Transactions') window.parent.navTo('Nav_Home');
             }}
         }}
     }}, {{passive: true}});
@@ -366,7 +360,7 @@ def get_all_cryptocompare_prices(tickers: tuple, refresh_key=0):
     if not symbols: return prices
     try:
         url = f"https://min-api.cryptocompare.com/data/pricemulti?fsyms={','.join(symbols)}&tsyms=USD"
-        data = get_with_retry(url, {"User-Agent": "Mozilla/5.0"})
+        data = get_with_retry(url, {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"})
         if data:
             for sym, price_data in data.items():
                 if isinstance(price_data, dict) and "USD" in price_data:
@@ -549,6 +543,7 @@ history_data_raw, allocation_series_js, pnl_df = vault['history_data_raw'], vaul
 usdc_row = df_port[df_port['Ticker'] == 'USDC'].iloc[0] if not df_port[df_port['Ticker'] == 'USDC'].empty else None
 usdc_holdings = usdc_row['Holdings'] if usdc_row is not None else 0
 
+
 # ====================== PAGE ROUTING ======================
 if st.session_state.page == "Home":
     
@@ -600,7 +595,7 @@ if st.session_state.page == "Home":
     roi_data_js = ",\n".join([f"{{ name: '{r['Ticker']}', y: {safe_float(r['PnL %'])}, color: '{get_ticker_color(r['Ticker'])}99' }}" for _, r in df_port[df_port['Ticker'] != 'USDC'].sort_values(by='PnL %', ascending=False).iterrows() if pd.notna(r['PnL %'])])
     daily_data_js = ",\n".join([f"{{ name: '{r['Ticker']}', y: 0, color: '#64748b99' }}" for _, r in df_port[df_port['Ticker'] != 'USDC'].iterrows()])
 
-    # Javascript data variables securely generated
+    # All JSON data variables cleanly injected to prevent Python curly-brace string collisions
     data_script = f"""
     <script>
         window.pnlDataMap = {{
@@ -653,7 +648,7 @@ if st.session_state.page == "Home":
             #chart-overlay { visibility: hidden; opacity: 0; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(10, 15, 28, 0.85); z-index: 1000; backdrop-filter: blur(5px); -webkit-backdrop-filter: blur(5px); transition: opacity 0.4s ease, visibility 0.4s ease; }
             #chart-overlay.active { visibility: visible; opacity: 1; }
             
-            /* Native Screen Adaptation on Double Tap */
+            /* Clean CSS bounds-stretching for Double Tap */
             .expanded-chart { width: 90vw !important; flex: 0 0 90vw !important; max-width: 100vw; }
             .expanded-chart .chart-box { background: rgba(15, 23, 42, 0.98) !important; border: 1px solid rgba(255, 255, 255, 0.15) !important; box-shadow: 0 15px 40px rgba(0,0,0,0.5) !important; }
 
@@ -809,28 +804,55 @@ if st.session_state.page == "Home":
                 });
             } catch(e) { console.error('InvVal fail:', e); }
             
+            // Beautiful Inline Width Expansion on Double Tap
             function toggleExpandChart(wrapperId) {
                 const el = document.getElementById(wrapperId);
                 const overlay = document.getElementById('chart-overlay');
-                const isMobile = window.innerWidth <= 768;
+                
+                let parentIframe = null;
+                try {
+                    const iframes = window.parent.document.querySelectorAll('iframe');
+                    for (let ifr of iframes) { if (ifr.contentWindow === window) parentIframe = ifr; }
+                } catch(e) {}
 
                 if (el.classList.contains('expanded-chart')) {
                     overlay.classList.remove('active');
                     el.classList.remove('expanded-chart');
-                    setTimeout(() => { 
-                        const hc = Highcharts.charts.find(c => c && c.renderTo.id === el.id.replace('-wrapper', '-container').replace('-placeholder', '-container'));
-                        if (hc) hc.reflow(); 
-                    }, 300);
+                    
+                    if (parentIframe) {
+                        const wrapper = parentIframe.closest('div[data-testid="stElementContainer"]');
+                        if (wrapper) wrapper.style.cssText = '';
+                    }
+                    
                 } else {
                     document.querySelectorAll('.expanded-chart').forEach(c => c.classList.remove('expanded-chart'));
-                    if (isMobile) overlay.classList.add('active');
+                    
+                    if (window.innerWidth <= 768) {
+                        overlay.classList.add('active');
+                    }
+                    
                     el.classList.add('expanded-chart');
-                    setTimeout(() => { 
-                        el.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' }); 
-                        const hc = Highcharts.charts.find(c => c && c.renderTo.id === el.id.replace('-wrapper', '-container').replace('-placeholder', '-container'));
-                        if (hc) hc.reflow();
-                    }, 300);
+                    
+                    if (parentIframe && window.innerWidth <= 768) {
+                        const wrapper = parentIframe.closest('div[data-testid="stElementContainer"]');
+                        if (wrapper) {
+                            wrapper.style.position = 'fixed';
+                            wrapper.style.top = '0';
+                            wrapper.style.left = '0';
+                            wrapper.style.width = '100vw';
+                            wrapper.style.height = '100vh';
+                            wrapper.style.zIndex = '999999';
+                        }
+                    }
                 }
+                
+                setTimeout(() => {
+                    const hc = Highcharts.charts.find(c => c && c.renderTo.id === el.id.replace('-wrapper', '-container').replace('-placeholder', '-container'));
+                    if (hc) {
+                        hc.setSize(null, null);
+                        hc.reflow();
+                    }
+                }, 300);
             }
 
             function setupDoubleTap(elementId) {
@@ -852,11 +874,7 @@ if st.session_state.page == "Home":
             setupDoubleTap('roi-wrapper'); setupDoubleTap('daily-wrapper'); setupDoubleTap('alloc-wrapper'); setupDoubleTap('inv-wrapper');
             
             document.getElementById('chart-overlay').addEventListener('click', () => {
-                document.querySelectorAll('.expanded-chart').forEach(el => {
-                    el.classList.remove('expanded-chart');
-                });
-                document.getElementById('chart-overlay').classList.remove('active');
-                setTimeout(() => { Highcharts.charts.forEach(c => { if(c) c.reflow(); }) }, 300);
+                document.querySelectorAll('.expanded-chart').forEach(el => toggleExpandChart(el.id));
             });
             
             // PC Mouse Wheel Scroll for Charts
@@ -1065,7 +1083,6 @@ if st.session_state.page == "Home":
                     const data = await resp.json();
                     
                     let totalCoinValue = 0; let totalCoinInvested = 0;
-                    let tickerValues = {{}}; let tickerDiffs = {{}}; let tickerRoi = {{}}; let ticker24h = {{}};
                     
                     cards.forEach(card => {{
                         const ticker = card.getAttribute('data-ticker');
@@ -1078,21 +1095,16 @@ if st.session_state.page == "Home":
                         if (data.RAW && data.RAW[sym] && data.RAW[sym].USD) {{
                             const newPrice = data.RAW[sym].USD.PRICE;
                             if (newPrice !== undefined) {{
-                                const oldVal = holdings * price;
                                 price = newPrice;
                                 card.setAttribute('data-current-price', price);
                                 
                                 const value = holdings * price;
-                                tickerValues[ticker] = value;
-                                tickerDiffs[ticker] = value - oldVal;
-                                
                                 const priceFmt = price < 1 ? price.toFixed(4) : price.toLocaleString('en-US', {{minimumFractionDigits: 2, maximumFractionDigits: 2}});
                                 const currentEl = card.querySelector('.current-value');
                                 if (currentEl) currentEl.innerText = '$' + priceFmt;
                                 
                                 const pnl = value - invested;
                                 const pnlPct = invested > 0 ? (pnl / invested) * 100 : 0;
-                                tickerRoi[ticker] = pnlPct;
                                 
                                 const valStr = '$' + value.toLocaleString('en-US', {{minimumFractionDigits: 2, maximumFractionDigits: 2}});
                                 const pnlStr = (pnl >= 0 ? '▲ $' : '▼ $') + Math.abs(pnl).toLocaleString('en-US', {{minimumFractionDigits: 2, maximumFractionDigits: 2}});
@@ -1124,7 +1136,6 @@ if st.session_state.page == "Home":
                             }}
                             if (changeSpan && data.RAW[sym].USD.CHANGEPCT24HOUR !== undefined) {{
                                 const change = data.RAW[sym].USD.CHANGEPCT24HOUR;
-                                ticker24h[ticker] = change;
                                 const sign = change >= 0 ? '▲' : '▼';
                                 const color = change >= 0 ? '#00ff9d' : '#ff4d4d';
                                 changeSpan.innerHTML = `<span style="color:${{color}};">${{sign}} ${{Math.abs(change).toFixed(2)}}%</span>`;
@@ -1178,7 +1189,6 @@ if st.session_state.page == "Home":
         const flipCards = document.querySelectorAll('.flip-card');
         window.chartCache = window.chartCache || {{}};
         const chartCache = window.chartCache;
-        const refreshKey = '{st.session_state.refresh_key}';
         
         async function fetchHistoricalData(ticker) {{
             const symbolMap = {{ 'BTC':'BTC','ETH':'ETH','SOL':'SOL','HBAR':'HBAR','XRP':'XRP','BNB':'BNB','TRX':'TRX','LINK':'LINK','SUI':'SUI' }};
@@ -1229,16 +1239,6 @@ if st.session_state.page == "Home":
             const border = card.getAttribute('data-border');
             card.style.setProperty('--border', border);
             
-            const p7d = parseFloat(card.getAttribute('data-price-7d'));
-            const p30d = parseFloat(card.getAttribute('data-price-30d'));
-            const p90d = parseFloat(card.getAttribute('data-price-90d'));
-            const pytd = parseFloat(card.getAttribute('data-price-ytd'));
-            
-            updateMetricUI(card, ticker, '7d', p7d, currentPrice);
-            updateMetricUI(card, ticker, '30d', p30d, currentPrice);
-            updateMetricUI(card, ticker, '90d', p90d, currentPrice);
-            updateMetricUI(card, ticker, 'ytd', pytd, currentPrice);
-            
             const front = card.querySelector('.flip-card-front');
             front.addEventListener('click', (e) => {{
                 e.stopPropagation();
@@ -1258,189 +1258,12 @@ if st.session_state.page == "Home":
         
         updateLivePrices();
         restoreFlippedState();
-        
-        if (window.oldRefreshKey && window.oldRefreshKey !== refreshKey) {{
-            for (let key in chartCache) if (chartCache[key].chartObj) chartCache[key].chartObj.destroy();
-            window.chartCache = {{}};
-        }}
-        window.oldRefreshKey = refreshKey;
     }})();
     </script>
     </body>
     </html>
     """
     components.html(full_html, height=380, scrolling=False)
-
-elif st.session_state.page == "Crypto Transactions":
-    glossy_header("Crypto Transactions", CRYPTO_ICON)
-
-    st.markdown("""
-    <style>
-    div[data-testid="stForm"]:has(.add-tx-card) { background: #0f172a !important; border: 1px solid rgba(255,255,255,0.05) !important; border-radius: 16px !important; padding: 24px !important; box-shadow: 0 4px 15px rgba(0,0,0,0.3) !important; margin-bottom: 24px !important; }
-    div[data-testid="stForm"]:has(.add-tx-card) label { font-size: 0.85rem !important; color: #94a3b8 !important; padding-bottom: 2px !important; }
-    div[data-testid="stForm"]:has(.add-tx-card) .stTextInput input, div[data-testid="stForm"]:has(.add-tx-card) .stNumberInput input, div[data-testid="stForm"]:has(.add-tx-card) .stDateInput input { background: rgba(255,255,255,0.03) !important; border: 1px solid rgba(255,255,255,0.1) !important; color: #fff !important; border-radius: 8px !important; margin-bottom: 0px !important; }
-    div[data-testid="stForm"]:has(.add-tx-card) div[data-testid="stHorizontalBlock"]:has(> div[data-testid="column"]:nth-child(4)) { display: flex !important; gap: 12px !important; }
-    div[data-testid="stForm"]:has(.add-tx-card) div[data-testid="stHorizontalBlock"]:has(> div[data-testid="column"]:nth-child(2):last-child) { display: flex !important; flex-direction: row !important; justify-content: space-between !important; align-items: center !important; margin-top: 12px !important; gap: 12px !important; }
-    div[data-testid="stForm"]:has(.add-tx-card) div[data-testid="stHorizontalBlock"]:has(> div[data-testid="column"]:nth-child(2):last-child) > div[data-testid="column"]:nth-child(1) { flex: 0 0 auto !important; width: auto !important; }
-    div[data-testid="stForm"]:has(.add-tx-card) div[data-testid="stHorizontalBlock"]:has(> div[data-testid="column"]:nth-child(2):last-child) > div[data-testid="column"]:nth-child(2) { flex: 1 1 auto !important; width: auto !important; }
-    div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] { background: rgba(0,0,0,0.3) !important; padding: 6px !important; border-radius: 12px !important; display: flex !important; flex-direction: row !important; gap: 8px !important; align-items: center !important; margin: 0 !important; height: 48px !important; border: 1px solid rgba(255,255,255,0.05) !important; min-width: 200px !important; }
-    div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label { margin: 0 !important; cursor: pointer !important; padding: 0 !important; border-radius: 8px !important; border: 1px solid transparent !important; transition: all 0.3s ease !important; background: transparent !important; flex: 1 !important; display: flex !important; justify-content: center !important; align-items: center !important; height: 100% !important; }
-    div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label:hover { background: rgba(255,255,255,0.05) !important; }
-    div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label > div:first-child { display: none !important; } 
-    div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label p { font-weight: bold !important; font-size: 1.05rem !important; color: #94a3b8 !important; margin: 0 !important; padding: 0 !important; white-space: nowrap !important; line-height: 1 !important; }
-    div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label:has(input:checked):first-child, div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label[aria-checked="true"]:first-child { background: rgba(0, 255, 157, 0.15) !important; border-color: #00ff9d !important; }
-    div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label:has(input:checked):first-child p, div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label[aria-checked="true"]:first-child p { color: #00ff9d !important; }
-    div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label:has(input:checked):last-child, div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label[aria-checked="true"]:last-child { background: rgba(255, 77, 77, 0.15) !important; border-color: #ff4d4d !important; }
-    div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label:has(input:checked):last-child p, div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label[aria-checked="true"]:last-child p { color: #ff4d4d !important; }
-    div[data-testid="stForm"]:has(.add-tx-card) .stButton { display: flex !important; justify-content: flex-end !important; align-items: center !important; margin: 0 !important; padding: 0 !important; width: 100% !important; }
-    div[data-testid="stForm"]:has(.add-tx-card) .stButton > button { background: #1e2a44 !important; color: #e0e0e0 !important; padding: 0 24px !important; border-radius: 10px !important; font-size: 1.05rem !important; font-weight: 700 !important; box-shadow: 0 4px 15px rgba(0,0,0,0.25) !important; transition: all 0.3s ease !important; border: none !important; margin: 0 !important; width: auto !important; height: 48px !important; min-height: 48px !important; }
-    div[data-testid="stForm"]:has(.add-tx-card) .stButton > button:hover { transform: translateY(-2px) !important; box-shadow: 0 8px 20px rgba(255, 255, 255, 0.2) !important; color: white !important; }
-    div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row) { background: #0f172a !important; border: 1px solid rgba(255,255,255,0.05) !important; border-radius: 12px !important; padding: 12px 16px !important; margin-bottom: 12px !important; position: relative; z-index: 2; }
-    div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row) > div { padding: 0 !important; } 
-    div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row) div[data-testid="stButton"] button { background: rgba(255,255,255,0.05) !important; border-radius: 8px !important; border: none !important; height: 40px !important; width: 40px !important; display: flex !important; align-items: center !important; justify-content: center !important; padding: 0 !important; margin: 0 auto !important; font-size: 1.2rem !important; transition: all 0.2s !important; }
-    div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row) div[data-testid="stButton"] button:hover { background: rgba(255,255,255,0.15) !important; transform: scale(1.05) !important; }
-    @keyframes rollDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
-    div[data-testid="stForm"]:has(.edit-rollout) { animation: rollDown 0.3s ease forwards !important; background: rgba(0,0,0,0.2) !important; border-left: 3px solid #00ff9d !important; border-radius: 0 0 12px 12px !important; border-top: none !important; border-right: none !important; border-bottom: none !important; padding: 16px !important; margin-top: -24px !important; margin-bottom: 20px !important; position: relative; z-index: 1; box-shadow: inset 0 4px 10px rgba(0,0,0,0.15) !important; }
-    div[data-testid="stVerticalBlockBorderWrapper"]:has(.del-warn) { border-color: rgba(255, 77, 77, 0.3) !important; background: rgba(15, 23, 42, 0.95) !important; border-radius: 12px !important; padding: 16px !important; text-align: center !important; margin-bottom: 12px !important; box-shadow: 0 4px 20px rgba(0,0,0,0.4) !important; }
-    div[data-testid="stVerticalBlockBorderWrapper"]:has(.del-warn) .stButton > button { border-radius: 8px !important; font-weight: 600 !important; transition: all 0.2s !important; width: 100% !important; margin-top: 8px !important; padding: 6px 12px !important; }
-    div[data-testid="stVerticalBlockBorderWrapper"]:has(.del-warn) div[data-testid="column"]:nth-child(1) .stButton > button { background: rgba(255, 77, 77, 0.1) !important; color: #ff4d4d !important; border: 1px solid rgba(255, 77, 77, 0.3) !important; }
-    div[data-testid="stVerticalBlockBorderWrapper"]:has(.del-warn) div[data-testid="column"]:nth-child(1) .stButton > button:hover { background: #ff4d4d !important; color: white !important; }
-    div[data-testid="stVerticalBlockBorderWrapper"]:has(.del-warn) div[data-testid="column"]:nth-child(2) .stButton > button { background: rgba(255, 255, 255, 0.05) !important; color: #cbd5e1 !important; border: 1px solid rgba(255, 255, 255, 0.1) !important; }
-    div[data-testid="stVerticalBlockBorderWrapper"]:has(.del-warn) div[data-testid="column"]:nth-child(2) .stButton > button:hover { background: rgba(255, 255, 255, 0.15) !important; color: white !important; }
-
-    @media (max-width: 768px) {
-        div[data-testid="stForm"]:has(.add-tx-card) div[data-testid="stHorizontalBlock"] { display: flex !important; flex-direction: row !important; flex-wrap: wrap !important; gap: 12px !important; }
-        div[data-testid="stForm"]:has(.add-tx-card) div[data-testid="stHorizontalBlock"]:has(> div[data-testid="column"]:nth-child(4)) > div[data-testid="column"] { min-width: calc(50% - 12px) !important; width: calc(50% - 12px) !important; flex: 1 1 calc(50% - 12px) !important; }
-        div[data-testid="stForm"]:has(.add-tx-card) input { padding: 6px !important; font-size: 0.95rem !important; }
-        div[data-testid="stForm"]:has(.add-tx-card) div[data-testid="stHorizontalBlock"]:has(> div[data-testid="column"]:nth-child(2):last-child) > div[data-testid="column"] { min-width: calc(50% - 12px) !important; width: calc(50% - 12px) !important; flex: 1 1 calc(50% - 12px) !important; }
-        div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] { min-width: 0 !important; width: 100% !important; }
-        div[data-testid="stForm"]:has(.add-tx-card) .stButton { display: flex !important; justify-content: flex-end !important; width: 100% !important; }
-        div[data-testid="stForm"]:has(.add-tx-card) .stButton > button { width: 100% !important; max-width: 120px !important; padding: 0 16px !important; }
-        div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row) > div > div[data-testid="stVerticalBlock"] > div[data-testid="stHorizontalBlock"] { display: flex !important; flex-direction: row !important; flex-wrap: nowrap !important; align-items: center !important; overflow: hidden !important; gap: 2px !important; }
-        div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row) div[data-testid="column"] { min-width: 0 !important; padding: 0 !important; width: auto !important; flex-shrink: 1 !important; }
-        div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row) > div > div[data-testid="stVerticalBlock"] > div[data-testid="stHorizontalBlock"] > div[data-testid="column"]:nth-child(1) { flex: 0 0 35px !important; width: 35px !important; }
-        div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row) > div > div[data-testid="stVerticalBlock"] > div[data-testid="stHorizontalBlock"] > div[data-testid="column"]:nth-child(2) { flex: 1 1 auto !important; overflow: hidden !important; text-align: left; }
-        div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row) > div > div[data-testid="stVerticalBlock"] > div[data-testid="stHorizontalBlock"] > div[data-testid="column"]:nth-child(3) { flex: 1.5 1 auto !important; overflow: hidden !important; text-align: center; }
-        div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row) > div > div[data-testid="stVerticalBlock"] > div[data-testid="stHorizontalBlock"] > div[data-testid="column"]:nth-child(4) { flex: 0 0 36px !important; width: 36px !important; }
-        div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row) > div > div[data-testid="stVerticalBlock"] > div[data-testid="stHorizontalBlock"] > div[data-testid="column"]:nth-child(5) { flex: 0 0 36px !important; width: 36px !important; }
-        div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row) div[data-testid="stButton"] button { width: 30px !important; height: 30px !important; font-size: 0.9rem !important; margin: 0 auto !important; }
-        .mobile-logo { width: 32px !important; height: 32px !important; margin-top: 0 !important; }
-        .mobile-tx-ticker { font-size: 0.95rem !important; margin-left: 2px !important;}
-        .mobile-tx-amount { font-size: 0.95rem !important; white-space: nowrap !important; }
-        .mobile-tx-sub { font-size: 0.7rem !important; white-space: nowrap !important; margin-left: 2px !important;}
-    }
-    </style>
-    """, unsafe_allow_html=True)
-
-    with st.form("add_crypto", border=False):
-        st.markdown("<div class='add-tx-card'></div><h3 style='text-align: center; color: white; margin-top: 0px; margin-bottom: 10px;'>New Transaction</h3>", unsafe_allow_html=True)
-        
-        r1c1, r1c2, r1c3, r1c4 = st.columns(4)
-        with r1c1: selected_date = st.date_input("Date", value=date(2026, 3, 25))
-        with r1c2: ticker = st.text_input("Ticker", value="BTC").upper().strip()
-        with r1c3: usdc = st.number_input("USDC Amount", value=15.0, step=0.01)
-        with r1c4: amount = st.number_input("Coin Amount", value=0.1, step=0.000001, format="%.8f")
-        
-        action_col1, action_col2 = st.columns(2)
-        with action_col1: tx_type = st.radio("Type", ["Buy", "Sell"], horizontal=True, label_visibility="collapsed")
-        with action_col2: submitted = st.form_submit_button("+ Add")
-        
-        if submitted and ticker:
-            final_usdc = usdc if tx_type == "Buy" else -usdc
-            final_amount = amount if tx_type == "Buy" else -amount
-            price = round(usdc / amount, 8) if amount > 0 else 0.0
-            new_row = pd.DataFrame([{"Datum": date_to_excel_serial(selected_date), "USDC": final_usdc, "Ticker": ticker, "Amount": final_amount, "Price": price}])
-            st.session_state.crypto_df = pd.concat([st.session_state.crypto_df, new_row], ignore_index=True)
-            save_crypto(st.session_state.crypto_df)
-            st.session_state.crypto_table_version += 1
-            st.session_state.ui_version += 1
-            st.success(f"✅ Executed {tx_type}: {amount} {ticker}")
-            st.rerun()
-
-    df_display = st.session_state.crypto_df.copy()
-    df_display['orig_idx'] = df_display.index
-    df_display = df_display.dropna(how='all').sort_values(by='Datum', ascending=False)
-
-    st.markdown("<h4 style='color: white; margin-top: 20px; margin-bottom: 15px;'>Transaction History</h4>", unsafe_allow_html=True)
-    
-    with st.container(height=550, border=False):
-        for i, r in df_display.iterrows():
-            orig_idx = r['orig_idx']
-            logo_url = get_ticker_logo(r['Ticker'])
-            amount = float(r['Amount']) if pd.notna(r['Amount']) else 0.0
-            usdc = float(r['USDC']) if pd.notna(r['USDC']) else 0.0
-            is_buy = amount >= 0
-            abs_amount, abs_usdc = abs(amount), abs(usdc)
-            price = abs_usdc / abs_amount if abs_amount > 0 else 0
-            
-            sign, color = ("+", "#00ff9d") if is_buy else ("-", "#ff4d4d")
-            action_text = "Spent" if is_buy else "Received"
-            invested_formatted, amount_formatted, price_formatted = format_money(abs_usdc), format_holdings(abs_amount, r['Ticker']), format_price(price)
-            date_str = format_datum(r['Datum'])
-
-            if st.session_state.get('confirm_delete_crypto') == orig_idx:
-                with st.container(border=True):
-                    st.markdown("<div class='del-warn'></div><h4 style='color: #ff4d4d; margin-top: 0; margin-bottom: 5px; font-size: 1.1rem; font-weight: 600;'>Delete this transaction?</h4>", unsafe_allow_html=True)
-                    c_yes, c_no = st.columns(2)
-                    with c_yes:
-                        if st.button("Delete", key=f"yes_del_{orig_idx}", use_container_width=True):
-                            st.session_state.crypto_df = st.session_state.crypto_df.drop(orig_idx).reset_index(drop=True)
-                            save_crypto(st.session_state.crypto_df)
-                            st.session_state['confirm_delete_crypto'] = None
-                            st.session_state.crypto_table_version += 1
-                            st.session_state.ui_version += 1
-                            st.rerun()
-                    with c_no:
-                        if st.button("Cancel", key=f"no_del_{orig_idx}", use_container_width=True):
-                            st.session_state['confirm_delete_crypto'] = None
-                            st.rerun()
-            else:
-                with st.container(border=True):
-                    st.markdown("<div class='tx-row'></div>", unsafe_allow_html=True)
-                    col_logo, col_ticker, col_vals, col_edit, col_del = st.columns([0.5, 2, 2.5, 0.5, 0.5])
-                    with col_logo: st.markdown(f"<img src='{logo_url}' class='mobile-logo' style='width:42px;height:42px;border-radius:50%;object-fit:contain;margin-top:6px;' onerror=\"this.src='https://via.placeholder.com/42/1e2a44/ffffff?text={r['Ticker'][0]}';\">", unsafe_allow_html=True)
-                    with col_ticker: st.markdown(f"""<div style="line-height: 1.2; margin-top: 6px; overflow: hidden; text-overflow: ellipsis;"><div class="mobile-tx-ticker" style="font-weight: 700; font-size: 1.15rem; color: #ffffff; white-space: nowrap;">{r['Ticker']}</div><div class="mobile-tx-sub" style="font-size: 0.85rem; color: #94a3b8; white-space: nowrap;">{date_str}</div></div>""", unsafe_allow_html=True)
-                    with col_vals: st.markdown(f"""<div style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; margin-top: 6px;"><div class="mobile-tx-amount" style="font-weight: 700; font-size: 1.15rem; color: {color}; white-space: nowrap;">{sign}{amount_formatted}</div><div class="mobile-tx-sub" style="font-size: 0.85rem; color: #cbd5e1; white-space: nowrap;">{action_text}: {invested_formatted} @ ${price_formatted}</div></div>""", unsafe_allow_html=True)
-                    with col_edit:
-                        if st.button("✏️", key=f"edit_btn_{orig_idx}"):
-                            st.session_state['edit_crypto_row'] = None if st.session_state.get('edit_crypto_row') == orig_idx else orig_idx
-                            st.rerun()
-                    with col_del:
-                        if st.button("🗑️", key=f"del_btn_{orig_idx}"):
-                            st.session_state['confirm_delete_crypto'] = orig_idx
-                            st.rerun()
-
-                if st.session_state.get('edit_crypto_row') == orig_idx:
-                    with st.form(f"edit_crypto_form_{orig_idx}", border=False):
-                        st.markdown("<div class='edit-rollout form-compact-marker'></div><h4 style='color: #00ff9d; margin-top: 0px; margin-bottom: 15px;'>✏️ Edit Row Details</h4>", unsafe_allow_html=True)
-                        
-                        e_r1c1, e_r1c2 = st.columns(2)
-                        with e_r1c1: new_date = st.date_input("Date", value=datetime(1899, 12, 30) + timedelta(days=int(r['Datum'])))
-                        with e_r1c2: new_ticker = st.text_input("Ticker", value=r['Ticker']).upper().strip()
-                        
-                        e_r2c1, e_r2c2 = st.columns(2)
-                        with e_r2c1: new_usdc = st.number_input("USDC Amount", value=float(abs(r['USDC'])), step=0.01)
-                        with e_r2c2: new_amount = st.number_input("Coin Amount", value=float(abs(r['Amount'])), step=0.000001, format="%.8f")
-                        
-                        tx_type_edit = st.radio("Type", ["Buy", "Sell"], horizontal=True, index=0 if is_buy else 1, label_visibility="collapsed")
-                        
-                        e_save, e_cancel = st.columns(2)
-                        with e_save: 
-                            if st.form_submit_button("💾 Save Changes"):
-                                final_usdc = new_usdc if tx_type_edit == "Buy" else -new_usdc
-                                final_amount = new_amount if tx_type_edit == "Buy" else -new_amount
-                                new_price = round(new_usdc / new_amount, 8) if new_amount > 0 else 0.0
-                                st.session_state.crypto_df.loc[orig_idx] = {"Datum": date_to_excel_serial(new_date), "USDC": final_usdc, "Ticker": new_ticker, "Amount": final_amount, "Price": new_price}
-                                save_crypto(st.session_state.crypto_df)
-                                st.session_state['edit_crypto_row'] = None
-                                st.session_state.crypto_table_version += 1
-                                st.session_state.ui_version += 1
-                                st.success("✅ Transaction updated!")
-                                st.rerun()
-                        with e_cancel:
-                            if st.form_submit_button("❌ Cancel"):
-                                st.session_state['edit_crypto_row'] = None
-                                st.rerun()
 
 # ================== PAGE 3: FIAT ==================
 elif st.session_state.page == "Fiat Transactions":
