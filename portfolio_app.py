@@ -400,7 +400,7 @@ def get_with_retry(url: str, headers: dict, timeout: int = 12, retries: int = 4)
             time.sleep(1.5 ** attempt)
     return None
 
-# ====================== LIVE PRICE FUNCTION ======================
+# ====================== DATA FETCHING & CALCULATIONS ======================
 @st.cache_data(ttl=15, show_spinner=False)
 def get_all_cryptocompare_prices(tickers, refresh_key=0):
     prices = {"USDC": 1.0}
@@ -438,7 +438,28 @@ def get_all_cryptocompare_prices(tickers, refresh_key=0):
             continue
     return prices
 
-# ====================== HISTORICAL PORTFOLIO BUILDER ======================
+@st.cache_data(ttl=3600, show_spinner=False)
+def get_historical_base_prices(tickers, refresh_key=0):
+    base_prices = {}
+    headers = {"User-Agent": "Mozilla/5.0"}
+    today = datetime.now()
+    ytd_days = (today - datetime(today.year, 1, 1)).days
+    limit = max(90, ytd_days) + 2
+    for t in tickers:
+        if t == 'USDC': continue
+        sym = CRYPTOCOMPARE_SYMBOL_MAP.get(t, t)
+        url = f"https://min-api.cryptocompare.com/data/v2/histoday?fsym={sym}&tsym=USD&limit={limit}"
+        data = get_with_retry(url, headers)
+        if data and 'Data' in data and 'Data' in data['Data']:
+            prices = [d['close'] for d in data['Data']['Data']]
+            if len(prices) > 0:
+                p_7d = prices[-8] if len(prices) >= 8 else prices[0]
+                p_30d = prices[-31] if len(prices) >= 31 else prices[0]
+                p_90d = prices[-91] if len(prices) >= 91 else prices[0]
+                p_ytd = prices[-(ytd_days+1)] if len(prices) >= (ytd_days+1) else prices[0]
+                base_prices[t] = {'7d': p_7d, '30d': p_30d, '90d': p_90d, 'ytd': p_ytd}
+    return base_prices
+
 @st.cache_data(ttl=3600, show_spinner=False)
 def build_portfolio_history(crypto_df, fiat_df, last_prices, refresh_key):
     if crypto_df.empty and fiat_df.empty: return [], "", pd.DataFrame()
@@ -515,10 +536,8 @@ def build_portfolio_history(crypto_df, fiat_df, last_prices, refresh_key):
         if coin not in prices_df.columns:
             prices_df[coin] = live_p
         
-        # Inject precise live price directly into the end of history for precise 1D PnL calculation
         prices_df.loc[date_range[-1], coin] = live_p
     
-    # Calculate PnL Tracking Dataframe
     pnl_df = pd.DataFrame()
     if not crypto.empty and not crypto_assets.empty:
         invested_daily = crypto_assets.groupby(['Date', 'Ticker'])['USDC'].sum().unstack(fill_value=0)
@@ -602,7 +621,6 @@ def get_ticker_color(ticker: str) -> str:
     if ticker in known:
         return known[ticker]
     
-    # Fallback dynamic color
     c = f"#{hashlib.md5(ticker.encode()).hexdigest()[:6]}"
     if c == '#000000': 
         return '#ffffff'
@@ -659,7 +677,7 @@ def calculate_portfolio(crypto_df):
     if 'last_known_prices' not in st.session_state:
         st.session_state.last_known_prices = {"USDC": 1.0}
     if crypto_df.empty:
-        return pd.DataFrame(columns=['Ticker','Holdings','USDC','AVG','Live','PnL','PnL %','Value']), 0, 0, 0
+        return pd.DataFrame(columns=['Ticker','Holdings','USDC','AVG','Live','PnL','PnL %','Value','Price7d','Price30d','Price90d','PriceYTD']), 0, 0, 0
     crypto_df = crypto_df.copy()
     crypto_df['Ticker'] = crypto_df['Ticker'].astype(str).str.upper()
     fiat_usdc = pd.to_numeric(st.session_state.fiat_df['USDC'], errors='coerce').fillna(0).sum()
@@ -668,8 +686,9 @@ def calculate_portfolio(crypto_df):
     coin_tickers = [t for t in crypto_df['Ticker'].unique() if t != 'USDC']
     
     fetch_tickers = list(set(coin_tickers) | {'BTC'})
-    
     live_prices = get_all_cryptocompare_prices(fetch_tickers, st.session_state.refresh_key)
+    base_prices = get_historical_base_prices(fetch_tickers, st.session_state.refresh_key)
+
     for t, p in live_prices.items():
         if p > 0:
             st.session_state.last_known_prices[t] = p
@@ -684,8 +703,11 @@ def calculate_portfolio(crypto_df):
         value = total_holdings * live_price
         pnl = value - total_invested
         pnl_pct = (pnl / total_invested * 100) if total_invested > 0 else 0
-        portfolio.append({'Ticker':ticker,'Holdings':total_holdings,'USDC':total_invested,'AVG':avg_price,'Live':live_price,'PnL':pnl,'PnL %':pnl_pct,'Value':value})
-    portfolio.append({'Ticker':'USDC','Holdings':usdc_holdings,'USDC':usdc_holdings,'AVG':1.0,'Live':1.0,'PnL':0,'PnL %':0,'Value':usdc_holdings})
+        
+        bp = base_prices.get(ticker, {'7d': live_price, '30d': live_price, '90d': live_price, 'ytd': live_price})
+        
+        portfolio.append({'Ticker':ticker,'Holdings':total_holdings,'USDC':total_invested,'AVG':avg_price,'Live':live_price,'PnL':pnl,'PnL %':pnl_pct,'Value':value, 'Price7d':bp['7d'], 'Price30d':bp['30d'], 'Price90d':bp['90d'], 'PriceYTD':bp['ytd']})
+    portfolio.append({'Ticker':'USDC','Holdings':usdc_holdings,'USDC':usdc_holdings,'AVG':1.0,'Live':1.0,'PnL':0,'PnL %':0,'Value':usdc_holdings, 'Price7d':1.0, 'Price30d':1.0, 'Price90d':1.0, 'PriceYTD':1.0})
     df_port = pd.DataFrame(portfolio)
     df_port = df_port.sort_values(by='USDC', ascending=False).reset_index(drop=True)
     total_value = df_port['Value'].sum()
@@ -829,7 +851,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                 lines = []
                 for ticker, val in series.items():
                     c = get_ticker_color(ticker)
-                    lines.append(f"{{ name: '{ticker}', y: {val}, color: '{c}A6' }}")
+                    lines.append(f"{{ name: '{ticker}', y: {val}, color: 'transparent', borderColor: '{c}' }}")
                 return ",\n".join(lines)
 
             pnl_all = pnl_df_active.iloc[-1]
@@ -860,7 +882,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
         for _, r in df_iv.iterrows():
             c = get_ticker_color(r['Ticker'])
             val = r['Value'] if pd.notna(r['Value']) else 0
-            val_data_points.append(f"{{ y: {val}, color: '{c}A6' }}")
+            val_data_points.append(f"{{ y: {val}, color: 'transparent', borderColor: '{c}' }}")
         val_data_js = ",".join(val_data_points)
         
         # Chart 6: ROI % Bar Data
@@ -871,14 +893,14 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
             val = r['PnL %']
             if pd.notna(val):
                 c = get_ticker_color(t)
-                roi_data_js_lines.append(f"{{ name: '{t}', y: {val}, color: '{c}A6' }}")
+                roi_data_js_lines.append(f"{{ name: '{t}', y: {val}, color: 'transparent', borderColor: '{c}' }}")
         roi_data_js = ",\n".join(roi_data_js_lines)
 
         # Chart 7: 24h Change Placeholder Data
         daily_data_js_lines = []
         for _, r in df_port[df_port['Ticker'] != 'USDC'].iterrows():
             t = r['Ticker']
-            daily_data_js_lines.append(f"{{ name: '{t}', y: 0, color: 'rgba(100, 116, 139, 0.65)' }}")
+            daily_data_js_lines.append(f"{{ name: '{t}', y: 0, color: 'transparent', borderColor: '#64748b' }}")
         daily_data_js = ",\n".join(daily_data_js_lines)
 
         charts_html = f"""
@@ -1193,17 +1215,17 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                     chart: {{ type: 'bar', backgroundColor: 'transparent', marginTop: 15, marginBottom: 25 }},
                     title: {{ text: null }},
                     xAxis: {{ type: 'category', labels: {{ style: {{ color: '#94a3b8', fontWeight: 'bold' }} }}, gridLineColor: 'rgba(255,255,255,0.05)', tickWidth: 0, lineWidth: 0 }},
-                    yAxis: {{ title: {{ text: null }}, labels: {{ enabled: false }}, gridLineColor: 'rgba(255,255,255,0.05)', minPadding: 0.15, maxPadding: 0.15 }},
+                    yAxis: {{ title: {{ text: null }}, labels: {{ enabled: false }}, gridLineColor: 'rgba(255,255,255,0.05)', minPadding: 0.25, maxPadding: 0.25 }},
                     legend: {{ enabled: false }},
                     tooltip: {{
                         backgroundColor: 'rgba(15, 23, 42, 0.95)', style: {{ color: '#fff' }}, borderColor: 'rgba(255,255,255,0.15)',
                         formatter: function() {{
                             const isPrivacy = document.body.classList.contains('privacy-mode');
                             const val = isPrivacy ? '***' : formatMoneyStr(this.y);
-                            return `<b>${{this.point.name}}</b><br/>PnL: <b style="color:${{this.point.color}}">${{val}}</b>`;
+                            return `<b>${{this.point.name}}</b><br/>PnL: <b style="color:${{this.point.borderColor}}">${{val}}</b>`;
                         }}
                     }},
-                    plotOptions: {{ bar: {{ borderRadius: 4, borderWidth: 0, pointPadding: 0.1, groupPadding: 0.1, maxPointWidth: 35, shadow: {{ color: 'rgba(0,0,0,0.3)', offsetX: 1, offsetY: 2, width: 4 }}, dataLabels: {{ enabled: true, inside: false, crop: false, overflow: 'allow', style: {{ color: '#fff', textOutline: '2px #0f172a', fontWeight: 'bold', fontSize: '11px' }}, formatter: function() {{ return document.body.classList.contains('privacy-mode') ? '***' : formatMoneyStr(this.y); }} }} }} }},
+                    plotOptions: {{ bar: {{ borderRadius: 4, borderWidth: 2, pointPadding: 0.1, groupPadding: 0.1, maxPointWidth: 35, dataLabels: {{ enabled: true, inside: false, crop: false, overflow: 'allow', style: {{ color: '#fff', textOutline: '2px #0f172a', fontWeight: 'bold', fontSize: '11px' }}, formatter: function() {{ return document.body.classList.contains('privacy-mode') ? '***' : formatMoneyStr(this.y); }} }} }} }},
                     credits: {{ enabled: false }},
                     series: [{{ name: 'PnL', data: pnlDataMap['all'] }}]
                 }});
@@ -1226,16 +1248,16 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                     chart: {{ type: 'bar', backgroundColor: 'transparent', marginTop: 15, marginBottom: 25 }},
                     title: {{ text: null }},
                     xAxis: {{ type: 'category', labels: {{ style: {{ color: '#94a3b8', fontWeight: 'bold' }} }}, gridLineColor: 'rgba(255,255,255,0.05)', tickWidth: 0, lineWidth: 0 }},
-                    yAxis: {{ title: {{ text: null }}, labels: {{ enabled: false }}, gridLineColor: 'rgba(255,255,255,0.05)', minPadding: 0.15, maxPadding: 0.15 }},
+                    yAxis: {{ title: {{ text: null }}, labels: {{ enabled: false }}, gridLineColor: 'rgba(255,255,255,0.05)', minPadding: 0.25, maxPadding: 0.25 }},
                     legend: {{ enabled: false }},
                     tooltip: {{
                         backgroundColor: 'rgba(15, 23, 42, 0.95)', style: {{ color: '#fff' }}, borderColor: 'rgba(255,255,255,0.15)',
                         formatter: function() {{
                             const val = Highcharts.numberFormat(this.y, 2) + '%';
-                            return `<b>${{this.point.name}}</b><br/>ROI: <b style="color:${{this.point.color}}">${{val}}</b>`;
+                            return `<b>${{this.point.name}}</b><br/>ROI: <b style="color:${{this.point.borderColor}}">${{val}}</b>`;
                         }}
                     }},
-                    plotOptions: {{ bar: {{ borderRadius: 4, borderWidth: 0, pointPadding: 0.1, groupPadding: 0.1, maxPointWidth: 35, shadow: {{ color: 'rgba(0,0,0,0.3)', offsetX: 1, offsetY: 2, width: 4 }}, dataLabels: {{ enabled: true, inside: false, crop: false, overflow: 'allow', style: {{ color: '#fff', textOutline: '2px #0f172a', fontWeight: 'bold', fontSize: '11px' }}, formatter: function() {{ return Highcharts.numberFormat(this.y, 2) + '%'; }} }} }} }},
+                    plotOptions: {{ bar: {{ borderRadius: 4, borderWidth: 2, pointPadding: 0.1, groupPadding: 0.1, maxPointWidth: 35, dataLabels: {{ enabled: true, inside: false, crop: false, overflow: 'allow', style: {{ color: '#fff', textOutline: '2px #0f172a', fontWeight: 'bold', fontSize: '11px' }}, formatter: function() {{ return Highcharts.numberFormat(this.y, 2) + '%'; }} }} }} }},
                     credits: {{ enabled: false }},
                     series: [{{ name: 'ROI %', data: [ {roi_data_js} ] }}]
                 }});
@@ -1245,17 +1267,17 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                     chart: {{ type: 'bar', backgroundColor: 'transparent', marginTop: 15, marginBottom: 25 }},
                     title: {{ text: null }},
                     xAxis: {{ type: 'category', labels: {{ style: {{ color: '#94a3b8', fontWeight: 'bold' }} }}, gridLineColor: 'rgba(255,255,255,0.05)', tickWidth: 0, lineWidth: 0 }},
-                    yAxis: {{ title: {{ text: null }}, labels: {{ enabled: false }}, gridLineColor: 'rgba(255,255,255,0.05)', minPadding: 0.15, maxPadding: 0.15 }},
+                    yAxis: {{ title: {{ text: null }}, labels: {{ enabled: false }}, gridLineColor: 'rgba(255,255,255,0.05)', minPadding: 0.25, maxPadding: 0.25 }},
                     legend: {{ enabled: false }},
                     tooltip: {{
                         backgroundColor: 'rgba(15, 23, 42, 0.95)', style: {{ color: '#fff' }}, borderColor: 'rgba(255,255,255,0.15)',
                         formatter: function() {{
                             const val = Highcharts.numberFormat(Math.abs(this.y), 2) + '%';
                             const sign = this.y >= 0 ? '▲ ' : '▼ ';
-                            return `<b>${{this.point.name}}</b><br/>24h Change: <b style="color:${{this.point.color}}">${{sign}}${{val}}</b>`;
+                            return `<b>${{this.point.name}}</b><br/>24h Change: <b style="color:${{this.point.borderColor}}">${{sign}}${{val}}</b>`;
                         }}
                     }},
-                    plotOptions: {{ bar: {{ borderRadius: 4, borderWidth: 0, pointPadding: 0.1, groupPadding: 0.1, maxPointWidth: 35, shadow: {{ color: 'rgba(0,0,0,0.3)', offsetX: 1, offsetY: 2, width: 4 }}, dataLabels: {{ enabled: true, inside: false, crop: false, overflow: 'allow', style: {{ color: '#fff', textOutline: '2px #0f172a', fontWeight: 'bold', fontSize: '11px' }}, formatter: function() {{ return (this.y >= 0 ? '+' : '') + Highcharts.numberFormat(this.y, 2) + '%'; }} }} }} }},
+                    plotOptions: {{ bar: {{ borderRadius: 4, borderWidth: 2, pointPadding: 0.1, groupPadding: 0.1, maxPointWidth: 35, dataLabels: {{ enabled: true, inside: false, crop: false, overflow: 'allow', style: {{ color: '#fff', textOutline: '2px #0f172a', fontWeight: 'bold', fontSize: '11px' }}, formatter: function() {{ return (this.y >= 0 ? '+' : '') + Highcharts.numberFormat(this.y, 2) + '%'; }} }} }} }},
                     credits: {{ enabled: false }},
                     series: [{{ name: '24h Change', data: [ {daily_data_js} ] }}]
                 }});
@@ -1287,7 +1309,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                     chart: {{ type: 'column', backgroundColor: 'transparent', marginTop: 45, marginBottom: 35 }},
                     title: {{ text: 'Invested vs Current Value', align: 'left', x: 8, y: 24, style: {{ color: '#e2e8f0', fontSize: '13px', fontWeight: 'bold' }} }},
                     xAxis: {{ categories: {inv_val_categories_js}, labels: {{ style: {{ color: '#94a3b8', fontWeight: 'bold', fontSize: '10px' }} }}, gridLineColor: 'rgba(255,255,255,0.05)', tickWidth: 0 }},
-                    yAxis: {{ title: {{ text: null }}, labels: {{ style: {{ color: '#94a3b8', fontSize: '10px' }}, formatter: function() {{ return document.body.classList.contains('privacy-mode') ? '***' : formatAxisMoneyStr(this.value); }} }}, gridLineColor: 'rgba(255,255,255,0.05)' }},
+                    yAxis: {{ title: {{ text: null }}, labels: {{ style: {{ color: '#94a3b8', fontSize: '10px' }}, formatter: function() {{ return document.body.classList.contains('privacy-mode') ? '***' : formatAxisMoneyStr(this.value); }} }}, gridLineColor: 'rgba(255,255,255,0.05)', minPadding: 0.15, maxPadding: 0.15 }},
                     legend: {{ enabled: false }},
                     tooltip: {{
                         shared: true, backgroundColor: 'rgba(15, 23, 42, 0.95)', style: {{ color: '#fff' }}, borderColor: 'rgba(255,255,255,0.15)',
@@ -1296,15 +1318,15 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                             const isPrivacy = document.body.classList.contains('privacy-mode');
                             this.points.forEach(function(point) {{
                                 let val = isPrivacy ? '***' : formatMoneyStr(point.y);
-                                s += '<br/>' + '<span style="color:'+ point.color +'">\u25CF</span> ' + point.series.name + ': <b>' + val + '</b>';
+                                s += '<br/>' + '<span style="color:'+ point.borderColor +'">\u25CF</span> ' + point.series.name + ': <b>' + val + '</b>';
                             }});
                             return s;
                         }}
                     }},
-                    plotOptions: {{ column: {{ borderRadius: 4, borderWidth: 0, maxPointWidth: 40, shadow: {{ color: 'rgba(0,0,0,0.3)', offsetX: 1, offsetY: 2, width: 4 }} }} }},
+                    plotOptions: {{ column: {{ borderRadius: 4, borderWidth: 2, maxPointWidth: 40, dataLabels: {{ enabled: true, inside: false, crop: false, overflow: 'allow', style: {{ color: '#fff', textOutline: '2px #0f172a', fontWeight: 'bold', fontSize: '11px' }}, formatter: function() {{ return document.body.classList.contains('privacy-mode') ? '***' : formatMoneyStr(this.y); }} }} }} }},
                     credits: {{ enabled: false }},
                     series: [
-                        {{ name: 'Invested', data: [{inv_data_js}], color: 'rgba(100, 116, 139, 0.65)' }},
+                        {{ name: 'Invested', data: [{inv_data_js}], color: 'transparent', borderColor: '#64748b' }},
                         {{ name: 'Current Value', data: [{val_data_js}] }}
                     ]
                 }});
@@ -1555,7 +1577,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
             chart_color = border_color
             
             cards_html += f"""
-<div class="flip-card" data-ticker="{ticker}" data-holdings="{r['Holdings']}" data-invested="{r['USDC']}" data-current-price="{live_price}" data-avg-price="{avg_price}" data-refresh="{st.session_state.refresh_key}" data-border="{border_color}" data-chart-color="{chart_color}" data-logo="{logo_url}">
+<div class="flip-card" data-ticker="{ticker}" data-holdings="{r['Holdings']}" data-invested="{r['USDC']}" data-current-price="{live_price}" data-avg-price="{avg_price}" data-price-7d="{r.get('Price7d', live_price)}" data-price-30d="{r.get('Price30d', live_price)}" data-price-90d="{r.get('Price90d', live_price)}" data-price-ytd="{r.get('PriceYTD', live_price)}" data-refresh="{st.session_state.refresh_key}" data-border="{border_color}" data-chart-color="{chart_color}" data-logo="{logo_url}">
     <div class="flip-card-inner">
         <div class="flip-card-front">
             <div class="card-header">
@@ -1564,29 +1586,27 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                         <img src="{logo_url}" style="height:44px;width:44px;border-radius:50%;object-fit:contain;" onerror="this.src='https://via.placeholder.com/44/1e2a44/ffffff?text={ticker[0]}';">
                         <span style="font-weight:700;font-size:1.3rem;margin-left:12px;color:#ffffff;">{ticker}</span>
                     </div>
-                    <div class="header-price-row">
-                        <div class="stat-group" style="align-items: flex-start;">
-                            <div class="stat-label">Current</div>
-                            <div class="current-value">${live_price_formatted}</div>
-                        </div>
-                        <div class="stat-group" style="align-items: flex-start;">
-                            <div class="stat-label">24h</div>
-                            <div class="change-value" id="change-{ticker}">...</div>
-                        </div>
-                    </div>
                 </div>
                 <div class="header-right">
                     <div class="stat-group">
-                        <div class="stat-label">Avg</div>
-                        <div class="stat-value privacy-val">${avg_price_formatted}</div>
+                        <div class="stat-label">Current</div>
+                        <div class="current-value" style="font-size: 1.4rem;">${live_price_formatted}</div>
                     </div>
                 </div>
             </div>
+            
+            <div class="metrics-row">
+                <div class="metric-col"><span class="metric-lbl">24h</span><span class="metric-val" id="change-24h-{ticker}">...</span></div>
+                <div class="metric-col"><span class="metric-lbl">7d</span><span class="metric-val" id="change-7d-{ticker}">...</span></div>
+                <div class="metric-col"><span class="metric-lbl">30d</span><span class="metric-val" id="change-30d-{ticker}">...</span></div>
+                <div class="metric-col"><span class="metric-lbl">90d</span><span class="metric-val" id="change-90d-{ticker}">...</span></div>
+                <div class="metric-col"><span class="metric-lbl">YTD</span><span class="metric-val" id="change-ytd-{ticker}">...</span></div>
+            </div>
+            
             <div class="card-content">
-                <div class="label-value-row"><span class="label">Holdings</span><span class="value privacy-val">{format_holdings(r['Holdings'], ticker)}</span></div>
-                <div class="label-value-row"><span class="label">Invested</span><span class="value privacy-val">{format_money(r['USDC'])}</span></div>
+                <div class="label-value-row" style="margin-top:4px;"><span class="label">Holdings</span><span class="value privacy-val">{format_holdings(r['Holdings'], ticker)}</span></div>
+                <div class="label-value-row"><span class="label">Avg Buy</span><span class="value privacy-val">${avg_price_formatted}</span></div>
                 <div class="label-value-row"><span class="label">PnL</span><span class="value card-pnl privacy-val" style="color:{pnl_color};">{arrow} {format_money(abs(pnl) if pd.notna(pnl) else "")}</span></div>
-                <div class="label-value-row"><span class="label">PnL %</span><span class="value card-pnl-pct privacy-val" style="color:{pnl_color};">{arrow} {pnl_pct_formatted}</span></div>
                 <div class="label-value-row total"><span class="label">Value</span><span class="value total-value privacy-val">{format_money(r['Value'])}</span></div>
             </div>
         </div>
@@ -1693,7 +1713,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
         .flip-card-front {{
             display: flex;
             flex-direction: column;
-            justify-content: space-between;
+            justify-content: flex-start;
         }}
         .flip-card-back {{
             transform: rotateY(180deg);
@@ -1736,7 +1756,6 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
             display: flex;
             justify-content: space-between;
             align-items: flex-start;
-            margin-bottom: 12px;
             width: 100%;
         }}
         .header-left-container {{
@@ -1748,12 +1767,6 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
         .header-logo-row {{
             display: flex;
             align-items: center;
-        }}
-        .header-price-row {{
-            display: flex;
-            flex-direction: row;
-            gap: 16px;
-            margin-top: 10px;
         }}
         .header-right {{
             display: flex;
@@ -1773,12 +1786,42 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
             margin-bottom: 2px;
             font-weight: 500;
         }}
-        .current-value, .stat-value, .change-value {{
+        .current-value, .stat-value {{
             font-size: 0.98rem;
             font-weight: 700;
             color: white;
             white-space: nowrap;
         }}
+        
+        .metrics-row {{
+            display: flex;
+            justify-content: space-between;
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.05);
+            border-radius: 12px;
+            padding: 8px 12px;
+            margin-top: 14px;
+            margin-bottom: 14px;
+        }}
+        .metric-col {{
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+        }}
+        .metric-lbl {{
+            font-size: 0.65rem;
+            color: #94a3b8;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }}
+        .metric-val {{
+            font-size: 0.85rem;
+            font-weight: 700;
+            white-space: nowrap;
+        }}
+
         .card-content {{
             display: flex;
             flex-direction: column;
@@ -1829,11 +1872,14 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
             .coin-grid {{ padding: 0 7.5vw; gap: 16px; }}
             
             .flip-card-front, .flip-card-back {{ padding: 12px 10px; }}
-            .header-price-row {{ gap: 10px; margin-top: 8px; }}
-            .current-value, .stat-value, .change-value {{ font-size: min(3.8vw, 0.95rem); letter-spacing: -0.3px; }}
+            .current-value, .stat-value {{ font-size: min(3.8vw, 0.95rem); letter-spacing: -0.3px; }}
             .stat-label {{ font-size: min(2.5vw, 0.65rem); }}
             .header-logo-row span {{ font-size: min(4vw, 1.1rem) !important; margin-left: 6px !important; }}
             .header-logo-row img {{ height: 32px !important; width: 32px !important; }}
+            
+            .metrics-row {{ padding: 6px 8px; }}
+            .metric-val {{ font-size: 0.75rem; }}
+            .metric-lbl {{ font-size: 0.55rem; }}
         }}
     </style>
 </head>
@@ -1929,6 +1975,15 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
             }}, {{ passive: false }});
         }}
 
+        function updateMetricUI(card, ticker, period, basePrice, currentPrice) {{
+            const span = card.querySelector(`#change-${{period}}-${{ticker}}`);
+            if (!span || !basePrice) return;
+            const change = ((currentPrice - basePrice) / basePrice) * 100;
+            const sign = change >= 0 ? '▲' : '▼';
+            const color = change >= 0 ? '#00ff9d' : '#ff4d4d';
+            span.innerHTML = `<span style="color:${{color}};">${{sign}} ${{Math.abs(change).toFixed(2)}}%</span>`;
+        }}
+
         const usdcHoldings = {usdc_holdings};
         async function updateLivePrices() {{
             const cards = Array.from(document.querySelectorAll('.flip-card'));
@@ -1961,7 +2016,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                     const invested = parseFloat(card.getAttribute('data-invested'));
                     let price = parseFloat(card.getAttribute('data-current-price'));
                     
-                    const changeSpan = card.querySelector(`#change-${{ticker}}`);
+                    const changeSpan = card.querySelector(`#change-24h-${{ticker}}`);
 
                     if (data.RAW && data.RAW[sym] && data.RAW[sym].USD) {{
                         const newPrice = data.RAW[sym].USD.PRICE;
@@ -2001,6 +2056,17 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                                 pnlPctEl.style.color = color;
                             }}
                             
+                            // Update Historical Metrics directly via math
+                            const p7d = parseFloat(card.getAttribute('data-price-7d'));
+                            const p30d = parseFloat(card.getAttribute('data-price-30d'));
+                            const p90d = parseFloat(card.getAttribute('data-price-90d'));
+                            const pytd = parseFloat(card.getAttribute('data-price-ytd'));
+                            
+                            updateMetricUI(card, ticker, '7d', p7d, price);
+                            updateMetricUI(card, ticker, '30d', p30d, price);
+                            updateMetricUI(card, ticker, '90d', p90d, price);
+                            updateMetricUI(card, ticker, 'ytd', pytd, price);
+                            
                             // Update sparkline chart
                             if (window.chartCache && window.chartCache[ticker] && window.chartCache[ticker].chartObj) {{
                                 const chart = window.chartCache[ticker].chartObj;
@@ -2012,7 +2078,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                             }}
                         }}
                         
-                        // Also update 24h change text
+                        // Update live 24h change text
                         if (changeSpan && data.RAW[sym].USD.CHANGEPCT24HOUR !== undefined) {{
                             const change = data.RAW[sym].USD.CHANGEPCT24HOUR;
                             ticker24h[ticker] = change;
@@ -2090,15 +2156,22 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                             histChart.redraw(true);
                         }}
 
-                        // 3. PnL Bar Chart & Map
+                        // 3. PnL Bar Chart
                         if (pnlChart && pnlChart.series[0]) {{
-                            // Update the active chart points
                             pnlChart.series[0].points.forEach(point => {{
                                 if (tickerDiffs[point.name] !== undefined) {{
                                     point.update({{y: point.y + tickerDiffs[point.name]}}, false);
                                 }}
                             }});
-                            // Note: pnlDataMap is scoped to the other iframe, but Highcharts series state is safe
+                            if (typeof hcWin.pnlDataMap !== 'undefined') {{
+                                Object.keys(hcWin.pnlDataMap).forEach(key => {{
+                                    hcWin.pnlDataMap[key].forEach(pt => {{
+                                        if (tickerDiffs[pt.name] !== undefined) {{
+                                            pt.y += tickerDiffs[pt.name];
+                                        }}
+                                    }});
+                                }});
+                            }}
                             pnlChart.redraw(true);
                         }}
                         
@@ -2118,7 +2191,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                                 if (ticker24h[point.name] !== undefined) {{
                                     const val = ticker24h[point.name];
                                     const color = val >= 0 ? 'rgba(0, 255, 157, 0.65)' : 'rgba(255, 77, 77, 0.65)'; 
-                                    point.update({{y: val, color: color}}, false);
+                                    point.update({{y: val, color: 'transparent', borderColor: val >= 0 ? '#00ff9d' : '#ff4d4d'}}, false);
                                 }}
                             }});
                             dailyChart.redraw(true);
@@ -2140,11 +2213,9 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
 
                         // 7. Invested vs Value Chart (Series 1 is 'Current Value')
                         if (invValChart && invValChart.series[1]) {{
-                            const categories = invValChart.xAxis[0].categories;
-                            invValChart.series[1].points.forEach((point, index) => {{
-                                const ticker = categories[index];
-                                if (tickerValues[ticker] !== undefined) {{
-                                    point.update({{y: tickerValues[ticker]}}, false);
+                            invValChart.series[1].points.forEach(point => {{
+                                if (tickerValues[point.name] !== undefined) {{
+                                    point.update({{y: tickerValues[point.name]}}, false);
                                 }}
                             }});
                             invValChart.redraw(true);
@@ -2216,7 +2287,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                 cards.forEach(card => {{
                     const ticker = card.getAttribute('data-ticker');
                     const sym = symbolMap[ticker.toUpperCase()] || ticker.toUpperCase();
-                    const changeSpan = card.querySelector(`#change-${{ticker}}`);
+                    const changeSpan = card.querySelector(`#change-24h-${{ticker}}`);
 
                     if (changeSpan && data.RAW && data.RAW[sym] && data.RAW[sym].USD && data.RAW[sym].USD.CHANGEPCT24HOUR !== undefined) {{
                         const change = data.RAW[sym].USD.CHANGEPCT24HOUR;
@@ -2247,7 +2318,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                             dailyC.series[0].points.forEach(pt => {{
                                 if (init24h[pt.name] !== undefined) {{
                                     const val = init24h[pt.name];
-                                    pt.update({{y: val, color: val >= 0 ? 'rgba(0, 255, 157, 0.65)' : 'rgba(255, 77, 77, 0.65)'}}, false);
+                                    pt.update({{y: val, color: 'transparent', borderColor: val >= 0 ? '#00ff9d' : '#ff4d4d'}}, false);
                                 }}
                             }});
                             dailyC.redraw();
@@ -2360,6 +2431,17 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
             const chartColor = card.getAttribute('data-chart-color');
             const border = card.getAttribute('data-border');
             card.style.setProperty('--border', border);
+            
+            // We initialize the calculated static metrics here so they appear instantly 
+            const p7d = parseFloat(card.getAttribute('data-price-7d'));
+            const p30d = parseFloat(card.getAttribute('data-price-30d'));
+            const p90d = parseFloat(card.getAttribute('data-price-90d'));
+            const pytd = parseFloat(card.getAttribute('data-price-ytd'));
+            
+            updateMetricUI(card, ticker, '7d', p7d, currentPrice);
+            updateMetricUI(card, ticker, '30d', p30d, currentPrice);
+            updateMetricUI(card, ticker, '90d', p90d, currentPrice);
+            updateMetricUI(card, ticker, 'ytd', pytd, currentPrice);
             
             const front = card.querySelector('.flip-card-front');
             front.addEventListener('click', (e) => {{
