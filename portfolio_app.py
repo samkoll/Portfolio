@@ -293,6 +293,16 @@ input[type="number"] {
 /* Hide Streamlit Header */
 header[data-testid="stHeader"] { display: none !important; }
 
+/* Hide the router block globally using class */
+.hidden-router-block {
+    display: none !important;
+    opacity: 0 !important;
+    height: 0 !important;
+    position: absolute !important;
+    pointer-events: none !important;
+    z-index: -9999 !important;
+}
+
 /* NATIVE BOTTOM BAR STYLING */
 #native-bottom-bar {
     position: fixed;
@@ -2532,20 +2542,20 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
 st.markdown('<div style="height: 100px;"></div>', unsafe_allow_html=True) # Bottom Spacer
 
 # --- 1. The Hidden Router (Actual Python Buttons) ---
+st.markdown('<div id="router-anchor" class="hidden-router-block"></div>', unsafe_allow_html=True)
 router_container = st.container()
 with router_container:
-    st.markdown('<div id="router-anchor"></div>', unsafe_allow_html=True)
     r1, r2, r3 = st.columns(3)
     with r1:
-        if st.button("ROUTER_HOME"):
+        if st.button("ROUTER_HOME", key="btn_h"):
             st.session_state.page = "Home"
             st.rerun()
     with r2:
-        if st.button("ROUTER_CRYPTO"):
+        if st.button("ROUTER_CRYPTO", key="btn_c"):
             st.session_state.page = "Crypto Transactions"
             st.rerun()
     with r3:
-        if st.button("ROUTER_FIAT"):
+        if st.button("ROUTER_FIAT", key="btn_f"):
             st.session_state.page = "Fiat Transactions"
             st.rerun()
 
@@ -2557,15 +2567,15 @@ fiat_active = "active" if active_page == "Fiat Transactions" else ""
 
 st.markdown(f"""
 <div id="native-bottom-bar">
-    <div class="nav-tab {home_active}" id="tab-home" onclick="document.querySelectorAll('button p').forEach(p => {{ if(p.innerText === 'ROUTER_HOME') p.closest('button').click(); }})">
+    <div class="nav-tab {home_active}" id="tab-home" onclick="Array.from(document.querySelectorAll('button')).find(b => b.innerText.includes('ROUTER_HOME'))?.click()">
         <span class="nav-icon">🏠</span>
         <span class="nav-lbl">Overview</span>
     </div>
-    <div class="nav-tab {crypto_active}" id="tab-crypto" onclick="document.querySelectorAll('button p').forEach(p => {{ if(p.innerText === 'ROUTER_CRYPTO') p.closest('button').click(); }})">
+    <div class="nav-tab {crypto_active}" id="tab-crypto" onclick="Array.from(document.querySelectorAll('button')).find(b => b.innerText.includes('ROUTER_CRYPTO'))?.click()">
         <span class="nav-icon">📊</span>
         <span class="nav-lbl">Crypto</span>
     </div>
-    <div class="nav-tab {fiat_active}" id="tab-fiat" onclick="document.querySelectorAll('button p').forEach(p => {{ if(p.innerText === 'ROUTER_FIAT') p.closest('button').click(); }})">
+    <div class="nav-tab {fiat_active}" id="tab-fiat" onclick="Array.from(document.querySelectorAll('button')).find(b => b.innerText.includes('ROUTER_FIAT'))?.click()">
         <span class="nav-icon">💰</span>
         <span class="nav-lbl">Fiat</span>
     </div>
@@ -2578,18 +2588,17 @@ js_controller = f"""
 (function() {{
     const parentDoc = window.parent.document;
 
-    // Safely target the buttons and collapse their grid containers visually so they don't take up space
-    Array.from(parentDoc.querySelectorAll('button p')).forEach(p => {{
-        if (p.innerText.startsWith('ROUTER_')) {{
-            const col = p.closest('div[data-testid="column"]');
-            if (col) {{
-                col.style.opacity = '0';
-                col.style.position = 'absolute';
-                col.style.pointerEvents = 'none';
-                col.style.zIndex = '-100';
-            }}
+    // Safely target the buttons and collapse their grid containers visually
+    const anchor = parentDoc.getElementById('router-anchor');
+    if (anchor) {{
+        const block = anchor.closest('div[data-testid="stVerticalBlock"]');
+        if (block) {{
+            block.style.position = 'absolute';
+            block.style.opacity = '0';
+            block.style.pointerEvents = 'none';
+            block.style.zIndex = '-9999';
         }}
-    }});
+    }}
 
     // Global Swipe Logic
     if (parentDoc._swipeSetupDone) return;
@@ -2615,9 +2624,9 @@ js_controller = f"""
             if (tgt.closest('.charts-scroll-wrapper') || tgt.closest('.scroll-wrapper') || tgt.closest('.flip-card') || tgt.tagName.toLowerCase() === 'canvas') return;
 
             const clickTarget = (btnText) => {{
-                Array.from(parentDoc.querySelectorAll('button p')).forEach(p => {{
-                    if (p.innerText === btnText) p.closest('button').click();
-                }});
+                const buttons = Array.from(parentDoc.querySelectorAll('button'));
+                const btn = buttons.find(b => b.innerText.includes(btnText));
+                if (btn) btn.click();
             }};
 
             // Check current active tab from DOM explicitly
