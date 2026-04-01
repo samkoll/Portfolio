@@ -14,8 +14,8 @@ from concurrent.futures import ThreadPoolExecutor
 st.set_page_config(page_title="Portfolio", layout="wide", page_icon="logo.png", initial_sidebar_state="collapsed")
 
 # ====================== CORE CONTAINERS ======================
-# By defining these FIRST, they are guaranteed to be the first 4 elements in the Streamlit DOM.
-# This allows our Javascript layout enforcer to target them perfectly.
+# Defining these immediately ensures they are the exact first 4 children of the main block.
+# This allows the JS layout enforcer to target them perfectly for horizontal swiping.
 page_home = st.container()
 page_crypto = st.container()
 page_fiat = st.container()
@@ -499,6 +499,444 @@ pnl_df = vault['pnl_df']
 
 usdc_row = df_port[df_port['Ticker'] == 'USDC'].iloc[0] if not df_port[df_port['Ticker'] == 'USDC'].empty else None
 usdc_holdings = usdc_row['Holdings'] if usdc_row is not None else 0
+
+
+# -------------------------------------------------------------------------
+# HIDDEN SCRIPTS: CSS AND LAYOUT ENFORCER
+# -------------------------------------------------------------------------
+with hidden_scripts:
+    st.markdown("""
+    <style>
+    /* HIDE SIDEBAR & DEFAULT STREAMLIT MARGINS */
+    [data-testid="stSidebar"] { display: none !important; }
+    [data-testid="collapsedControl"] { display: none !important; }
+
+    div[data-testid="stMainBlockContainer"] {
+        padding: 0 !important;
+        max-width: 100% !important;
+    }
+    
+    .stApp {
+        background: linear-gradient(180deg, #0f1724 0%, #0a0f1c 100%) !important;
+        overflow: hidden !important;
+    }
+
+    /* Dashboard Pullable Drawer Styles */
+    .dashboard-wrapper {
+        position: relative;
+        z-index: 10;
+    }
+    .glossy-header-label {
+        cursor: pointer;
+        display: block;
+        position: relative;
+        z-index: 3;
+        -webkit-tap-highlight-color: transparent;
+    }
+    .home-header {
+        margin-bottom: 0 !important;
+        padding-bottom: 30px !important;
+    }
+    .pull-indicator {
+        position: absolute;
+        bottom: 8px;
+        left: 50%;
+        transform: translateX(-50%);
+        color: #64748b;
+        opacity: 0.8;
+        transition: color 0.3s ease;
+    }
+    @media (hover: hover) and (pointer: fine) {
+        .glossy-header-label:hover .pull-indicator {
+            color: #cbd5e1;
+        }
+    }
+    .pull-indicator .eye-open { display: none; }
+    .pull-indicator .eye-closed { display: block; }
+
+    .dashboard-toggle:checked ~ .dashboard-wrapper .glossy-header-label .pull-indicator .eye-open { display: block; }
+    .dashboard-toggle:checked ~ .dashboard-wrapper .glossy-header-label .pull-indicator .eye-closed { display: none; }
+    .dashboard-toggle:checked ~ .dashboard-wrapper .glossy-header-label .pull-indicator { color: #ffffff; }
+
+    .stats-layer {
+        position: relative;
+        z-index: 1;
+        margin-top: -60px !important; 
+        transition: margin-top 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        margin-bottom: 24px;
+    }
+    .dashboard-toggle:checked ~ .dashboard-wrapper .stats-layer {
+        margin-top: 14px !important;
+    }
+
+    /* Force 3 columns globally without wrapping */
+    .stats-layer-inner {
+        display: grid !important;
+        grid-template-columns: repeat(3, 1fr) !important;
+        gap: 14px;
+        width: 100%;
+    }
+
+    /* Tucked Text Fade Out */
+    .dash-value {
+        font-size: clamp(14px, 2.5vw, 24px) !important;
+        font-weight: 700;
+        line-height: 1.05;
+        color: #ffffff;
+        position: absolute;
+        top: 20px;
+        left: 0;
+        width: 100%;
+        text-align: center;
+        margin: 0;
+        transition: opacity 0.3s ease;
+        padding: 0 4px;
+        box-sizing: border-box;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    .dashboard-toggle:not(:checked) ~ .dashboard-wrapper .stats-layer .dash-value {
+        opacity: 0;
+        pointer-events: none;
+    }
+
+    .dash-label {
+        font-size: 11px !important;
+        font-weight: 600;
+        letter-spacing: 1.5px;
+        text-transform: uppercase;
+        color: #94a3b8;
+        line-height: 1.2;
+        position: absolute;
+        bottom: 8px;
+        left: 0;
+        width: 100%;
+        text-align: center;
+    }
+
+    .glossy-header {
+        position: relative;
+        overflow: hidden;
+        background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+        border: 1px solid rgba(255,255,255,0.05);
+        border-radius: 18px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.4);
+        transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.4s ease, border-color 0.4s ease;
+        padding: 32px 24px;
+        min-height: 130px;
+        font-size: 29px;
+        font-weight: 700;
+        letter-spacing: 1.5px;
+        line-height: 1.1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 16px;
+        width: 100% !important;
+        margin-top: 68px;
+        margin-bottom: 38px;
+    }
+
+    /* PC Hover and Sync with Dashboard Toggle */
+    @media (hover: hover) and (pointer: fine) {
+        .glossy-header-label:hover .glossy-header {
+            transform: translateY(-4px) scale(1.01);
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.5);
+            border-color: rgba(255, 255, 255, 0.15);
+        }
+    }
+    .dashboard-toggle:checked ~ .dashboard-wrapper .glossy-header {
+        transform: translateY(-4px) scale(1.01);
+        box-shadow: 0 15px 40px rgba(0, 0, 0, 0.5);
+        border-color: rgba(255, 255, 255, 0.15);
+    }
+
+    .glossy-box {
+        position: relative;
+        overflow: hidden;
+        background: linear-gradient(180deg, #162032 0%, #0f172a 100%);
+        border: 1px solid rgba(255,255,255,0.05);
+        border-radius: 18px;
+        box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        padding: 28px 30px;
+        text-align: center;
+        flex: 1;
+        min-width: 220px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+    }
+
+    .glossy-box:not(.swapped) > div:first-child {
+        font-size: 12px;
+        font-weight: 600;
+        letter-spacing: 1.5px;
+        text-transform: uppercase;
+        color: #94a3b8;
+        margin-bottom: 6px;
+        line-height: 1.2;
+    }
+    .glossy-box:not(.swapped) > div:last-child {
+        font-size: 27px;
+        font-weight: 700;
+        line-height: 1.05;
+        color: #ffffff;
+    }
+
+    .glossy-box.swapped {
+        min-width: 0 !important;
+        height: 80px !important;
+        min-height: 80px !important;
+        max-height: 80px !important;
+        padding: 0;
+        display: block;
+    }
+
+    /* Subdued and Smaller USDC Banner */
+    .usdc-banner {
+        position: relative;
+        overflow: hidden;
+        background: rgba(15, 23, 42, 0.5);
+        border: 1px solid rgba(39, 117, 202, 0.2);
+        border-radius: 12px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        padding: 10px 20px;
+        width: 90%; 
+        max-width: 400px; 
+        margin: -15px auto 12px auto !important;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+    .usdc-banner-left {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+    .usdc-banner-left img {
+        width: 28px;
+        height: 28px;
+        border-radius: 50%;
+        object-fit: contain;
+        opacity: 0.85;
+    }
+    .usdc-banner-title {
+        font-size: 1.05rem;
+        font-weight: 600;
+        color: #e2e8f0;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    .usdc-banner-subtitle {
+        font-size: 0.75rem;
+        font-weight: 500;
+        color: #64748b;
+    }
+    .usdc-banner-amount {
+        font-size: 1.2rem;
+        font-weight: 600;
+        color: #e2e8f0;
+    }
+
+    /* Native CSS Privacy Mode for USDC Banner */
+    .dashboard-toggle:not(:checked) ~ .usdc-banner .usdc-banner-amount {
+        font-size: 0 !important;
+    }
+    .dashboard-toggle:not(:checked) ~ .usdc-banner .usdc-banner-amount::after {
+        content: '***';
+        font-size: 1.2rem;
+        color: #e2e8f0;
+    }
+
+    /* GLOBALLY HIDE NUMBER INPUT STEP BUTTONS (+ / -) */
+    button[aria-label="Step Up"],
+    button[aria-label="Step Down"],
+    button[data-testid="stNumberInputStepUp"],
+    button[data-testid="stNumberInputStepDown"] {
+        display: none !important;
+    }
+    input[type="number"]::-webkit-inner-spin-button, 
+    input[type="number"]::-webkit-outer-spin-button { 
+        -webkit-appearance: none; 
+        margin: 0; 
+    }
+    input[type="number"] {
+        -moz-appearance: textfield;
+    }
+    </style>
+    """, unsafe_allow_html=True)
+
+    # We define the JS that safely limits the layout altering strictly to the outermost parent
+    js_layout_enforcer = """
+    <script>
+    (function() {
+        const parentDoc = window.parent.document;
+        
+        function enforceLayout() {
+            const mainBlock = parentDoc.querySelector('[data-testid="stMainBlockContainer"] > div > [data-testid="stVerticalBlock"]');
+            if (mainBlock && !mainBlock.classList.contains('horizontal-swipe-main')) {
+                mainBlock.classList.add('horizontal-swipe-main');
+                
+                // Inject CSS specific ONLY to our isolated swipe wrapper
+                if (!parentDoc.getElementById('swipe-layout-css')) {
+                    const style = parentDoc.createElement('style');
+                    style.id = 'swipe-layout-css';
+                    style.innerHTML = `
+                        .horizontal-swipe-main {
+                            display: flex !important;
+                            flex-direction: row !important;
+                            flex-wrap: nowrap !important;
+                            overflow-x: auto !important;
+                            overflow-y: hidden !important;
+                            scroll-snap-type: x mandatory !important;
+                            scroll-behavior: smooth !important;
+                            width: 100vw !important;
+                            height: 100dvh !important;
+                            gap: 0 !important;
+                            padding: 0 !important;
+                            -ms-overflow-style: none; 
+                            scrollbar-width: none;
+                        }
+                        .horizontal-swipe-main::-webkit-scrollbar { display: none !important; }
+                        
+                        /* Target ONLY the 4 outer Element Containers we strictly defined */
+                        .horizontal-swipe-main > .element-container {
+                            flex: 0 0 100vw !important;
+                            width: 100vw !important;
+                            max-width: 100vw !important;
+                            height: 100dvh !important;
+                            overflow-y: auto !important;
+                            overflow-x: hidden !important;
+                            scroll-snap-align: start !important;
+                            background: transparent !important;
+                        }
+                        
+                        /* Visually destroy the 4th container holding this script */
+                        .horizontal-swipe-main > .element-container:nth-child(4) {
+                            display: none !important;
+                        }
+                        
+                        /* Pad the inner vertical blocks of our 3 pages to leave room for bottom nav */
+                        .horizontal-swipe-main > .element-container > div[data-testid="stVerticalBlock"] {
+                            padding: 14px !important;
+                            padding-bottom: 95px !important;
+                            min-height: 100dvh !important;
+                        }
+                    `;
+                    parentDoc.head.appendChild(style);
+                }
+
+                // Restore Streamlit scroll state gracefully after reruns
+                const savedIdx = localStorage.getItem('swipeIdx');
+                if (savedIdx !== null) {
+                    mainBlock.style.scrollBehavior = 'auto';
+                    mainBlock.scrollLeft = parseInt(savedIdx) * mainBlock.clientWidth;
+                    setTimeout(() => { mainBlock.style.scrollBehavior = 'smooth'; }, 50);
+                }
+
+                // Re-bind Scroll Listener seamlessly
+                mainBlock.addEventListener('scroll', () => {
+                    const width = mainBlock.clientWidth;
+                    if(width === 0) return;
+                    const idx = Math.round(mainBlock.scrollLeft / width);
+                    localStorage.setItem('swipeIdx', idx);
+                    
+                    const navItems = parentDoc.querySelectorAll('#custom-bottom-nav .nav-item');
+                    navItems.forEach((item, i) => {
+                        item.classList.toggle('active', i === idx);
+                    });
+                }, {passive: true});
+            }
+        }
+        
+        // Check frequently (200ms) to beat Streamlit's arbitrary DOM redraws
+        setInterval(enforceLayout, 200);
+
+        function injectNav() {
+            let nav = parentDoc.getElementById('custom-bottom-nav');
+            if (!nav) {
+                // Permanently attach custom navigation to the parent body
+                nav = parentDoc.createElement('div');
+                nav.id = 'custom-bottom-nav';
+                nav.innerHTML = `
+                    <style>
+                    #custom-bottom-nav {
+                        position: fixed;
+                        bottom: 0; left: 0; width: 100vw; height: 75px;
+                        background: rgba(15, 23, 42, 0.95);
+                        backdrop-filter: blur(15px);
+                        -webkit-backdrop-filter: blur(15px);
+                        border-top: 1px solid rgba(255,255,255,0.05);
+                        display: flex; justify-content: space-around; align-items: center;
+                        z-index: 9999999;
+                        padding-bottom: env(safe-area-inset-bottom);
+                        box-shadow: 0 -4px 20px rgba(0,0,0,0.5);
+                    }
+                    .nav-item {
+                        display: flex; flex-direction: column; align-items: center; justify-content: center;
+                        color: #64748b; width: 33.33%; height: 100%; cursor: pointer;
+                        -webkit-tap-highlight-color: transparent; user-select: none;
+                        transition: color 0.3s ease;
+                    }
+                    .nav-item.active { color: #00ff9d; }
+                    .nav-item svg {
+                        width: 24px; height: 24px; margin-bottom: 4px;
+                        stroke: currentColor; fill: none; stroke-width: 2;
+                        stroke-linecap: round; stroke-linejoin: round;
+                        transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+                    }
+                    .nav-item.active svg {
+                        transform: scale(1.15); filter: drop-shadow(0 0 5px rgba(0,255,157,0.4));
+                    }
+                    .nav-item span { font-size: 11px; font-weight: 700; }
+                    </style>
+                    <div class="nav-item active" data-idx="0">
+                        <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+                        <span>Overview</span>
+                    </div>
+                    <div class="nav-item" data-idx="1">
+                        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M14.5 8.5L9.5 13.5"/><path d="M9.5 8.5L14.5 13.5"/></svg>
+                        <span>Crypto</span>
+                    </div>
+                    <div class="nav-item" data-idx="2">
+                        <svg viewBox="0 0 24 24"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M6 8h12"/><path d="M6 12h12"/><path d="M6 16h12"/></svg>
+                        <span>Fiat</span>
+                    </div>
+                `;
+                parentDoc.body.appendChild(nav);
+
+                // Setup Clicks that execute securely against current main element
+                const navItems = nav.querySelectorAll('.nav-item');
+                navItems.forEach(item => {
+                    item.onclick = (e) => {
+                        e.preventDefault();
+                        const idx = parseInt(item.getAttribute('data-idx'));
+                        const currentMain = parentDoc.querySelector('.horizontal-swipe-main');
+                        if (currentMain) {
+                            currentMain.scrollTo({ left: idx * currentMain.clientWidth, behavior: 'smooth' });
+                        }
+                    };
+                });
+            }
+            
+            // Re-sync active highlighting globally just in case
+            const savedIdx = localStorage.getItem('swipeIdx') || 0;
+            const navItems = nav.querySelectorAll('.nav-item');
+            navItems.forEach((item, i) => {
+                item.classList.toggle('active', i == savedIdx);
+            });
+        }
+        // Background check to verify navigation remains bound securely
+        setInterval(injectNav, 200);
+
+    })();
+    </script>
+    """
+    components.html(js_layout_enforcer, height=0)
+
 
 # -------------------------------------------------------------------------
 # PAGE 1: OVERVIEW (HOME)
@@ -1241,6 +1679,7 @@ with page_home:
     """
     components.html(full_html, height=380, scrolling=False)
 
+
 # -------------------------------------------------------------------------
 # PAGE 2: CRYPTO TRANSACTIONS
 # -------------------------------------------------------------------------
@@ -1668,216 +2107,3 @@ with page_fiat:
             st.session_state.fiat_table_version += 1
             st.session_state.ui_version += 1
             st.rerun()
-
-# -------------------------------------------------------------------------
-# HIDDEN SCRIPTS: CSS AND LAYOUT ENFORCER
-# -------------------------------------------------------------------------
-with hidden_scripts:
-    # We define the JS that actually alters the layout dynamically to guarantee the flex row
-    js_layout_enforcer = """
-    <script>
-    (function() {
-        const parentDoc = window.parent.document;
-        
-        // --- 1. Force the layout into horizontal mode safely ---
-        function enforceLayout() {
-            const mainBlock = parentDoc.querySelector('div[data-testid="stMainBlockContainer"]');
-            if (!mainBlock) {
-                requestAnimationFrame(enforceLayout);
-                return;
-            }
-            
-            // Remove defaults
-            mainBlock.style.padding = '0';
-            mainBlock.style.maxWidth = '100%';
-            
-            const verticalBlock = mainBlock.querySelector('div[data-testid="stVerticalBlock"]');
-            if (verticalBlock) {
-                // Force horizontal swiping
-                verticalBlock.style.display = 'flex';
-                verticalBlock.style.flexDirection = 'row';
-                verticalBlock.style.flexWrap = 'nowrap';
-                verticalBlock.style.overflowX = 'auto';
-                verticalBlock.style.overflowY = 'hidden';
-                verticalBlock.style.scrollSnapType = 'x mandatory';
-                verticalBlock.style.scrollBehavior = 'smooth';
-                verticalBlock.style.height = '100dvh';
-                verticalBlock.style.width = '100vw';
-                
-                // Add global CSS to hide default scrollbars
-                if (!parentDoc.getElementById('hide-scrollbar-style')) {
-                    const style = parentDoc.createElement('style');
-                    style.id = 'hide-scrollbar-style';
-                    style.innerHTML = `
-                        div[data-testid="stMainBlockContainer"] div[data-testid="stVerticalBlock"]::-webkit-scrollbar { display: none !important; }
-                        html, body { overflow: hidden !important; position: fixed; width: 100%; height: 100%; }
-                    `;
-                    parentDoc.head.appendChild(style);
-                }
-
-                // Map exactly the 4 children: [Page 1, Page 2, Page 3, Scripts]
-                const children = Array.from(verticalBlock.children);
-                children.forEach((child, index) => {
-                    if (index < 3) {
-                        child.style.flex = '0 0 100vw';
-                        child.style.width = '100vw';
-                        child.style.minWidth = '100vw';
-                        child.style.height = '100dvh';
-                        child.style.overflowY = 'auto';
-                        child.style.overflowX = 'hidden';
-                        child.style.scrollSnapAlign = 'start';
-                        
-                        const innerBlock = child.querySelector('div[data-testid="stVerticalBlock"]');
-                        if (innerBlock) {
-                            innerBlock.style.padding = '14px 14px 100px 14px'; // 100px buffer for bottom nav
-                        }
-                    } else {
-                        // The scripts container takes exactly 0 space
-                        child.style.flex = '0 0 0px';
-                        child.style.width = '0px';
-                        child.style.height = '0px';
-                        child.style.overflow = 'hidden';
-                        child.style.visibility = 'hidden';
-                        child.style.margin = '0';
-                        child.style.padding = '0';
-                    }
-                });
-            }
-        }
-        
-        // Let it run a few times to ensure dynamic Streamlit renders are caught
-        let layoutAttempts = 0;
-        function tryEnforce() {
-            enforceLayout();
-            layoutAttempts++;
-            if (layoutAttempts < 15) {
-                setTimeout(tryEnforce, 100);
-            }
-        }
-        tryEnforce();
-
-        // --- 2. Build and bind the Navigation Bar natively ---
-        let nav = parentDoc.getElementById('custom-bottom-nav');
-        if (!nav) {
-            nav = parentDoc.createElement('div');
-            nav.id = 'custom-bottom-nav';
-            nav.innerHTML = `
-                <style>
-                #custom-bottom-nav {
-                    position: fixed;
-                    bottom: 0;
-                    left: 0;
-                    width: 100vw;
-                    height: 70px;
-                    background: rgba(15, 23, 42, 0.98);
-                    backdrop-filter: blur(10px);
-                    -webkit-backdrop-filter: blur(10px);
-                    border-top: 1px solid rgba(255,255,255,0.08);
-                    display: flex;
-                    justify-content: space-around;
-                    align-items: center;
-                    z-index: 999999;
-                    padding-bottom: env(safe-area-inset-bottom);
-                    box-shadow: 0 -4px 20px rgba(0,0,0,0.5);
-                }
-                .nav-item {
-                    display: flex;
-                    flex-direction: column;
-                    align-items: center;
-                    justify-content: center;
-                    color: #64748b;
-                    width: 33.33%;
-                    height: 100%;
-                    cursor: pointer;
-                    transition: all 0.3s ease;
-                    -webkit-tap-highlight-color: transparent;
-                    user-select: none;
-                }
-                .nav-item:hover { color: #94a3b8; }
-                .nav-item.active { color: #00ff9d; }
-                .nav-item svg {
-                    width: 24px;
-                    height: 24px;
-                    margin-bottom: 4px;
-                    stroke: currentColor;
-                    fill: none;
-                    stroke-width: 2;
-                    stroke-linecap: round;
-                    stroke-linejoin: round;
-                    transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-                }
-                .nav-item.active svg {
-                    transform: scale(1.15);
-                    filter: drop-shadow(0 0 5px rgba(0,255,157,0.4));
-                }
-                .nav-item span {
-                    font-size: 11px;
-                    font-weight: 700;
-                    letter-spacing: 0.5px;
-                }
-                </style>
-                <div class="nav-item active" data-idx="0">
-                    <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
-                    <span>Overview</span>
-                </div>
-                <div class="nav-item" data-idx="1">
-                    <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M14.5 8.5L9.5 13.5"/><path d="M9.5 8.5L14.5 13.5"/></svg>
-                    <span>Crypto</span>
-                </div>
-                <div class="nav-item" data-idx="2">
-                    <svg viewBox="0 0 24 24"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M6 8h12"/><path d="M6 12h12"/><path d="M6 16h12"/></svg>
-                    <span>Fiat</span>
-                </div>
-            `;
-            parentDoc.body.appendChild(nav);
-        }
-
-        // --- 3. Bind Swipe Logic ---
-        function bindSwipeable() {
-            const scroller = parentDoc.querySelector('div[data-testid="stMainBlockContainer"] > div > div[data-testid="stVerticalBlock"]');
-            if(!scroller) {
-                setTimeout(bindSwipeable, 50);
-                return;
-            }
-
-            // Remove old listeners to prevent stacking bugs
-            const navItems = nav.querySelectorAll('.nav-item');
-            navItems.forEach(item => {
-                const clone = item.cloneNode(true);
-                item.parentNode.replaceChild(clone, item);
-            });
-            const freshNavItems = nav.querySelectorAll('.nav-item');
-            
-            // Restore scroll position securely to prevent flashing
-            const savedIdx = localStorage.getItem('activeSwipePage') || 0;
-            scroller.style.scrollBehavior = 'auto'; // Disable smooth scroll instantly
-            scroller.scrollLeft = savedIdx * scroller.clientWidth;
-            setTimeout(() => { scroller.style.scrollBehavior = 'smooth'; }, 100);
-
-            // Scroll listener updates active icon
-            scroller.onscroll = function() {
-                const width = scroller.clientWidth;
-                if(width === 0) return;
-                const idx = Math.round(scroller.scrollLeft / width);
-                localStorage.setItem('activeSwipePage', idx);
-                
-                freshNavItems.forEach((item, i) => {
-                    if (i === idx) item.classList.add('active');
-                    else item.classList.remove('active');
-                });
-            };
-
-            // Click listener scrolls horizontally
-            freshNavItems.forEach(item => {
-                item.onclick = function() {
-                    const idx = parseInt(this.getAttribute('data-idx'));
-                    scroller.scrollTo({ left: idx * scroller.clientWidth, behavior: 'smooth' });
-                };
-            });
-        }
-        
-        bindSwipeable();
-    })();
-    </script>
-    """
-    components.html(js_layout_enforcer, height=0)
