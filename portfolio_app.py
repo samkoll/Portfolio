@@ -8,6 +8,7 @@ import json
 from pathlib import Path
 import hashlib
 import random
+from concurrent.futures import ThreadPoolExecutor
 
 # ====================== CONFIG ======================
 st.set_page_config(page_title="Portfolio", layout="wide", page_icon="logo.png")
@@ -59,47 +60,43 @@ div[data-testid="stMainBlockContainer"] {
 .home-header {
     margin-bottom: 0 !important;
     padding-bottom: 30px !important;
-/* space for the eye icon */
 }
 .pull-indicator {
     position: absolute;
     bottom: 8px;
     left: 50%;
     transform: translateX(-50%);
-color: #64748b;
+    color: #64748b;
     opacity: 0.8;
     transition: color 0.3s ease;
 }
 @media (hover: hover) and (pointer: fine) {
     .glossy-header-label:hover .pull-indicator {
         color: #cbd5e1;
-}
+    }
 }
 .pull-indicator .eye-open { display: none; }
 .pull-indicator .eye-closed { display: block; }
 
-.dashboard-toggle:checked ~ .dashboard-wrapper .glossy-header-label .pull-indicator .eye-open { display: block;
-}
+.dashboard-toggle:checked ~ .dashboard-wrapper .glossy-header-label .pull-indicator .eye-open { display: block; }
 .dashboard-toggle:checked ~ .dashboard-wrapper .glossy-header-label .pull-indicator .eye-closed { display: none; }
-.dashboard-toggle:checked ~ .dashboard-wrapper .glossy-header-label .pull-indicator { color: #ffffff;
-}
+.dashboard-toggle:checked ~ .dashboard-wrapper .glossy-header-label .pull-indicator { color: #ffffff; }
 
 .stats-layer {
     position: relative;
     z-index: 1;
     margin-top: -60px !important; 
     transition: margin-top 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-margin-bottom: 24px;
+    margin-bottom: 24px;
 }
 .dashboard-toggle:checked ~ .dashboard-wrapper .stats-layer {
     margin-top: 14px !important;
-/* Drops down */
 }
 
 /* Force 3 columns globally without wrapping */
 .stats-layer-inner {
     display: grid !important;
-grid-template-columns: repeat(3, 1fr) !important;
+    grid-template-columns: repeat(3, 1fr) !important;
     gap: 14px;
     width: 100%;
 }
@@ -107,14 +104,13 @@ grid-template-columns: repeat(3, 1fr) !important;
 /* Tucked Text Fade Out */
 .dash-value {
     font-size: clamp(14px, 2.5vw, 24px) !important;
-/* Fluid typography */
     font-weight: 700;
     line-height: 1.05;
     color: #ffffff;
     position: absolute;
     top: 20px;
     left: 0;
-width: 100%;
+    width: 100%;
     text-align: center;
     margin: 0;
     transition: opacity 0.3s ease;
@@ -122,7 +118,7 @@ width: 100%;
     box-sizing: border-box;
     white-space: nowrap;
     overflow: hidden;
-text-overflow: ellipsis;
+    text-overflow: ellipsis;
 }
 .dashboard-toggle:not(:checked) ~ .dashboard-wrapper .stats-layer .dash-value {
     opacity: 0;
@@ -137,7 +133,7 @@ text-overflow: ellipsis;
     color: #94a3b8;
     line-height: 1.2;
     position: absolute;
-bottom: 8px;
+    bottom: 8px;
     left: 0;
     width: 100%;
     text-align: center;
@@ -146,15 +142,15 @@ bottom: 8px;
 .glossy-header {
     position: relative;
     overflow: hidden;
-background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+    background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
     border: 1px solid rgba(255,255,255,0.05);
     border-radius: 18px;
     box-shadow: 0 10px 30px rgba(0,0,0,0.4);
-transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.4s ease, border-color 0.4s ease;
+    transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.4s ease, border-color 0.4s ease;
     padding: 32px 24px;
     min-height: 130px;
     font-size: 29px;
-font-weight: 700;
+    font-weight: 700;
     letter-spacing: 1.5px;
     line-height: 1.1;
     display: flex;
@@ -163,32 +159,32 @@ font-weight: 700;
     gap: 16px;
     width: 100% !important;
     margin-top: 68px;
-margin-bottom: 38px;
+    margin-bottom: 38px;
 }
 
 /* PC Hover and Sync with Dashboard Toggle */
 @media (hover: hover) and (pointer: fine) {
     .glossy-header-label:hover .glossy-header {
         transform: translateY(-4px) scale(1.01);
-box-shadow: 0 15px 40px rgba(0, 0, 0, 0.5);
+        box-shadow: 0 15px 40px rgba(0, 0, 0, 0.5);
         border-color: rgba(255, 255, 255, 0.15);
-}
+    }
 }
 .dashboard-toggle:checked ~ .dashboard-wrapper .glossy-header {
     transform: translateY(-4px) scale(1.01);
     box-shadow: 0 15px 40px rgba(0, 0, 0, 0.5);
-border-color: rgba(255, 255, 255, 0.15);
+    border-color: rgba(255, 255, 255, 0.15);
 }
 
 .glossy-box {
     position: relative;
     overflow: hidden;
     background: linear-gradient(180deg, #162032 0%, #0f172a 100%);
-border: 1px solid rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.05);
     border-radius: 18px;
     box-shadow: 0 8px 24px rgba(0,0,0,0.4);
     transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-padding: 28px 30px;
+    padding: 28px 30px;
     text-align: center;
     flex: 1;
     min-width: 220px;
@@ -204,7 +200,7 @@ padding: 28px 30px;
     text-transform: uppercase;
     color: #94a3b8;
     margin-bottom: 6px;
-line-height: 1.2;
+    line-height: 1.2;
 }
 .glossy-box:not(.swapped) > div:last-child {
     font-size: 27px;
@@ -219,25 +215,24 @@ line-height: 1.2;
     min-height: 80px !important;
     max-height: 80px !important;
     padding: 0;
-display: block;
+    display: block;
 }
 
 /* Subdued and Smaller USDC Banner */
 .usdc-banner {
     position: relative;
     overflow: hidden;
-background: rgba(15, 23, 42, 0.5);
+    background: rgba(15, 23, 42, 0.5);
     border: 1px solid rgba(39, 117, 202, 0.2);
     border-radius: 12px;
     box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-padding: 10px 20px;
+    padding: 10px 20px;
     width: 90%; 
     max-width: 400px; 
     margin: -15px auto 12px auto !important;
-/* Negative top margin to close the gap, slight bottom margin */
     display: flex;
     align-items: center;
-justify-content: space-between;
+    justify-content: space-between;
 }
 .usdc-banner-left {
     display: flex;
@@ -267,18 +262,17 @@ justify-content: space-between;
 .usdc-banner-amount {
     font-size: 1.2rem;
     font-weight: 600;
-color: #e2e8f0;
+    color: #e2e8f0;
 }
 
 /* Native CSS Privacy Mode for USDC Banner */
 .dashboard-toggle:not(:checked) ~ .usdc-banner .usdc-banner-amount {
     font-size: 0 !important;
-/* Hides text perfectly without shifting layout */
 }
 .dashboard-toggle:not(:checked) ~ .usdc-banner .usdc-banner-amount::after {
     content: '***';
     font-size: 1.2rem;
-color: #e2e8f0;
+    color: #e2e8f0;
 }
 
 /* GLOBALLY HIDE NUMBER INPUT STEP BUTTONS (+ / -) */
@@ -336,6 +330,26 @@ def parse_excel_date(x):
     except:
         return datetime.now().date()
 
+def get_max_history_limit(crypto_df, fiat_df):
+    all_dates = []
+    if not fiat_df.empty:
+        all_dates.extend(fiat_df['Datum'].apply(parse_excel_date).tolist())
+    if not crypto_df.empty:
+        all_dates.extend(crypto_df['Datum'].apply(parse_excel_date).tolist())
+        
+    if not all_dates:
+        limit = 365
+    else:
+        min_date = min(all_dates)
+        today = datetime.now().date()
+        if min_date > today: min_date = today
+        limit = (today - min_date).days + 5
+        
+    today_dt = datetime.now()
+    ytd_days = (today_dt - datetime(today_dt.year, 1, 1)).days
+    limit = max(limit, ytd_days + 5, 95)
+    return min(2000, limit)
+
 # ====================== INITIAL DATA ======================
 def get_initial_crypto_df():
     return pd.DataFrame([
@@ -389,30 +403,28 @@ CRYPTOCOMPARE_SYMBOL_MAP = {
 }
 
 # ====================== HELPER: RETRY WRAPPER ======================
-def get_with_retry(url: str, headers: dict, timeout: int = 12, retries: int = 4) -> dict | None:
+def get_with_retry(url: str, headers: dict, timeout: int = 12, retries: int = 3) -> dict | None:
     for attempt in range(retries):
         try:
             resp = requests.get(url, headers=headers, timeout=timeout)
             resp.raise_for_status()
             data = resp.json()
-            # If CryptoCompare explicitly returned an error (e.g. invalid symbol), exit immediately to prevent massive loading delays
             if isinstance(data, dict) and data.get('Response') == 'Error':
-                return None
+                return None  # Immediate fast-fail if symbol not found
             return data
         except Exception:
             if attempt == retries - 1:
                 return None
-            time.sleep(1.5 ** attempt)
+            time.sleep(1.0 ** attempt)
     return None
 
-# ====================== LIVE PRICE FUNCTION ======================
+# ====================== PARALLEL API FUNCTIONS ======================
 @st.cache_data(ttl=15, show_spinner=False)
 def get_all_cryptocompare_prices(tickers: tuple, refresh_key=0):
     prices = {"USDC": 1.0}
     symbols = [CRYPTOCOMPARE_SYMBOL_MAP.get(t.upper()) for t in tickers if t.upper() != "USDC"]
     symbols = [s for s in symbols if s]
-    if not symbols:
-        return prices
+    if not symbols: return prices
     try:
         fsyms = ",".join(symbols)
         url = f"https://min-api.cryptocompare.com/data/pricemulti?fsyms={fsyms}&tsyms=USD"
@@ -422,63 +434,61 @@ def get_all_cryptocompare_prices(tickers: tuple, refresh_key=0):
             for sym, price_data in data.items():
                 if isinstance(price_data, dict) and "USD" in price_data:
                     ticker = next((k for k, v in CRYPTOCOMPARE_SYMBOL_MAP.items() if v == sym), None)
-                    if ticker:
-                        prices[ticker] = float(price_data["USD"])
+                    if ticker: prices[ticker] = float(price_data["USD"])
             return prices
     except:
         pass
-    for ticker in set(tickers):
-        if ticker.upper() == "USDC":
-            continue
-        sym = CRYPTOCOMPARE_SYMBOL_MAP.get(ticker.upper())
-        if not sym:
-            continue
-        try:
-            url = f"https://min-api.cryptocompare.com/data/price?fsym={sym}&tsyms=USD"
-            headers = {"User-Agent": "Mozilla/5.0 (compatible; StreamlitPortfolio/1.0)"}
-            data = get_with_retry(url, headers)
-            if data and "USD" in data:
-                prices[ticker] = float(data["USD"])
-        except:
-            continue
     return prices
 
 @st.cache_data(ttl=3600, show_spinner=False)
-def get_historical_base_prices(tickers: tuple, refresh_key=0):
-    base_prices = {}
-    headers = {"User-Agent": "Mozilla/5.0"}
-    today = datetime.now()
-    ytd_days = (today - datetime(today.year, 1, 1)).days
-    limit = max(90, ytd_days) + 2
-    for t in tickers:
-        if t == 'USDC': continue
-        sym = CRYPTOCOMPARE_SYMBOL_MAP.get(t, t)
-        url = f"https://min-api.cryptocompare.com/data/v2/histoday?fsym={sym}&tsym=USD&limit={limit}"
-        data = get_with_retry(url, headers)
-        if data and 'Data' in data and 'Data' in data['Data']:
-            prices = [d['close'] for d in data['Data']['Data']]
-            if len(prices) > 0:
-                p_7d = prices[-8] if len(prices) >= 8 else prices[0]
-                p_30d = prices[-31] if len(prices) >= 31 else prices[0]
-                p_90d = prices[-91] if len(prices) >= 91 else prices[0]
-                p_ytd = prices[-(ytd_days+1)] if len(prices) >= (ytd_days+1) else prices[0]
-                base_prices[t] = {'7d': p_7d, '30d': p_30d, '90d': p_90d, 'ytd': p_ytd}
-    return base_prices
-
-# Independent cached function for pure API fetches, keeps pandas fast calculations uncached
-@st.cache_data(ttl=3600, show_spinner=False)
-def fetch_historical_prices_dict(coins_tuple: tuple, limit: int, refresh_key: int):
+def fetch_all_historical_data(coins_tuple: tuple, limit: int, refresh_key: int):
     prices_dict = {}
     headers = {"User-Agent": "Mozilla/5.0 (compatible; StreamlitPortfolio/1.0)"}
-    for coin in coins_tuple:
+    
+    def fetch_coin(coin):
+        if coin.upper() == "USDC": return coin, {}
         sym = CRYPTOCOMPARE_SYMBOL_MAP.get(coin.upper(), coin.upper())
         url = f"https://min-api.cryptocompare.com/data/v2/histoday?fsym={sym}&tsym=USD&limit={limit}"
         data = get_with_retry(url, headers)
         if data and 'Data' in data and 'Data' in data['Data']:
-            prices_dict[coin] = {datetime.fromtimestamp(d['time']).date(): d['close'] for d in data['Data']['Data']}
+            return coin, {datetime.fromtimestamp(d['time']).date(): float(d['close']) for d in data['Data']['Data']}
+        return coin, {}
+
+    # ThreadPoolExecutor performs 10 concurrent requests at once, converting 10s wait to 0.5s wait
+    with ThreadPoolExecutor(max_workers=10) as executor:
+        results = executor.map(fetch_coin, coins_tuple)
+        for coin, hist in results:
+            if hist: prices_dict[coin] = hist
+                
     return prices_dict
 
-def build_portfolio_history(crypto_df, fiat_df, last_prices, refresh_key):
+def get_base_prices(prices_dict, coins):
+    base_prices = {}
+    today = datetime.now().date()
+    ytd_date = date(today.year, 1, 1)
+    
+    for coin in coins:
+        hist = prices_dict.get(coin, {})
+        if not hist: continue
+        
+        def get_closest_price(target_date):
+            for i in range(7):
+                d = target_date - timedelta(days=i)
+                if d in hist: return hist[d]
+            if hist: return list(hist.values())[0]
+            return 0.0
+
+        base_prices[coin] = {
+            '7d': get_closest_price(today - timedelta(days=7)),
+            '30d': get_closest_price(today - timedelta(days=30)),
+            '90d': get_closest_price(today - timedelta(days=90)),
+            'ytd': get_closest_price(ytd_date)
+        }
+    return base_prices
+
+# ====================== CORE CALCULATIONS (NOW FULLY CACHED) ======================
+@st.cache_data(show_spinner=False)
+def build_portfolio_history(crypto_df, fiat_df, last_prices, hist_dict):
     if crypto_df.empty and fiat_df.empty: return [], "", pd.DataFrame()
 
     fiat = fiat_df.copy()
@@ -526,13 +536,8 @@ def build_portfolio_history(crypto_df, fiat_df, last_prices, refresh_key):
         coins = []
 
     fetch_coins = tuple(sorted(set(coins) | {'BTC'}))
-    days_diff = (today - min_date).days
-    limit = min(2000, days_diff + 5)
     
-    # Use tightly isolated cached fetch so last_prices variations won't bust the API cache!
-    prices_dict = fetch_historical_prices_dict(fetch_coins, limit, refresh_key)
-            
-    prices_df = pd.DataFrame(prices_dict)
+    prices_df = pd.DataFrame(hist_dict)
     if not prices_df.empty:
         prices_df = prices_df.reindex(date_range).ffill().bfill().fillna(0)
     else:
@@ -555,7 +560,6 @@ def build_portfolio_history(crypto_df, fiat_df, last_prices, refresh_key):
         invested_daily = crypto_assets.groupby(['Date', 'Ticker'])['USDC'].sum().unstack(fill_value=0)
         invested_daily = invested_daily.reindex(date_range, fill_value=0).fillna(0)
         cum_invested = invested_daily.cumsum()
-        
         pnl_df = (cum_holdings[common_cols] * prices_df[common_cols]) - cum_invested[common_cols]
 
     daily_crypto_value = pd.Series(0.0, index=date_range)
@@ -601,6 +605,40 @@ def build_portfolio_history(crypto_df, fiat_df, last_prices, refresh_key):
     allocation_series_js = ",\n".join(allocation_series_js_list)
         
     return history_data, allocation_series_js, pnl_df
+
+@st.cache_data(show_spinner=False)
+def calculate_portfolio(crypto_df, fiat_df, live_prices, base_prices):
+    if crypto_df.empty:
+        return pd.DataFrame(columns=['Ticker','Holdings','USDC','AVG','Live','PnL','PnL %','Value','Price7d','Price30d','Price90d','PriceYTD']), 0, 0, 0
+    crypto_df = crypto_df.copy()
+    crypto_df['Ticker'] = crypto_df['Ticker'].astype(str).str.upper()
+    fiat_usdc = pd.to_numeric(fiat_df['USDC'], errors='coerce').fillna(0).sum()
+    crypto_spent = pd.to_numeric(crypto_df['USDC'], errors='coerce').fillna(0).sum()
+    usdc_holdings = fiat_usdc - crypto_spent
+    coin_tickers = [t for t in crypto_df['Ticker'].unique() if t != 'USDC']
+        
+    portfolio = []
+    for ticker in coin_tickers:
+        sub = crypto_df[crypto_df['Ticker'] == ticker]
+        total_holdings = sub['Amount'].sum()
+        total_invested = sub['USDC'].sum()
+        avg_price = total_invested / total_holdings if total_holdings > 0 else 0
+        live_price = live_prices.get(ticker, 0.0)
+        value = total_holdings * live_price
+        pnl = value - total_invested
+        pnl_pct = (pnl / total_invested * 100) if total_invested > 0 else 0
+        
+        bp = base_prices.get(ticker, {'7d': live_price, '30d': live_price, '90d': live_price, 'ytd': live_price})
+        
+        portfolio.append({'Ticker':ticker,'Holdings':total_holdings,'USDC':total_invested,'AVG':avg_price,'Live':live_price,'PnL':pnl,'PnL %':pnl_pct,'Value':value, 'Price7d':bp['7d'], 'Price30d':bp['30d'], 'Price90d':bp['90d'], 'PriceYTD':bp['ytd']})
+    
+    portfolio.append({'Ticker':'USDC','Holdings':usdc_holdings,'USDC':usdc_holdings,'AVG':1.0,'Live':1.0,'PnL':0,'PnL %':0,'Value':usdc_holdings, 'Price7d':1.0, 'Price30d':1.0, 'Price90d':1.0, 'PriceYTD':1.0})
+    df_port = pd.DataFrame(portfolio)
+    df_port = df_port.sort_values(by='USDC', ascending=False).reset_index(drop=True)
+    total_value = df_port['Value'].sum()
+    total_pnl = df_port['PnL'].sum()
+    total_pnl_pct = (total_pnl / (total_value - total_pnl) * 100) if (total_value - total_pnl) != 0 else 0
+    return df_port, total_value, total_pnl, total_pnl_pct
 
 # ====================== LOGOS & COLORS ======================
 def get_ticker_logo(ticker: str) -> str:
@@ -683,50 +721,6 @@ def format_price(val):
     except:
         return str(val)
 
-# ====================== PORTFOLIO CALC ======================
-def calculate_portfolio(crypto_df):
-    if 'last_known_prices' not in st.session_state:
-        st.session_state.last_known_prices = {"USDC": 1.0}
-    if crypto_df.empty:
-        return pd.DataFrame(columns=['Ticker','Holdings','USDC','AVG','Live','PnL','PnL %','Value','Price7d','Price30d','Price90d','PriceYTD']), 0, 0, 0
-    crypto_df = crypto_df.copy()
-    crypto_df['Ticker'] = crypto_df['Ticker'].astype(str).str.upper()
-    fiat_usdc = pd.to_numeric(st.session_state.fiat_df['USDC'], errors='coerce').fillna(0).sum()
-    crypto_spent = pd.to_numeric(crypto_df['USDC'], errors='coerce').fillna(0).sum()
-    usdc_holdings = fiat_usdc - crypto_spent
-    coin_tickers = [t for t in crypto_df['Ticker'].unique() if t != 'USDC']
-    
-    # Forced to tuple to eliminate unstable hashing/cache missing bugs
-    fetch_tickers = tuple(sorted(set(coin_tickers) | {'BTC'}))
-    live_prices = get_all_cryptocompare_prices(fetch_tickers, st.session_state.refresh_key)
-    base_prices = get_historical_base_prices(fetch_tickers, st.session_state.refresh_key)
-
-    for t, p in live_prices.items():
-        if p > 0:
-            st.session_state.last_known_prices[t] = p
-            
-    portfolio = []
-    for ticker in coin_tickers:
-        sub = crypto_df[crypto_df['Ticker'] == ticker]
-        total_holdings = sub['Amount'].sum()
-        total_invested = sub['USDC'].sum()
-        avg_price = total_invested / total_holdings if total_holdings > 0 else 0
-        live_price = live_prices.get(ticker, st.session_state.last_known_prices.get(ticker, 0))
-        value = total_holdings * live_price
-        pnl = value - total_invested
-        pnl_pct = (pnl / total_invested * 100) if total_invested > 0 else 0
-        
-        bp = base_prices.get(ticker, {'7d': live_price, '30d': live_price, '90d': live_price, 'ytd': live_price})
-        
-        portfolio.append({'Ticker':ticker,'Holdings':total_holdings,'USDC':total_invested,'AVG':avg_price,'Live':live_price,'PnL':pnl,'PnL %':pnl_pct,'Value':value, 'Price7d':bp['7d'], 'Price30d':bp['30d'], 'Price90d':bp['90d'], 'PriceYTD':bp['ytd']})
-    portfolio.append({'Ticker':'USDC','Holdings':usdc_holdings,'USDC':usdc_holdings,'AVG':1.0,'Live':1.0,'PnL':0,'PnL %':0,'Value':usdc_holdings, 'Price7d':1.0, 'Price30d':1.0, 'Price90d':1.0, 'PriceYTD':1.0})
-    df_port = pd.DataFrame(portfolio)
-    df_port = df_port.sort_values(by='USDC', ascending=False).reset_index(drop=True)
-    total_value = df_port['Value'].sum()
-    total_pnl = df_port['PnL'].sum()
-    total_pnl_pct = (total_pnl / (total_value - total_pnl) * 100) if (total_value - total_pnl) != 0 else 0
-    return df_port, total_value, total_pnl, total_pnl_pct
-
 # ====================== SESSION STATE ======================
 if 'crypto_df' not in st.session_state:
     st.session_state.crypto_df = load_or_init_crypto()
@@ -778,7 +772,26 @@ def glossy_header(title: str, icon_svg: str):
 with main_container.container(key=f"page_{st.session_state.page}_{st.session_state.ui_version}"):
     if st.session_state.page == "Home":
 
-        df_port, total_value, total_pnl, total_pnl_pct = calculate_portfolio(st.session_state.crypto_df)
+        # ================== UNIFIED NETWORK FETCHING ==================
+        fetch_tickers = tuple(sorted(set([t.upper() for t in st.session_state.crypto_df['Ticker'] if t.upper() != 'USDC']) | {'BTC'}))
+        limit = get_max_history_limit(st.session_state.crypto_df, st.session_state.fiat_df)
+        
+        # Pull live prices and cache updates
+        live_prices = get_all_cryptocompare_prices(fetch_tickers, st.session_state.refresh_key)
+        for t, p in live_prices.items():
+            if p > 0: st.session_state.last_known_prices[t] = p
+            
+        for t in fetch_tickers:
+            if t not in live_prices or live_prices[t] == 0:
+                live_prices[t] = st.session_state.last_known_prices.get(t, 0)
+                
+        # Bulk Fetch Historical Data (Parallelized & Fully Cached)
+        hist_dict = fetch_all_historical_data(fetch_tickers, limit, st.session_state.refresh_key)
+        base_prices = get_base_prices(hist_dict, fetch_tickers)
+
+        df_port, total_value, total_pnl, total_pnl_pct = calculate_portfolio(
+            st.session_state.crypto_df, st.session_state.fiat_df, live_prices, base_prices
+        )
         
         usdc_row = df_port[df_port['Ticker'] == 'USDC'].iloc[0] if not df_port[df_port['Ticker'] == 'USDC'].empty else None
         usdc_holdings = usdc_row['Holdings'] if usdc_row is not None else 0
@@ -808,8 +821,9 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
         st.markdown(value_box_html, unsafe_allow_html=True)
 
         # ================== 2. ASSEMBLE ALL CHARTS DATA ==================
-        last_prices_dict = st.session_state.last_known_prices.copy()
-        history_data_raw, allocation_series_js, pnl_df = build_portfolio_history(st.session_state.crypto_df, st.session_state.fiat_df, last_prices_dict, st.session_state.refresh_key)
+        history_data_raw, allocation_series_js, pnl_df = build_portfolio_history(
+            st.session_state.crypto_df, st.session_state.fiat_df, live_prices, hist_dict
+        )
         
         hist_val_js_list = []
         hist_inv_js_list = []
