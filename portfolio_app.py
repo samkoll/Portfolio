@@ -2372,7 +2372,134 @@ with tab_home:
                          dailyChart.series[0].points.forEach(point => {{
                             if (ticker24h[point.name] !== undefined) {{
                                 const val = ticker24h[point.name];
-                                document.querySelector('.metric-val').parentElement.parentElement.parentElement.parentElement.parentElement.parentElement.parentElement.parentElement // trigger
+                                const color = val >= 0 ? 'rgba(0, 255, 157, 0.65)' : 'rgba(255, 77, 77, 0.65)'; 
+                                point.update({{y: val, color: color}}, false);
+                            }}
+                        }});
+                        dailyChart.redraw(true);
+                    }}
+
+                    // 6. Asset Allocation Chart
+                    if (allocChart) {{
+                        allocChart.series.forEach(s => {{
+                             if (tickerValues[s.name] !== undefined) {{
+                                const points = s.points;
+                                if (points && points.length > 0) {{
+                                    const lastPoint = points[points.length - 1];
+                                    lastPoint.update({{y: tickerValues[s.name]}}, false);
+                                 }}
+                            }}
+                        }});
+                        allocChart.redraw(true);
+                    }}
+
+                    // 7. Invested vs Value Chart (Series 1 is 'Current Value')
+                    if (invValChart && invValChart.series[1]) {{
+                        invValChart.series[1].points.forEach(point => {{
+                             if (tickerValues[point.name] !== undefined) {{
+                                point.update({{y: tickerValues[point.name]}}, false);
+                            }}
+                         }});
+                        invValChart.redraw(true);
+                    }}
+                }}
+            }} catch (e) {{
+                console.error("Highcharts Sync Error: ", e);
+            }}
+            
+        }} catch (e) {{
+            console.error('Auto-refresh error:', e);
+        }}
+    }}
+    setInterval(updateLivePrices, 10000);
+    
+    function saveFlippedState() {{
+        const flippedCards = [];
+        document.querySelectorAll('.flip-card').forEach(card => {{
+            if (card.classList.contains('flipped')) {{
+                const ticker = card.getAttribute('data-ticker');
+                if (ticker) flippedCards.push(ticker);
+            }}
+        }});
+        localStorage.setItem('flippedCards', JSON.stringify(flippedCards));
+    }}
+    
+    function restoreFlippedState() {{
+        const saved = localStorage.getItem('flippedCards');
+        if (!saved) return;
+        const flippedTickers = JSON.parse(saved);
+        document.querySelectorAll('.flip-card').forEach(card => {{
+            const ticker = card.getAttribute('data-ticker');
+            if (flippedTickers.includes(ticker)) {{
+                card.classList.add('flipped');
+                card.classList.add('touch-hover');
+                const currentPrice = parseFloat(card.getAttribute('data-current-price'));
+                const avgPrice = parseFloat(card.getAttribute('data-avg-price'));
+                const chartColor = card.getAttribute('data-chart-color');
+                if (!chartCache[ticker] || !chartCache[ticker].chartObj) {{
+                     renderChart(card, ticker, currentPrice, avgPrice, chartColor);
+                }}
+            }}
+        }});
+        localStorage.removeItem('flippedCards');
+    }}
+
+    const flipCards = document.querySelectorAll('.flip-card');
+    window.chartCache = window.chartCache || {{}};
+    const chartCache = window.chartCache;
+    const refreshKey = '{st.session_state.refresh_key}';
+    
+    async function fetchAll24hChanges() {{
+        const cards = Array.from(document.querySelectorAll('.flip-card'));
+        if (cards.length === 0) return;
+        const tickers = cards.map(card => card.getAttribute('data-ticker'));
+        const symbolMap = {{
+            'BTC':'BTC','ETH':'ETH','SOL':'SOL','HBAR':'HBAR',
+            'XRP':'XRP','BNB':'BNB','TRX':'TRX','LINK':'LINK','SUI':'SUI'
+        }};
+        const mappedTickers = tickers.map(t => symbolMap[t.toUpperCase()] || t.toUpperCase());
+
+        const url = `https://min-api.cryptocompare.com/data/pricemultifull?fsyms=${{mappedTickers.join(',')}}&tsyms=USD`;
+        try {{
+            const resp = await fetch(url, {{ headers: {{ 'User-Agent': 'Mozilla/5.0' }} }});
+            const data = await resp.json();
+            
+            let init24h = {{}};
+
+            cards.forEach(card => {{
+                const ticker = card.getAttribute('data-ticker');
+                const sym = symbolMap[ticker.toUpperCase()] || ticker.toUpperCase();
+                const changeSpan = card.querySelector(`#change-24h-${{ticker}}`);
+
+                if (changeSpan && data.RAW && data.RAW[sym] && data.RAW[sym].USD && data.RAW[sym].USD.CHANGEPCT24HOUR !== undefined) {{
+                    const change = data.RAW[sym].USD.CHANGEPCT24HOUR;
+                    init24h[ticker] = change;
+                    const sign = change >= 0 ? '▲' : '▼';
+                    const color = change >= 0 ? '#00ff9d' : '#ff4d4d';
+                    changeSpan.innerHTML = `<span style="color:${{color}};">${{sign}} ${{Math.abs(change).toFixed(2)}}%</span>`;
+                }} else if (changeSpan) {{
+                     changeSpan.innerHTML = `N/A`;
+                }}
+            }});
+            
+            // Immediately push this initial fetch into the daily Highcharts graph
+            try {{
+                let hcWin = window;
+                if (window !== window.parent) {{
+                    const iframes = window.parent.document.querySelectorAll('iframe');
+                    for (let i = 0; i < iframes.length; i++) {{
+                        if (iframes[i].contentWindow && iframes[i].contentWindow.Highcharts) {{
+                            hcWin = iframes[i].contentWindow;
+                            break;
+                        }}
+                    }}
+                }}
+                if (hcWin && hcWin.Highcharts) {{
+                    const dailyC = hcWin.Highcharts.charts.find(c => c && c.renderTo.id === 'daily-container');
+                    if (dailyC && dailyC.series[0]) {{
+                        dailyC.series[0].points.forEach(pt => {{
+                            if (init24h[pt.name] !== undefined) {{
+                                 const val = init24h[pt.name];
                                 pt.update({{y: val, color: val >= 0 ? 'rgba(0, 255, 157, 0.65)' : 'rgba(255, 77, 77, 0.65)'}}, false);
                             }}
                          }});
