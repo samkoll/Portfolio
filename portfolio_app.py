@@ -7,7 +7,6 @@ import json
 from pathlib import Path
 import hashlib
 import math
-import random
 from concurrent.futures import ThreadPoolExecutor
 import streamlit.components.v1 as components
 
@@ -231,6 +230,7 @@ st.markdown(f"""
 """, unsafe_allow_html=True)
 
 # ====================== INJECT SWIPE AND ROUTING LISTENER ======================
+# Bypasses .innerText which fails when the sidebar is hidden via CSS
 js_engine = f"""
 <script>
 if (!window.swipeListenerActive) {{
@@ -238,8 +238,8 @@ if (!window.swipeListenerActive) {{
     const doc = window.parent.document;
     
     window.parent.navTo = function(btnKey) {{
-        const btns = Array.from(doc.querySelectorAll('[data-testid="stSidebar"] button'));
-        const target = btns.find(b => b.innerText.includes(btnKey));
+        const btns = Array.from(doc.querySelectorAll('button'));
+        const target = btns.find(b => b.textContent && b.textContent.includes(btnKey));
         if (target) target.click();
     }};
     
@@ -302,6 +302,9 @@ def get_initial_crypto_df():
         {"Datum": 46099, "USDC": 50.0, "Ticker": "BTC", "Amount": 0.00067193, "Price": 74412.51321},
         {"Datum": 46099, "USDC": 15.0, "Ticker": "ETH", "Amount": 0.00642259, "Price": 2335.506392},
         {"Datum": 46099, "USDC": 10.0, "Ticker": "SOL", "Amount": 0.1055771, "Price": 94.71750976},
+        {"Datum": 46100, "USDC": 50.0, "Ticker": "BTC", "Amount": 0.00071602, "Price": 69830.45166},
+        {"Datum": 46100, "USDC": 15.0, "Ticker": "ETH", "Amount": 0.00707709, "Price": 2119.515224},
+        {"Datum": 46100, "USDC": 10.0, "Ticker": "SOL", "Amount": 0.11363518, "Price": 88.00091662},
     ])
 
 def get_initial_fiat_df():
@@ -388,8 +391,12 @@ def get_base_prices(prices_dict, coins):
 def build_portfolio_history(crypto_df, fiat_df, last_prices, hist_dict):
     if crypto_df.empty and fiat_df.empty: return [], "", pd.DataFrame()
     fiat = fiat_df.copy()
+    fiat['USDC'] = pd.to_numeric(fiat['USDC'], errors='coerce').fillna(0.0)
     daily_fiat_usdc = fiat.groupby(fiat['Datum'].apply(parse_excel_date))['USDC'].sum() if not fiat.empty else pd.Series(dtype=float)
+    
     crypto = crypto_df.copy()
+    crypto['USDC'] = pd.to_numeric(crypto['USDC'], errors='coerce').fillna(0.0)
+    crypto['Amount'] = pd.to_numeric(crypto['Amount'], errors='coerce').fillna(0.0)
     daily_crypto_spent = crypto[crypto['Ticker'].str.upper() != 'USDC'].groupby(crypto['Datum'].apply(parse_excel_date))['USDC'].sum() if not crypto.empty else pd.Series(dtype=float)
 
     all_dates = sorted(set(daily_fiat_usdc.index) | set(crypto['Datum'].apply(parse_excel_date).dropna() if not crypto.empty else []))
@@ -456,9 +463,16 @@ def build_portfolio_history(crypto_df, fiat_df, last_prices, hist_dict):
 
 def calculate_portfolio(crypto_df, fiat_df, live_prices, base_prices):
     if crypto_df.empty: return pd.DataFrame(columns=['Ticker','Holdings','USDC','AVG','Live','PnL','PnL %','Value','Price7d','Price30d','Price90d','PriceYTD']), 0, 0, 0
+    
     crypto_df = crypto_df.copy()
     crypto_df['Ticker'] = crypto_df['Ticker'].astype(str).str.upper()
-    usdc_holdings = pd.to_numeric(fiat_df['USDC'], errors='coerce').fillna(0).sum() - pd.to_numeric(crypto_df['USDC'], errors='coerce').fillna(0).sum()
+    crypto_df['USDC'] = pd.to_numeric(crypto_df['USDC'], errors='coerce').fillna(0.0)
+    crypto_df['Amount'] = pd.to_numeric(crypto_df['Amount'], errors='coerce').fillna(0.0)
+    
+    fiat_df = fiat_df.copy()
+    fiat_df['USDC'] = pd.to_numeric(fiat_df['USDC'], errors='coerce').fillna(0.0)
+    
+    usdc_holdings = fiat_df['USDC'].sum() - crypto_df['USDC'].sum()
         
     portfolio = []
     for ticker in [t for t in crypto_df['Ticker'].unique() if t != 'USDC']:
@@ -586,7 +600,7 @@ if st.session_state.page == "Home":
             .charts-scroll-wrapper {{ width: 100%; overflow-y: hidden; overflow-x: auto; padding: 6px 0px 6px 0px; margin-bottom: 0px; scroll-snap-type: x mandatory; -webkit-overflow-scrolling: touch; scrollbar-width: none; -ms-overflow-style: none; }}
             .charts-scroll-wrapper::-webkit-scrollbar {{ display: none; }}
             .charts-flex {{ display: flex; flex-direction: row; flex-wrap: nowrap; gap: 24px; width: max-content; padding: 0 24px; }}
-            .chart-placeholder {{ scroll-snap-align: center; transition: all 0.3s ease; }}
+            .chart-placeholder {{ scroll-snap-align: center; }}
             .chart-placeholder[data-type="pie"] {{ width: 350px; flex: 0 0 350px; height: 340px; }}
             .chart-placeholder[data-type="history"] {{ width: 600px; flex: 0 0 600px; height: 340px; }}
             .chart-placeholder[data-type="pnl"] {{ width: 400px; flex: 0 0 400px; height: 340px; }}
@@ -594,7 +608,7 @@ if st.session_state.page == "Home":
             .chart-placeholder[data-type="allocation"] {{ width: 600px; flex: 0 0 600px; height: 340px; }}
             .chart-placeholder[data-type="inv-val"] {{ width: 500px; flex: 0 0 500px; height: 340px; }}
             .chart-placeholder[data-type="daily"] {{ width: 400px; flex: 0 0 400px; height: 340px; }}
-            .chart-box {{ width: 100%; height: 100%; background: rgba(15, 23, 42, 0.4); border: 1px solid rgba(255,255,255,0.05); border-radius: 16px; box-shadow: 0 4px 15px rgba(0,0,0,0.2); touch-action: pan-x pan-y; position: relative; display: flex; flex-direction: column; transition: all 0.3s ease; }}
+            .chart-box {{ width: 100%; height: 100%; background: rgba(15, 23, 42, 0.4); border: 1px solid rgba(255,255,255,0.05); border-radius: 16px; box-shadow: 0 4px 15px rgba(0,0,0,0.2); touch-action: pan-x pan-y; will-change: transform; position: relative; display: flex; flex-direction: column; }}
             .chart-header {{ display: flex; justify-content: space-between; align-items: center; padding: 12px 16px 0 16px; width: 100%; box-sizing: border-box; }}
             .chart-title {{ color: #e2e8f0; font-size: 13px; font-weight: bold; white-space: nowrap; }}
             .chart-controls {{ display: flex; gap: 4px; }}
@@ -603,29 +617,21 @@ if st.session_state.page == "Home":
             .chart-body {{ flex: 1; width: 100%; position: relative; }}
             #chart-overlay {{ visibility: hidden; opacity: 0; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(10, 15, 28, 0.85); z-index: 1000; backdrop-filter: blur(5px); -webkit-backdrop-filter: blur(5px); transition: opacity 0.4s ease, visibility 0.4s ease; }}
             #chart-overlay.active {{ visibility: visible; opacity: 1; }}
-            
-            /* Native Screen Adaptation on Double Tap */
-            .expanded-chart {{ width: 90vw !important; flex: 0 0 90vw !important; max-width: 100vw; }}
-            .expanded-chart .chart-box {{ background: rgba(15, 23, 42, 0.98) !important; border: 1px solid rgba(255, 255, 255, 0.15) !important; box-shadow: 0 15px 40px rgba(0,0,0,0.5) !important; }}
-
-            @media (max-width: 768px) {{ 
-                .chart-placeholder {{ height: 320px !important; width: 90vw !important; flex: 0 0 90vw !important; }} 
-                .charts-flex {{ padding: 0 5vw; gap: 16px; }} 
-                .chart-controls button {{ padding: 3px 6px; font-size: 9px; }} 
-            }}
+            .expanded-chart {{ background: rgba(15, 23, 42, 0.98) !important; border: 1px solid rgba(255, 255, 255, 0.08) !important; box-shadow: 0 15px 50px rgba(0,0,0,0.9) !important; border-radius: 20px !important; }}
+            @media (max-width: 768px) {{ .chart-placeholder {{ height: 320px !important; width: 90vw !important; flex: 0 0 90vw !important; }} .charts-flex {{ padding: 0 5vw; gap: 16px; }} .chart-controls button {{ padding: 3px 6px; font-size: 9px; }} }}
         </style>
     </head>
     <body>
         <div id="chart-overlay"></div>
         <div class="charts-scroll-wrapper" id="chartsScrollContainer">
             <div class="charts-flex">
-                <div class="chart-placeholder" data-type="pie" id="pie-wrapper"><div id="pie-container" class="chart-box"></div></div>
-                <div class="chart-placeholder" data-type="history" id="history-wrapper"><div id="history-container-box" class="chart-box"><div class="chart-header"><div class="chart-title">Historical Performance</div><div class="chart-controls hist-controls"><button class="active" data-range="all">All</button><button data-range="1w">1W</button><button data-range="1m">1M</button><button data-range="1y">1Y</button><button data-range="ytd">YTD</button></div></div><div id="history-container" class="chart-body"></div></div></div>
-                <div class="chart-placeholder" data-type="pnl" id="pnl-wrapper"><div id="pnl-container-box" class="chart-box"><div class="chart-header"><div class="chart-title">Winners & Losers ($)</div><div class="chart-controls pnl-controls"><button class="active" data-range="all">All</button><button data-range="1d">Today</button><button data-range="7d">1W</button><button data-range="30d">1M</button><button data-range="1y">1Y</button></div></div><div id="pnl-container" class="chart-body"></div></div></div>
-                <div class="chart-placeholder" data-type="roi" id="roi-wrapper"><div id="roi-container-box" class="chart-box"><div class="chart-header"><div class="chart-title">ROI (%) by Asset</div></div><div id="roi-container" class="chart-body"></div></div></div>
-                <div class="chart-placeholder" data-type="daily" id="daily-wrapper"><div id="daily-container-box" class="chart-box"><div class="chart-header"><div class="chart-title">24h Market Movers (%)</div></div><div id="daily-container" class="chart-body"></div></div></div>
-                <div class="chart-placeholder" data-type="allocation" id="alloc-wrapper"><div id="allocation-container" class="chart-box"></div></div>
-                <div class="chart-placeholder" data-type="inv-val" id="inv-wrapper"><div id="inv-val-container" class="chart-box"></div></div>
+                <div class="chart-placeholder" data-type="pie"><div id="pie-container" class="chart-box"></div></div>
+                <div class="chart-placeholder" data-type="history"><div id="history-wrapper" class="chart-box"><div class="chart-header"><div class="chart-title">Historical Performance</div><div class="chart-controls hist-controls"><button class="active" data-range="all">All</button><button data-range="1w">1W</button><button data-range="1m">1M</button><button data-range="1y">1Y</button><button data-range="ytd">YTD</button></div></div><div id="history-container" class="chart-body"></div></div></div>
+                <div class="chart-placeholder" data-type="pnl"><div id="pnl-wrapper" class="chart-box"><div class="chart-header"><div class="chart-title">Winners & Losers ($)</div><div class="chart-controls pnl-controls"><button class="active" data-range="all">All</button><button data-range="1d">Today</button><button data-range="7d">1W</button><button data-range="30d">1M</button><button data-range="1y">1Y</button></div></div><div id="pnl-container" class="chart-body"></div></div></div>
+                <div class="chart-placeholder" data-type="roi"><div id="roi-wrapper" class="chart-box"><div class="chart-header"><div class="chart-title">ROI (%) by Asset</div></div><div id="roi-container" class="chart-body"></div></div></div>
+                <div class="chart-placeholder" data-type="daily"><div id="daily-wrapper" class="chart-box"><div class="chart-header"><div class="chart-title">24h Market Movers (%)</div></div><div id="daily-container" class="chart-body"></div></div></div>
+                <div class="chart-placeholder" data-type="allocation"><div id="allocation-container" class="chart-box"></div></div>
+                <div class="chart-placeholder" data-type="inv-val"><div id="inv-val-container" class="chart-box"></div></div>
             </div>
         </div>
         <script>
@@ -760,28 +766,49 @@ if st.session_state.page == "Home":
                 }});
             }} catch(e) {{ console.error('InvVal fail:', e); }}
             
-            // Beautiful Inline Screen Expansion on Double Tap
             function toggleExpandChart(wrapperId) {{
+                if (window.innerWidth > 768) return; 
                 const el = document.getElementById(wrapperId);
                 const overlay = document.getElementById('chart-overlay');
-                const isMobile = window.innerWidth <= 768;
+                const wrapper = document.getElementById('chartsScrollContainer');
+                
+                let parentIframe = null;
+                try {{
+                    const iframes = window.parent.document.querySelectorAll('iframe');
+                    for (let ifr of iframes) {{ if (ifr.contentWindow === window) parentIframe = ifr; }}
+                }} catch(e) {{}}
 
                 if (el.classList.contains('expanded-chart')) {{
                     overlay.classList.remove('active');
                     el.classList.remove('expanded-chart');
-                    setTimeout(() => {{ 
-                        const hc = Highcharts.charts.find(c => c && c.renderTo.id === el.id.replace('-wrapper', '-container').replace('-placeholder', '-container'));
-                        if (hc) hc.reflow(); 
-                    }}, 300);
+                    el.style.cssText = ''; 
+                    document.querySelectorAll('.chart-box').forEach(c => c.style.opacity = '1');
+                    
+                    if (parentIframe) {{
+                        parentIframe.style.position = ''; parentIframe.style.top = ''; parentIframe.style.left = '';
+                        parentIframe.style.width = ''; parentIframe.style.height = ''; parentIframe.style.zIndex = '';
+                        parentIframe.style.background = '';
+                    }}
                 }} else {{
-                    document.querySelectorAll('.expanded-chart').forEach(c => c.classList.remove('expanded-chart'));
-                    if (isMobile) overlay.classList.add('active');
+                    document.querySelectorAll('.chart-box').forEach(c => {{ if (c.id !== wrapperId) c.style.opacity = '0'; }});
+                    
+                    overlay.classList.add('active'); 
                     el.classList.add('expanded-chart');
-                    setTimeout(() => {{ 
-                        el.scrollIntoView({{ behavior: 'smooth', block: 'nearest', inline: 'center' }}); 
-                        const hc = Highcharts.charts.find(c => c && c.renderTo.id === el.id.replace('-wrapper', '-container').replace('-placeholder', '-container'));
+                    
+                    el.style.position = 'fixed'; el.style.top = '10vh'; el.style.left = '5vw';
+                    el.style.width = '90vw'; el.style.height = '75vh'; el.style.zIndex = '9999999';
+                    el.style.transform = 'none'; el.style.transition = 'all 0.3s ease';
+                    
+                    if (parentIframe) {{
+                        parentIframe.style.position = 'fixed'; parentIframe.style.top = '0'; parentIframe.style.left = '0';
+                        parentIframe.style.width = '100vw'; parentIframe.style.height = '100vh'; parentIframe.style.zIndex = '999999';
+                        parentIframe.style.background = 'rgba(10,15,28,0.98)';
+                    }}
+                    
+                    setTimeout(() => {{
+                        const hc = Highcharts.charts.find(c => c && c.renderTo.id === el.id.replace('-wrapper', '-container'));
                         if (hc) hc.reflow();
-                    }}, 300);
+                    }}, 350);
                 }}
             }}
 
@@ -804,20 +831,15 @@ if st.session_state.page == "Home":
             setupDoubleTap('roi-wrapper'); setupDoubleTap('daily-wrapper'); setupDoubleTap('alloc-wrapper'); setupDoubleTap('inv-wrapper');
             
             document.getElementById('chart-overlay').addEventListener('click', () => {{
-                document.querySelectorAll('.expanded-chart').forEach(el => {{
-                    el.classList.remove('expanded-chart');
-                }});
-                document.getElementById('chart-overlay').classList.remove('active');
-                setTimeout(() => {{ Highcharts.charts.forEach(c => {{ if(c) c.reflow(); }}) }}, 300);
+                document.querySelectorAll('.expanded-chart').forEach(el => toggleExpandChart(el.id));
             }});
             
-            // PC Mouse Wheel Scroll for Charts
             const chartScroll = document.getElementById('chartsScrollContainer');
             if (chartScroll) {{
                 chartScroll.addEventListener('wheel', (evt) => {{
                     if (Math.abs(evt.deltaY) > Math.abs(evt.deltaX)) {{
                         evt.preventDefault();
-                        chartScroll.scrollBy({{ left: evt.deltaY > 0 ? 250 : -250, behavior: 'smooth' }});
+                        chartScroll.scrollBy({{ left: evt.deltaY > 0 ? 200 : -200, behavior: 'smooth' }});
                     }}
                 }}, {{ passive: false }});
             }}
@@ -1249,6 +1271,177 @@ if st.session_state.page == "Home":
     """
     components.html(full_html, height=380, scrolling=False)
 
+# ================== PAGE 2: CRYPTO ==================
+elif st.session_state.page == "Crypto Transactions":
+    glossy_header("Crypto Transactions", CRYPTO_ICON)
+
+    st.markdown("""
+    <style>
+    div[data-testid="stForm"]:has(.add-tx-card) { background: #0f172a !important; border: 1px solid rgba(255,255,255,0.05) !important; border-radius: 16px !important; padding: 24px !important; box-shadow: 0 4px 15px rgba(0,0,0,0.3) !important; margin-bottom: 24px !important; }
+    div[data-testid="stForm"]:has(.add-tx-card) label { font-size: 0.85rem !important; color: #94a3b8 !important; padding-bottom: 2px !important; }
+    div[data-testid="stForm"]:has(.add-tx-card) .stTextInput input, div[data-testid="stForm"]:has(.add-tx-card) .stNumberInput input, div[data-testid="stForm"]:has(.add-tx-card) .stDateInput input { background: rgba(255,255,255,0.03) !important; border: 1px solid rgba(255,255,255,0.1) !important; color: #fff !important; border-radius: 8px !important; margin-bottom: 0px !important; }
+    div[data-testid="stForm"]:has(.add-tx-card) div[data-testid="stHorizontalBlock"]:has(> div[data-testid="column"]:nth-child(4)) { display: flex !important; gap: 12px !important; }
+    div[data-testid="stForm"]:has(.add-tx-card) div[data-testid="stHorizontalBlock"]:has(> div[data-testid="column"]:nth-child(2):last-child) { display: flex !important; flex-direction: row !important; justify-content: space-between !important; align-items: center !important; margin-top: 12px !important; gap: 12px !important; }
+    div[data-testid="stForm"]:has(.add-tx-card) div[data-testid="stHorizontalBlock"]:has(> div[data-testid="column"]:nth-child(2):last-child) > div[data-testid="column"]:nth-child(1) { flex: 0 0 auto !important; width: auto !important; }
+    div[data-testid="stForm"]:has(.add-tx-card) div[data-testid="stHorizontalBlock"]:has(> div[data-testid="column"]:nth-child(2):last-child) > div[data-testid="column"]:nth-child(2) { flex: 1 1 auto !important; width: auto !important; }
+    div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] { background: rgba(0,0,0,0.3) !important; padding: 6px !important; border-radius: 12px !important; display: flex !important; flex-direction: row !important; gap: 8px !important; align-items: center !important; margin: 0 !important; height: 48px !important; border: 1px solid rgba(255,255,255,0.05) !important; min-width: 200px !important; }
+    div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label { margin: 0 !important; cursor: pointer !important; padding: 0 !important; border-radius: 8px !important; border: 1px solid transparent !important; transition: all 0.3s ease !important; background: transparent !important; flex: 1 !important; display: flex !important; justify-content: center !important; align-items: center !important; height: 100% !important; }
+    div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label:hover { background: rgba(255,255,255,0.05) !important; }
+    div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label > div:first-child { display: none !important; } 
+    div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label p { font-weight: bold !important; font-size: 1.05rem !important; color: #94a3b8 !important; margin: 0 !important; padding: 0 !important; white-space: nowrap !important; line-height: 1 !important; }
+    div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label:has(input:checked):first-child, div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label[aria-checked="true"]:first-child { background: rgba(0, 255, 157, 0.15) !important; border-color: #00ff9d !important; }
+    div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label:has(input:checked):first-child p, div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label[aria-checked="true"]:first-child p { color: #00ff9d !important; }
+    div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label:has(input:checked):last-child, div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label[aria-checked="true"]:last-child { background: rgba(255, 77, 77, 0.15) !important; border-color: #ff4d4d !important; }
+    div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label:has(input:checked):last-child p, div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label[aria-checked="true"]:last-child p { color: #ff4d4d !important; }
+    div[data-testid="stForm"]:has(.add-tx-card) .stButton { display: flex !important; justify-content: flex-end !important; align-items: center !important; margin: 0 !important; padding: 0 !important; width: 100% !important; }
+    div[data-testid="stForm"]:has(.add-tx-card) .stButton > button { background: #1e2a44 !important; color: #e0e0e0 !important; padding: 0 24px !important; border-radius: 10px !important; font-size: 1.05rem !important; font-weight: 700 !important; box-shadow: 0 4px 15px rgba(0,0,0,0.25) !important; transition: all 0.3s ease !important; border: none !important; margin: 0 !important; width: auto !important; height: 48px !important; min-height: 48px !important; }
+    div[data-testid="stForm"]:has(.add-tx-card) .stButton > button:hover { transform: translateY(-2px) !important; box-shadow: 0 8px 20px rgba(255, 255, 255, 0.2) !important; color: white !important; }
+    div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row) { background: #0f172a !important; border: 1px solid rgba(255,255,255,0.05) !important; border-radius: 12px !important; padding: 12px 16px !important; margin-bottom: 12px !important; position: relative; z-index: 2; }
+    div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row) > div { padding: 0 !important; } 
+    div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row) div[data-testid="stButton"] button { background: rgba(255,255,255,0.05) !important; border-radius: 8px !important; border: none !important; height: 40px !important; width: 40px !important; display: flex !important; align-items: center !important; justify-content: center !important; padding: 0 !important; margin: 0 auto !important; font-size: 1.2rem !important; transition: all 0.2s !important; }
+    div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row) div[data-testid="stButton"] button:hover { background: rgba(255,255,255,0.15) !important; transform: scale(1.05) !important; }
+    @keyframes rollDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+    div[data-testid="stForm"]:has(.edit-rollout) { animation: rollDown 0.3s ease forwards !important; background: rgba(0,0,0,0.2) !important; border-left: 3px solid #00ff9d !important; border-radius: 0 0 12px 12px !important; border-top: none !important; border-right: none !important; border-bottom: none !important; padding: 16px !important; margin-top: -24px !important; margin-bottom: 20px !important; position: relative; z-index: 1; box-shadow: inset 0 4px 10px rgba(0,0,0,0.15) !important; }
+    div[data-testid="stVerticalBlockBorderWrapper"]:has(.del-warn) { border-color: rgba(255, 77, 77, 0.3) !important; background: rgba(15, 23, 42, 0.95) !important; border-radius: 12px !important; padding: 16px !important; text-align: center !important; margin-bottom: 12px !important; box-shadow: 0 4px 20px rgba(0,0,0,0.4) !important; }
+    div[data-testid="stVerticalBlockBorderWrapper"]:has(.del-warn) .stButton > button { border-radius: 8px !important; font-weight: 600 !important; transition: all 0.2s !important; width: 100% !important; margin-top: 8px !important; padding: 6px 12px !important; }
+    div[data-testid="stVerticalBlockBorderWrapper"]:has(.del-warn) div[data-testid="column"]:nth-child(1) .stButton > button { background: rgba(255, 77, 77, 0.1) !important; color: #ff4d4d !important; border: 1px solid rgba(255, 77, 77, 0.3) !important; }
+    div[data-testid="stVerticalBlockBorderWrapper"]:has(.del-warn) div[data-testid="column"]:nth-child(1) .stButton > button:hover { background: #ff4d4d !important; color: white !important; }
+    div[data-testid="stVerticalBlockBorderWrapper"]:has(.del-warn) div[data-testid="column"]:nth-child(2) .stButton > button { background: rgba(255, 255, 255, 0.05) !important; color: #cbd5e1 !important; border: 1px solid rgba(255, 255, 255, 0.1) !important; }
+    div[data-testid="stVerticalBlockBorderWrapper"]:has(.del-warn) div[data-testid="column"]:nth-child(2) .stButton > button:hover { background: rgba(255, 255, 255, 0.15) !important; color: white !important; }
+
+    @media (max-width: 768px) {
+        div[data-testid="stForm"]:has(.add-tx-card) div[data-testid="stHorizontalBlock"] { display: flex !important; flex-direction: row !important; flex-wrap: wrap !important; gap: 12px !important; }
+        div[data-testid="stForm"]:has(.add-tx-card) div[data-testid="stHorizontalBlock"]:has(> div[data-testid="column"]:nth-child(4)) > div[data-testid="column"] { min-width: calc(50% - 12px) !important; width: calc(50% - 12px) !important; flex: 1 1 calc(50% - 12px) !important; }
+        div[data-testid="stForm"]:has(.add-tx-card) input { padding: 6px !important; font-size: 0.95rem !important; }
+        div[data-testid="stForm"]:has(.add-tx-card) div[data-testid="stHorizontalBlock"]:has(> div[data-testid="column"]:nth-child(2):last-child) > div[data-testid="column"] { min-width: calc(50% - 12px) !important; width: calc(50% - 12px) !important; flex: 1 1 calc(50% - 12px) !important; }
+        div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] { min-width: 0 !important; width: 100% !important; }
+        div[data-testid="stForm"]:has(.add-tx-card) .stButton { display: flex !important; justify-content: flex-end !important; width: 100% !important; }
+        div[data-testid="stForm"]:has(.add-tx-card) .stButton > button { width: 100% !important; max-width: 120px !important; padding: 0 16px !important; }
+        div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row) > div > div[data-testid="stVerticalBlock"] > div[data-testid="stHorizontalBlock"] { display: flex !important; flex-direction: row !important; flex-wrap: nowrap !important; align-items: center !important; overflow: hidden !important; gap: 2px !important; }
+        div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row) div[data-testid="column"] { min-width: 0 !important; padding: 0 !important; width: auto !important; flex-shrink: 1 !important; }
+        div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row) > div > div[data-testid="stVerticalBlock"] > div[data-testid="stHorizontalBlock"] > div[data-testid="column"]:nth-child(1) { flex: 0 0 35px !important; width: 35px !important; }
+        div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row) > div > div[data-testid="stVerticalBlock"] > div[data-testid="stHorizontalBlock"] > div[data-testid="column"]:nth-child(2) { flex: 1 1 auto !important; overflow: hidden !important; text-align: left; }
+        div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row) > div > div[data-testid="stVerticalBlock"] > div[data-testid="stHorizontalBlock"] > div[data-testid="column"]:nth-child(3) { flex: 1.5 1 auto !important; overflow: hidden !important; text-align: center; }
+        div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row) > div > div[data-testid="stVerticalBlock"] > div[data-testid="stHorizontalBlock"] > div[data-testid="column"]:nth-child(4) { flex: 0 0 36px !important; width: 36px !important; }
+        div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row) > div > div[data-testid="stVerticalBlock"] > div[data-testid="stHorizontalBlock"] > div[data-testid="column"]:nth-child(5) { flex: 0 0 36px !important; width: 36px !important; }
+        div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row) div[data-testid="stButton"] button { width: 30px !important; height: 30px !important; font-size: 0.9rem !important; margin: 0 auto !important; }
+        .mobile-logo { width: 32px !important; height: 32px !important; margin-top: 0 !important; }
+        .mobile-tx-ticker { font-size: 0.95rem !important; margin-left: 2px !important;}
+        .mobile-tx-amount { font-size: 0.95rem !important; white-space: nowrap !important; }
+        .mobile-tx-sub { font-size: 0.7rem !important; white-space: nowrap !important; margin-left: 2px !important;}
+    }
+    </style>
+    """, unsafe_allow_html=True)
+
+    with st.form("add_crypto", border=False):
+        st.markdown("<div class='add-tx-card'></div><h3 style='text-align: center; color: white; margin-top: 0px; margin-bottom: 10px;'>New Transaction</h3>", unsafe_allow_html=True)
+        
+        r1c1, r1c2, r1c3, r1c4 = st.columns(4)
+        with r1c1: selected_date = st.date_input("Date", value=date(2026, 3, 25))
+        with r1c2: ticker = st.text_input("Ticker", value="BTC").upper().strip()
+        with r1c3: usdc = st.number_input("USDC Amount", value=15.0, step=0.01)
+        with r1c4: amount = st.number_input("Coin Amount", value=0.1, step=0.000001, format="%.8f")
+        
+        action_col1, action_col2 = st.columns(2)
+        with action_col1: tx_type = st.radio("Type", ["Buy", "Sell"], horizontal=True, label_visibility="collapsed")
+        with action_col2: submitted = st.form_submit_button("+ Add")
+        
+        if submitted and ticker:
+            final_usdc = usdc if tx_type == "Buy" else -usdc
+            final_amount = amount if tx_type == "Buy" else -amount
+            price = round(usdc / amount, 8) if amount > 0 else 0.0
+            new_row = pd.DataFrame([{"Datum": date_to_excel_serial(selected_date), "USDC": final_usdc, "Ticker": ticker, "Amount": final_amount, "Price": price}])
+            st.session_state.crypto_df = pd.concat([st.session_state.crypto_df, new_row], ignore_index=True)
+            save_crypto(st.session_state.crypto_df)
+            st.session_state.crypto_table_version += 1
+            st.session_state.ui_version += 1
+            st.success(f"✅ Executed {tx_type}: {amount} {ticker}")
+            st.rerun()
+
+    df_display = st.session_state.crypto_df.copy()
+    df_display['orig_idx'] = df_display.index
+    df_display = df_display.dropna(how='all').sort_values(by='Datum', ascending=False)
+
+    st.markdown("<h4 style='color: white; margin-top: 20px; margin-bottom: 15px;'>Transaction History</h4>", unsafe_allow_html=True)
+    
+    with st.container(height=550, border=False):
+        for i, r in df_display.iterrows():
+            orig_idx = r['orig_idx']
+            logo_url = get_ticker_logo(r['Ticker'])
+            amount = float(r['Amount']) if pd.notna(r['Amount']) else 0.0
+            usdc = float(r['USDC']) if pd.notna(r['USDC']) else 0.0
+            is_buy = amount >= 0
+            abs_amount, abs_usdc = abs(amount), abs(usdc)
+            price = abs_usdc / abs_amount if abs_amount > 0 else 0
+            
+            sign, color = ("+", "#00ff9d") if is_buy else ("-", "#ff4d4d")
+            action_text = "Spent" if is_buy else "Received"
+            invested_formatted, amount_formatted, price_formatted = format_money(abs_usdc), format_holdings(abs_amount, r['Ticker']), format_price(price)
+            date_str = format_datum(r['Datum'])
+
+            if st.session_state.get('confirm_delete_crypto') == orig_idx:
+                with st.container(border=True):
+                    st.markdown("<div class='del-warn'></div><h4 style='color: #ff4d4d; margin-top: 0; margin-bottom: 5px; font-size: 1.1rem; font-weight: 600;'>Delete this transaction?</h4>", unsafe_allow_html=True)
+                    c_yes, c_no = st.columns(2)
+                    with c_yes:
+                        if st.button("Delete", key=f"yes_del_{orig_idx}", use_container_width=True):
+                            st.session_state.crypto_df = st.session_state.crypto_df.drop(orig_idx).reset_index(drop=True)
+                            save_crypto(st.session_state.crypto_df)
+                            st.session_state['confirm_delete_crypto'] = None
+                            st.session_state.crypto_table_version += 1
+                            st.session_state.ui_version += 1
+                            st.rerun()
+                    with c_no:
+                        if st.button("Cancel", key=f"no_del_{orig_idx}", use_container_width=True):
+                            st.session_state['confirm_delete_crypto'] = None
+                            st.rerun()
+            else:
+                with st.container(border=True):
+                    st.markdown("<div class='tx-row'></div>", unsafe_allow_html=True)
+                    col_logo, col_ticker, col_vals, col_edit, col_del = st.columns([0.5, 2, 2.5, 0.5, 0.5])
+                    with col_logo: st.markdown(f"<img src='{logo_url}' class='mobile-logo' style='width:42px;height:42px;border-radius:50%;object-fit:contain;margin-top:6px;' onerror=\"this.src='https://via.placeholder.com/42/1e2a44/ffffff?text={r['Ticker'][0]}';\">", unsafe_allow_html=True)
+                    with col_ticker: st.markdown(f"""<div style="line-height: 1.2; margin-top: 6px; overflow: hidden; text-overflow: ellipsis;"><div class="mobile-tx-ticker" style="font-weight: 700; font-size: 1.15rem; color: #ffffff; white-space: nowrap;">{r['Ticker']}</div><div class="mobile-tx-sub" style="font-size: 0.85rem; color: #94a3b8; white-space: nowrap;">{date_str}</div></div>""", unsafe_allow_html=True)
+                    with col_vals: st.markdown(f"""<div style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; margin-top: 6px;"><div class="mobile-tx-amount" style="font-weight: 700; font-size: 1.15rem; color: {color}; white-space: nowrap;">{sign}{amount_formatted}</div><div class="mobile-tx-sub" style="font-size: 0.85rem; color: #cbd5e1; white-space: nowrap;">{action_text}: {invested_formatted} @ ${price_formatted}</div></div>""", unsafe_allow_html=True)
+                    with col_edit:
+                        if st.button("✏️", key=f"edit_btn_{orig_idx}"):
+                            st.session_state['edit_crypto_row'] = None if st.session_state.get('edit_crypto_row') == orig_idx else orig_idx
+                            st.rerun()
+                    with col_del:
+                        if st.button("🗑️", key=f"del_btn_{orig_idx}"):
+                            st.session_state['confirm_delete_crypto'] = orig_idx
+                            st.rerun()
+
+                if st.session_state.get('edit_crypto_row') == orig_idx:
+                    with st.form(f"edit_crypto_form_{orig_idx}", border=False):
+                        st.markdown("<div class='edit-rollout form-compact-marker'></div><h4 style='color: #00ff9d; margin-top: 0px; margin-bottom: 15px;'>✏️ Edit Row Details</h4>", unsafe_allow_html=True)
+                        
+                        e_r1c1, e_r1c2 = st.columns(2)
+                        with e_r1c1: new_date = st.date_input("Date", value=datetime(1899, 12, 30) + timedelta(days=int(r['Datum'])))
+                        with e_r1c2: new_ticker = st.text_input("Ticker", value=r['Ticker']).upper().strip()
+                        
+                        e_r2c1, e_r2c2 = st.columns(2)
+                        with e_r2c1: new_usdc = st.number_input("USDC Amount", value=float(abs(r['USDC'])), step=0.01)
+                        with e_r2c2: new_amount = st.number_input("Coin Amount", value=float(abs(r['Amount'])), step=0.000001, format="%.8f")
+                        
+                        tx_type_edit = st.radio("Type", ["Buy", "Sell"], horizontal=True, index=0 if is_buy else 1, label_visibility="collapsed")
+                        
+                        e_save, e_cancel = st.columns(2)
+                        with e_save: 
+                            if st.form_submit_button("💾 Save Changes"):
+                                final_usdc = new_usdc if tx_type_edit == "Buy" else -new_usdc
+                                final_amount = new_amount if tx_type_edit == "Buy" else -new_amount
+                                new_price = round(new_usdc / new_amount, 8) if new_amount > 0 else 0.0
+                                st.session_state.crypto_df.loc[orig_idx] = {"Datum": date_to_excel_serial(new_date), "USDC": final_usdc, "Ticker": new_ticker, "Amount": final_amount, "Price": new_price}
+                                save_crypto(st.session_state.crypto_df)
+                                st.session_state['edit_crypto_row'] = None
+                                st.session_state.crypto_table_version += 1
+                                st.session_state.ui_version += 1
+                                st.success("✅ Transaction updated!")
+                                st.rerun()
+                        with e_cancel:
+                            if st.form_submit_button("❌ Cancel"):
+                                st.session_state['edit_crypto_row'] = None
+                                st.rerun()
 
 # ================== PAGE 3: FIAT ==================
 elif st.session_state.page == "Fiat Transactions":
