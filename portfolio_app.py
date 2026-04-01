@@ -2,16 +2,15 @@ import streamlit as st
 import pandas as pd
 from datetime import datetime, timedelta, date
 import time
+import streamlit.components.v1 as components
 import requests
 import json
 from pathlib import Path
 import hashlib
 import random
 from concurrent.futures import ThreadPoolExecutor
-import streamlit.components.v1 as components
 
 # ====================== CONFIG ======================
-# Replaced "logo.png" with an emoji to fix the Missing File MediaHandler error
 st.set_page_config(page_title="Portfolio", layout="wide", page_icon="📊")
 
 # ====================== GLOBAL CSS & SWIPE ANIMATIONS ======================
@@ -785,21 +784,24 @@ with st.sidebar:
                 "fiat": json.loads(st.session_state.fiat_df.to_json(orient="records"))}
         st.download_button("Download JSON", json.dumps(data, indent=2), "portfolio_backup.json", "application/json")
 
+
 # ====================== GLOBAL DRAG & SWIPE LISTENER ======================
-# Bulletproof inline script injection that completely bypasses Streamlit React DOM lifecycle & String Escaping bugs
-swipe_js = """
-<img src="dummy_bypass" style="display:none;" onerror="
+# The entire raw script is cleanly generated in Python, JSON encoded to escape all newlines 
+# and quotes securely, and passed to a minimal injector script. This completely bypasses
+# Python's backtick escape warnings AND Streamlit's markdown-stripping protocols.
+
+js_engine = """
 if (!window.mySwipeEngineLoaded) {
     window.mySwipeEngineLoaded = true;
-    const doc = window.parent ? window.parent.document : document;
-    const win = window.parent ? window.parent : window;
+    const doc = window.document;
+    const win = window;
     
     let touchstartX = 0;
     let touchstartY = 0;
     let isDragging = false;
     let isHorizontalSwipe = null;
     let mainContainer = null;
-    win.lastSeenPage = null;
+    window.lastSeenPage = null;
 
     function isIgnored(t) {
         if (!t || !t.closest) return false;
@@ -807,11 +809,11 @@ if (!window.mySwipeEngineLoaded) {
     }
 
     const observer = new MutationObserver(function() {
-        const activeBtn = doc.querySelector('.nav-btn-wrapper[data-active=&quot;true&quot;]');
+        const activeBtn = doc.querySelector('.nav-btn-wrapper[data-active="true"]');
         const activePage = activeBtn ? activeBtn.getAttribute('data-key') : null;
-        if (activePage && activePage !== win.lastSeenPage) {
-            win.lastSeenPage = activePage;
-            mainContainer = doc.querySelector('div[data-testid=&quot;stMainBlockContainer&quot;]');
+        if (activePage && activePage !== window.lastSeenPage) {
+            window.lastSeenPage = activePage;
+            mainContainer = doc.querySelector('div[data-testid="stMainBlockContainer"]');
             if (mainContainer) {
                 mainContainer.style.transform = '';
                 mainContainer.style.transition = '';
@@ -821,7 +823,7 @@ if (!window.mySwipeEngineLoaded) {
     observer.observe(doc.body, { childList: true, subtree: true });
 
     doc.addEventListener('touchstart', function(e) {
-        mainContainer = doc.querySelector('div[data-testid=&quot;stMainBlockContainer&quot;]');
+        mainContainer = doc.querySelector('div[data-testid="stMainBlockContainer"]');
         if (e.touches.length > 1 || isIgnored(e.target) || !mainContainer) return;
         
         touchstartX = e.touches[0].clientX;
@@ -851,7 +853,7 @@ if (!window.mySwipeEngineLoaded) {
         }
 
         if (isHorizontalSwipe) {
-            let activeBtn = doc.querySelector('.nav-btn-wrapper[data-active=&quot;true&quot;]');
+            let activeBtn = doc.querySelector('.nav-btn-wrapper[data-active="true"]');
             let activePage = activeBtn ? activeBtn.getAttribute('data-key') : 'Home';
             const pages = ['Home', 'Crypto Transactions', 'Fiat Transactions'];
             let currentIndex = pages.indexOf(activePage);
@@ -875,7 +877,7 @@ if (!window.mySwipeEngineLoaded) {
             const deltaX = currentX - touchstartX;
             const threshold = win.innerWidth * 0.20; 
             
-            let activeBtn = doc.querySelector('.nav-btn-wrapper[data-active=&quot;true&quot;]');
+            let activeBtn = doc.querySelector('.nav-btn-wrapper[data-active="true"]');
             let activePage = activeBtn ? activeBtn.getAttribute('data-key') : 'Home';
             const pages = ['Home', 'Crypto Transactions', 'Fiat Transactions'];
             let currentIndex = pages.indexOf(activePage);
@@ -908,9 +910,24 @@ if (!window.mySwipeEngineLoaded) {
         isHorizontalSwipe = null;
     }, {passive: true});
 }
-">
 """
-st.markdown(swipe_js, unsafe_allow_html=True)
+
+encoded_js = json.dumps(js_engine)
+
+swipe_injector = f"""
+<script>
+(function() {{
+    const doc = window.parent.document;
+    if (!doc.getElementById('global-swipe-script')) {{
+        const script = doc.createElement('script');
+        script.id = 'global-swipe-script';
+        script.textContent = {encoded_js};
+        doc.head.appendChild(script);
+    }}
+}})();
+</script>
+"""
+components.html(swipe_injector, height=0, width=0)
 
 # ====================== MAIN CONTENT ======================
 main_container = st.empty()
