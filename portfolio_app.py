@@ -228,7 +228,7 @@ div[data-testid="stMainBlockContainer"] {
     padding: 10px 20px;
     width: 90%; 
     max-width: 400px; 
-    margin: 0 auto 0 auto; /* Removed Bottom Margin */
+    margin: -15px auto 12px auto !important; /* Negative top margin to close the gap, slight bottom margin */
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -921,7 +921,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                     width: 100%;
                     overflow-y: hidden;
                     overflow-x: auto;
-                    padding: 24px 0px 32px 0px; 
+                    padding: 6px 0px 6px 0px; 
                     margin-bottom: 0px; 
                     scroll-snap-type: x mandatory;
                     -webkit-overflow-scrolling: touch;
@@ -1537,12 +1537,12 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
         </body>
         </html>
         """
-        components.html(charts_html, height=400, scrolling=False)
+        components.html(charts_html, height=355, scrolling=False)
 
         # ================== 3. SUBDUED USDC BANNER ==================
         usdc_banner_html = f"""
 <input type="checkbox" id="dash-toggle-usdc" class="dashboard-toggle" style="display:none;">
-<div class="usdc-banner" style="--border: #2775ca; margin: 0 auto 0 auto !important;">
+<div class="usdc-banner" style="--border: #2775ca;">
 <div class="usdc-banner-left">
 <img src="{get_ticker_logo('USDC')}" onerror="this.src='https://via.placeholder.com/42/1e2a44/ffffff?text=U';">
 <div class="usdc-banner-title">USDC <span class="usdc-banner-subtitle">(Available Cash)</span></div>
@@ -1654,8 +1654,8 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
             width: 100%;
             overflow-y: hidden;
             overflow-x: auto;
-            padding: 12px 0px 20px 0px;
-            margin-bottom: 20px;
+            padding: 20px 0px 20px 0px;
+            margin-bottom: 0px;
             scroll-snap-type: x mandatory; 
             -webkit-overflow-scrolling: touch;
             scrollbar-width: none; 
@@ -1679,7 +1679,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
         .flip-card {{
             flex: 0 0 420px; 
             background-color: transparent;
-            height: 320px;
+            height: 310px;
             perspective: 1200px;
             cursor: pointer;
             scroll-snap-align: center; 
@@ -2187,7 +2187,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                             dailyChart.series[0].points.forEach(point => {{
                                 if (ticker24h[point.name] !== undefined) {{
                                     const val = ticker24h[point.name];
-                                    const color = val >= 0 ? '#00ff9d99' : '#ff4d4d99'; 
+                                    const color = val >= 0 ? 'rgba(0, 255, 157, 0.65)' : 'rgba(255, 77, 77, 0.65)'; 
                                     point.update({{y: val, color: color}}, false);
                                 }}
                             }});
@@ -2315,7 +2315,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                             dailyC.series[0].points.forEach(pt => {{
                                 if (init24h[pt.name] !== undefined) {{
                                     const val = init24h[pt.name];
-                                    pt.update({{y: val, color: val >= 0 ? '#00ff9d99' : '#ff4d4d99'}}, false);
+                                    pt.update({{y: val, color: val >= 0 ? 'rgba(0, 255, 157, 0.65)' : 'rgba(255, 77, 77, 0.65)'}}, false);
                                 }}
                             }});
                             dailyC.redraw();
@@ -2480,7 +2480,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
 </body>
 </html>
 """
-        components.html(full_html, height=400, scrolling=False)
+        components.html(full_html, height=370, scrolling=False)
 
     # ====================== CRYPTO TRANSACTIONS ======================
     elif st.session_state.page == "Crypto Transactions":
@@ -2761,7 +2761,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
             .dash-label { font-size: clamp(8px, 2.5vw, 10px) !important; bottom: 8px !important; white-space: nowrap !important; letter-spacing: 0.5px !important; }
             
             /* Restyled Subdued USDC Banner Mobile */
-            .usdc-banner { padding: 8px 14px; width: 92%; margin: 0 auto 20px auto; }
+            .usdc-banner { padding: 8px 14px; width: 92%; margin: -12px auto 12px auto !important; }
             .usdc-banner-left img { width: 24px; height: 24px; }
             .usdc-banner-title { font-size: 0.95rem; }
             .usdc-banner-subtitle { font-size: 0.7rem; }
