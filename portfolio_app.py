@@ -851,7 +851,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                 lines = []
                 for ticker, val in series.items():
                     c = get_ticker_color(ticker)
-                    lines.append(f"{{ name: '{ticker}', y: {val}, color: 'transparent', borderColor: '{c}' }}")
+                    lines.append(f"{{ name: '{ticker}', y: {val}, color: 'transparent', borderColor: '{c}A6' }}")
                 return ",\n".join(lines)
 
             pnl_all = pnl_df_active.iloc[-1]
@@ -882,7 +882,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
         for _, r in df_iv.iterrows():
             c = get_ticker_color(r['Ticker'])
             val = r['Value'] if pd.notna(r['Value']) else 0
-            val_data_points.append(f"{{ y: {val}, color: 'transparent', borderColor: '{c}' }}")
+            val_data_points.append(f"{{ y: {val}, color: 'transparent', borderColor: '{c}A6' }}")
         val_data_js = ",".join(val_data_points)
         
         # Chart 6: ROI % Bar Data
@@ -893,7 +893,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
             val = r['PnL %']
             if pd.notna(val):
                 c = get_ticker_color(t)
-                roi_data_js_lines.append(f"{{ name: '{t}', y: {val}, color: 'transparent', borderColor: '{c}' }}")
+                roi_data_js_lines.append(f"{{ name: '{t}', y: {val}, color: 'transparent', borderColor: '{c}A6' }}")
         roi_data_js = ",\n".join(roi_data_js_lines)
 
         # Chart 7: 24h Change Placeholder Data
@@ -1225,7 +1225,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                             return `<b>${{this.point.name}}</b><br/>PnL: <b style="color:${{this.point.borderColor}}">${{val}}</b>`;
                         }}
                     }},
-                    plotOptions: {{ bar: {{ borderRadius: 4, borderWidth: 2, pointPadding: 0.1, groupPadding: 0.1, maxPointWidth: 35, dataLabels: {{ enabled: true, inside: false, crop: false, overflow: 'allow', style: {{ color: '#fff', textOutline: '2px #0f172a', fontWeight: 'bold', fontSize: '11px' }}, formatter: function() {{ return document.body.classList.contains('privacy-mode') ? '***' : formatMoneyStr(this.y); }} }} }} }},
+                    plotOptions: {{ bar: {{ borderRadius: 4, borderWidth: 2, pointPadding: 0.1, groupPadding: 0.1, maxPointWidth: 35, shadow: {{ color: 'rgba(0,0,0,0.3)', offsetX: 1, offsetY: 2, width: 4 }}, dataLabels: {{ enabled: true, inside: false, crop: false, overflow: 'allow', style: {{ color: '#fff', textOutline: '2px #0f172a', fontWeight: 'bold', fontSize: '11px' }}, formatter: function() {{ return document.body.classList.contains('privacy-mode') ? '***' : formatMoneyStr(this.y); }} }} }} }},
                     credits: {{ enabled: false }},
                     series: [{{ name: 'PnL', data: pnlDataMap['all'] }}]
                 }});
@@ -1257,7 +1257,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                             return `<b>${{this.point.name}}</b><br/>ROI: <b style="color:${{this.point.borderColor}}">${{val}}</b>`;
                         }}
                     }},
-                    plotOptions: {{ bar: {{ borderRadius: 4, borderWidth: 2, pointPadding: 0.1, groupPadding: 0.1, maxPointWidth: 35, dataLabels: {{ enabled: true, inside: false, crop: false, overflow: 'allow', style: {{ color: '#fff', textOutline: '2px #0f172a', fontWeight: 'bold', fontSize: '11px' }}, formatter: function() {{ return Highcharts.numberFormat(this.y, 2) + '%'; }} }} }} }},
+                    plotOptions: {{ bar: {{ borderRadius: 4, borderWidth: 2, pointPadding: 0.1, groupPadding: 0.1, maxPointWidth: 35, shadow: {{ color: 'rgba(0,0,0,0.3)', offsetX: 1, offsetY: 2, width: 4 }}, dataLabels: {{ enabled: true, inside: false, crop: false, overflow: 'allow', style: {{ color: '#fff', textOutline: '2px #0f172a', fontWeight: 'bold', fontSize: '11px' }}, formatter: function() {{ return Highcharts.numberFormat(this.y, 2) + '%'; }} }} }} }},
                     credits: {{ enabled: false }},
                     series: [{{ name: 'ROI %', data: [ {roi_data_js} ] }}]
                 }});
@@ -1277,7 +1277,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                             return `<b>${{this.point.name}}</b><br/>24h Change: <b style="color:${{this.point.borderColor}}">${{sign}}${{val}}</b>`;
                         }}
                     }},
-                    plotOptions: {{ bar: {{ borderRadius: 4, borderWidth: 2, pointPadding: 0.1, groupPadding: 0.1, maxPointWidth: 35, dataLabels: {{ enabled: true, inside: false, crop: false, overflow: 'allow', style: {{ color: '#fff', textOutline: '2px #0f172a', fontWeight: 'bold', fontSize: '11px' }}, formatter: function() {{ return (this.y >= 0 ? '+' : '') + Highcharts.numberFormat(this.y, 2) + '%'; }} }} }} }},
+                    plotOptions: {{ bar: {{ borderRadius: 4, borderWidth: 2, pointPadding: 0.1, groupPadding: 0.1, maxPointWidth: 35, shadow: {{ color: 'rgba(0,0,0,0.3)', offsetX: 1, offsetY: 2, width: 4 }}, dataLabels: {{ enabled: true, inside: false, crop: false, overflow: 'allow', style: {{ color: '#fff', textOutline: '2px #0f172a', fontWeight: 'bold', fontSize: '11px' }}, formatter: function() {{ return (this.y >= 0 ? '+' : '') + Highcharts.numberFormat(this.y, 2) + '%'; }} }} }} }},
                     credits: {{ enabled: false }},
                     series: [{{ name: '24h Change', data: [ {daily_data_js} ] }}]
                 }});
@@ -1580,7 +1580,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
 <div class="flip-card" data-ticker="{ticker}" data-holdings="{r['Holdings']}" data-invested="{r['USDC']}" data-current-price="{live_price}" data-avg-price="{avg_price}" data-price-7d="{r.get('Price7d', live_price)}" data-price-30d="{r.get('Price30d', live_price)}" data-price-90d="{r.get('Price90d', live_price)}" data-price-ytd="{r.get('PriceYTD', live_price)}" data-refresh="{st.session_state.refresh_key}" data-border="{border_color}" data-chart-color="{chart_color}" data-logo="{logo_url}">
     <div class="flip-card-inner">
         <div class="flip-card-front">
-            <div class="card-header">
+            <div class="card-header" style="align-items: center;">
                 <div class="header-left-container">
                     <div class="header-logo-row">
                         <img src="{logo_url}" style="height:44px;width:44px;border-radius:50%;object-fit:contain;" onerror="this.src='https://via.placeholder.com/44/1e2a44/ffffff?text={ticker[0]}';">
@@ -1588,9 +1588,9 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                     </div>
                 </div>
                 <div class="header-right">
-                    <div class="stat-group">
-                        <div class="stat-label">Current</div>
+                    <div class="stat-group" style="align-items: flex-end;">
                         <div class="current-value" style="font-size: 1.4rem;">${live_price_formatted}</div>
+                        <div class="stat-label" style="font-size: 0.75rem; margin-top: 2px; color: #94a3b8;">Avg: <span class="privacy-val" style="color: #cbd5e1; font-weight: 600;">${avg_price_formatted}</span></div>
                     </div>
                 </div>
             </div>
@@ -1605,8 +1605,9 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
             
             <div class="card-content">
                 <div class="label-value-row" style="margin-top:4px;"><span class="label">Holdings</span><span class="value privacy-val">{format_holdings(r['Holdings'], ticker)}</span></div>
-                <div class="label-value-row"><span class="label">Avg Buy</span><span class="value privacy-val">${avg_price_formatted}</span></div>
+                <div class="label-value-row"><span class="label">Invested</span><span class="value privacy-val">{format_money(r['USDC'])}</span></div>
                 <div class="label-value-row"><span class="label">PnL</span><span class="value card-pnl privacy-val" style="color:{pnl_color};">{arrow} {format_money(abs(pnl) if pd.notna(pnl) else "")}</span></div>
+                <div class="label-value-row"><span class="label">PnL %</span><span class="value card-pnl-pct privacy-val" style="color:{pnl_color};">{arrow} {pnl_pct_formatted}</span></div>
                 <div class="label-value-row total"><span class="label">Value</span><span class="value total-value privacy-val">{format_money(r['Value'])}</span></div>
             </div>
         </div>
@@ -2191,7 +2192,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                                 if (ticker24h[point.name] !== undefined) {{
                                     const val = ticker24h[point.name];
                                     const color = val >= 0 ? 'rgba(0, 255, 157, 0.65)' : 'rgba(255, 77, 77, 0.65)'; 
-                                    point.update({{y: val, color: 'transparent', borderColor: val >= 0 ? '#00ff9d' : '#ff4d4d'}}, false);
+                                    point.update({{y: val, color: color}}, false);
                                 }}
                             }});
                             dailyChart.redraw(true);
@@ -2213,9 +2214,11 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
 
                         // 7. Invested vs Value Chart (Series 1 is 'Current Value')
                         if (invValChart && invValChart.series[1]) {{
-                            invValChart.series[1].points.forEach(point => {{
-                                if (tickerValues[point.name] !== undefined) {{
-                                    point.update({{y: tickerValues[point.name]}}, false);
+                            const categories = invValChart.xAxis[0].categories;
+                            invValChart.series[1].points.forEach((point, index) => {{
+                                const ticker = categories[index];
+                                if (tickerValues[ticker] !== undefined) {{
+                                    point.update({{y: tickerValues[ticker]}}, false);
                                 }}
                             }});
                             invValChart.redraw(true);
@@ -2318,7 +2321,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                             dailyC.series[0].points.forEach(pt => {{
                                 if (init24h[pt.name] !== undefined) {{
                                     const val = init24h[pt.name];
-                                    pt.update({{y: val, color: 'transparent', borderColor: val >= 0 ? '#00ff9d' : '#ff4d4d'}}, false);
+                                    pt.update({{y: val, color: val >= 0 ? '#00ff9d' : '#ff4d4d'}}, false);
                                 }}
                             }});
                             dailyC.redraw();
@@ -2416,7 +2419,7 @@ with main_container.container(key=f"page_{st.session_state.page}_{st.session_sta
                     }},
                     scales: {{
                         x: {{ ticks: {{ color: '#ccc', maxRotation: 45, autoSkip: true, maxTicksLimit: 6 }}, grid: {{ color: 'rgba(255,255,255,0.1)' }} }},
-                        y: {{ ticks: {{ color: '#ccc' }}, grid: {{ color: 'rgba(255,255,255,0.1)' }} }}
+                        y: {{ position: 'right', ticks: {{ color: '#ccc' }}, grid: {{ color: 'rgba(255,255,255,0.1)' }} }}
                     }}
                 }}
             }});
