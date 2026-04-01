@@ -754,8 +754,9 @@ with st.sidebar:
     page_order = {key: i for i, (_, key) in enumerate(nav_items)}
 
     for label, key in nav_items:
-        # We give the buttons specific classes so JS can auto-click them on swipe
-        st.markdown(f"<div class='nav-btn-wrapper' data-key='{key}'>", unsafe_allow_html=True)
+        # Give buttons active data states so JS can query current page reliably
+        is_active = "true" if st.session_state.page == key else "false"
+        st.markdown(f"<div class='nav-btn-wrapper' data-key='{key}' data-active='{is_active}'>", unsafe_allow_html=True)
         if st.button(label, key=f"nav_{key}", use_container_width=True):
             curr_idx = page_order.get(st.session_state.page, 0)
             new_idx = page_order.get(key, 0)
@@ -784,125 +785,134 @@ with st.sidebar:
         st.download_button("Download JSON", json.dumps(data, indent=2), "portfolio_backup.json", "application/json")
 
 # ====================== GLOBAL DRAG & SWIPE LISTENER ======================
-# This physically drags the page with your finger and bounces or switches when you let go.
-swipe_js = f"""
+swipe_js = """
 <script>
-(function() {{
+(function() {
     const doc = window.parent.document;
-    if (doc.getElementById('global-swipe-listener')) return;
     
-    const scriptTag = doc.createElement('div');
-    scriptTag.id = 'global-swipe-listener';
-    doc.body.appendChild(scriptTag);
+    // Inject permanently into parent head so it never dies on Streamlit reruns
+    if (!doc.getElementById('global-swipe-script')) {
+        const script = doc.createElement('script');
+        script.id = 'global-swipe-script';
+        script.innerHTML = `
+            let touchstartX = 0;
+            let touchstartY = 0;
+            let isDragging = false;
+            let isHorizontalSwipe = null;
+            let mainContainer = null;
+            window.lastSeenPage = null;
 
-    let touchstartX = 0;
-    let touchstartY = 0;
-    let isDragging = false;
-    let isHorizontalSwipe = null;
-    let mainContainer = null;
-    
-    // Prevent interference with charts and internal scroll boxes
-    function isIgnoredTarget(target) {{
-        if (!target || !target.closest) return false;
-        return target.closest('.charts-scroll-wrapper') || target.closest('.scroll-wrapper');
-    }}
+            function isIgnoredTarget(target) {
+                if (!target || !target.closest) return false;
+                return target.closest('.charts-scroll-wrapper') || target.closest('.scroll-wrapper');
+            }
 
-    doc.addEventListener('touchstart', e => {{
-        // Get fresh reference every touch in case Streamlit rebuilt the DOM
-        mainContainer = doc.querySelector('div[data-testid="stMainBlockContainer"]');
-        
-        if (e.touches.length > 1 || isIgnoredTarget(e.target) || !mainContainer) return;
-        
-        touchstartX = e.touches[0].clientX;
-        touchstartY = e.touches[0].clientY;
-        isDragging = true;
-        isHorizontalSwipe = null;
-        
-        // Remove transitions so the page instantly sticks to your finger
-        mainContainer.style.transition = 'none';
-    }}, {{passive: true}});
+            // Immediately snaps container back to center the exact millisecond Streamlit loads the new page
+            const observer = new MutationObserver(() => {
+                const activeBtn = document.querySelector('.nav-btn-wrapper[data-active="true"]');
+                const activePage = activeBtn ? activeBtn.getAttribute('data-key') : null;
+                if (activePage && activePage !== window.lastSeenPage) {
+                    window.lastSeenPage = activePage;
+                    mainContainer = document.querySelector('div[data-testid="stMainBlockContainer"]');
+                    if (mainContainer) {
+                        mainContainer.style.transform = '';
+                        mainContainer.style.transition = '';
+                    }
+                }
+            });
+            observer.observe(document.body, { childList: true, subtree: true });
 
-    doc.addEventListener('touchmove', e => {{
-        if (!isDragging || !mainContainer) return;
-        
-        const currentX = e.touches[0].clientX;
-        const currentY = e.touches[0].clientY;
-        const deltaX = currentX - touchstartX;
-        const deltaY = currentY - touchstartY;
+            document.addEventListener('touchstart', e => {
+                mainContainer = document.querySelector('div[data-testid="stMainBlockContainer"]');
+                if (e.touches.length > 1 || isIgnoredTarget(e.target) || !mainContainer) return;
+                
+                touchstartX = e.touches[0].clientX;
+                touchstartY = e.touches[0].clientY;
+                isDragging = true;
+                isHorizontalSwipe = null;
+                
+                mainContainer.style.animation = 'none';
+                mainContainer.style.transition = 'none';
+            }, {passive: true});
 
-        // Determine direction on first significant move
-        if (isHorizontalSwipe === null) {{
-            if (Math.abs(deltaX) > 10 && Math.abs(deltaX) > Math.abs(deltaY)) {{
-                isHorizontalSwipe = true;
-            }} else if (Math.abs(deltaY) > 10) {{
-                isHorizontalSwipe = false;
-            }}
-        }}
+            document.addEventListener('touchmove', e => {
+                if (!isDragging || !mainContainer) return;
+                
+                const currentX = e.touches[0].clientX;
+                const currentY = e.touches[0].clientY;
+                const deltaX = currentX - touchstartX;
+                const deltaY = currentY - touchstartY;
 
-        if (isHorizontalSwipe) {{
-            const currentPage = "{st.session_state.page}";
-            const pages = ["Home", "Crypto Transactions", "Fiat Transactions"];
-            let currentIndex = pages.indexOf(currentPage);
-            
-            let actualDelta = deltaX;
-            
-            // Add rubber-banding resistance if trying to swipe past the first/last page
-            if ((actualDelta > 0 && currentIndex === 0) || 
-                (actualDelta < 0 && currentIndex === pages.length - 1)) {{
-                actualDelta = actualDelta * 0.25; // High resistance bounce
-            }}
-            
-            // Apply physical drag to the screen
-            mainContainer.style.transform = `translateX(${{actualDelta}}px)`;
-        }}
-    }}, {{passive: true}});
+                if (isHorizontalSwipe === null) {
+                    if (Math.abs(deltaX) > 10 && Math.abs(deltaX) > Math.abs(deltaY)) {
+                        isHorizontalSwipe = true;
+                    } else if (Math.abs(deltaY) > 10) {
+                        isHorizontalSwipe = false;
+                        isDragging = false;
+                    }
+                }
 
-    doc.addEventListener('touchend', e => {{
-        if (!isDragging || !mainContainer) return;
-        isDragging = false;
-        
-        const currentX = e.changedTouches[0].clientX;
-        const deltaX = currentX - touchstartX;
-        
-        if (isHorizontalSwipe) {{
-            // Restore smooth transition for snapping or flying out
-            mainContainer.style.transition = 'transform 0.3s ease-out';
-            
-            const threshold = window.innerWidth * 0.22; // Must swipe 22% of screen width to trigger
-            
-            const currentPage = "{st.session_state.page}";
-            const pages = ["Home", "Crypto Transactions", "Fiat Transactions"];
-            let currentIndex = pages.indexOf(currentPage);
-            
-            let targetPage = null;
-            
-            if (deltaX < -threshold && currentIndex < pages.length - 1) {{
-                // Swiped Left -> Load Next Page
-                targetPage = pages[currentIndex + 1];
-                mainContainer.style.transform = `translateX(-100vw)`;
-            }} else if (deltaX > threshold && currentIndex > 0) {{
-                // Swiped Right -> Load Prev Page
-                targetPage = pages[currentIndex - 1];
-                mainContainer.style.transform = `translateX(100vw)`;
-            }} else {{
-                // Didn't swipe far enough, or swiped past edge -> snap back to center
-                mainContainer.style.transform = `translateX(0)`;
-            }}
+                if (isHorizontalSwipe) {
+                    let activeBtn = document.querySelector('.nav-btn-wrapper[data-active="true"]');
+                    let activePage = activeBtn ? activeBtn.getAttribute('data-key') : "Home";
+                    const pages = ["Home", "Crypto Transactions", "Fiat Transactions"];
+                    let currentIndex = pages.indexOf(activePage);
+                    
+                    let actualDelta = deltaX;
+                    if ((actualDelta > 0 && currentIndex === 0) || 
+                        (actualDelta < 0 && currentIndex === pages.length - 1)) {
+                        actualDelta = actualDelta * 0.25; 
+                    }
+                    
+                    mainContainer.style.transform = \`translateX(${actualDelta}px)\`;
+                }
+            }, {passive: true});
 
-            if (targetPage) {{
-                // Trigger Streamlit load
-                const wrappers = doc.querySelectorAll('.nav-btn-wrapper');
-                wrappers.forEach(w => {{
-                    if (w.getAttribute('data-key') === targetPage) {{
-                        const btn = w.querySelector('button');
-                        // Small delay ensures the visual fly-out starts smoothly before Python blocks the thread
-                        if (btn) setTimeout(() => btn.click(), 40); 
-                    }}
-                }});
-            }}
-        }}
-    }}, {{passive: true}});
-}})();
+            document.addEventListener('touchend', e => {
+                if (!isDragging || !mainContainer || isHorizontalSwipe === false) return;
+                isDragging = false;
+                
+                if (isHorizontalSwipe) {
+                    const currentX = e.changedTouches[0].clientX;
+                    const deltaX = currentX - touchstartX;
+                    const threshold = window.innerWidth * 0.20; 
+                    
+                    let activeBtn = document.querySelector('.nav-btn-wrapper[data-active="true"]');
+                    let activePage = activeBtn ? activeBtn.getAttribute('data-key') : "Home";
+                    const pages = ["Home", "Crypto Transactions", "Fiat Transactions"];
+                    let currentIndex = pages.indexOf(activePage);
+                    
+                    let targetPage = null;
+                    
+                    if (deltaX < -threshold && currentIndex < pages.length - 1) {
+                        targetPage = pages[currentIndex + 1];
+                        mainContainer.style.transition = 'transform 0.25s ease-out';
+                        mainContainer.style.transform = \`translateX(-100vw)\`;
+                    } else if (deltaX > threshold && currentIndex > 0) {
+                        targetPage = pages[currentIndex - 1];
+                        mainContainer.style.transition = 'transform 0.25s ease-out';
+                        mainContainer.style.transform = \`translateX(100vw)\`;
+                    } else {
+                        mainContainer.style.transition = 'transform 0.3s ease-out';
+                        mainContainer.style.transform = \`translateX(0)\`;
+                    }
+
+                    if (targetPage) {
+                        const wrappers = document.querySelectorAll('.nav-btn-wrapper');
+                        wrappers.forEach(w => {
+                            if (w.getAttribute('data-key') === targetPage) {
+                                const btn = w.querySelector('button');
+                                if (btn) setTimeout(() => btn.click(), 50); 
+                            }
+                        });
+                    }
+                }
+                isHorizontalSwipe = null;
+            }, {passive: true});
+        `;
+        doc.head.appendChild(script);
+    }
+})();
 </script>
 """
 components.html(swipe_js, height=0, width=0)
