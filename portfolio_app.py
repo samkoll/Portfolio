@@ -16,9 +16,11 @@ st.set_page_config(page_title="Portfolio", layout="wide", page_icon="logo.png")
 # ====================== GLOBAL CSS ======================
 st.markdown("""
 <style>
-/* Hide Native Streamlit Top Header */
-header[data-testid="stHeader"] {
+/* Hide Native Streamlit Top Header and Decoration Line */
+header[data-testid="stHeader"],
+div[data-testid="stDecoration"] {
     display: none !important;
+    height: 0 !important;
 }
 
 .stApp {
@@ -29,7 +31,8 @@ header[data-testid="stHeader"] {
 div[data-testid="stMainBlockContainer"] {
     padding-left: 14px !important;
     padding-right: 14px !important;
-    padding-top: 12px !important;
+    padding-top: 0rem !important; /* Forces it completely to the top */
+    margin-top: -2rem !important; /* Pulls it up over any invisible gaps */
     padding-bottom: 90px !important; /* Added to clear bottom nav dock */
     max-width: 100% !important;
 }
@@ -159,7 +162,7 @@ div[data-testid="stTabs"] > div[role="tabpanel"] {
     z-index: 1;
     margin-top: -60px !important; 
     transition: margin-top 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-    margin-bottom: 24px;
+    margin-bottom: 8px; /* Reduced to pull USDC banner closer */
 }
 .dashboard-toggle:checked ~ .dashboard-wrapper .stats-layer {
     margin-top: 14px !important;
@@ -302,7 +305,7 @@ div[data-testid="stTabs"] > div[role="tabpanel"] {
     width: auto; 
     min-width: 250px;
     max-width: 400px; 
-    margin: 12px 0 24px 24px !important; /* Sorted left for PC */
+    margin: 4px 0 8px 24px !important; /* Reduced top and bottom spacing */
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -2860,7 +2863,7 @@ with tab_crypto:
        7. MOBILE OVERRIDES (IRONCLAD)
        ============================================================== */
     @media (max-width: 768px) {
-        .glossy-header { margin-top: 12px !important; margin-bottom: 24px !important;
+        .glossy-header { margin-top: 0px !important; margin-bottom: 16px !important;
         padding: 20px 16px !important;
         font-size: 22px !important; min-height: 90px; }
         .home-header { margin-bottom: 0 !important; }
@@ -2959,7 +2962,7 @@ with tab_crypto:
         
         /* Restyled Subdued USDC Banner Mobile */
         .usdc-banner { padding: 8px 14px;
-        width: 92%; margin: 12px auto 16px auto !important; }
+        width: 92%; margin: 4px auto 8px auto !important; }
         .usdc-banner-left img { width: 24px;
         height: 24px; }
         .usdc-banner-title { font-size: 0.95rem;
