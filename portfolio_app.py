@@ -13,11 +13,28 @@ from concurrent.futures import ThreadPoolExecutor
 # ====================== CONFIG ======================
 st.set_page_config(page_title="Portfolio", layout="wide", page_icon="logo.png")
 
-# ====================== SPLASH SCREEN & GLOBAL CSS ======================
-st.markdown("""
+# ====================== SVG ICONS ======================
+DASHBOARD_ICON = '''<svg xmlns="http://www.w3.org/2000/svg" width="100%" height="100%" viewBox="0 0 24 24" fill="none" stroke="#00ff9d" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>'''
+CRYPTO_ICON = '''<svg xmlns="http://www.w3.org/2000/svg" width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="#00ff9d" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M14.5 8.5L9.5 13.5"/><path d="M9.5 8.5L14.5 13.5"/></svg>'''
+FIAT_ICON = '''<svg xmlns="http://www.w3.org/2000/svg" width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="#00ff9d" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M6 8h12"/><path d="M6 12h12"/><path d="M6 16h12"/></svg>'''
+EYE_CLOSED = '''<svg class="eye-closed" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>'''
+EYE_OPEN = '''<svg class="eye-open" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>'''
+EXTERNAL_LINK_ICON = '''<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>'''
+TV_ICON = '''<svg xmlns="http://www.w3.org/2000/svg" width="18" height="14" viewBox="0 0 28 21" fill="currentColor"><path d="M12 21H8V3h4v18zm1.5-6h3.5l3.5-4.5V21h-7v-6zM28 21h-4l-6.5-9L21 6l7 10v5z"/></svg>'''
+STABLECOIN_ICON = '''<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#00ff9d" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="16"></line><line x1="8" y1="12" x2="16" y2="12"></line></svg>'''
+
+# ====================== STATE MANAGEMENT & SPLASH ======================
+is_first_load = 'app_initialized' not in st.session_state
+if is_first_load:
+    st.session_state.app_initialized = True
+    splash_style = ""
+else:
+    splash_style = "display: none !important;"
+
+st.markdown(f"""
 <style>
 /* --- SPLASH SCREEN LOADING ANIMATION --- */
-#app-splash {
+#app-splash {{
     position: fixed; 
     top: 0; left: 0; 
     width: 100vw; height: 100vh;
@@ -28,76 +45,72 @@ st.markdown("""
     justify-content: center; 
     align-items: center;
     transition: opacity 0.5s ease-out, visibility 0.5s ease-out;
-}
-.splash-logo {
+}}
+.splash-logo {{
     width: 80px; height: 80px;
     animation: splashPulse 1.5s infinite ease-in-out;
-}
-.splash-logo svg {
-    width: 100%; height: 100%;
-    stroke: #00ff9d;
-}
-@keyframes splashPulse {
-    0% { transform: scale(0.90); opacity: 0.7; }
-    50% { transform: scale(1.1); opacity: 1; }
-    100% { transform: scale(0.90); opacity: 0.7; }
-}
+}}
+@keyframes splashPulse {{
+    0% {{ transform: scale(0.90); opacity: 0.7; }}
+    50% {{ transform: scale(1.1); opacity: 1; }}
+    100% {{ transform: scale(0.90); opacity: 0.7; }}
+}}
 
 /* Hide Native Streamlit Top Header and Decoration Line */
 header[data-testid="stHeader"],
-div[data-testid="stDecoration"] {
+div[data-testid="stDecoration"] {{
     display: none !important;
     height: 0 !important;
-}
+}}
 
-.stApp {
+.stApp {{
     background: linear-gradient(180deg, #0f1724 0%, #0a0f1c 100%) !important;
-}
+}}
 .main .block-container,
 .stMain .block-container,
-div[data-testid="stMainBlockContainer"] {
+div[data-testid="stMainBlockContainer"] {{
     padding-left: 14px !important;
     padding-right: 14px !important;
     padding-top: 0rem !important;
     margin-top: -2rem !important; 
     padding-bottom: 90px !important; 
     max-width: 100% !important;
-}
-@media (min-width: 1200px) {
+}}
+@media (min-width: 1200px) {{
     .main .block-container,
-    div[data-testid="stMainBlockContainer"] {
+    div[data-testid="stMainBlockContainer"] {{
         padding-left: 18px !important;
         padding-right: 18px !important;
-    }
-}
-@media (max-width: 768px) {
+    }}
+}}
+@media (max-width: 768px) {{
     .main .block-container,
-    div[data-testid="stMainBlockContainer"] {
+    div[data-testid="stMainBlockContainer"] {{
         padding-left: 8px !important;
         padding-right: 8px !important;
-    }
-}
-.main, .block-container, .stMain {
+    }}
+}}
+.main, .block-container, .stMain {{
     padding-top: 0px !important;
-}
+}}
 
 /* ---------------------------------------------------
    NATIVE APP NAVIGATION BAR & TAB HIDING
 --------------------------------------------------- */
 div[data-testid="stTabs"] [role="tablist"],
-div[data-testid="stTabs"] [data-baseweb="tab-list"] {
+div[data-testid="stTabs"] [data-baseweb="tab-list"] {{
     display: none !important;
     height: 0px !important;
     margin: 0px !important;
     padding: 0px !important;
     visibility: hidden !important;
-}
+}}
 div[data-testid="stTabs"] > div[data-baseweb="tab-panel"],
-div[data-testid="stTabs"] > div[role="tabpanel"] {
+div[data-testid="stTabs"] > div[role="tabpanel"] {{
     padding-bottom: 20px !important; 
-}
+}}
 
-#bottom-nav-bar {
+#bottom-nav-bar {{
     position: fixed;
     bottom: 0;
     left: 0;
@@ -112,8 +125,8 @@ div[data-testid="stTabs"] > div[role="tabpanel"] {
     align-items: center;
     z-index: 999999;
     padding-bottom: env(safe-area-inset-bottom);
-}
-.nav-item {
+}}
+.nav-item {{
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -125,44 +138,44 @@ div[data-testid="stTabs"] > div[role="tabpanel"] {
     cursor: pointer;
     transition: color 0.3s ease;
     -webkit-tap-highlight-color: transparent;
-}
-.nav-item.active {
+}}
+.nav-item.active {{
     color: #00ff9d;
-}
-.nav-icon {
+}}
+.nav-icon {{
     width: 24px;
     height: 24px;
     margin-bottom: 4px;
-}
-.nav-icon svg {
+}}
+.nav-icon svg {{
     width: 100%;
     height: 100%;
     stroke: currentColor;
     fill: none;
-}
-.nav-label {
+}}
+.nav-label {{
     font-size: 11px;
     font-weight: 600;
     letter-spacing: 0.5px;
-}
+}}
 
 /* Dashboard Pullable Drawer Styles */
-.dashboard-wrapper {
+.dashboard-wrapper {{
     position: relative;
     z-index: 10;
-}
-.glossy-header-label {
+}}
+.glossy-header-label {{
     cursor: pointer;
     display: block;
     position: relative;
     z-index: 3;
     -webkit-tap-highlight-color: transparent;
-}
-.home-header {
+}}
+.home-header {{
     margin-bottom: 0 !important;
     padding-bottom: 30px !important;
-}
-.pull-indicator {
+}}
+.pull-indicator {{
     position: absolute;
     bottom: 8px;
     left: 50%;
@@ -170,36 +183,36 @@ div[data-testid="stTabs"] > div[role="tabpanel"] {
     color: #64748b;
     opacity: 0.8;
     transition: color 0.3s ease;
-}
-@media (hover: hover) and (pointer: fine) {
-    .glossy-header-label:hover .pull-indicator { color: #cbd5e1; }
-}
-.pull-indicator .eye-open { display: none; }
-.pull-indicator .eye-closed { display: block; }
+}}
+@media (hover: hover) and (pointer: fine) {{
+    .glossy-header-label:hover .pull-indicator {{ color: #cbd5e1; }}
+}}
+.pull-indicator .eye-open {{ display: none; }}
+.pull-indicator .eye-closed {{ display: block; }}
 
-.dashboard-toggle:checked ~ .dashboard-wrapper .glossy-header-label .pull-indicator .eye-open { display: block; }
-.dashboard-toggle:checked ~ .dashboard-wrapper .glossy-header-label .pull-indicator .eye-closed { display: none; }
-.dashboard-toggle:checked ~ .dashboard-wrapper .glossy-header-label .pull-indicator { color: #ffffff; }
+.dashboard-toggle:checked ~ .dashboard-wrapper .glossy-header-label .pull-indicator .eye-open {{ display: block; }}
+.dashboard-toggle:checked ~ .dashboard-wrapper .glossy-header-label .pull-indicator .eye-closed {{ display: none; }}
+.dashboard-toggle:checked ~ .dashboard-wrapper .glossy-header-label .pull-indicator {{ color: #ffffff; }}
 
-.stats-layer {
+.stats-layer {{
     position: relative;
     z-index: 1;
     margin-top: -60px !important; 
     transition: margin-top 0.4s cubic-bezier(0.4, 0, 0.2, 1);
     margin-bottom: 8px;
-}
-.dashboard-toggle:checked ~ .dashboard-wrapper .stats-layer {
+}}
+.dashboard-toggle:checked ~ .dashboard-wrapper .stats-layer {{
     margin-top: 14px !important;
-}
+}}
 
-.stats-layer-inner {
+.stats-layer-inner {{
     display: grid !important;
     grid-template-columns: repeat(3, 1fr) !important;
     gap: 14px;
     width: 100%;
-}
+}}
 
-.dash-value {
+.dash-value {{
     font-size: clamp(14px, 2.5vw, 24px) !important;
     font-weight: 700;
     line-height: 1.05;
@@ -216,13 +229,13 @@ div[data-testid="stTabs"] > div[role="tabpanel"] {
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-}
-.dashboard-toggle:not(:checked) ~ .dashboard-wrapper .stats-layer .dash-value {
+}}
+.dashboard-toggle:not(:checked) ~ .dashboard-wrapper .stats-layer .dash-value {{
     opacity: 0;
     pointer-events: none;
-}
+}}
 
-.dash-label {
+.dash-label {{
     font-size: 11px !important;
     font-weight: 600;
     letter-spacing: 1.5px;
@@ -234,9 +247,9 @@ div[data-testid="stTabs"] > div[role="tabpanel"] {
     left: 0;
     width: 100%;
     text-align: center;
-}
+}}
 
-.glossy-header {
+.glossy-header {{
     position: relative;
     overflow: hidden;
     background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
@@ -257,22 +270,22 @@ div[data-testid="stTabs"] > div[role="tabpanel"] {
     width: 100% !important;
     margin-top: 0px !important;
     margin-bottom: 24px !important;
-}
+}}
 
-@media (hover: hover) and (pointer: fine) {
-    .glossy-header-label:hover .glossy-header {
+@media (hover: hover) and (pointer: fine) {{
+    .glossy-header-label:hover .glossy-header {{
         transform: translateY(-4px) scale(1.01);
         box-shadow: 0 15px 40px rgba(0, 0, 0, 0.5);
         border-color: rgba(255, 255, 255, 0.15);
-    }
-}
-.dashboard-toggle:checked ~ .dashboard-wrapper .glossy-header {
+    }}
+}}
+.dashboard-toggle:checked ~ .dashboard-wrapper .glossy-header {{
     transform: translateY(-4px) scale(1.01);
     box-shadow: 0 15px 40px rgba(0, 0, 0, 0.5);
     border-color: rgba(255, 255, 255, 0.15);
-}
+}}
 
-.glossy-box {
+.glossy-box {{
     position: relative;
     overflow: hidden;
     background: linear-gradient(180deg, #162032 0%, #0f172a 100%);
@@ -287,9 +300,9 @@ div[data-testid="stTabs"] > div[role="tabpanel"] {
     display: flex;
     flex-direction: column;
     justify-content: center;
-}
+}}
 
-.glossy-box:not(.swapped) > div:first-child {
+.glossy-box:not(.swapped) > div:first-child {{
     font-size: 12px;
     font-weight: 600;
     letter-spacing: 1.5px;
@@ -297,27 +310,27 @@ div[data-testid="stTabs"] > div[role="tabpanel"] {
     color: #94a3b8;
     margin-bottom: 6px;
     line-height: 1.2;
-}
-.glossy-box:not(.swapped) > div:last-child {
+}}
+.glossy-box:not(.swapped) > div:last-child {{
     font-size: 27px;
     font-weight: 700;
     line-height: 1.05;
     color: #ffffff;
-}
+}}
 
-.glossy-box.swapped {
+.glossy-box.swapped {{
     min-width: 0 !important;
     height: 80px !important;
     min-height: 80px !important;
     max-height: 80px !important;
     padding: 0;
     display: block;
-}
+}}
 
 /* ==============================================================
    STABLECOINS BANNER & INTERACTIVE DROPDOWN
    ============================================================== */
-.usdc-banner {
+.usdc-banner {{
     position: relative;
     overflow: hidden;
     background: rgba(15, 23, 42, 0.5);
@@ -333,231 +346,223 @@ div[data-testid="stTabs"] > div[role="tabpanel"] {
     align-items: center;
     justify-content: space-between;
     transition: all 0.3s ease;
-}
-.usdc-banner:hover {
+}}
+.usdc-banner:hover {{
     background: rgba(15, 23, 42, 0.7);
     border-color: rgba(38, 161, 123, 0.4);
-}
-.usdc-banner-left { display: flex; align-items: center; gap: 12px; }
-.usdc-banner-left svg { width: 28px; height: 28px; border-radius: 50%; object-fit: contain; opacity: 0.85; }
-.usdc-banner-title { font-size: 1.05rem; font-weight: 600; color: #e2e8f0; display: flex; align-items: center; gap: 8px; }
-.usdc-banner-subtitle { font-size: 0.75rem; font-weight: 500; color: #64748b; }
-.usdc-banner-amount { font-size: 1.2rem; font-weight: 600; color: #e2e8f0; }
+}}
+.usdc-banner-left {{ display: flex; align-items: center; gap: 12px; }}
+.usdc-banner-left svg {{ width: 28px; height: 28px; border-radius: 50%; object-fit: contain; opacity: 0.85; }}
+.usdc-banner-title {{ font-size: 1.05rem; font-weight: 600; color: #e2e8f0; display: flex; align-items: center; gap: 8px; }}
+.usdc-banner-subtitle {{ font-size: 0.75rem; font-weight: 500; color: #64748b; }}
+.usdc-banner-amount {{ font-size: 1.2rem; font-weight: 600; color: #e2e8f0; }}
 
-.stable-dropdown-wrapper {
+.stable-dropdown-wrapper {{
     position: relative; width: auto; min-width: 250px; max-width: 400px; margin: -12px 0 16px 24px; z-index: 5;
-}
-.stable-dropdown {
+}}
+.stable-dropdown {{
     max-height: 0; overflow: hidden; transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
     background: rgba(10, 15, 28, 0.85); border: 1px solid rgba(38, 161, 123, 0); border-top: none;
     border-radius: 0 0 12px 12px;
     padding: 0 20px; backdrop-filter: blur(5px);
-}
-#stable-dropdown-toggle:checked ~ .stable-dropdown-wrapper .stable-dropdown {
+}}
+#stable-dropdown-toggle:checked ~ .stable-dropdown-wrapper .stable-dropdown {{
     max-height: 300px; border-color: rgba(38, 161, 123, 0.2);
     padding: 12px 20px; margin-top: 4px; box-shadow: 0 10px 20px rgba(0,0,0,0.3);
-}
-.st-item { display: flex; justify-content: space-between; align-items: center; font-size: 0.95rem; color: #94a3b8; padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,0.05); }
-.st-item:last-child { border-bottom: none; }
-.st-item .val { color: #e2e8f0; font-weight: 600; }
-.st-item-left { display: flex; align-items: center; gap: 10px; }
+}}
+.st-item {{ display: flex; justify-content: space-between; align-items: center; font-size: 0.95rem; color: #94a3b8; padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,0.05); }}
+.st-item:last-child {{ border-bottom: none; }}
+.st-item .val {{ color: #e2e8f0; font-weight: 600; }}
+.st-item-left {{ display: flex; align-items: center; gap: 10px; }}
 
 /* Native CSS Privacy Mode integration */
-.dashboard-toggle:not(:checked) ~ label .usdc-banner .usdc-banner-amount { font-size: 0 !important; }
-.dashboard-toggle:not(:checked) ~ label .usdc-banner .usdc-banner-amount::after { content: '***'; font-size: 1.2rem; color: #e2e8f0; }
-.dashboard-toggle:not(:checked) ~ .stable-dropdown-wrapper .stable-dropdown .st-item .val { font-size: 0 !important; }
-.dashboard-toggle:not(:checked) ~ .stable-dropdown-wrapper .stable-dropdown .st-item .val::after { content: '***'; font-size: 0.9rem; color: #e2e8f0; }
+.dashboard-toggle:not(:checked) ~ label .usdc-banner .usdc-banner-amount {{ font-size: 0 !important; }}
+.dashboard-toggle:not(:checked) ~ label .usdc-banner .usdc-banner-amount::after {{ content: '***'; font-size: 1.2rem; color: #e2e8f0; }}
+.dashboard-toggle:not(:checked) ~ .stable-dropdown-wrapper .stable-dropdown .st-item .val {{ font-size: 0 !important; }}
+.dashboard-toggle:not(:checked) ~ .stable-dropdown-wrapper .stable-dropdown .st-item .val::after {{ content: '***'; font-size: 0.9rem; color: #e2e8f0; }}
 
 /* GLOBALLY HIDE NUMBER INPUT STEP BUTTONS (+ / -) */
 button[aria-label="Step Up"],
 button[aria-label="Step Down"],
 button[data-testid="stNumberInputStepUp"],
-button[data-testid="stNumberInputStepDown"] { display: none !important; }
-input[type="number"]::-webkit-inner-spin-button, input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
-input[type="number"] { -moz-appearance: textfield; }
+button[data-testid="stNumberInputStepDown"] {{ display: none !important; }}
+input[type="number"]::-webkit-inner-spin-button, input[type="number"]::-webkit-outer-spin-button {{ -webkit-appearance: none; margin: 0; }}
+input[type="number"] {{ -moz-appearance: textfield; }}
 
 /* ==============================================================
    COMPACT EXPANDER FOR FORMS
    ============================================================== */
-div[data-testid="stExpander"] {
+div[data-testid="stExpander"] {{
     background: #0f172a !important;
     border: 1px solid rgba(255,255,255,0.05) !important;
     border-radius: 12px !important; box-shadow: 0 4px 15px rgba(0,0,0,0.3) !important; margin-bottom: 24px !important;
-}
-div[data-testid="stExpander"] summary {
+}}
+div[data-testid="stExpander"] summary {{
     color: #ffffff !important; font-weight: 700 !important; font-size: 1.05rem !important;
     padding: 12px 16px !important;
     background: transparent !important; border-bottom: none !important;
-}
-div[data-testid="stExpander"] summary svg { color: #ffffff !important; fill: #ffffff !important; }
-div[data-testid="stExpanderDetails"] { padding: 0 16px 16px 16px !important; }
-div[data-testid="stExpanderDetails"] div[data-testid="stForm"] { padding: 0 !important; border: none !important; box-shadow: none !important; margin-bottom: 0 !important; background: transparent !important; }
+}}
+div[data-testid="stExpander"] summary svg {{ color: #ffffff !important; fill: #ffffff !important; }}
+div[data-testid="stExpanderDetails"] {{ padding: 0 16px 16px 16px !important; }}
+div[data-testid="stExpanderDetails"] div[data-testid="stForm"] {{ padding: 0 !important; border: none !important; box-shadow: none !important; margin-bottom: 0 !important; background: transparent !important; }}
 
 /* INPUTS STYLING */
-div[data-testid="stForm"]:has(.add-tx-card) label { font-size: 0.85rem !important; color: #94a3b8 !important; padding-bottom: 2px !important; }
-div[data-testid="stForm"]:has(.add-tx-card) .stTextInput input, div[data-testid="stForm"]:has(.add-tx-card) .stNumberInput input, div[data-testid="stForm"]:has(.add-tx-card) .stDateInput input, div[data-testid="stForm"]:has(.add-tx-card) div[data-baseweb="select"] > div {
+div[data-testid="stForm"]:has(.add-tx-card) label {{ font-size: 0.85rem !important; color: #94a3b8 !important; padding-bottom: 2px !important; }}
+div[data-testid="stForm"]:has(.add-tx-card) .stTextInput input, div[data-testid="stForm"]:has(.add-tx-card) .stNumberInput input, div[data-testid="stForm"]:has(.add-tx-card) .stDateInput input, div[data-testid="stForm"]:has(.add-tx-card) div[data-baseweb="select"] > div {{
     background: rgba(255,255,255,0.03) !important;
     border: 1px solid rgba(255,255,255,0.1) !important; color: #fff !important; border-radius: 8px !important; margin-bottom: 0px !important;
-}
-div[data-testid="stForm"]:has(.add-tx-card) div[data-testid="stHorizontalBlock"]:has(> div[data-testid="column"]:nth-child(4)) { display: flex !important; gap: 12px !important; }
+}}
+div[data-testid="stForm"]:has(.add-tx-card) div[data-testid="stHorizontalBlock"]:has(> div[data-testid="column"]:nth-child(4)) {{ display: flex !important; gap: 12px !important; }}
 
 /* BEAUTIFUL BUY/SELL SWITCH */
-div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] {
+div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] {{
     background: rgba(0,0,0,0.3) !important; padding: 6px !important; border-radius: 12px !important;
     display: flex !important; flex-direction: row !important; gap: 8px !important; align-items: center !important; margin: 0 !important; height: 48px !important;
     border: 1px solid rgba(255,255,255,0.05) !important;
-}
-div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label {
+}}
+div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label {{
     margin: 0 !important; cursor: pointer !important;
     padding: 0 !important; border-radius: 8px !important; border: 1px solid transparent !important; transition: all 0.3s ease !important; background: transparent !important;
     flex: 1 !important; display: flex !important; justify-content: center !important; align-items: center !important; height: 100% !important;
-}
-div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label:hover { background: rgba(255,255,255,0.05) !important; }
-div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label > div:first-child { display: none !important; } 
-div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label p { font-weight: bold !important; font-size: 1.05rem !important; color: #94a3b8 !important; margin: 0 !important; padding: 0 !important; white-space: nowrap !important; line-height: 1 !important; }
-div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label:has(input:checked):first-child { background: rgba(0, 255, 157, 0.15) !important; border-color: #00ff9d !important; }
-div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label:has(input:checked):first-child p { color: #00ff9d !important; }
-div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label:has(input:checked):last-child { background: rgba(255, 77, 77, 0.15) !important; border-color: #ff4d4d !important; }
-div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label:has(input:checked):last-child p { color: #ff4d4d !important; }
+}}
+div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label:hover {{ background: rgba(255,255,255,0.05) !important; }}
+div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label > div:first-child {{ display: none !important; }} 
+div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label p {{ font-weight: bold !important; font-size: 1.05rem !important; color: #94a3b8 !important; margin: 0 !important; padding: 0 !important; white-space: nowrap !important; line-height: 1 !important; }}
+div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label:has(input:checked):first-child {{ background: rgba(0, 255, 157, 0.15) !important; border-color: #00ff9d !important; }}
+div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label:has(input:checked):first-child p {{ color: #00ff9d !important; }}
+div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label:has(input:checked):last-child {{ background: rgba(255, 77, 77, 0.15) !important; border-color: #ff4d4d !important; }}
+div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label:has(input:checked):last-child p {{ color: #ff4d4d !important; }}
 
-div[data-testid="stForm"]:has(.add-tx-card) .stButton { display: flex !important; justify-content: flex-end !important; align-items: center !important; margin: 0 !important; padding: 0 !important; width: 100% !important; }
-div[data-testid="stForm"]:has(.add-tx-card) .stButton > button { background: #1e2a44 !important; color: #e0e0e0 !important; padding: 0 24px !important; border-radius: 10px !important; font-size: 1.05rem !important; font-weight: 700 !important; box-shadow: 0 4px 15px rgba(0,0,0,0.25) !important; transition: all 0.3s ease !important; border: none !important; margin: 0 !important; width: auto !important; height: 48px !important; min-height: 48px !important; }
-div[data-testid="stForm"]:has(.add-tx-card) .stButton > button:hover { transform: translateY(-2px) !important; box-shadow: 0 8px 20px rgba(255, 255, 255, 0.2) !important; color: white !important; }
+div[data-testid="stForm"]:has(.add-tx-card) .stButton {{ display: flex !important; justify-content: flex-end !important; align-items: center !important; margin: 0 !important; padding: 0 !important; width: 100% !important; }}
+div[data-testid="stForm"]:has(.add-tx-card) .stButton > button {{ background: #1e2a44 !important; color: #e0e0e0 !important; padding: 0 24px !important; border-radius: 10px !important; font-size: 1.05rem !important; font-weight: 700 !important; box-shadow: 0 4px 15px rgba(0,0,0,0.25) !important; transition: all 0.3s ease !important; border: none !important; margin: 0 !important; width: auto !important; height: 48px !important; min-height: 48px !important; }}
+div[data-testid="stForm"]:has(.add-tx-card) .stButton > button:hover {{ transform: translateY(-2px) !important; box-shadow: 0 8px 20px rgba(255, 255, 255, 0.2) !important; color: white !important; }}
 
 /* ==============================================================
    SMOOTH EDIT / DELETE PANEL ANIMATION
    ============================================================== */
-@keyframes slideDownFade {
-    from { opacity: 0; transform: translateY(-10px); }
-    to { opacity: 1; transform: translateY(0); }
-}
-.edit-form-container {
+@keyframes slideDownFade {{
+    from {{ opacity: 0; transform: translateY(-10px); }}
+    to {{ opacity: 1; transform: translateY(0); }}
+}}
+.edit-form-container {{
     animation: slideDownFade 0.3s ease-out forwards;
-}
+}}
 
 /* ==============================================================
    COMPACT TRANSACTION ROWS & INLINE ACTION BUTTONS
    ============================================================== */
-div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row) {
+div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row) {{
     background: #0f172a !important;
     border: 1px solid rgba(255,255,255,0.05) !important; 
     border-radius: 12px !important; 
     padding: 8px 12px !important; 
     margin-bottom: 8px !important; 
     transition: background 0.3s ease;
-}
-div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row):hover { background: rgba(30, 41, 59, 0.8) !important; }
+}}
+div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row):hover {{ background: rgba(30, 41, 59, 0.8) !important; }}
 
-/* OVERRIDE STREAMLIT MOBILE COLUMN STACKING FOR TX ROWS BRUTALLY */
-div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row) div[data-testid="stHorizontalBlock"] {
+/* ABSOLUTE FORCE: HORIZONTAL BLOCK NEVER WRAPS */
+div[data-testid="stHorizontalBlock"]:has(.tx-row) {{
     display: flex !important;
     flex-direction: row !important;
     flex-wrap: nowrap !important;
     align-items: center !important;
-    gap: 8px !important;
-}
+    gap: 6px !important;
+    width: 100% !important;
+}}
 
-/* Brutal override for inner columns to prevent mobile flex-basis 100% wrapping */
-div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row) div[data-testid="column"] {
+/* Override Streamlit's native Mobile column stack */
+div[data-testid="stHorizontalBlock"]:has(.tx-row) > div[data-testid="column"] {{
     width: auto !important;
     min-width: 0 !important;
     flex-basis: auto !important;
     margin-bottom: 0 !important;
-}
+}}
 
-/* Left side takes most space */
-div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row) div[data-testid="column"]:nth-child(1) {
+/* Content Column */
+div[data-testid="stHorizontalBlock"]:has(.tx-row) > div[data-testid="column"]:nth-child(1) {{
     flex: 1 1 0% !important;
-}
+    width: 100% !important;
+}}
 
-/* Right side buttons take fixed tiny space natively without wrapping */
-div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row) div[data-testid="column"]:nth-child(2),
-div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row) div[data-testid="column"]:nth-child(3) {
-    flex: 0 0 32px !important;
-    width: 32px !important;
+/* Action Button Columns */
+div[data-testid="stHorizontalBlock"]:has(.tx-row) > div[data-testid="column"]:nth-child(2),
+div[data-testid="stHorizontalBlock"]:has(.tx-row) > div[data-testid="column"]:nth-child(3) {{
+    flex: 0 0 34px !important;
+    width: 34px !important;
+    min-width: 34px !important;
     padding: 0 !important;
     display: flex !important;
     justify-content: center !important;
     align-items: center !important;
-}
+}}
 
-/* SLEEK NATIVE BUTTON STYLING */
-div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row) div[data-testid="column"]:nth-child(2) button,
-div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row) div[data-testid="column"]:nth-child(3) button {
+/* NAKED BUTTON STYLING */
+div[data-testid="stHorizontalBlock"]:has(.tx-row) button[kind="secondary"] {{
     background: transparent !important;
     border: none !important;
     box-shadow: none !important;
     color: #64748b !important;
     padding: 0px !important;
     margin: 0px !important;
-    min-height: 32px !important;
-    height: 32px !important;
-    width: 32px !important;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    transition: all 0.2s ease;
+    min-height: 34px !important;
+    height: 34px !important;
+    width: 34px !important;
+    display: flex !important;
+    justify-content: center !important;
+    align-items: center !important;
+    transition: all 0.2s ease !important;
     border-radius: 8px !important;
-}
-div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row) div[data-testid="column"]:nth-child(2) button:hover {
+}}
+div[data-testid="stHorizontalBlock"]:has(.tx-row) > div[data-testid="column"]:nth-child(2) button[kind="secondary"]:hover {{
     color: #00ff9d !important;
     background: rgba(0, 255, 157, 0.1) !important;
     transform: scale(1.05);
-}
-div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row) div[data-testid="column"]:nth-child(3) button:hover {
+}}
+div[data-testid="stHorizontalBlock"]:has(.tx-row) > div[data-testid="column"]:nth-child(3) button[kind="secondary"]:hover {{
     color: #ff4d4d !important;
     background: rgba(255, 77, 77, 0.1) !important;
     transform: scale(1.05);
-}
-div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row) div[data-testid="column"] button p {
+}}
+div[data-testid="stHorizontalBlock"]:has(.tx-row) button p {{
     font-size: 1.1rem !important;
     margin: 0 !important;
-}
+}}
 
 /* Mobile Adjustments */
-@media (max-width: 768px) {
-    .glossy-header { margin-top: 0px !important; margin-bottom: 16px !important; padding: 20px 16px !important; font-size: 22px !important; min-height: 90px; }
-    .home-header { margin-bottom: 0 !important; }
+@media (max-width: 768px) {{
+    .glossy-header {{ margin-top: 0px !important; margin-bottom: 16px !important; padding: 20px 16px !important; font-size: 22px !important; min-height: 90px; }}
+    .home-header {{ margin-bottom: 0 !important; }}
     
-    div[data-testid="stForm"]:has(.add-tx-card) input { padding: 6px !important; font-size: 0.95rem !important; }
-    div[data-testid="stForm"]:has(.add-tx-card) .stButton { width: 100% !important; justify-content: center !important; }
-    div[data-testid="stForm"]:has(.add-tx-card) .stButton > button { width: 100% !important; max-width: none !important; }
+    div[data-testid="stForm"]:has(.add-tx-card) input {{ padding: 6px !important; font-size: 0.95rem !important; }}
+    div[data-testid="stForm"]:has(.add-tx-card) .stButton {{ width: 100% !important; justify-content: center !important; }}
+    div[data-testid="stForm"]:has(.add-tx-card) .stButton > button {{ width: 100% !important; max-width: none !important; }}
 
-    div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row) {
+    div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row) {{
         padding: 8px 10px !important;
-    }
+    }}
     
     /* Dashboard Mobile Stats */
-    .stats-layer-inner { gap: 6px !important; }
-    .stats-layer { margin-top: -60px !important; margin-bottom: 18px; } 
-    .glossy-box.swapped { height: 80px !important; min-height: 80px !important; max-height: 80px !important; padding: 0 !important; min-width: 0 !important; }
-    .dash-value { font-size: clamp(11px, 3.5vw, 15px) !important; top: 24px !important; } 
-    .dash-label { font-size: clamp(8px, 2.5vw, 10px) !important; bottom: 8px !important; white-space: nowrap !important; letter-spacing: 0.5px !important; }
+    .stats-layer-inner {{ gap: 6px !important; }}
+    .stats-layer {{ margin-top: -60px !important; margin-bottom: 18px; }} 
+    .glossy-box.swapped {{ height: 80px !important; min-height: 80px !important; max-height: 80px !important; padding: 0 !important; min-width: 0 !important; }}
+    .dash-value {{ font-size: clamp(11px, 3.5vw, 15px) !important; top: 24px !important; }} 
+    .dash-label {{ font-size: clamp(8px, 2.5vw, 10px) !important; bottom: 8px !important; white-space: nowrap !important; letter-spacing: 0.5px !important; }}
     
-    .usdc-banner { padding: 8px 14px; width: 92%; margin: 4px auto 8px auto !important; }
-    .usdc-banner-title { font-size: 0.95rem; }
-    .usdc-banner-subtitle { font-size: 0.7rem; }
-    .usdc-banner-amount { font-size: 1.1rem; }
-    .stable-dropdown-wrapper { width: 92%; margin: -8px auto 12px auto !important; }
-}
+    .usdc-banner {{ padding: 8px 14px; width: 92%; margin: 4px auto 8px auto !important; }}
+    .usdc-banner-title {{ font-size: 0.95rem; }}
+    .usdc-banner-subtitle {{ font-size: 0.7rem; }}
+    .usdc-banner-amount {{ font-size: 1.1rem; }}
+    .stable-dropdown-wrapper {{ width: 92%; margin: -8px auto 12px auto !important; }}
+}}
 </style>
 
-<div id="app-splash">
+<div id="app-splash" style="{splash_style}">
     <div class="splash-logo">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+        {DASHBOARD_ICON}
     </div>
 </div>
 """, unsafe_allow_html=True)
-
-# ====================== SVG ICONS ======================
-DASHBOARD_ICON = '''<svg xmlns="http://www.w3.org/2000/svg" width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="#00ff9d" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>'''
-CRYPTO_ICON = '''<svg xmlns="http://www.w3.org/2000/svg" width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="#00ff9d" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M14.5 8.5L9.5 13.5"/><path d="M9.5 8.5L14.5 13.5"/></svg>'''
-FIAT_ICON = '''<svg xmlns="http://www.w3.org/2000/svg" width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="#00ff9d" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M6 8h12"/><path d="M6 12h12"/><path d="M6 16h12"/></svg>'''
-EYE_CLOSED = '''<svg class="eye-closed" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>'''
-EYE_OPEN = '''<svg class="eye-open" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>'''
-EXTERNAL_LINK_ICON = '''<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>'''
-TV_ICON = '''<svg xmlns="http://www.w3.org/2000/svg" width="18" height="14" viewBox="0 0 28 21" fill="currentColor"><path d="M12 21H8V3h4v18zm1.5-6h3.5l3.5-4.5V21h-7v-6zM28 21h-4l-6.5-9L21 6l7 10v5z"/></svg>'''
-STABLECOIN_ICON = '''<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#00ff9d" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="16"></line><line x1="8" y1="12" x2="16" y2="12"></line></svg>'''
 
 DATA_DIR = Path("data")
 DATA_DIR.mkdir(exist_ok=True)
@@ -1043,7 +1048,7 @@ if 'delete_fiat_id' not in st.session_state:
     st.session_state.delete_fiat_id = None
 
 def glossy_header(title: str, icon_svg: str):
-    html = f"""<div class="glossy-header">{icon_svg}<span style="margin-left:12px;">{title}</span></div>"""
+    html = f"""<div class="glossy-header"><div style="width:38px;height:38px;">{icon_svg}</div><span style="margin-left:12px;">{title}</span></div>"""
     st.markdown(html, unsafe_allow_html=True)
 
 # ====================== APP NAVIGATION DOCK ======================
@@ -1072,18 +1077,24 @@ components.html("""
         
         // --- ADAPTIVE SPLASH HIDE & BULLETPROOF EVENT ATTACHMENT ---
         function initApp() {
+            // Check if Python has finished executing the full page
+            const pythonFinished = parentDoc.getElementById('python-finished');
+            if (!pythonFinished) return false; // Wait until python hits the very bottom
+
             const tabs = parentDoc.querySelectorAll('button[data-baseweb="tab"]');
             if (!tabs || tabs.length < 3) return false;
 
+            // Python is finished and tabs exist, we are fully loaded! Fade out splash.
             const splash = parentDoc.getElementById('app-splash');
-            if (splash) {
+            if (splash && splash.style.display !== 'none') {
                 setTimeout(() => {
                     splash.style.opacity = '0';
                     splash.style.visibility = 'hidden';
-                    splash.style.pointerEvents = 'none';
-                }, 200); 
+                    setTimeout(() => { splash.style.display = 'none'; }, 500);
+                }, 100); // Tiny buffer for final paint
             }
 
+            // Only attach event listeners ONCE per page load
             if (parentDoc.__portfolioInitialized) {
                 updateActiveNav();
                 return true;
@@ -1152,10 +1163,8 @@ components.html("""
 
         let attempts = 0;
         const interval = setInterval(() => {
-            if (initApp() || attempts > 50) {
+            if (initApp() || attempts > 100) {
                 clearInterval(interval);
-                const splash = parentDoc.getElementById('app-splash');
-                if(splash) { splash.style.opacity = '0'; splash.style.visibility = 'hidden'; }
             }
             attempts++;
         }, 100);
@@ -1265,7 +1274,7 @@ with tab_home:
 <div class="dashboard-wrapper">
 <label for="dash-toggle" class="glossy-header-label">
 <div class="glossy-header home-header">
-{DASHBOARD_ICON}<span style="margin-left:12px;">Overview</span>
+<div style="width:38px;height:38px;">{DASHBOARD_ICON}</div><span style="margin-left:12px;">Overview</span>
 <div class="pull-indicator">
 {EYE_CLOSED}
 {EYE_OPEN}
@@ -2568,7 +2577,6 @@ with tab_home:
             const dashPnlPctStr = (totalPnL >= 0 ? '▲ ' : '▼ ') + Math.abs(totalPnLPct).toFixed(2) + '%';
             const dashColor = totalPnL >= 0 ? '#00ff9d' : '#ff4d4d';
             
-            const parentDoc = window.parent.document;
             const dValue = parentDoc.getElementById('dash-total-value');
             const dPnl = parentDoc.getElementById('dash-pnl');
             const dPnlPct = parentDoc.getElementById('dash-pnl-pct');
@@ -2850,6 +2858,161 @@ with tab_home:
 with tab_crypto:
     glossy_header("Crypto Transactions", CRYPTO_ICON)
 
+    st.markdown("""
+    <style>
+    /* ==============================================================
+       COMPACT EXPANDER FOR FORMS
+       ============================================================== */
+    div[data-testid="stExpander"] {
+        background: #0f172a !important;
+        border: 1px solid rgba(255,255,255,0.05) !important;
+        border-radius: 12px !important; box-shadow: 0 4px 15px rgba(0,0,0,0.3) !important; margin-bottom: 24px !important;
+    }
+    div[data-testid="stExpander"] summary {
+        color: #ffffff !important; font-weight: 700 !important; font-size: 1.05rem !important;
+        padding: 12px 16px !important; background: transparent !important; border-bottom: none !important;
+    }
+    div[data-testid="stExpander"] summary svg { color: #ffffff !important; fill: #ffffff !important; }
+    div[data-testid="stExpanderDetails"] { padding: 0 16px 16px 16px !important; }
+    div[data-testid="stExpanderDetails"] div[data-testid="stForm"] { padding: 0 !important; border: none !important; box-shadow: none !important; margin-bottom: 0 !important; background: transparent !important; }
+
+    /* INPUTS STYLING */
+    div[data-testid="stForm"]:has(.add-tx-card) label { font-size: 0.85rem !important; color: #94a3b8 !important; padding-bottom: 2px !important; }
+    div[data-testid="stForm"]:has(.add-tx-card) .stTextInput input, div[data-testid="stForm"]:has(.add-tx-card) .stNumberInput input, div[data-testid="stForm"]:has(.add-tx-card) .stDateInput input, div[data-testid="stForm"]:has(.add-tx-card) div[data-baseweb="select"] > div {
+        background: rgba(255,255,255,0.03) !important;
+        border: 1px solid rgba(255,255,255,0.1) !important; color: #fff !important; border-radius: 8px !important; margin-bottom: 0px !important;
+    }
+    div[data-testid="stForm"]:has(.add-tx-card) div[data-testid="stHorizontalBlock"]:has(> div[data-testid="column"]:nth-child(4)) { display: flex !important; gap: 12px !important; }
+
+    /* BEAUTIFUL BUY/SELL SWITCH */
+    div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] {
+        background: rgba(0,0,0,0.3) !important; padding: 6px !important; border-radius: 12px !important; display: flex !important; flex-direction: row !important; gap: 8px !important; align-items: center !important; margin: 0 !important; height: 48px !important; border: 1px solid rgba(255,255,255,0.05) !important;
+    }
+    div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label {
+        margin: 0 !important; cursor: pointer !important; padding: 0 !important; border-radius: 8px !important; border: 1px solid transparent !important; transition: all 0.3s ease !important; background: transparent !important; flex: 1 !important; display: flex !important; justify-content: center !important; align-items: center !important; height: 100% !important;
+    }
+    div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label:hover { background: rgba(255,255,255,0.05) !important; }
+    div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label > div:first-child { display: none !important; } 
+    div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label p { font-weight: bold !important; font-size: 1.05rem !important; color: #94a3b8 !important; margin: 0 !important; padding: 0 !important; white-space: nowrap !important; line-height: 1 !important; }
+    div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label:has(input:checked):first-child { background: rgba(0, 255, 157, 0.15) !important; border-color: #00ff9d !important; }
+    div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label:has(input:checked):first-child p { color: #00ff9d !important; }
+    div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label:has(input:checked):last-child { background: rgba(255, 77, 77, 0.15) !important; border-color: #ff4d4d !important; }
+    div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label:has(input:checked):last-child p { color: #ff4d4d !important; }
+
+    div[data-testid="stForm"]:has(.add-tx-card) .stButton { display: flex !important; justify-content: flex-end !important; align-items: center !important; margin: 0 !important; padding: 0 !important; width: 100% !important; }
+    div[data-testid="stForm"]:has(.add-tx-card) .stButton > button { background: #1e2a44 !important; color: #e0e0e0 !important; padding: 0 24px !important; border-radius: 10px !important; font-size: 1.05rem !important; font-weight: 700 !important; box-shadow: 0 4px 15px rgba(0,0,0,0.25) !important; transition: all 0.3s ease !important; border: none !important; margin: 0 !important; width: auto !important; height: 48px !important; min-height: 48px !important; }
+    div[data-testid="stForm"]:has(.add-tx-card) .stButton > button:hover { transform: translateY(-2px) !important; box-shadow: 0 8px 20px rgba(255, 255, 255, 0.2) !important; color: white !important; }
+
+    /* ==============================================================
+       COMPACT TRANSACTION ROWS & INLINE ACTION BUTTONS
+       ============================================================== */
+    div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row) {
+        background: #0f172a !important;
+        border: 1px solid rgba(255,255,255,0.05) !important; 
+        border-radius: 12px !important; 
+        padding: 8px 12px !important; 
+        margin-bottom: 8px !important; 
+        transition: background 0.3s ease;
+    }
+    div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row):hover { background: rgba(30, 41, 59, 0.8) !important; }
+
+    /* ABSOLUTE FORCE: HORIZONTAL BLOCK NEVER WRAPS */
+    div[data-testid="stHorizontalBlock"]:has(.tx-row) {
+        display: flex !important;
+        flex-direction: row !important;
+        flex-wrap: nowrap !important;
+        align-items: center !important;
+        gap: 6px !important;
+        width: 100% !important;
+    }
+
+    /* Override Streamlit's native Mobile column stack */
+    div[data-testid="stHorizontalBlock"]:has(.tx-row) > div[data-testid="column"] {
+        width: auto !important;
+        min-width: 0 !important;
+        flex-basis: auto !important;
+        margin-bottom: 0 !important;
+    }
+
+    /* Content Column */
+    div[data-testid="stHorizontalBlock"]:has(.tx-row) > div[data-testid="column"]:nth-child(1) {
+        flex: 1 1 0% !important;
+        width: 100% !important;
+    }
+
+    /* Action Button Columns */
+    div[data-testid="stHorizontalBlock"]:has(.tx-row) > div[data-testid="column"]:nth-child(2),
+    div[data-testid="stHorizontalBlock"]:has(.tx-row) > div[data-testid="column"]:nth-child(3) {
+        flex: 0 0 34px !important;
+        width: 34px !important;
+        min-width: 34px !important;
+        padding: 0 !important;
+        display: flex !important;
+        justify-content: center !important;
+        align-items: center !important;
+    }
+
+    /* NAKED BUTTON STYLING */
+    div[data-testid="stHorizontalBlock"]:has(.tx-row) button[kind="secondary"] {
+        background: transparent !important;
+        border: none !important;
+        box-shadow: none !important;
+        color: #64748b !important;
+        padding: 0px !important;
+        margin: 0px !important;
+        min-height: 34px !important;
+        height: 34px !important;
+        width: 34px !important;
+        display: flex !important;
+        justify-content: center !important;
+        align-items: center !important;
+        transition: all 0.2s ease !important;
+        border-radius: 8px !important;
+    }
+    div[data-testid="stHorizontalBlock"]:has(.tx-row) > div[data-testid="column"]:nth-child(2) button[kind="secondary"]:hover {
+        color: #00ff9d !important;
+        background: rgba(0, 255, 157, 0.1) !important;
+        transform: scale(1.05);
+    }
+    div[data-testid="stHorizontalBlock"]:has(.tx-row) > div[data-testid="column"]:nth-child(3) button[kind="secondary"]:hover {
+        color: #ff4d4d !important;
+        background: rgba(255, 77, 77, 0.1) !important;
+        transform: scale(1.05);
+    }
+    div[data-testid="stHorizontalBlock"]:has(.tx-row) button p {
+        font-size: 1.1rem !important;
+        margin: 0 !important;
+    }
+
+    /* Mobile Adjustments */
+    @media (max-width: 768px) {
+        .glossy-header { margin-top: 0px !important; margin-bottom: 16px !important; padding: 20px 16px !important; font-size: 22px !important; min-height: 90px; }
+        .home-header { margin-bottom: 0 !important; }
+        
+        div[data-testid="stForm"]:has(.add-tx-card) input { padding: 6px !important; font-size: 0.95rem !important; }
+        div[data-testid="stForm"]:has(.add-tx-card) .stButton { width: 100% !important; justify-content: center !important; }
+        div[data-testid="stForm"]:has(.add-tx-card) .stButton > button { width: 100% !important; max-width: none !important; }
+
+        div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row) {
+            padding: 8px 10px !important;
+        }
+        
+        /* Dashboard Mobile Stats */
+        .stats-layer-inner { gap: 6px !important; }
+        .stats-layer { margin-top: -60px !important; margin-bottom: 18px; } 
+        .glossy-box.swapped { height: 80px !important; min-height: 80px !important; max-height: 80px !important; padding: 0 !important; min-width: 0 !important; }
+        .dash-value { font-size: clamp(11px, 3.5vw, 15px) !important; top: 24px !important; } 
+        .dash-label { font-size: clamp(8px, 2.5vw, 10px) !important; bottom: 8px !important; white-space: nowrap !important; letter-spacing: 0.5px !important; }
+        
+        .usdc-banner { padding: 8px 14px; width: 92%; margin: 4px auto 8px auto !important; }
+        .usdc-banner-title { font-size: 0.95rem; }
+        .usdc-banner-subtitle { font-size: 0.7rem; }
+        .usdc-banner-amount { font-size: 1.1rem; }
+        .stable-dropdown-wrapper { width: 92%; margin: -8px auto 12px auto !important; }
+    }
+    </style>
+    """, unsafe_allow_html=True)
+
     # 1. ADD NEW TRANSACTION CARD (TUCKED IN EXPANDER)
     with st.expander("Add Transaction", expanded=False):
         with st.form("add_crypto", border=False):
@@ -2984,7 +3147,6 @@ with tab_crypto:
                 date_str = format_datum(r['Datum'])
 
                 with st.container(border=True):
-                    # 3-Column inline layout forced via CSS overrides to stay intact on mobile without wrapping
                     col_html, col_edit, col_del = st.columns([0.80, 0.10, 0.10])
                     
                     with col_html:
@@ -3188,3 +3350,6 @@ with tab_fiat:
                             st.session_state.delete_fiat_id = orig_idx
                             st.session_state.edit_fiat_id = None
                             st.rerun()
+
+# --- PYTHON FINISHED MARKER (DO NOT REMOVE) ---
+st.markdown('<div id="python-finished" style="display:none;"></div>', unsafe_allow_html=True)
