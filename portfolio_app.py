@@ -315,7 +315,7 @@ div[data-testid="stTabs"] > div[role="tabpanel"] {
     align-items: center;
     gap: 12px;
 }
-.usdc-banner-left img {
+.usdc-banner-left img, .usdc-banner-left svg {
     width: 28px;
     height: 28px;
     border-radius: 50%;
@@ -378,11 +378,14 @@ EYE_CLOSED = '''<svg class="eye-closed" xmlns="http://www.w3.org/2000/svg" width
 EYE_OPEN = '''<svg class="eye-open" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>'''
 EXTERNAL_LINK_ICON = '''<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>'''
 TV_ICON = '''<svg xmlns="http://www.w3.org/2000/svg" width="18" height="14" viewBox="0 0 28 21" fill="currentColor"><path d="M12 21H8V3h4v18zm1.5-6h3.5l3.5-4.5V21h-7v-6zM28 21h-4l-6.5-9L21 6l7 10v5z"/></svg>'''
+STABLECOIN_ICON = '''<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#00ff9d" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="16"></line><line x1="8" y1="12" x2="16" y2="12"></line></svg>'''
 
 DATA_DIR = Path("data")
 DATA_DIR.mkdir(exist_ok=True)
 CRYPTO_JSON = DATA_DIR / "crypto_transactions.json"
 FIAT_JSON = DATA_DIR / "fiat_transactions.json"
+
+STABLECOINS_LIST = ["USDT", "USDC", "DAI", "FDUSD", "BUSD", "USDD"]
 
 # ====================== DATE HELPERS ======================
 def format_datum(datum_val):
@@ -409,38 +412,50 @@ def parse_excel_date(x):
 # ====================== INITIAL DATA ======================
 def get_initial_crypto_df():
     return pd.DataFrame([
-        {"Datum": 46098, "USDC": 8.33, "Ticker": "HBAR", "Amount": 83.60159414, "Price": 0.09963924834},
-        {"Datum": 46098, "USDC": 8.33, "Ticker": "XRP", "Amount": 5.51291403, "Price": 1.510997624},
-        {"Datum": 46098, "USDC": 8.33, "Ticker": "BNB", "Amount": 0.01246729, "Price": 668.1484108},
-        {"Datum": 46098, "USDC": 8.33, "Ticker": "LINK", "Amount": 0.84859547, "Price": 9.816220207},
-        {"Datum": 46098, "USDC": 8.33, "Ticker": "TRX", "Amount": 27.22422112, "Price": 0.3059775324},
-        {"Datum": 46099, "USDC": 50.0, "Ticker": "BTC", "Amount": 0.00067193, "Price": 74412.51321},
-        {"Datum": 46099, "USDC": 15.0, "Ticker": "ETH", "Amount": 0.00642259, "Price": 2335.506392},
-        {"Datum": 46099, "USDC": 10.0, "Ticker": "SOL", "Amount": 0.1055771, "Price": 94.71750976},
-        {"Datum": 46100, "USDC": 50.0, "Ticker": "BTC", "Amount": 0.00071602, "Price": 69830.45166},
-        {"Datum": 46100, "USDC": 15.0, "Ticker": "ETH", "Amount": 0.00707709, "Price": 2119.515224},
-        {"Datum": 46100, "USDC": 10.0, "Ticker": "SOL", "Amount": 0.11363518, "Price": 88.00091662},
+        {"Datum": 46098, "Stable_Amt": 8.33, "Stable_Ticker": "USDT", "Ticker": "HBAR", "Amount": 83.60159414, "Price": 0.09963924834},
+        {"Datum": 46098, "Stable_Amt": 8.33, "Stable_Ticker": "USDC", "Ticker": "XRP", "Amount": 5.51291403, "Price": 1.510997624},
+        {"Datum": 46098, "Stable_Amt": 8.33, "Stable_Ticker": "USDT", "Ticker": "BNB", "Amount": 0.01246729, "Price": 668.1484108},
+        {"Datum": 46098, "Stable_Amt": 8.33, "Stable_Ticker": "USDC", "Ticker": "LINK", "Amount": 0.84859547, "Price": 9.816220207},
+        {"Datum": 46098, "Stable_Amt": 8.33, "Stable_Ticker": "USDT", "Ticker": "TRX", "Amount": 27.22422112, "Price": 0.3059775324},
+        {"Datum": 46099, "Stable_Amt": 50.0, "Stable_Ticker": "USDT", "Ticker": "BTC", "Amount": 0.00067193, "Price": 74412.51321},
+        {"Datum": 46099, "Stable_Amt": 15.0, "Stable_Ticker": "USDC", "Ticker": "ETH", "Amount": 0.00642259, "Price": 2335.506392},
+        {"Datum": 46099, "Stable_Amt": 10.0, "Stable_Ticker": "USDT", "Ticker": "SOL", "Amount": 0.1055771, "Price": 94.71750976},
+        {"Datum": 46100, "Stable_Amt": 50.0, "Stable_Ticker": "USDT", "Ticker": "BTC", "Amount": 0.00071602, "Price": 69830.45166},
+        {"Datum": 46100, "Stable_Amt": 15.0, "Stable_Ticker": "USDC", "Ticker": "ETH", "Amount": 0.00707709, "Price": 2119.515224},
+        {"Datum": 46100, "Stable_Amt": 10.0, "Stable_Ticker": "USDT", "Ticker": "SOL", "Amount": 0.11363518, "Price": 88.00091662},
     ])
 
 def get_initial_fiat_df():
     return pd.DataFrame([
-        {"Datum": 46098, "CZK": 1010.16, "EUR": 40.0, "Fee": 1.0, "CZK/EUR": 25.254, "USDC": 44.67, "NI": "CZK", "GG": "", "ER": "8972.72"},
-        {"Datum": 46098, "CZK": 3156.76, "EUR": 125.0, "Fee": 1.0, "CZK/EUR": 25.25408, "USDC": 142.03, "NI": "USDC", "GG": "", "ER": "402.308"},
-        {"Datum": 46098, "CZK": 4174.67, "EUR": 165.0, "Fee": 1.0, "CZK/EUR": 25.3010303, "USDC": 188.188, "NI": "EUR", "GG": "", "ER": "355"},
-        {"Datum": 46099, "CZK": 631.13, "EUR": 25.0, "Fee": 1.0, "CZK/EUR": 25.2452, "USDC": 27.42, "NI": "FEEs", "GG": "4", "ER": "101.0543103"},
+        {"Datum": 46098, "CZK": 1010.16, "EUR": 40.0, "Fee": 1.0, "CZK/EUR": 25.254, "Stable_Amt": 44.67, "Stable_Ticker": "USDT", "NI": "CZK", "GG": "", "ER": "8972.72"},
+        {"Datum": 46098, "CZK": 3156.76, "EUR": 125.0, "Fee": 1.0, "CZK/EUR": 25.25408, "Stable_Amt": 142.03, "Stable_Ticker": "USDC", "NI": "USDC", "GG": "", "ER": "402.308"},
+        {"Datum": 46098, "CZK": 4174.67, "EUR": 165.0, "Fee": 1.0, "CZK/EUR": 25.3010303, "Stable_Amt": 188.188, "Stable_Ticker": "USDT", "NI": "EUR", "GG": "", "ER": "355"},
+        {"Datum": 46099, "CZK": 631.13, "EUR": 25.0, "Fee": 1.0, "CZK/EUR": 25.2452, "Stable_Amt": 27.42, "Stable_Ticker": "USDC", "NI": "FEEs", "GG": "4", "ER": "101.0543103"},
     ])
 
 # ====================== LOAD / SAVE ======================
 def load_or_init_crypto():
     if CRYPTO_JSON.exists():
-        return pd.read_json(CRYPTO_JSON)
+        df = pd.read_json(CRYPTO_JSON)
+        # Handle migration from USDC to generalized Stable_Amt
+        if 'USDC' in df.columns and 'Stable_Amt' not in df.columns:
+            df.rename(columns={'USDC': 'Stable_Amt'}, inplace=True)
+        if 'Stable_Ticker' not in df.columns:
+            df['Stable_Ticker'] = 'USDC'
+        return df
     df = get_initial_crypto_df()
     save_crypto(df)
     return df
 
 def load_or_init_fiat():
     if FIAT_JSON.exists():
-        return pd.read_json(FIAT_JSON)
+        df = pd.read_json(FIAT_JSON)
+        # Handle migration from USDC to generalized Stable_Amt
+        if 'USDC' in df.columns and 'Stable_Amt' not in df.columns:
+            df.rename(columns={'USDC': 'Stable_Amt'}, inplace=True)
+        if 'Stable_Ticker' not in df.columns:
+            df['Stable_Ticker'] = 'USDC'
+        return df
     df = get_initial_fiat_df()
     save_fiat(df)
     return df
@@ -455,7 +470,7 @@ def save_fiat(df):
 CRYPTOCOMPARE_SYMBOL_MAP = {
     'BTC': 'BTC', 'ETH': 'ETH', 'SOL': 'SOL', 'HBAR': 'HBAR',
     'XRP': 'XRP', 'BNB': 'BNB', 'TRX': 'TRX', 'LINK': 'LINK',
-    'SUI': 'SUI', 'USDC': 'USDC',
+    'SUI': 'SUI', 'USDC': 'USDC', 'USDT': 'USDT'
 }
 
 # ====================== HELPER: RETRY WRAPPER ======================
@@ -481,8 +496,8 @@ def get_with_retry(url: str, headers: dict, timeout: int = 12, retries: int = 4)
 
 # ====================== NETWORK FETCHING ======================
 def get_all_cryptocompare_prices(tickers: tuple, refresh_key=0):
-    prices = {"USDC": 1.0}
-    symbols = [CRYPTOCOMPARE_SYMBOL_MAP.get(t.upper()) for t in tickers if t.upper() != "USDC"]
+    prices = {"STABLES": 1.0}
+    symbols = [CRYPTOCOMPARE_SYMBOL_MAP.get(t.upper()) for t in tickers if t.upper() != "STABLES"]
     symbols = [s for s in symbols if s]
     if not symbols: return prices
     try:
@@ -505,7 +520,7 @@ def fetch_all_historical_data(coins_tuple: tuple, limit: int, refresh_key: int):
     headers = {"User-Agent": "Mozilla/5.0 (compatible; StreamlitPortfolio/1.0)"}
     
     def fetch_coin(coin):
-        if coin.upper() == "USDC": return coin, {}
+        if coin.upper() == "STABLES": return coin, {}
         sym = CRYPTOCOMPARE_SYMBOL_MAP.get(coin.upper(), coin.upper())
         url = f"https://min-api.cryptocompare.com/data/v2/histoday?fsym={sym}&tsym=USD&limit={limit}"
         data = get_with_retry(url, headers)
@@ -555,18 +570,18 @@ def build_portfolio_history(crypto_df, fiat_df, last_prices, hist_dict):
     fiat = fiat_df.copy()
     if not fiat.empty:
         fiat['Date'] = fiat['Datum'].apply(parse_excel_date)
-        daily_fiat_usdc = fiat.groupby('Date')['USDC'].sum()
+        daily_fiat_stable = fiat.groupby('Date')['Stable_Amt'].sum()
     else:
-        daily_fiat_usdc = pd.Series(dtype=float)
+        daily_fiat_stable = pd.Series(dtype=float)
 
     crypto = crypto_df.copy()
     if not crypto.empty:
         crypto['Date'] = crypto['Datum'].apply(parse_excel_date)
-        daily_crypto_spent = crypto[crypto['Ticker'].str.upper() != 'USDC'].groupby('Date')['USDC'].sum()
+        daily_crypto_spent = crypto[crypto['Ticker'].str.upper() != 'STABLES'].groupby('Date')['Stable_Amt'].sum()
     else:
         daily_crypto_spent = pd.Series(dtype=float)
 
-    all_dates = sorted(set(daily_fiat_usdc.index) | set(crypto['Date'].dropna() if not crypto.empty else []))
+    all_dates = sorted(set(daily_fiat_stable.index) | set(crypto['Date'].dropna() if not crypto.empty else []))
     if not all_dates: return [], "", pd.DataFrame()
     
     min_date = min(all_dates)
@@ -574,16 +589,16 @@ def build_portfolio_history(crypto_df, fiat_df, last_prices, hist_dict):
     if min_date > today: min_date = today
     date_range = pd.date_range(start=min_date, end=today).date
 
-    daily_fiat_usdc = daily_fiat_usdc.reindex(date_range, fill_value=0)
-    cum_fiat_usdc = daily_fiat_usdc.cumsum()
+    daily_fiat_stable = daily_fiat_stable.reindex(date_range, fill_value=0)
+    cum_fiat_stable = daily_fiat_stable.cumsum()
 
     daily_crypto_spent = daily_crypto_spent.reindex(date_range, fill_value=0)
     cum_crypto_spent = daily_crypto_spent.cumsum()
 
-    cum_unused_usdc = cum_fiat_usdc - cum_crypto_spent
+    cum_unused_stable = cum_fiat_stable - cum_crypto_spent
 
     if not crypto.empty:
-        crypto_assets = crypto[crypto['Ticker'].str.upper() != 'USDC']
+        crypto_assets = crypto[crypto['Ticker'].str.upper() != 'STABLES']
         if not crypto_assets.empty:
             holdings = crypto_assets.groupby(['Date', 'Ticker'])['Amount'].sum().unstack(fill_value=0)
             holdings = holdings.reindex(date_range, fill_value=0).fillna(0)
@@ -619,7 +634,7 @@ def build_portfolio_history(crypto_df, fiat_df, last_prices, hist_dict):
     common_cols = cum_holdings.columns.intersection(prices_df.columns)
     
     if not crypto.empty and not crypto_assets.empty:
-        invested_daily = crypto_assets.groupby(['Date', 'Ticker'])['USDC'].sum().unstack(fill_value=0)
+        invested_daily = crypto_assets.groupby(['Date', 'Ticker'])['Stable_Amt'].sum().unstack(fill_value=0)
         invested_daily = invested_daily.reindex(date_range, fill_value=0).fillna(0)
         cum_invested = invested_daily.cumsum()
         pnl_df = (cum_holdings[common_cols] * prices_df[common_cols]) - cum_invested[common_cols]
@@ -628,12 +643,12 @@ def build_portfolio_history(crypto_df, fiat_df, last_prices, hist_dict):
     if not common_cols.empty:
         daily_crypto_value = (cum_holdings[common_cols] * prices_df[common_cols]).sum(axis=1)
 
-    total_portfolio_value = daily_crypto_value + cum_unused_usdc
+    total_portfolio_value = daily_crypto_value + cum_unused_stable
 
     # Re-calculate BTC Benchmark properly tracking historical prices without dividing by constant flatline
     if 'BTC' in prices_df.columns and not prices_df['BTC'].empty and prices_df['BTC'].sum() > 0:
         btc_prices = prices_df['BTC'].replace(0, 1) 
-        btc_bought = daily_fiat_usdc / btc_prices
+        btc_bought = daily_fiat_stable / btc_prices
         cum_btc_benchmark_holdings = btc_bought.cumsum()
         btc_benchmark_value = cum_btc_benchmark_holdings * btc_prices
     else:
@@ -644,7 +659,7 @@ def build_portfolio_history(crypto_df, fiat_df, last_prices, hist_dict):
         dt = datetime.combine(d, datetime.min.time())
         ts = int(dt.timestamp()) * 1000
         val = float(total_portfolio_value.loc[d])
-        inv = float(cum_fiat_usdc.loc[d])
+        inv = float(cum_fiat_stable.loc[d])
         btc_val = float(btc_benchmark_value.loc[d])
         history_data.append({'time': ts, 'value': val, 'invested': inv, 'btc': btc_val})
         
@@ -671,19 +686,21 @@ def build_portfolio_history(crypto_df, fiat_df, last_prices, hist_dict):
 
 def calculate_portfolio(crypto_df, fiat_df, live_prices, base_prices):
     if crypto_df.empty:
-        return pd.DataFrame(columns=['Ticker','Holdings','USDC','AVG','Live','PnL','PnL %','Value','Price7d','Price30d','Price90d','PriceYTD']), 0, 0, 0
+        return pd.DataFrame(columns=['Ticker','Holdings','Stable_Amt','AVG','Live','PnL','PnL %','Value','Price7d','Price30d','Price90d','PriceYTD']), 0, 0, 0
     crypto_df = crypto_df.copy()
     crypto_df['Ticker'] = crypto_df['Ticker'].astype(str).str.upper()
-    fiat_usdc = pd.to_numeric(fiat_df['USDC'], errors='coerce').fillna(0).sum()
-    crypto_spent = pd.to_numeric(crypto_df['USDC'], errors='coerce').fillna(0).sum()
-    usdc_holdings = fiat_usdc - crypto_spent
-    coin_tickers = [t for t in crypto_df['Ticker'].unique() if t != 'USDC']
+    
+    fiat_stable = pd.to_numeric(fiat_df['Stable_Amt'], errors='coerce').fillna(0).sum()
+    crypto_spent = pd.to_numeric(crypto_df['Stable_Amt'], errors='coerce').fillna(0).sum()
+    stable_holdings = fiat_stable - crypto_spent
+    
+    coin_tickers = [t for t in crypto_df['Ticker'].unique() if t != 'STABLES']
         
     portfolio = []
     for ticker in coin_tickers:
         sub = crypto_df[crypto_df['Ticker'] == ticker]
         total_holdings = sub['Amount'].sum()
-        total_invested = sub['USDC'].sum()
+        total_invested = sub['Stable_Amt'].sum()
         avg_price = total_invested / total_holdings if total_holdings > 0 else 0
         live_price = live_prices.get(ticker, 0.0)
         value = total_holdings * live_price
@@ -692,11 +709,11 @@ def calculate_portfolio(crypto_df, fiat_df, live_prices, base_prices):
         
         bp = base_prices.get(ticker, {'7d': live_price, '30d': live_price, '90d': live_price, 'ytd': live_price})
         
-        portfolio.append({'Ticker':ticker,'Holdings':total_holdings,'USDC':total_invested,'AVG':avg_price,'Live':live_price,'PnL':pnl,'PnL %':pnl_pct,'Value':value, 'Price7d':bp['7d'], 'Price30d':bp['30d'], 'Price90d':bp['90d'], 'PriceYTD':bp['ytd']})
+        portfolio.append({'Ticker':ticker,'Holdings':total_holdings,'Stable_Amt':total_invested,'AVG':avg_price,'Live':live_price,'PnL':pnl,'PnL %':pnl_pct,'Value':value, 'Price7d':bp['7d'], 'Price30d':bp['30d'], 'Price90d':bp['90d'], 'PriceYTD':bp['ytd']})
     
-    portfolio.append({'Ticker':'USDC','Holdings':usdc_holdings,'USDC':usdc_holdings,'AVG':1.0,'Live':1.0,'PnL':0,'PnL %':0,'Value':usdc_holdings, 'Price7d':1.0, 'Price30d':1.0, 'Price90d':1.0, 'PriceYTD':1.0})
+    portfolio.append({'Ticker':'STABLES','Holdings':stable_holdings,'Stable_Amt':stable_holdings,'AVG':1.0,'Live':1.0,'PnL':0,'PnL %':0,'Value':stable_holdings, 'Price7d':1.0, 'Price30d':1.0, 'Price90d':1.0, 'PriceYTD':1.0})
     df_port = pd.DataFrame(portfolio)
-    df_port = df_port.sort_values(by='USDC', ascending=False).reset_index(drop=True)
+    df_port = df_port.sort_values(by='Stable_Amt', ascending=False).reset_index(drop=True)
     total_value = df_port['Value'].sum()
     total_pnl = df_port['PnL'].sum()
     total_pnl_pct = (total_pnl / (total_value - total_pnl) * 100) if (total_value - total_pnl) != 0 else 0
@@ -707,6 +724,9 @@ def get_ticker_logo(ticker: str) -> str:
     ticker = ticker.upper()
     known = {
         'USDC': 'https://assets.coingecko.com/coins/images/6319/small/USD_Coin_icon.png',
+        'USDT': 'https://assets.coingecko.com/coins/images/325/small/Tether.png',
+        'DAI': 'https://assets.coingecko.com/coins/images/9956/small/4943.png',
+        'FDUSD': 'https://assets.coingecko.com/coins/images/31089/small/FDUSD.png',
         'BTC': 'https://assets.coingecko.com/coins/images/1/small/bitcoin.png',
         'ETH': 'https://assets.coingecko.com/coins/images/279/small/ethereum.png',
         'SOL': 'https://assets.coingecko.com/coins/images/4128/small/Solana.png',
@@ -724,7 +744,8 @@ def get_ticker_logo(ticker: str) -> str:
 def get_ticker_color(ticker: str) -> str:
     ticker = ticker.upper()
     known = {
-        'USDC': '#2775ca', 'BTC': '#f7931a', 'ETH': '#627eea',
+        'USDC': '#2775ca', 'USDT': '#26a17b', 'DAI': '#f4b731', 'FDUSD': '#2775ca',
+        'STABLES': '#26a17b', 'BTC': '#f7931a', 'ETH': '#627eea',
         'SOL': '#9b59b6', 'HBAR': '#ffffff', 'XRP': '#ffffff', 
         'SUI': '#60a5fa', 'LINK': '#1e3a8a', 'BNB': '#f4c430',
         'TRX': '#ff2d55'
@@ -795,7 +816,7 @@ if 'fiat_table_version' not in st.session_state:
 if 'ui_version' not in st.session_state:
     st.session_state.ui_version = 0
 if 'last_known_prices' not in st.session_state:
-    st.session_state.last_known_prices = {"USDC": 1.0}
+    st.session_state.last_known_prices = {"STABLES": 1.0}
 if 'refresh_key' not in st.session_state:
     st.session_state.refresh_key = random.randint(100000, 999999)
 if 'portfolio_cache' not in st.session_state:
@@ -912,7 +933,7 @@ with tab_home:
     current_hash = f"{st.session_state.crypto_table_version}_{st.session_state.fiat_table_version}_{st.session_state.refresh_key}"
 
     if st.session_state.portfolio_cache.get('hash') != current_hash:
-        fetch_tickers = tuple(sorted(set([t.upper() for t in st.session_state.crypto_df['Ticker'] if t.upper() != 'USDC']) | {'BTC'}))
+        fetch_tickers = tuple(sorted(set([t.upper() for t in st.session_state.crypto_df['Ticker'] if t.upper() != 'STABLES']) | {'BTC'}))
         
         # Request exact limit to guarantee 90D/YTD math always finds chronological prices
         limit = 2000 
@@ -959,8 +980,8 @@ with tab_home:
     allocation_series_js = vault['allocation_series_js']
     pnl_df = vault['pnl_df']
     
-    usdc_row = df_port[df_port['Ticker'] == 'USDC'].iloc[0] if not df_port[df_port['Ticker'] == 'USDC'].empty else None
-    usdc_holdings = usdc_row['Holdings'] if usdc_row is not None else 0
+    stables_row = df_port[df_port['Ticker'] == 'STABLES'].iloc[0] if not df_port[df_port['Ticker'] == 'STABLES'].empty else None
+    stables_holdings = stables_row['Holdings'] if stables_row is not None else 0
 
     # ================== 1. DASHBOARD OVERVIEW ==================
     value_box_html = f"""
@@ -993,7 +1014,7 @@ with tab_home:
     
     if history_data_raw:
         today_ts = int(datetime.combine(datetime.now().date(), datetime.min.time()).timestamp()) * 1000
-        fiat_usdc_total = pd.to_numeric(st.session_state.fiat_df['USDC'], errors='coerce').fillna(0).sum()
+        fiat_stables_total = pd.to_numeric(st.session_state.fiat_df['Stable_Amt'], errors='coerce').fillna(0).sum()
         
         for idx, d in enumerate(history_data_raw):
             ts = d['time']
@@ -1003,7 +1024,7 @@ with tab_home:
             
             if idx == len(history_data_raw) - 1 and ts == today_ts:
                 val = float(total_value)
-                inv = float(fiat_usdc_total)
+                inv = float(fiat_stables_total)
             
             hist_val_js_list.append(f"[{ts}, {val}]")
             hist_inv_js_list.append(f"[{ts}, {inv}]")
@@ -1019,7 +1040,7 @@ with tab_home:
     pie_data_js_lines = []
     for _, r in df_port.iterrows():
         ticker = r['Ticker']
-        if ticker == 'USDC':
+        if ticker == 'STABLES':
             continue
         val = r['Value']
         if pd.notna(val) and val > 0:
@@ -1030,7 +1051,7 @@ with tab_home:
     # Chart 3: PnL Bar Data with Timeframes
     pnl_data_js_dict = {'all': '', '1y': '', '30d': '', '7d': '', '1d': ''}
     if not pnl_df.empty:
-        active_tickers = [t for t in df_port['Ticker'] if t != 'USDC']
+        active_tickers = [t for t in df_port['Ticker'] if t != 'STABLES']
         valid_cols = [c for c in active_tickers if c in pnl_df.columns]
         pnl_df_active = pnl_df[valid_cols] if valid_cols else pnl_df
 
@@ -1061,7 +1082,7 @@ with tab_home:
         pnl_data_js_dict['1y'] = format_pnl_js(pnl_1y)
 
     # Chart 5: Invested vs Current Value Data
-    df_iv = df_port[df_port['Ticker'] != 'USDC'].sort_values(by='Value', ascending=False)
+    df_iv = df_port[df_port['Ticker'] != 'STABLES'].sort_values(by='Value', ascending=False)
     inv_val_categories_list = [str(r['Ticker']) for _, r in df_iv.iterrows()]
     inv_val_categories_js = json.dumps(inv_val_categories_list)
     
@@ -1070,14 +1091,14 @@ with tab_home:
     for _, r in df_iv.iterrows():
         c = get_ticker_color(r['Ticker'])
         val = r['Value'] if pd.notna(r['Value']) else 0
-        inv = float(r['USDC']) if pd.notna(r['USDC']) else 0.0
+        inv = float(r['Stable_Amt']) if pd.notna(r['Stable_Amt']) else 0.0
         val_data_points.append(f"{{ name: '{r['Ticker']}', y: {val}, color: '{c}99' }}")
         inv_data_points.append(f"{{ name: '{r['Ticker']}', y: {inv}, color: '#64748b99' }}")
     val_data_js = ",\n".join(val_data_points)
     inv_data_js = ",\n".join(inv_data_points)
     
     # Chart 6: ROI % Bar Data
-    df_roi = df_port[df_port['Ticker'] != 'USDC'].sort_values(by='PnL %', ascending=False)
+    df_roi = df_port[df_port['Ticker'] != 'STABLES'].sort_values(by='PnL %', ascending=False)
     roi_data_js_lines = []
     for _, r in df_roi.iterrows():
         t = r['Ticker']
@@ -1089,7 +1110,7 @@ with tab_home:
 
     # Chart 7: 24h Change Placeholder Data
     daily_data_js_lines = []
-    for _, r in df_port[df_port['Ticker'] != 'USDC'].iterrows():
+    for _, r in df_port[df_port['Ticker'] != 'STABLES'].iterrows():
         t = r['Ticker']
         daily_data_js_lines.append(f"{{ name: '{t}', y: 0, color: '#64748b99' }}")
     daily_data_js = ",\n".join(daily_data_js_lines)
@@ -1725,12 +1746,12 @@ with tab_home:
     # ================== 3. SUBDUED USDC BANNER ==================
     usdc_banner_html = f"""
 <input type="checkbox" id="dash-toggle-usdc" class="dashboard-toggle" style="display:none;">
-<div class="usdc-banner" style="--border: #2775ca;">
+<div class="usdc-banner" style="--border: #26a17b;">
 <div class="usdc-banner-left">
-<img src="{get_ticker_logo('USDC')}" onerror="this.src='https://via.placeholder.com/42/1e2a44/ffffff?text=U';">
-<div class="usdc-banner-title">USDC <span class="usdc-banner-subtitle">(Available Cash)</span></div>
+{STABLECOIN_ICON}
+<div class="usdc-banner-title">Stablecoins <span class="usdc-banner-subtitle">(Available Cash)</span></div>
 </div>
-<div class="usdc-banner-amount">{format_holdings(usdc_holdings, 'USDC')}</div>
+<div class="usdc-banner-amount">{format_holdings(stables_holdings, 'STABLES')}</div>
 </div>
 """
     st.markdown(usdc_banner_html, unsafe_allow_html=True)
@@ -1739,7 +1760,7 @@ with tab_home:
     cards_html = ""
     for _, r in df_port.iterrows():
         ticker = r['Ticker']
-        if ticker == 'USDC':
+        if ticker == 'STABLES':
             continue
             
         pnl = r['PnL']
@@ -1756,7 +1777,7 @@ with tab_home:
         chart_color = border_color
         
         cards_html += f"""
-<div class="flip-card" data-ticker="{ticker}" data-holdings="{r['Holdings']}" data-invested="{r['USDC']}" data-current-price="{live_price}" data-avg-price="{avg_price}" data-price-7d="{r.get('Price7d', live_price)}" data-price-30d="{r.get('Price30d', live_price)}" data-price-90d="{r.get('Price90d', live_price)}" data-price-ytd="{r.get('PriceYTD', live_price)}" data-refresh="{st.session_state.refresh_key}" data-border="{border_color}" data-chart-color="{chart_color}" data-logo="{logo_url}">
+<div class="flip-card" data-ticker="{ticker}" data-holdings="{r['Holdings']}" data-invested="{r['Stable_Amt']}" data-current-price="{live_price}" data-avg-price="{avg_price}" data-price-7d="{r.get('Price7d', live_price)}" data-price-30d="{r.get('Price30d', live_price)}" data-price-90d="{r.get('Price90d', live_price)}" data-price-ytd="{r.get('PriceYTD', live_price)}" data-refresh="{st.session_state.refresh_key}" data-border="{border_color}" data-chart-color="{chart_color}" data-logo="{logo_url}">
 <div class="flip-card-inner">
     <div class="flip-card-front">
         <div class="card-header" style="align-items: center; margin-bottom: 4px;">
@@ -1784,7 +1805,7 @@ with tab_home:
         
         <div class="card-content">
             <div class="label-value-row" style="margin-top:4px;"><span class="label">Holdings</span><span class="value privacy-val">{format_holdings(r['Holdings'], ticker)}</span></div>
-            <div class="label-value-row"><span class="label">Invested</span><span class="value privacy-val">{format_money(r['USDC'])}</span></div>
+            <div class="label-value-row"><span class="label">Invested</span><span class="value privacy-val">{format_money(r['Stable_Amt'])}</span></div>
             <div class="label-value-row"><span class="label">PnL</span><span class="value card-pnl privacy-val" style="color:{pnl_color};">{arrow} {format_money(abs(pnl) if pd.notna(pnl) else "")}</span></div>
             <div class="label-value-row"><span class="label">PnL %</span><span class="value card-pnl-pct privacy-val" style="color:{pnl_color};">{arrow} {pnl_pct_formatted}</span></div>
             <div class="label-value-row total"><span class="label">Value</span><span class="value total-value privacy-val">{format_money(r['Value'])}</span></div>
@@ -2163,7 +2184,7 @@ with tab_home:
         span.innerHTML = `<span style="color:${{color}};">${{sign}} ${{Math.abs(change).toFixed(2)}}%</span>`;
     }}
 
-    const usdcHoldings = {usdc_holdings};
+    const stablesHoldings = {stables_holdings};
     async function updateLivePrices() {{
         const cards = Array.from(document.querySelectorAll('.flip-card'));
         if (cards.length === 0) return;
@@ -2269,7 +2290,7 @@ with tab_home:
                 totalCoinInvested += invested;
             }});
             
-            const totalPortfolioValue = totalCoinValue + usdcHoldings;
+            const totalPortfolioValue = totalCoinValue + stablesHoldings;
             const totalPnL = totalCoinValue - totalCoinInvested;
             const totalInvestedBase = totalPortfolioValue - totalPnL;
             const totalPnLPct = totalInvestedBase !== 0 ? (totalPnL / totalInvestedBase) * 100 : 0;
@@ -2679,7 +2700,8 @@ with tab_crypto:
     
     div[data-testid="stForm"]:has(.add-tx-card) .stTextInput input,
     div[data-testid="stForm"]:has(.add-tx-card) .stNumberInput input,
-    div[data-testid="stForm"]:has(.add-tx-card) .stDateInput input {
+    div[data-testid="stForm"]:has(.add-tx-card) .stDateInput input,
+    div[data-testid="stForm"]:has(.add-tx-card) div[data-baseweb="select"] > div {
         background: rgba(255,255,255,0.03) !important;
         border: 1px solid rgba(255,255,255,0.1) !important;
         color: #fff !important;
@@ -2821,6 +2843,10 @@ with tab_crypto:
         position: relative; z-index: 1;
         box-shadow: inset 0 4px 10px rgba(0,0,0,0.15) !important;
     }
+    div[data-testid="stForm"]:has(.edit-rollout) div[data-baseweb="select"] > div {
+        background: rgba(255,255,255,0.03) !important;
+        border: 1px solid rgba(255,255,255,0.1) !important;
+    }
 
     /* 6. REDESIGNED DELETE DIALOG */
     div[data-testid="stVerticalBlockBorderWrapper"]:has(.del-warn) {
@@ -2883,6 +2909,14 @@ with tab_crypto:
             width: calc(50% - 12px) !important;
             flex: 1 1 calc(50% - 12px) !important;
         }
+        
+        /* FIAT 3 Column Input override -> map to 2x2 */
+        div[data-testid="stForm"]:has(.add-tx-card) div[data-testid="stHorizontalBlock"]:has(> div[data-testid="column"]:nth-child(3)) > div[data-testid="column"] {
+            min-width: calc(50% - 12px) !important;
+            width: calc(50% - 12px) !important;
+            flex: 1 1 calc(50% - 12px) !important;
+        }
+        
         div[data-testid="stForm"]:has(.add-tx-card) input { padding: 6px !important;
         font-size: 0.95rem !important;
         }
@@ -2979,14 +3013,16 @@ with tab_crypto:
     with st.form("add_crypto", border=False):
         st.markdown("<div class='add-tx-card'></div><h3 style='text-align: center; color: white; margin-top: 0px; margin-bottom: 10px;'>New Transaction</h3>", unsafe_allow_html=True)
         
-        # Row 1: Inputs (Rendered as 4 columns on PC, cleanly wrapped to 2x2 grid by CSS on mobile)
+        # Row 1: Inputs
         r1c1, r1c2, r1c3, r1c4 = st.columns(4)
         with r1c1: selected_date = st.date_input("Date", value=date(2026, 3, 25))
-        with r1c2: ticker = st.text_input("Ticker", value="BTC").upper().strip()
-        with r1c3: usdc = st.number_input("USDC Amount", value=15.0, step=0.01)
-        with r1c4: amount = st.number_input("Coin Amount", value=0.1, step=0.000001, format="%.8f")
+        with r1c2: ticker = st.text_input("Coin Ticker", value="BTC").upper().strip()
+        with r1c3: stable_ticker = st.selectbox("Stablecoin", STABLECOINS_LIST, index=0)
+        with r1c4: 
+            stable_amt = st.number_input("Stable Amount", value=15.0, step=0.01)
+            coin_amt = st.number_input("Coin Amount", value=0.1, step=0.000001, format="%.8f")
         
-        # Row 2: Action Row (Always 2 columns mapping naturally under the 2x2 layout above on mobile)
+        # Row 2: Action Row
         action_col1, action_col2 = st.columns(2)
         with action_col1:
             tx_type = st.radio("Type", ["Buy", "Sell"], horizontal=True, label_visibility="collapsed")
@@ -2995,19 +3031,18 @@ with tab_crypto:
         
         if submitted:
             if ticker:
-                final_usdc = usdc if tx_type == "Buy" else -usdc
-                final_amount = amount if tx_type == "Buy" else -amount
-                price = round(usdc / amount, 8) if amount > 0 else 0.0
+                final_stable_amt = stable_amt if tx_type == "Buy" else -stable_amt
+                final_amount = coin_amt if tx_type == "Buy" else -coin_amt
+                price = round(stable_amt / coin_amt, 8) if coin_amt > 0 else 0.0
                 
-                new_row = pd.DataFrame([{"Datum": date_to_excel_serial(selected_date), "USDC": final_usdc, "Ticker": ticker, "Amount": final_amount, "Price": price}])
+                new_row = pd.DataFrame([{"Datum": date_to_excel_serial(selected_date), "Stable_Amt": final_stable_amt, "Stable_Ticker": stable_ticker, "Ticker": ticker, "Amount": final_amount, "Price": price}])
                 st.session_state.crypto_df = pd.concat([st.session_state.crypto_df, new_row], ignore_index=True)
                 save_crypto(st.session_state.crypto_df)
                 st.session_state.crypto_table_version += 1
                 st.session_state.ui_version += 1
-                st.success(f"✅ Executed {tx_type}: {amount} {ticker}")
+                st.success(f"✅ Executed {tx_type}: {coin_amt} {ticker}")
                 st.rerun()
 
-    # Preserve original index for accurate editing/deleting, then sort descending by Date
     df_display = st.session_state.crypto_df.copy()
     df_display['orig_idx'] = df_display.index
     df_display = df_display.dropna(how='all')
@@ -3021,18 +3056,19 @@ with tab_crypto:
             orig_idx = r['orig_idx']
             logo_url = get_ticker_logo(r['Ticker'])
             amount = r['Amount']
-            usdc = r['USDC']
+            stable_amt = r.get('Stable_Amt', 0.0)
+            stable_ticker = r.get('Stable_Ticker', 'USDC')
             is_buy = amount >= 0
             
             abs_amount = abs(amount)
-            abs_usdc = abs(usdc)
-            price = abs_usdc / abs_amount if abs_amount > 0 else 0
+            abs_stable = abs(stable_amt)
+            price = abs_stable / abs_amount if abs_amount > 0 else 0
             
             sign = "+" if is_buy else "-"
             color = "#00ff9d" if is_buy else "#ff4d4d"
             action_text = "Spent" if is_buy else "Received"
             
-            invested_formatted = format_money(abs_usdc)
+            invested_formatted = f"{abs_stable:,.2f} {stable_ticker}"
             amount_formatted = format_holdings(abs_amount, r['Ticker'])
             price_formatted = format_price(price)
             date_str = format_datum(r['Datum'])
@@ -3099,12 +3135,13 @@ with tab_crypto:
                     with st.form(f"edit_crypto_form_{orig_idx}", border=False):
                         st.markdown("<div class='edit-rollout form-compact-marker'></div><h4 style='color: #00ff9d; margin-top: 0px; margin-bottom: 15px;'>✏️ Edit Row Details</h4>", unsafe_allow_html=True)
                         
-                        e_r1c1, e_r1c2 = st.columns(2)
+                        e_r1c1, e_r1c2, e_r1c3 = st.columns([1,1,1])
                         with e_r1c1: new_date = st.date_input("Date", value=datetime(1899, 12, 30) + timedelta(days=int(r['Datum'])))
                         with e_r1c2: new_ticker = st.text_input("Ticker", value=r['Ticker']).upper().strip()
+                        with e_r1c3: new_stable_ticker = st.selectbox("Stablecoin", STABLECOINS_LIST, index=STABLECOINS_LIST.index(stable_ticker) if stable_ticker in STABLECOINS_LIST else 0)
                         
                         e_r2c1, e_r2c2 = st.columns(2)
-                        with e_r2c1: new_usdc = st.number_input("USDC Amount", value=float(abs(r['USDC'])), step=0.01)
+                        with e_r2c1: new_stable = st.number_input("Stable Amount", value=float(abs(stable_amt)), step=0.01)
                         with e_r2c2: new_amount = st.number_input("Coin Amount", value=float(abs(r['Amount'])), step=0.000001, format="%.8f")
                         
                         tx_type_edit = st.radio("Type", ["Buy", "Sell"], horizontal=True, index=0 if is_buy else 1, label_visibility="collapsed")
@@ -3112,11 +3149,11 @@ with tab_crypto:
                         e_save, e_cancel = st.columns(2)
                         with e_save: 
                             if st.form_submit_button("💾 Save Changes"):
-                                final_usdc = new_usdc if tx_type_edit == "Buy" else -new_usdc
+                                final_stable = new_stable if tx_type_edit == "Buy" else -new_stable
                                 final_amount = new_amount if tx_type_edit == "Buy" else -new_amount
-                                new_price = round(new_usdc / new_amount, 8) if new_amount > 0 else 0.0
+                                new_price = round(new_stable / new_amount, 8) if new_amount > 0 else 0.0
                                 
-                                st.session_state.crypto_df.loc[orig_idx] = {"Datum": date_to_excel_serial(new_date), "USDC": final_usdc, "Ticker": new_ticker, "Amount": final_amount, "Price": new_price}
+                                st.session_state.crypto_df.loc[orig_idx] = {"Datum": date_to_excel_serial(new_date), "Stable_Amt": final_stable, "Stable_Ticker": new_stable_ticker, "Ticker": new_ticker, "Amount": final_amount, "Price": new_price}
                                 save_crypto(st.session_state.crypto_df)
                                 st.session_state['edit_crypto_row'] = None
                                 st.session_state.crypto_table_version += 1
@@ -3132,7 +3169,7 @@ with tab_crypto:
 with tab_fiat:
     total_czk = pd.to_numeric(st.session_state.fiat_df['CZK'], errors='coerce').fillna(0).sum()
     total_eur = pd.to_numeric(st.session_state.fiat_df['EUR'], errors='coerce').fillna(0).sum()
-    total_usdc = pd.to_numeric(st.session_state.fiat_df['USDC'], errors='coerce').fillna(0).sum()
+    total_stables = pd.to_numeric(st.session_state.fiat_df['Stable_Amt'], errors='coerce').fillna(0).sum()
     fees_eur = pd.to_numeric(st.session_state.fiat_df['Fee'], errors='coerce').fillna(0).sum()
     fees_czk = (pd.to_numeric(st.session_state.fiat_df['Fee'], errors='coerce').fillna(0) *
              pd.to_numeric(st.session_state.fiat_df['CZK/EUR'], errors='coerce').fillna(0)).sum()
@@ -3143,7 +3180,7 @@ with tab_fiat:
 <div style="display:flex;flex-wrap:wrap;justify-content:center;gap:12px;margin-bottom:30px;">
 <div class="glossy-box swapped"><div class="dash-value">{total_czk:,.2f}</div><div class="dash-label">Total CZK</div></div>
 <div class="glossy-box swapped"><div class="dash-value">{total_eur:,.2f}</div><div class="dash-label">Total EUR</div></div>
-<div class="glossy-box swapped"><div class="dash-value">{format_money(total_usdc)}</div><div class="dash-label">Total USDC</div></div>
+<div class="glossy-box swapped"><div class="dash-value">{format_money(total_stables)}</div><div class="dash-label">Total Stables</div></div>
 <div class="glossy-box swapped">
 <div class="dash-value" style="font-size:13px !important; white-space:normal;">{fees_eur:,.2f} EUR / {fees_czk:,.2f} CZK</div>
 <div class="dash-label">Fees</div>
@@ -3152,91 +3189,146 @@ with tab_fiat:
 """
     st.markdown(summary_html, unsafe_allow_html=True)
 
-    df_clean = st.session_state.fiat_df.dropna(how='all').reset_index(drop=True)
-    table_container = st.container(key=f"fiat_table_container_{st.session_state.ui_version}")
-    with table_container:
-        with st.container(height=520, border=True):
-            h = st.columns([1.0, 0.9, 0.9, 0.6, 0.9, 1.0, 0.4, 0.4])
-            h[0].markdown("**Date**")
-            h[1].markdown("**CZK**")
-            h[2].markdown("**EUR**")
-            h[3].markdown("**Fee**")
-            h[4].markdown("**CZK/EUR**")
-            h[5].markdown("**USDC**")
-            h[6].markdown("**Del**")
-            h[7].markdown("**Edit**")
-            for i, r in df_clean.iterrows():
-                cols = st.columns([1.0, 0.9, 0.9, 0.6, 0.9, 1.0, 0.4, 0.4])
-                with cols[0]: st.write(format_datum(r['Datum']))
-                with cols[1]: st.write(f"{r['CZK']:,.2f}")
-                with cols[2]: st.write(f"{r['EUR']:,.2f}")
-                with cols[3]: st.write(f"{r['Fee']:,.2f}")
-                with cols[4]: st.write(f"{r['CZK/EUR']:,.5f}")
-                with cols[5]: st.write(format_money(r['USDC']))
-                with cols[6]:
-                    if st.session_state.get(f'confirm_del_fiat_{i}'):
-                        if st.button("✅", key=f"yes_fiat_{i}"):
-                            st.session_state.fiat_df = st.session_state.fiat_df.drop(i).reset_index(drop=True)
-                            save_fiat(st.session_state.fiat_df)
-                            st.session_state.fiat_table_version += 1
-                            st.session_state.ui_version += 1
-                            st.session_state[f'confirm_del_fiat_{i}'] = False
-                            st.rerun()
-                    else:
-                        if st.button("🗑️", key=f"del_{i}_{st.session_state.fiat_table_version}_{st.session_state.ui_version}"):
-                            st.session_state[f'confirm_del_fiat_{i}'] = True
-                            st.rerun()
-                with cols[7]:
-                    if st.button("✏️", key=f"edit_{i}_{st.session_state.fiat_table_version}_{st.session_state.ui_version}"):
-                        st.session_state.editing_row = i
-                        st.rerun()
-
-    if 'editing_row' in st.session_state:
-        edit_idx = st.session_state.editing_row
-        row = st.session_state.fiat_df.loc[edit_idx]
-        st.markdown("**Edit row**")
-        with st.form("edit_fiat_row"):
-            col_a, col_b = st.columns(2)
-            with col_a:
-                new_date = st.date_input("Date", value=datetime(1899, 12, 30) + timedelta(days=int(row['Datum'])))
-                new_datum = date_to_excel_serial(new_date)
-            with col_b:
-                new_czk = st.number_input("CZK", value=float(row['CZK']), step=0.01)
-            new_eur = st.number_input("EUR", value=float(row['EUR']), step=0.01)
-            new_fee = st.number_input("Fee", value=float(row['Fee']), step=0.01)
-            new_usdc = st.number_input("USDC", value=float(row['USDC']), step=0.01)
-            new_czk_eur = round(new_czk / new_eur, 5) if new_eur > 0 else 0.0
-            col_save, col_cancel = st.columns(2)
-            with col_save:
-                if st.form_submit_button("💾 Save Changes"):
-                    st.session_state.fiat_df.loc[edit_idx] = {"Datum": new_datum, "CZK": new_czk, "EUR": new_eur, "Fee": new_fee, "CZK/EUR": new_czk_eur, "USDC": new_usdc, "NI": row.get('NI', ""), "GG": row.get('GG', ""), "ER": row.get('ER', "")}
-                    save_fiat(st.session_state.fiat_df)
-                    del st.session_state.editing_row
-                    st.session_state.fiat_table_version += 1
-                    st.session_state.ui_version += 1
-                    st.success("✅ Row updated!")
-                    st.rerun()
-            with col_cancel:
-                if st.form_submit_button("❌ Cancel"):
-                    del st.session_state.editing_row
-                    st.rerun()
-
-    st.subheader("➕ Add New Fiat Entry")
-    with st.form("add_fiat"):
-        col1, col2 = st.columns(2)
-        with col1:
-            selected_date = st.date_input("Date", value=date(2026, 3, 25))
-            datum = date_to_excel_serial(selected_date)
-        with col2:
-            czk = st.number_input("CZK", value=1000.0, step=0.01)
-        eur = st.number_input("EUR", value=40.0, step=0.01)
-        fee = st.number_input("Fee", value=1.0, step=0.01)
-        usdc = st.number_input("USDC", value=44.67, step=0.01)
-        czk_eur = round(czk / eur, 5) if eur > 0 else 0.0
-        if st.form_submit_button("➕ Add Entry"):
-            new_row = pd.DataFrame([{"Datum": datum, "CZK": czk, "EUR": eur, "Fee": fee, "CZK/EUR": czk_eur, "USDC": usdc, "NI": "", "GG": "", "ER": ""}])
+    # 1. ADD NEW FIAT TRANSACTION CARD
+    with st.form("add_fiat", border=False):
+        st.markdown("<div class='add-tx-card'></div><h3 style='text-align: center; color: white; margin-top: 0px; margin-bottom: 10px;'>New Fiat Deposit</h3>", unsafe_allow_html=True)
+        
+        # Row 1: Inputs
+        f1, f2, f3 = st.columns(3)
+        with f1: selected_date = st.date_input("Date", value=date(2026, 3, 25))
+        with f2: czk = st.number_input("CZK Invested", value=1000.0, step=0.01)
+        with f3: eur = st.number_input("EUR Equivalent", value=40.0, step=0.01)
+        
+        f4, f5, f6 = st.columns(3)
+        with f4: fee = st.number_input("Fee (EUR)", value=1.0, step=0.01)
+        with f5: stable_ticker = st.selectbox("Received Stablecoin", STABLECOINS_LIST, index=0)
+        with f6: stable_amt = st.number_input("Stablecoin Amount", value=44.67, step=0.01)
+        
+        action_col1, action_col2 = st.columns(2)
+        with action_col1:
+            st.markdown("<div style='color: transparent;'>Spacing</div>", unsafe_allow_html=True)
+        with action_col2:
+            submitted_fiat = st.form_submit_button("+ Add Entry")
+            
+        if submitted_fiat:
+            czk_eur = round(czk / eur, 5) if eur > 0 else 0.0
+            new_row = pd.DataFrame([{"Datum": date_to_excel_serial(selected_date), "CZK": czk, "EUR": eur, "Fee": fee, "CZK/EUR": czk_eur, "Stable_Amt": stable_amt, "Stable_Ticker": stable_ticker, "NI": "", "GG": "", "ER": ""}])
             st.session_state.fiat_df = pd.concat([st.session_state.fiat_df, new_row], ignore_index=True)
             save_fiat(st.session_state.fiat_df)
             st.session_state.fiat_table_version += 1
             st.session_state.ui_version += 1
+            st.success(f"✅ Executed fiat deposit!")
             st.rerun()
+
+    df_fiat_display = st.session_state.fiat_df.copy()
+    df_fiat_display['orig_idx'] = df_fiat_display.index
+    df_fiat_display = df_fiat_display.dropna(how='all')
+    df_fiat_display = df_fiat_display.sort_values(by='Datum', ascending=False)
+
+    st.markdown("<h4 style='color: white; margin-top: 20px; margin-bottom: 15px;'>Fiat History</h4>", unsafe_allow_html=True)
+
+    # 2. SCROLLABLE FIAT TRANSACTION LIST
+    with st.container(height=550, border=False):
+        for i, r in df_fiat_display.iterrows():
+            orig_idx = r['orig_idx']
+            stable_ticker = r.get('Stable_Ticker', 'USDC')
+            logo_url = get_ticker_logo(stable_ticker)
+            
+            stable_amt = r.get('Stable_Amt', 0.0)
+            czk_val = r.get('CZK', 0.0)
+            eur_val = r.get('EUR', 0.0)
+            fee_val = r.get('Fee', 0.0)
+            
+            stable_formatted = f"+{stable_amt:,.2f} {stable_ticker}"
+            fiat_formatted = f"CZK: {czk_val:,.2f} / EUR: {eur_val:,.2f}"
+            date_str = format_datum(r['Datum'])
+
+            # If user clicked delete, show confirmation dialog replacing the row
+            if st.session_state.get('confirm_delete_fiat') == orig_idx:
+                with st.container(border=True):
+                    st.markdown("<div class='del-warn'></div><h4 style='color: #ff4d4d; margin-top: 0; margin-bottom: 5px; font-size: 1.1rem; font-weight: 600;'>Delete this entry?</h4>", unsafe_allow_html=True)
+                    c_yes, c_no = st.columns(2)
+                    with c_yes:
+                        if st.button("Delete", key=f"yes_fiat_del_{orig_idx}", use_container_width=True):
+                            st.session_state.fiat_df = st.session_state.fiat_df.drop(orig_idx).reset_index(drop=True)
+                            save_fiat(st.session_state.fiat_df)
+                            st.session_state['confirm_delete_fiat'] = None
+                            st.session_state.fiat_table_version += 1
+                            st.session_state.ui_version += 1
+                            st.rerun()
+                    with c_no:
+                        if st.button("Cancel", key=f"no_fiat_del_{orig_idx}", use_container_width=True):
+                            st.session_state['confirm_delete_fiat'] = None
+                            st.rerun()
+            else:
+                # Standard Row Display
+                with st.container(border=True):
+                    st.markdown("<div class='tx-row'></div>", unsafe_allow_html=True)
+                    
+                    # STRICT 5 COLUMNS: Logo, Dates/Fiat, Stable Amount, Edit, Delete
+                    col_logo, col_fiat, col_vals, col_edit, col_del = st.columns([0.5, 2, 2.5, 0.5, 0.5])
+                    
+                    with col_logo:
+                        st.markdown(f"<img src='{logo_url}' class='mobile-logo' style='width:42px;height:42px;border-radius:50%;object-fit:contain;margin-top:6px;' onerror=\"this.src='https://via.placeholder.com/42/1e2a44/ffffff?text={stable_ticker[0]}';\">", unsafe_allow_html=True)
+                        
+                    with col_fiat:
+                        st.markdown(f"""
+                            <div style="line-height: 1.2; margin-top: 6px; overflow: hidden; text-overflow: ellipsis;">
+                                <div class="mobile-tx-ticker" style="font-weight: 700; font-size: 1.15rem; color: #ffffff; white-space: nowrap;">{date_str}</div>
+                                <div class="mobile-tx-sub" style="font-size: 0.85rem; color: #94a3b8; white-space: nowrap;">{fiat_formatted}</div>
+                            </div>
+                        """, unsafe_allow_html=True)
+                        
+                    with col_vals:
+                        st.markdown(f"""
+                            <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; margin-top: 6px;">
+                                <div class="mobile-tx-amount" style="font-weight: 700; font-size: 1.15rem; color: #00ff9d; white-space: nowrap;">{stable_formatted}</div>
+                                <div class="mobile-tx-sub" style="font-size: 0.85rem; color: #cbd5e1; white-space: nowrap;">Fee: {fee_val:,.2f} EUR</div>
+                            </div>
+                        """, unsafe_allow_html=True)
+                        
+                    with col_edit:
+                        if st.button("✏️", key=f"edit_fiat_btn_{orig_idx}"):
+                            if st.session_state.get('edit_fiat_row') == orig_idx:
+                                st.session_state['edit_fiat_row'] = None
+                            else:
+                                st.session_state['edit_fiat_row'] = orig_idx
+                            st.rerun()
+                            
+                    with col_del:
+                        if st.button("🗑️", key=f"del_fiat_btn_{orig_idx}"):
+                            st.session_state['confirm_delete_fiat'] = orig_idx
+                            st.rerun()
+
+                # 3. ROLL OUT EDIT FORM Directly Attached
+                if st.session_state.get('edit_fiat_row') == orig_idx:
+                    with st.form(f"edit_fiat_form_{orig_idx}", border=False):
+                        st.markdown("<div class='edit-rollout form-compact-marker'></div><h4 style='color: #00ff9d; margin-top: 0px; margin-bottom: 15px;'>✏️ Edit Fiat Details</h4>", unsafe_allow_html=True)
+                        
+                        e_f1, e_f2, e_f3 = st.columns(3)
+                        with e_f1: new_date = st.date_input("Date", value=datetime(1899, 12, 30) + timedelta(days=int(r['Datum'])))
+                        with e_f2: new_czk = st.number_input("CZK", value=float(czk_val), step=0.01)
+                        with e_f3: new_eur = st.number_input("EUR", value=float(eur_val), step=0.01)
+                        
+                        e_f4, e_f5, e_f6 = st.columns(3)
+                        with e_f4: new_fee = st.number_input("Fee", value=float(fee_val), step=0.01)
+                        with e_f5: new_stable_ticker = st.selectbox("Stablecoin", STABLECOINS_LIST, index=STABLECOINS_LIST.index(stable_ticker) if stable_ticker in STABLECOINS_LIST else 0)
+                        with e_f6: new_stable = st.number_input("Stable Amount", value=float(stable_amt), step=0.01)
+                         
+                        e_save, e_cancel = st.columns(2)
+                        with e_save: 
+                            if st.form_submit_button("💾 Save Changes"):
+                                new_czk_eur = round(new_czk / new_eur, 5) if new_eur > 0 else 0.0
+                                
+                                st.session_state.fiat_df.loc[orig_idx] = {"Datum": date_to_excel_serial(new_date), "CZK": new_czk, "EUR": new_eur, "Fee": new_fee, "CZK/EUR": new_czk_eur, "Stable_Amt": new_stable, "Stable_Ticker": new_stable_ticker, "NI": r.get('NI', ""), "GG": r.get('GG', ""), "ER": r.get('ER', "")}
+                                save_fiat(st.session_state.fiat_df)
+                                st.session_state['edit_fiat_row'] = None
+                                st.session_state.fiat_table_version += 1
+                                st.session_state.ui_version += 1
+                                st.success("✅ Entry updated!")
+                                st.rerun()
+                                
+                        with e_cancel:
+                            if st.form_submit_button("❌ Cancel"):
+                                st.session_state['edit_fiat_row'] = None
+                                st.rerun()
