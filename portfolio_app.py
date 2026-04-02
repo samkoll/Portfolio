@@ -31,9 +31,9 @@ div[data-testid="stDecoration"] {
 div[data-testid="stMainBlockContainer"] {
     padding-left: 14px !important;
     padding-right: 14px !important;
-    padding-top: 0rem !important; /* Forces it completely to the top */
-    margin-top: -2rem !important; /* Pulls it up over any invisible gaps */
-    padding-bottom: 90px !important; /* Added to clear bottom nav dock */
+    padding-top: 0rem !important; 
+    margin-top: -2rem !important; 
+    padding-bottom: 90px !important; 
     max-width: 100% !important;
 }
 @media (min-width: 1200px) {
@@ -57,7 +57,6 @@ div[data-testid="stMainBlockContainer"] {
 /* ---------------------------------------------------
    NATIVE APP NAVIGATION BAR & TAB HIDING
 --------------------------------------------------- */
-/* Safely target ONLY the tab list row, leaving the tab panels completely visible */
 div[data-testid="stTabs"] [role="tablist"],
 div[data-testid="stTabs"] [data-baseweb="tab-list"] {
     display: none !important;
@@ -162,13 +161,12 @@ div[data-testid="stTabs"] > div[role="tabpanel"] {
     z-index: 1;
     margin-top: -60px !important; 
     transition: margin-top 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-    margin-bottom: 8px; /* Reduced to pull USDC banner closer */
+    margin-bottom: 8px;
 }
 .dashboard-toggle:checked ~ .dashboard-wrapper .stats-layer {
     margin-top: 14px !important;
 }
 
-/* Force 3 columns globally without wrapping */
 .stats-layer-inner {
     display: grid !important;
     grid-template-columns: repeat(3, 1fr) !important;
@@ -176,7 +174,6 @@ div[data-testid="stTabs"] > div[role="tabpanel"] {
     width: 100%;
 }
 
-/* Tucked Text Fade Out */
 .dash-value {
     font-size: clamp(14px, 2.5vw, 24px) !important;
     font-weight: 700;
@@ -237,7 +234,6 @@ div[data-testid="stTabs"] > div[role="tabpanel"] {
     margin-bottom: 24px !important;
 }
 
-/* PC Hover and Sync with Dashboard Toggle */
 @media (hover: hover) and (pointer: fine) {
     .glossy-header-label:hover .glossy-header {
         transform: translateY(-4px) scale(1.01);
@@ -305,7 +301,7 @@ div[data-testid="stTabs"] > div[role="tabpanel"] {
     width: auto; 
     min-width: 250px;
     max-width: 400px; 
-    margin: 4px 0 8px 24px !important; /* Reduced top and bottom spacing */
+    margin: 4px 0 8px 24px !important;
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -437,7 +433,6 @@ def get_initial_fiat_df():
 def load_or_init_crypto():
     if CRYPTO_JSON.exists():
         df = pd.read_json(CRYPTO_JSON)
-        # Handle migration from USDC to generalized Stable_Amt
         if 'USDC' in df.columns and 'Stable_Amt' not in df.columns:
             df.rename(columns={'USDC': 'Stable_Amt'}, inplace=True)
         if 'Stable_Ticker' not in df.columns:
@@ -450,7 +445,6 @@ def load_or_init_crypto():
 def load_or_init_fiat():
     if FIAT_JSON.exists():
         df = pd.read_json(FIAT_JSON)
-        # Handle migration from USDC to generalized Stable_Amt
         if 'USDC' in df.columns and 'Stable_Amt' not in df.columns:
             df.rename(columns={'USDC': 'Stable_Amt'}, inplace=True)
         if 'Stable_Ticker' not in df.columns:
@@ -482,11 +476,10 @@ def get_with_retry(url: str, headers: dict, timeout: int = 12, retries: int = 4)
             data = resp.json()
             if isinstance(data, dict) and data.get('Response') == 'Error':
                 msg = data.get('Message', '').lower()
-                # If rate limit hit, sleep and let it organically retry
                 if 'rate limit' in msg:
                     time.sleep(1.5 ** attempt)
                     continue
-                return None  # Fast fail only if invalid symbol
+                return None  
             return data
         except Exception:
             if attempt == retries - 1:
@@ -528,7 +521,6 @@ def fetch_all_historical_data(coins_tuple: tuple, limit: int, refresh_key: int):
             return coin, {datetime.fromtimestamp(d['time']).date(): float(d['close']) for d in data['Data']['Data']}
         return coin, {}
 
-    # Strict pool limit ensures we don't trigger the API's rate limits, avoiding the flatline bug
     with ThreadPoolExecutor(max_workers=5) as executor:
         results = executor.map(fetch_coin, coins_tuple)
         for coin, hist in results:
@@ -545,7 +537,6 @@ def get_base_prices(prices_dict, coins):
         hist = prices_dict.get(coin, {})
         if not hist: continue
         
-        # Sort chronologically, strictly avoiding timezone matching bugs
         sorted_dates = sorted(hist.keys())
         prices = [hist[d] for d in sorted_dates]
         
@@ -621,7 +612,6 @@ def build_portfolio_history(crypto_df, fiat_df, last_prices, hist_dict):
         
     for coin in fetch_coins:
         live_p = last_prices.get(coin, 0.0)
-        # Prevents mathematical flatline if BTC network response ever failed completely
         if live_p == 0.0 and coin == 'BTC':
             live_p = 65000.0 
             
@@ -645,7 +635,6 @@ def build_portfolio_history(crypto_df, fiat_df, last_prices, hist_dict):
 
     total_portfolio_value = daily_crypto_value + cum_unused_stable
 
-    # Re-calculate BTC Benchmark properly tracking historical prices without dividing by constant flatline
     if 'BTC' in prices_df.columns and not prices_df['BTC'].empty and prices_df['BTC'].sum() > 0:
         btc_prices = prices_df['BTC'].replace(0, 1) 
         btc_bought = daily_fiat_stable / btc_prices
@@ -809,6 +798,18 @@ if 'crypto_df' not in st.session_state:
     st.session_state.crypto_df = load_or_init_crypto()
 if 'fiat_df' not in st.session_state:
     st.session_state.fiat_df = load_or_init_fiat()
+
+# --- HOTFIX: Force Live Session State Migration ---
+if not st.session_state.crypto_df.empty and 'USDC' in st.session_state.crypto_df.columns and 'Stable_Amt' not in st.session_state.crypto_df.columns:
+    st.session_state.crypto_df.rename(columns={'USDC': 'Stable_Amt'}, inplace=True)
+    st.session_state.crypto_df['Stable_Ticker'] = 'USDC'
+    save_crypto(st.session_state.crypto_df)
+
+if not st.session_state.fiat_df.empty and 'USDC' in st.session_state.fiat_df.columns and 'Stable_Amt' not in st.session_state.fiat_df.columns:
+    st.session_state.fiat_df.rename(columns={'USDC': 'Stable_Amt'}, inplace=True)
+    st.session_state.fiat_df['Stable_Ticker'] = 'USDC'
+    save_fiat(st.session_state.fiat_df)
+
 if 'crypto_table_version' not in st.session_state:
     st.session_state.crypto_table_version = 0
 if 'fiat_table_version' not in st.session_state:
@@ -822,7 +823,6 @@ if 'refresh_key' not in st.session_state:
 if 'portfolio_cache' not in st.session_state:
     st.session_state.portfolio_cache = {}
 
-# RESTORED MISSING FUNCTION HERE
 def glossy_header(title: str, icon_svg: str):
     html = f"""<div class="glossy-header">{icon_svg}<span style="margin-left:12px;">{title}</span></div>"""
     st.markdown(html, unsafe_allow_html=True)
@@ -865,7 +865,6 @@ components.html("""
             if (activeItem) activeItem.classList.add('active');
         }
 
-        // Bind click handlers to the dock icons
         const n0 = parentDoc.getElementById('nav-item-0');
         const n1 = parentDoc.getElementById('nav-item-1');
         const n2 = parentDoc.getElementById('nav-item-2');
@@ -874,7 +873,6 @@ components.html("""
         if(n1) n1.addEventListener('click', () => switchTab(1));
         if(n2) n2.addEventListener('click', () => switchTab(2));
 
-        // Swipe logic
         let startX = 0, startY = 0, endX = 0, endY = 0;
         parentDoc.addEventListener('touchstart', e => {
             startX = e.changedTouches[0].screenX;
@@ -884,13 +882,10 @@ components.html("""
             endX = e.changedTouches[0].screenX;
             endY = e.changedTouches[0].screenY;
             
-            // Allow interaction with horizontal scrolls (flip cards, charts) without jumping pages
             const xDiff = Math.abs(endX - startX);
             const yDiff = Math.abs(endY - startY);
             
-            // Only register if it's a significant horizontal swipe
             if (xDiff > yDiff && xDiff > 80) {
-                // Prevent swiping pages when inside horizontal scroll containers
                 const isScrollable = e.target.closest('.scroll-wrapper') || e.target.closest('.charts-scroll-wrapper') || e.target.closest('canvas');
                 if(isScrollable) return;
 
@@ -901,15 +896,14 @@ components.html("""
                         currentTab = i;
                     }
                 });
-                if (endX < startX && currentTab < 2) { // Swipe Left (Next tab)
+                if (endX < startX && currentTab < 2) { 
                     switchTab(currentTab + 1);
                 }
-                if (endX > startX && currentTab > 0) { // Swipe Right (Prev tab)
+                if (endX > startX && currentTab > 0) { 
                     switchTab(currentTab - 1);
                 }
             }
         }, {passive: true});
-        // Sync initial active state after load/rerun
         setTimeout(() => {
             let currentTab = 0;
             const tabs = parentDoc.querySelectorAll('button[data-baseweb="tab"]');
@@ -929,13 +923,11 @@ tab_home, tab_crypto, tab_fiat = st.tabs(["Overview", "Crypto", "Fiat"])
 
 with tab_home:
 
-    # ================== ZERO-LATENCY CACHE ARCHITECTURE ==================
     current_hash = f"{st.session_state.crypto_table_version}_{st.session_state.fiat_table_version}_{st.session_state.refresh_key}"
 
     if st.session_state.portfolio_cache.get('hash') != current_hash:
         fetch_tickers = tuple(sorted(set([t.upper() for t in st.session_state.crypto_df['Ticker'] if t.upper() != 'STABLES']) | {'BTC'}))
         
-        # Request exact limit to guarantee 90D/YTD math always finds chronological prices
         limit = 2000 
         
         live_prices = get_all_cryptocompare_prices(fetch_tickers, st.session_state.refresh_key)
@@ -956,7 +948,6 @@ with tab_home:
              st.session_state.crypto_df, st.session_state.fiat_df, live_prices, hist_dict
         )
 
-        # Assign to the instant bypass vault
         st.session_state.portfolio_cache = {
             'hash': current_hash,
             'df_port': df_port,
@@ -970,7 +961,6 @@ with tab_home:
             'base_prices': base_prices
         }
 
-    # PULL FROM INSTANT VAULT
     vault = st.session_state.portfolio_cache
     df_port = vault['df_port']
     total_value = vault['total_value']
@@ -1036,7 +1026,6 @@ with tab_home:
     else:
         hist_val_js, hist_inv_js, hist_btc_js = "", "", ""
 
-    # Chart 1: Pie Data
     pie_data_js_lines = []
     for _, r in df_port.iterrows():
         ticker = r['Ticker']
@@ -1048,7 +1037,6 @@ with tab_home:
             pie_data_js_lines.append(f"{{ name: '{ticker}', y: {val}, color: '{chart_color}' }}")
     pie_data_js = ",\n".join(pie_data_js_lines)
 
-    # Chart 3: PnL Bar Data with Timeframes
     pnl_data_js_dict = {'all': '', '1y': '', '30d': '', '7d': '', '1d': ''}
     if not pnl_df.empty:
         active_tickers = [t for t in df_port['Ticker'] if t != 'STABLES']
@@ -1081,7 +1069,6 @@ with tab_home:
         pnl_data_js_dict['30d'] = format_pnl_js(pnl_30d)
         pnl_data_js_dict['1y'] = format_pnl_js(pnl_1y)
 
-    # Chart 5: Invested vs Current Value Data
     df_iv = df_port[df_port['Ticker'] != 'STABLES'].sort_values(by='Value', ascending=False)
     inv_val_categories_list = [str(r['Ticker']) for _, r in df_iv.iterrows()]
     inv_val_categories_js = json.dumps(inv_val_categories_list)
@@ -1097,7 +1084,6 @@ with tab_home:
     val_data_js = ",\n".join(val_data_points)
     inv_data_js = ",\n".join(inv_data_points)
     
-    # Chart 6: ROI % Bar Data
     df_roi = df_port[df_port['Ticker'] != 'STABLES'].sort_values(by='PnL %', ascending=False)
     roi_data_js_lines = []
     for _, r in df_roi.iterrows():
@@ -1108,7 +1094,6 @@ with tab_home:
             roi_data_js_lines.append(f"{{ name: '{t}', y: {val}, color: '{c}99' }}")
     roi_data_js = ",\n".join(roi_data_js_lines)
 
-    # Chart 7: 24h Change Placeholder Data
     daily_data_js_lines = []
     for _, r in df_port[df_port['Ticker'] != 'STABLES'].iterrows():
         t = r['Ticker']
@@ -1251,7 +1236,6 @@ with tab_home:
                     gap: 16px; 
                 }}
                 
-                /* Shrink buttons slightly on very small phones to prevent overlap */
                 .chart-controls button {{
                     padding: 3px 6px;
                     font-size: 9px;
@@ -1330,7 +1314,6 @@ with tab_home:
         
         <script>
             Highcharts.setOptions({{ global: {{ useUTC: false }} }});
-            // Helper for proper negative dollar signs without messing up Privacy mode
             function formatMoneyStr(val) {{
                 return val < 0 ? '-$' + Highcharts.numberFormat(Math.abs(val), 2) : '$' + Highcharts.numberFormat(val, 2);
             }}
@@ -1385,7 +1368,6 @@ with tab_home:
                          {{ name: 'Net Invested', type: 'line', data: [{hist_inv_js}], color: '#64748b', dashStyle: 'Dash', lineWidth: 2, zIndex: 1 }}]
             }});
 
-            // Custom Range Logic for History Chart
             document.querySelectorAll('.hist-controls button').forEach(btn => {{
                 btn.addEventListener('click', (e) => {{
                     e.stopPropagation();
@@ -1442,7 +1424,6 @@ with tab_home:
                     const range = btn.getAttribute('data-range');
                     const chart = Highcharts.charts.find(c => c && c.renderTo.id === 'pnl-container');
                     if (chart && window.pnlDataMap[range]) {{
-                        // Crucial: Use deep cloned object to prevent Highcharts from mutating shared reference which breaks the ALL button
                         chart.series[0].setData(JSON.parse(JSON.stringify(window.pnlDataMap[range])), true, {{ duration: 500 }}, true);
                     }}
                 }});
@@ -1487,7 +1468,7 @@ with tab_home:
                 series: [{{ name: '24h Change', data: [ {daily_data_js} ] }}]
             }});
 
-            // Chart 4: Portfolio Allocation (Stacked Area -> smooth areaspline)
+            // Chart 4: Portfolio Allocation
             Highcharts.chart('allocation-container', {{
                 chart: {{ type: 'areaspline', backgroundColor: 'transparent', marginTop: 45, marginBottom: 35 }},
                 title: {{ text: 'Asset Allocation', align: 'left', x: 8, y: 24, style: {{ color: '#e2e8f0', fontSize: '13px', fontWeight: 'bold' }} }},
@@ -1509,7 +1490,7 @@ with tab_home:
                 series: [{allocation_series_js}]
             }});
 
-            // Chart 5: Invested vs Current Value (Grouped Column)
+            // Chart 5: Invested vs Current Value
             Highcharts.chart('inv-val-container', {{
                 chart: {{ type: 'column', backgroundColor: 'transparent', marginTop: 45, marginBottom: 35 }},
                 title: {{ text: 'Invested vs Current Value', align: 'left', x: 8, y: 24, style: {{ color: '#e2e8f0', fontSize: '13px', fontWeight: 'bold' }} }},
@@ -1561,7 +1542,6 @@ with tab_home:
             }} catch(e) {{}}
 
             function toggleExpandChart(wrapperId) {{
-                // BLOCK PC COMPLETELY - Only runs on Mobile
                 if (window.innerWidth > 768) return;
                 const el = document.getElementById(wrapperId);
                 const overlay = document.getElementById('chart-overlay');
@@ -1577,43 +1557,31 @@ with tab_home:
                 const screenH = window.parent ? window.parent.innerHeight : window.innerHeight;
 
                 if (el.classList.contains('expanded-chart')) {{
-                    // ==========================================
-                    // CLOSING MECHANICS 
-                    // ==========================================
                     overlay.classList.remove('active');
                     const origTop = parseFloat(el.getAttribute('data-orig-top')) || 0;
                     const origLeft = parseFloat(el.getAttribute('data-orig-left')) || 0;
-                    // Instantly remove class so background crossfades cleanly during the travel
                     el.classList.remove('expanded-chart');
-                    // Transition smoothly to original slot
                     el.style.transition = 'transform 0.4s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.4s ease, box-shadow 0.4s ease';
                     el.style.transform = `translate(${{origLeft}}px, ${{origTop}}px) scale(1)`;
 
-                    // Ensure flawless snapping without a flash when the CSS transition finishes
                     const finishClose = (e) => {{
                         if (e && e.propertyName !== 'transform') return;
                         el.removeEventListener('transitionend', finishClose);
                         clearTimeout(el._closeTimeout);
                         if (parentIframe) parentIframe.classList.remove('fullscreen-mode');
                         el.style.cssText = ''; 
-                        wrapper.style.overflowX = 'auto'; // Restore scroll snapping
+                        wrapper.style.overflowX = 'auto'; 
                         
-                        // Restore siblings
                         document.querySelectorAll('.chart-box').forEach(c => {{
                             c.style.opacity = '1';
                             c.style.pointerEvents = 'auto';
                         }});
                     }};
                     el.addEventListener('transitionend', finishClose);
-                    el._closeTimeout = setTimeout(() => {{ finishClose(); }}, 450); // Fallback
+                    el._closeTimeout = setTimeout(() => {{ finishClose(); }}, 450); 
                     return;
                 }}
                 
-                // ==========================================
-                // OPENING MECHANICS 
-                // ==========================================
-                
-                // 1. SILENT VANISH: instantly hide siblings to prevent bleeding
                 document.querySelectorAll('.chart-box').forEach(c => {{
                     if (c.id !== wrapperId) {{
                         c.style.transition = 'opacity 0.15s ease';
@@ -1641,7 +1609,6 @@ with tab_home:
                 let targetW = screenW * 0.95;
                 let targetH = screenH * 0.70;
                 
-                // Calculate perfectly uniform maximum scale
                 const maxScaleX = targetW / origW;
                 const maxScaleY = targetH / origH;
                 const targetScale = Math.min(maxScaleX, maxScaleY);
@@ -1651,11 +1618,9 @@ with tab_home:
                 const centerLeft = (screenW - scaledW) / 2;
                 const centerTop = (screenH - scaledH) / 2;
 
-                // Save origins
                 el.setAttribute('data-orig-top', visualTop);
                 el.setAttribute('data-orig-left', visualLeft);
 
-                // Phase 1: Lock the chart in its starting spot natively small, no HC Redraw
                 el.style.position = 'fixed';
                 el.style.top = '0px';
                 el.style.left = '0px';
@@ -1667,9 +1632,8 @@ with tab_home:
                 el.style.transition = 'none';
                 el.style.transform = `translate(${{visualLeft}}px, ${{visualTop}}px) scale(1)`;
                 
-                void el.offsetWidth; // Force CSS Engine Reflow
+                void el.offsetWidth; 
 
-                // Phase 2: Add CSS class for background color and apply transform translation/scale
                 el.classList.add('expanded-chart');
                 el.style.transition = 'transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.4s ease, box-shadow 0.4s ease';
                 el.style.transform = `translate(${{centerLeft}}px, ${{centerTop}}px) scale(${{targetScale}})`;
@@ -2202,7 +2166,6 @@ with tab_home:
             
             let totalCoinValue = 0;
             let totalCoinInvested = 0;
-            // Keep track of diffs to update charts smoothly
             let tickerValues = {{}};
             let tickerDiffs = {{}};
             let tickerRoi = {{}};
@@ -2253,7 +2216,6 @@ with tab_home:
                             pnlPctEl.style.color = color;
                         }}
                         
-                        // Update Historical Metrics directly via math
                         const p7d = parseFloat(card.getAttribute('data-price-7d'));
                         const p30d = parseFloat(card.getAttribute('data-price-30d'));
                         const p90d = parseFloat(card.getAttribute('data-price-90d'));
@@ -2263,7 +2225,6 @@ with tab_home:
                         updateMetricUI(card, ticker, '30d', p30d, price);
                         updateMetricUI(card, ticker, '90d', p90d, price);
                         updateMetricUI(card, ticker, 'ytd', pytd, price);
-                        // Update sparkline chart
                         if (window.chartCache && window.chartCache[ticker] && window.chartCache[ticker].chartObj) {{
                             const chart = window.chartCache[ticker].chartObj;
                             const dataLen = chart.data.datasets[0].data.length;
@@ -2274,7 +2235,6 @@ with tab_home:
                         }}
                     }}
                     
-                    // Update live 24h change text
                     if (changeSpan && data.RAW[sym].USD.CHANGEPCT24HOUR !== undefined) {{
                         const change = data.RAW[sym].USD.CHANGEPCT24HOUR;
                         ticker24h[ticker] = change;
@@ -2310,9 +2270,6 @@ with tab_home:
             if (dPnlPct) {{ dPnlPct.innerText = dashPnlPctStr;
             dPnlPct.style.color = dashColor; }}
 
-            // ==========================================
-            // DYNAMICALLY UPDATE HIGHCHARTS (SYNCED)
-            // ==========================================
             try {{
                 let hcWin = null;
                 const iframes = window.parent.document.querySelectorAll('iframe');
@@ -2333,7 +2290,6 @@ with tab_home:
                     const allocChart = HC.charts.find(c => c && c.renderTo.id === 'allocation-container');
                     const invValChart = HC.charts.find(c => c && c.renderTo.id === 'inv-val-container');
                     
-                    // 1. Pie Chart
                     if (pieChart && pieChart.series[0]) {{
                         pieChart.series[0].points.forEach(point => {{
                             if (tickerValues[point.name] !== undefined) {{
@@ -2343,7 +2299,6 @@ with tab_home:
                         pieChart.redraw(true);
                     }}
 
-                    // 2. History Chart (Portfolio Value is series 0)
                     if (histChart && histChart.series[0]) {{
                         const points = histChart.series[0].points;
                         if (points && points.length > 0) {{
@@ -2353,7 +2308,6 @@ with tab_home:
                         histChart.redraw(true);
                     }}
 
-                    // 3. PnL Bar Chart
                     if (pnlChart && pnlChart.series[0]) {{
                         pnlChart.series[0].points.forEach(point => {{
                             if (tickerDiffs[point.name] !== undefined) {{
@@ -2372,7 +2326,6 @@ with tab_home:
                         pnlChart.redraw(true);
                     }}
                     
-                    // 4. ROI Chart
                     if (roiChart && roiChart.series[0]) {{
                          roiChart.series[0].points.forEach(point => {{
                             if (tickerRoi[point.name] !== undefined) {{
@@ -2382,7 +2335,6 @@ with tab_home:
                         roiChart.redraw(true);
                     }}
                     
-                    // 5. Daily 24h Chart
                     if (dailyChart && dailyChart.series[0]) {{
                          dailyChart.series[0].points.forEach(point => {{
                              if (ticker24h[point.name] !== undefined) {{
@@ -2394,7 +2346,6 @@ with tab_home:
                         dailyChart.redraw(true);
                     }}
 
-                    // 6. Asset Allocation Chart
                     if (allocChart) {{
                         allocChart.series.forEach(s => {{
                             if (tickerValues[s.name] !== undefined) {{
@@ -2408,7 +2359,6 @@ with tab_home:
                         allocChart.redraw(true);
                     }}
 
-                    // 7. Invested vs Value Chart (Series 1 is 'Current Value')
                     if (invValChart && invValChart.series[1]) {{
                         invValChart.series[1].points.forEach(point => {{
                             if (tickerValues[point.name] !== undefined) {{
@@ -2497,7 +2447,6 @@ with tab_home:
                 }}
             }});
             
-            // Immediately push this initial fetch into the daily Highcharts graph
             try {{
                 let hcWin = window;
                 if (window !== window.parent) {{
@@ -2629,7 +2578,6 @@ with tab_home:
         const border = card.getAttribute('data-border');
         card.style.setProperty('--border', border);
         
-        // We initialize the calculated static metrics here so they appear instantly 
         const p7d = parseFloat(card.getAttribute('data-price-7d'));
         const p30d = parseFloat(card.getAttribute('data-price-30d'));
         const p90d = parseFloat(card.getAttribute('data-price-90d'));
@@ -2664,7 +2612,6 @@ with tab_home:
         }}
     }});
     
-    // Initial call to sync 24h change values immediately on load
     updateLivePrices();
     restoreFlippedState();
     
@@ -2687,15 +2634,40 @@ with tab_crypto:
 
     st.markdown("""
     <style>
-    /* 1. NEW ADD TRANSACTION CARD */
-    div[data-testid="stForm"]:has(.add-tx-card) {
+    /* ==============================================================
+       NEW COMPACT EXPANDER FOR FORMS
+       ============================================================== */
+    div[data-testid="stExpander"] {
         background: #0f172a !important;
         border: 1px solid rgba(255,255,255,0.05) !important;
-        border-radius: 16px !important;
-        padding: 24px !important;
+        border-radius: 12px !important;
         box-shadow: 0 4px 15px rgba(0,0,0,0.3) !important;
         margin-bottom: 24px !important;
     }
+    div[data-testid="stExpander"] summary {
+        color: #00ff9d !important;
+        font-weight: 700 !important;
+        font-size: 1.1rem !important;
+        padding: 12px 16px !important;
+        background: transparent !important;
+    }
+    div[data-testid="stExpander"] summary svg {
+        color: #00ff9d !important;
+        fill: #00ff9d !important;
+    }
+    div[data-testid="stExpanderDetails"] {
+        padding: 0 16px 16px 16px !important;
+    }
+    /* Neutralize form border inside expander */
+    div[data-testid="stExpanderDetails"] div[data-testid="stForm"] {
+        padding: 0 !important;
+        border: none !important;
+        box-shadow: none !important;
+        margin-bottom: 0 !important;
+        background: transparent !important;
+    }
+
+    /* 1. INPUTS STYLING */
     div[data-testid="stForm"]:has(.add-tx-card) label { font-size: 0.85rem !important; color: #94a3b8 !important; padding-bottom: 2px !important; }
     
     div[data-testid="stForm"]:has(.add-tx-card) .stTextInput input,
@@ -2724,14 +2696,11 @@ with tab_crypto:
         margin-top: 12px !important;
         gap: 12px !important;
     }
-    /* Make switch column hug content, make button column take rest */
     div[data-testid="stForm"]:has(.add-tx-card) div[data-testid="stHorizontalBlock"]:has(> div[data-testid="column"]:nth-child(2):last-child) > div[data-testid="column"]:nth-child(1) {
-        flex: 0 0 auto !important;
-        width: auto !important;
+        flex: 0 0 auto !important; width: auto !important;
     }
     div[data-testid="stForm"]:has(.add-tx-card) div[data-testid="stHorizontalBlock"]:has(> div[data-testid="column"]:nth-child(2):last-child) > div[data-testid="column"]:nth-child(2) {
-        flex: 1 1 auto !important;
-        width: auto !important;
+        flex: 1 1 auto !important; width: auto !important;
     }
 
     /* BEAUTIFUL BUY/SELL SWITCH */
@@ -2749,30 +2718,21 @@ with tab_crypto:
         min-width: 200px !important;
     }
     div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label {
-        margin: 0 !important;
-        cursor: pointer !important; 
-        padding: 0 !important; 
-        border-radius: 8px !important;
-        border: 1px solid transparent !important; 
-        transition: all 0.3s ease !important;
-        background: transparent !important;
-        flex: 1 !important; 
-        display: flex !important;
-        justify-content: center !important;
-        align-items: center !important;
-        height: 100% !important;
+        margin: 0 !important; cursor: pointer !important; padding: 0 !important; 
+        border-radius: 8px !important; border: 1px solid transparent !important; 
+        transition: all 0.3s ease !important; background: transparent !important;
+        flex: 1 !important; display: flex !important; justify-content: center !important;
+        align-items: center !important; height: 100% !important;
     }
     div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label:hover { background: rgba(255,255,255,0.05) !important; }
     div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label > div:first-child { display: none !important; } 
     div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label p {
-        font-weight: bold !important;
-        font-size: 1.05rem !important; color: #94a3b8 !important; margin: 0 !important; padding: 0 !important; white-space: nowrap !important; line-height: 1 !important;
+        font-weight: bold !important; font-size: 1.05rem !important; color: #94a3b8 !important; margin: 0 !important; padding: 0 !important; white-space: nowrap !important; line-height: 1 !important;
     }
     /* Active Buy */
     div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label:has(input:checked):first-child,
     div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label[aria-checked="true"]:first-child {
-        background: rgba(0, 255, 157, 0.15) !important;
-        border-color: #00ff9d !important;
+        background: rgba(0, 255, 157, 0.15) !important; border-color: #00ff9d !important;
     }
     div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label:has(input:checked):first-child p,
     div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label[aria-checked="true"]:first-child p { color: #00ff9d !important; }
@@ -2780,23 +2740,18 @@ with tab_crypto:
     /* Active Sell */
     div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label:has(input:checked):last-child,
     div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label[aria-checked="true"]:last-child {
-        background: rgba(255, 77, 77, 0.15) !important;
-        border-color: #ff4d4d !important;
+        background: rgba(255, 77, 77, 0.15) !important; border-color: #ff4d4d !important;
     }
     div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label:has(input:checked):last-child p,
     div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label[aria-checked="true"]:last-child p { color: #ff4d4d !important; }
 
     /* 3. RIGHT ALIGNED SUBMIT BUTTON */
     div[data-testid="stForm"]:has(.add-tx-card) .stButton {
-        display: flex !important;
-        justify-content: flex-end !important; /* Force to right side */
-        align-items: center !important;
-        margin: 0 !important; padding: 0 !important;
-        width: 100% !important;
+        display: flex !important; justify-content: flex-end !important; align-items: center !important;
+        margin: 0 !important; padding: 0 !important; width: 100% !important;
     }
     div[data-testid="stForm"]:has(.add-tx-card) .stButton > button {
-        background: #1e2a44 !important;
-        color: #e0e0e0 !important; padding: 0 24px !important;
+        background: #1e2a44 !important; color: #e0e0e0 !important; padding: 0 24px !important;
         border-radius: 10px !important; font-size: 1.05rem !important; font-weight: 700 !important;
         box-shadow: 0 4px 15px rgba(0,0,0,0.25) !important; transition: all 0.3s ease !important;
         border: none !important; margin: 0 !important; width: auto !important;
@@ -2807,13 +2762,15 @@ with tab_crypto:
         box-shadow: 0 8px 20px rgba(255, 255, 255, 0.2) !important; color: white !important;
     }
 
-    /* 4. TRANSACTION ROW STYLING & INLINE BUTTONS */
+    /* ==============================================================
+       4. HIGHLY COMPACT TRANSACTION ROW STYLING 
+       ============================================================== */
     div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row) {
         background: #0f172a !important;
         border: 1px solid rgba(255,255,255,0.05) !important;
-        border-radius: 12px !important;
-        padding: 12px 16px !important;
-        margin-bottom: 12px !important;
+        border-radius: 8px !important; /* Smaller radius */
+        padding: 6px 12px !important;  /* Halved padding */
+        margin-bottom: 6px !important; /* Halved margin */
         position: relative;
         z-index: 2;
     }
@@ -2821,14 +2778,14 @@ with tab_crypto:
     
     div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row) div[data-testid="stButton"] button {
         background: rgba(255,255,255,0.05) !important;
-        border-radius: 8px !important; border: none !important;
-        height: 40px !important; width: 40px !important; display: flex !important; align-items: center !important;
-        justify-content: center !important; padding: 0 !important; margin: 0 auto !important; font-size: 1.2rem !important;
+        border-radius: 6px !important; border: none !important;
+        height: 30px !important; width: 30px !important; /* Smaller Buttons */
+        display: flex !important; align-items: center !important;
+        justify-content: center !important; padding: 0 !important; margin: 0 auto !important; font-size: 1rem !important;
         transition: all 0.2s !important;
     }
     div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row) div[data-testid="stButton"] button:hover {
-        background: rgba(255,255,255,0.15) !important;
-        transform: scale(1.05) !important;
+        background: rgba(255,255,255,0.15) !important; transform: scale(1.05) !important;
     }
 
     /* 5. SMOOTH EDIT ROLLOUT */
@@ -2837,52 +2794,36 @@ with tab_crypto:
         animation: rollDown 0.3s ease forwards !important;
         background: rgba(0,0,0,0.2) !important;
         border-left: 3px solid #00ff9d !important; border-radius: 0 0 12px 12px !important;
-        border-top: none !important; border-right: none !important;
-        border-bottom: none !important;
-        padding: 16px !important; margin-top: -24px !important; margin-bottom: 20px !important;
+        border-top: none !important; border-right: none !important; border-bottom: none !important;
+        padding: 12px !important; margin-top: -16px !important; margin-bottom: 12px !important; /* Tighter spacing */
         position: relative; z-index: 1;
         box-shadow: inset 0 4px 10px rgba(0,0,0,0.15) !important;
     }
     div[data-testid="stForm"]:has(.edit-rollout) div[data-baseweb="select"] > div {
-        background: rgba(255,255,255,0.03) !important;
-        border: 1px solid rgba(255,255,255,0.1) !important;
+        background: rgba(255,255,255,0.03) !important; border: 1px solid rgba(255,255,255,0.1) !important;
     }
 
     /* 6. REDESIGNED DELETE DIALOG */
     div[data-testid="stVerticalBlockBorderWrapper"]:has(.del-warn) {
-        border-color: rgba(255, 77, 77, 0.3) !important;
-        background: rgba(15, 23, 42, 0.95) !important;
-        border-radius: 12px !important; 
-        padding: 16px !important; 
-        text-align: center !important;
-        margin-bottom: 12px !important;
-        box-shadow: 0 4px 20px rgba(0,0,0,0.4) !important;
+        border-color: rgba(255, 77, 77, 0.3) !important; background: rgba(15, 23, 42, 0.95) !important;
+        border-radius: 8px !important; padding: 12px !important; text-align: center !important;
+        margin-bottom: 8px !important; box-shadow: 0 4px 20px rgba(0,0,0,0.4) !important;
     }
     div[data-testid="stVerticalBlockBorderWrapper"]:has(.del-warn) .stButton > button {
-        border-radius: 8px !important;
-        font-weight: 600 !important; 
-        transition: all 0.2s !important; 
-        width: 100% !important; 
-        margin-top: 8px !important;
-        padding: 6px 12px !important;
+        border-radius: 6px !important; font-weight: 600 !important; transition: all 0.2s !important; 
+        width: 100% !important; margin-top: 4px !important; padding: 4px 8px !important;
     }
     div[data-testid="stVerticalBlockBorderWrapper"]:has(.del-warn) div[data-testid="column"]:nth-child(1) .stButton > button {
-        background: rgba(255, 77, 77, 0.1) !important;
-        color: #ff4d4d !important; 
-        border: 1px solid rgba(255, 77, 77, 0.3) !important;
+        background: rgba(255, 77, 77, 0.1) !important; color: #ff4d4d !important; border: 1px solid rgba(255, 77, 77, 0.3) !important;
     }
     div[data-testid="stVerticalBlockBorderWrapper"]:has(.del-warn) div[data-testid="column"]:nth-child(1) .stButton > button:hover {
-        background: #ff4d4d !important;
-        color: white !important;
+        background: #ff4d4d !important; color: white !important;
     }
     div[data-testid="stVerticalBlockBorderWrapper"]:has(.del-warn) div[data-testid="column"]:nth-child(2) .stButton > button {
-        background: rgba(255, 255, 255, 0.05) !important;
-        color: #cbd5e1 !important; 
-        border: 1px solid rgba(255, 255, 255, 0.1) !important;
+        background: rgba(255, 255, 255, 0.05) !important; color: #cbd5e1 !important; border: 1px solid rgba(255, 255, 255, 0.1) !important;
     }
     div[data-testid="stVerticalBlockBorderWrapper"]:has(.del-warn) div[data-testid="column"]:nth-child(2) .stButton > button:hover {
-        background: rgba(255, 255, 255, 0.15) !important;
-        color: white !important;
+        background: rgba(255, 255, 255, 0.15) !important; color: white !important;
     }
 
     /* ==============================================================
@@ -2890,168 +2831,109 @@ with tab_crypto:
        ============================================================== */
     @media (max-width: 768px) {
         .glossy-header { margin-top: 0px !important; margin-bottom: 16px !important;
-        padding: 20px 16px !important;
-        font-size: 22px !important; min-height: 90px; }
+        padding: 20px 16px !important; font-size: 22px !important; min-height: 90px; }
         .home-header { margin-bottom: 0 !important; }
         
         /* Fix Add Form Mobile Grid */
-        /* Force all horizontal blocks inside the form to flex explicitly */
         div[data-testid="stForm"]:has(.add-tx-card) div[data-testid="stHorizontalBlock"] {
-            display: flex !important;
-            flex-direction: row !important; 
-            flex-wrap: wrap !important; 
-            gap: 12px !important;
+            display: flex !important; flex-direction: row !important; flex-wrap: wrap !important; gap: 12px !important;
         }
-        
-        /* The 4-column inputs row -> map exactly to 2x2 grid */
-        div[data-testid="stForm"]:has(.add-tx-card) div[data-testid="stHorizontalBlock"]:has(> div[data-testid="column"]:nth-child(4)) > div[data-testid="column"] {
-            min-width: calc(50% - 12px) !important;
-            width: calc(50% - 12px) !important;
-            flex: 1 1 calc(50% - 12px) !important;
-        }
-        
-        /* FIAT 3 Column Input override -> map to 2x2 */
-        div[data-testid="stForm"]:has(.add-tx-card) div[data-testid="stHorizontalBlock"]:has(> div[data-testid="column"]:nth-child(3)) > div[data-testid="column"] {
-            min-width: calc(50% - 12px) !important;
-            width: calc(50% - 12px) !important;
-            flex: 1 1 calc(50% - 12px) !important;
-        }
-        
-        div[data-testid="stForm"]:has(.add-tx-card) input { padding: 6px !important;
-        font-size: 0.95rem !important;
-        }
-        
-        /* The 2-column action row -> map to the 50/50 split below inputs (Switch left, Button right) */
+        div[data-testid="stForm"]:has(.add-tx-card) div[data-testid="stHorizontalBlock"]:has(> div[data-testid="column"]:nth-child(4)) > div[data-testid="column"],
+        div[data-testid="stForm"]:has(.add-tx-card) div[data-testid="stHorizontalBlock"]:has(> div[data-testid="column"]:nth-child(3)) > div[data-testid="column"],
         div[data-testid="stForm"]:has(.add-tx-card) div[data-testid="stHorizontalBlock"]:has(> div[data-testid="column"]:nth-child(2):last-child) > div[data-testid="column"] {
-            min-width: calc(50% - 12px) !important;
-            width: calc(50% - 12px) !important;
-            flex: 1 1 calc(50% - 12px) !important;
+            min-width: calc(50% - 12px) !important; width: calc(50% - 12px) !important; flex: 1 1 calc(50% - 12px) !important;
         }
-        div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] {
-            min-width: 0 !important;
-            width: 100% !important; 
-        }
-        /* Push the submit button to the absolute right of its column */
-        div[data-testid="stForm"]:has(.add-tx-card) .stButton {
-            display: flex !important;
-            justify-content: flex-end !important;
-            width: 100% !important;
-        }
-        div[data-testid="stForm"]:has(.add-tx-card) .stButton > button {
-            width: 100% !important;
-            max-width: 120px !important; 
-            padding: 0 16px !important;
-        }
+        div[data-testid="stForm"]:has(.add-tx-card) input { padding: 6px !important; font-size: 0.95rem !important; }
+        div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] { min-width: 0 !important; width: 100% !important; }
+        div[data-testid="stForm"]:has(.add-tx-card) .stButton { display: flex !important; justify-content: flex-end !important; width: 100% !important; }
+        div[data-testid="stForm"]:has(.add-tx-card) .stButton > button { width: 100% !important; max-width: 120px !important; padding: 0 16px !important; }
 
-        /* Force Mobile Transaction Rows to stay perfectly horizontal */
+        /* Force Mobile Transaction Rows to stay perfectly horizontal and COMPACT */
         div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row) > div > div[data-testid="stVerticalBlock"] > div[data-testid="stHorizontalBlock"] {
-            display: flex !important;
-            flex-direction: row !important; flex-wrap: nowrap !important; align-items: center !important; overflow: hidden !important; gap: 2px !important;
+            display: flex !important; flex-direction: row !important; flex-wrap: nowrap !important; align-items: center !important; overflow: hidden !important; gap: 4px !important;
         }
         div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row) div[data-testid="column"] {
-            min-width: 0 !important;
-            padding: 0 !important; width: auto !important; flex-shrink: 1 !important;
+            min-width: 0 !important; padding: 0 !important; width: auto !important; flex-shrink: 1 !important;
         }
-        /* Exact layout for the 5 strict columns to prevent ANY dropping/wrapping */
-        div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row) > div > div[data-testid="stVerticalBlock"] > div[data-testid="stHorizontalBlock"] > div[data-testid="column"]:nth-child(1) { flex: 0 0 35px !important;
-        width: 35px !important; } /* Logo */
-        div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row) > div > div[data-testid="stVerticalBlock"] > div[data-testid="stHorizontalBlock"] > div[data-testid="column"]:nth-child(2) { flex: 1 1 auto !important;
-        overflow: hidden !important; text-align: left; } /* Ticker */
-        div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row) > div > div[data-testid="stVerticalBlock"] > div[data-testid="stHorizontalBlock"] > div[data-testid="column"]:nth-child(3) { flex: 1.5 1 auto !important;
-        overflow: hidden !important; text-align: center; } /* Amounts */
-        div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row) > div > div[data-testid="stVerticalBlock"] > div[data-testid="stHorizontalBlock"] > div[data-testid="column"]:nth-child(4) { flex: 0 0 36px !important;
-        width: 36px !important; } /* Edit */
-        div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row) > div > div[data-testid="stVerticalBlock"] > div[data-testid="stHorizontalBlock"] > div[data-testid="column"]:nth-child(5) { flex: 0 0 36px !important;
-        width: 36px !important; } /* Delete */
+        
+        /* Strict proportional compact grid for mobile */
+        div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row) > div > div[data-testid="stVerticalBlock"] > div[data-testid="stHorizontalBlock"] > div[data-testid="column"]:nth-child(1) { flex: 0 0 28px !important; width: 28px !important; } /* Logo */
+        div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row) > div > div[data-testid="stVerticalBlock"] > div[data-testid="stHorizontalBlock"] > div[data-testid="column"]:nth-child(2) { flex: 1.2 1 auto !important; overflow: hidden !important; text-align: left; } /* Ticker */
+        div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row) > div > div[data-testid="stVerticalBlock"] > div[data-testid="stHorizontalBlock"] > div[data-testid="column"]:nth-child(3) { flex: 1.5 1 auto !important; overflow: hidden !important; text-align: right; } /* Amounts Right Aligned */
+        div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row) > div > div[data-testid="stVerticalBlock"] > div[data-testid="stHorizontalBlock"] > div[data-testid="column"]:nth-child(4) { flex: 0 0 28px !important; width: 28px !important; } /* Edit */
+        div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row) > div > div[data-testid="stVerticalBlock"] > div[data-testid="stHorizontalBlock"] > div[data-testid="column"]:nth-child(5) { flex: 0 0 28px !important; width: 28px !important; } /* Delete */
         
         div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row) div[data-testid="stButton"] button {
-            width: 30px !important;
-            height: 30px !important; font-size: 0.9rem !important; margin: 0 auto !important;
+            width: 26px !important; height: 26px !important; font-size: 0.85rem !important; margin: 0 auto !important;
         }
         
-        .mobile-logo { width: 32px !important;
-        height: 32px !important; margin-top: 0 !important; }
-        .mobile-tx-ticker { font-size: 0.95rem !important;
-        margin-left: 2px !important;}
-        .mobile-tx-amount { font-size: 0.95rem !important;
-        white-space: nowrap !important;
-        }
-        .mobile-tx-sub { font-size: 0.7rem !important;
-        white-space: nowrap !important;
-        margin-left: 2px !important;}
+        /* Shrunk Text for Mobile */
+        .mobile-logo { width: 26px !important; height: 26px !important; margin-top: 4px !important; }
+        .mobile-tx-ticker { font-size: 0.95rem !important; margin-left: 2px !important;}
+        .mobile-tx-amount { font-size: 0.95rem !important; white-space: nowrap !important; }
+        .mobile-tx-sub { font-size: 0.65rem !important; white-space: nowrap !important; margin-left: 2px !important; margin-top: -2px !important;}
         
         /* Dashboard Mobile Stats Override Fix */
-        .stats-layer-inner { gap: 6px !important;
-        }
-        .stats-layer { margin-top: -60px !important; margin-bottom: 18px;
-        } 
-        .glossy-box.swapped { height: 80px !important;
-        min-height: 80px !important; max-height: 80px !important;
-        padding: 0 !important; min-width: 0 !important;
-        }
-        .dash-value { font-size: clamp(11px, 3.5vw, 15px) !important;
-        top: 24px !important; } 
-        .dash-label { font-size: clamp(8px, 2.5vw, 10px) !important;
-        bottom: 8px !important; white-space: nowrap !important; letter-spacing: 0.5px !important; }
+        .stats-layer-inner { gap: 6px !important; }
+        .stats-layer { margin-top: -60px !important; margin-bottom: 18px; } 
+        .glossy-box.swapped { height: 80px !important; min-height: 80px !important; max-height: 80px !important; padding: 0 !important; min-width: 0 !important; }
+        .dash-value { font-size: clamp(11px, 3.5vw, 15px) !important; top: 24px !important; } 
+        .dash-label { font-size: clamp(8px, 2.5vw, 10px) !important; bottom: 8px !important; white-space: nowrap !important; letter-spacing: 0.5px !important; }
         
         /* Restyled Subdued USDC Banner Mobile */
-        .usdc-banner { padding: 8px 14px;
-        width: 92%; margin: 4px auto 8px auto !important; }
-        .usdc-banner-left img { width: 24px;
-        height: 24px; }
-        .usdc-banner-title { font-size: 0.95rem;
-        }
-        .usdc-banner-subtitle { font-size: 0.7rem;
-        }
-        .usdc-banner-amount { font-size: 1.1rem;
-        }
+        .usdc-banner { padding: 8px 14px; width: 92%; margin: 4px auto 8px auto !important; }
+        .usdc-banner-left img { width: 24px; height: 24px; }
+        .usdc-banner-title { font-size: 0.95rem; }
+        .usdc-banner-subtitle { font-size: 0.7rem; }
+        .usdc-banner-amount { font-size: 1.1rem; }
     }
     </style>
     """, unsafe_allow_html=True)
 
-    # 1. ADD NEW TRANSACTION CARD
-    with st.form("add_crypto", border=False):
-        st.markdown("<div class='add-tx-card'></div><h3 style='text-align: center; color: white; margin-top: 0px; margin-bottom: 10px;'>New Transaction</h3>", unsafe_allow_html=True)
-        
-        # Row 1: Inputs
-        r1c1, r1c2, r1c3, r1c4 = st.columns(4)
-        with r1c1: selected_date = st.date_input("Date", value=date(2026, 3, 25))
-        with r1c2: ticker = st.text_input("Coin Ticker", value="BTC").upper().strip()
-        with r1c3: stable_ticker = st.selectbox("Stablecoin", STABLECOINS_LIST, index=0)
-        with r1c4: 
-            stable_amt = st.number_input("Stable Amount", value=15.0, step=0.01)
-            coin_amt = st.number_input("Coin Amount", value=0.1, step=0.000001, format="%.8f")
-        
-        # Row 2: Action Row
-        action_col1, action_col2 = st.columns(2)
-        with action_col1:
-            tx_type = st.radio("Type", ["Buy", "Sell"], horizontal=True, label_visibility="collapsed")
-        with action_col2:
-            submitted = st.form_submit_button("+ Add")
-        
-        if submitted:
-            if ticker:
-                final_stable_amt = stable_amt if tx_type == "Buy" else -stable_amt
-                final_amount = coin_amt if tx_type == "Buy" else -coin_amt
-                price = round(stable_amt / coin_amt, 8) if coin_amt > 0 else 0.0
-                
-                new_row = pd.DataFrame([{"Datum": date_to_excel_serial(selected_date), "Stable_Amt": final_stable_amt, "Stable_Ticker": stable_ticker, "Ticker": ticker, "Amount": final_amount, "Price": price}])
-                st.session_state.crypto_df = pd.concat([st.session_state.crypto_df, new_row], ignore_index=True)
-                save_crypto(st.session_state.crypto_df)
-                st.session_state.crypto_table_version += 1
-                st.session_state.ui_version += 1
-                st.success(f"✅ Executed {tx_type}: {coin_amt} {ticker}")
-                st.rerun()
+    # 1. ADD NEW TRANSACTION CARD (TUCKED IN EXPANDER)
+    with st.expander("➕ Add New Crypto Transaction", expanded=False):
+        with st.form("add_crypto", border=False):
+            st.markdown("<div class='add-tx-card'></div>", unsafe_allow_html=True) # Hidden hook for CSS overrides
+            
+            # Row 1: Inputs
+            r1c1, r1c2, r1c3, r1c4 = st.columns(4)
+            with r1c1: selected_date = st.date_input("Date", value=date(2026, 3, 25))
+            with r1c2: ticker = st.text_input("Coin Ticker", value="BTC").upper().strip()
+            with r1c3: stable_ticker = st.selectbox("Stablecoin", STABLECOINS_LIST, index=0)
+            with r1c4: 
+                stable_amt = st.number_input("Stable Amount", value=15.0, step=0.01)
+                coin_amt = st.number_input("Coin Amount", value=0.1, step=0.000001, format="%.8f")
+            
+            # Row 2: Action Row
+            action_col1, action_col2 = st.columns(2)
+            with action_col1:
+                tx_type = st.radio("Type", ["Buy", "Sell"], horizontal=True, label_visibility="collapsed")
+            with action_col2:
+                submitted = st.form_submit_button("+ Add")
+            
+            if submitted:
+                if ticker:
+                    final_stable_amt = stable_amt if tx_type == "Buy" else -stable_amt
+                    final_amount = coin_amt if tx_type == "Buy" else -coin_amt
+                    price = round(stable_amt / coin_amt, 8) if coin_amt > 0 else 0.0
+                    
+                    new_row = pd.DataFrame([{"Datum": date_to_excel_serial(selected_date), "Stable_Amt": final_stable_amt, "Stable_Ticker": stable_ticker, "Ticker": ticker, "Amount": final_amount, "Price": price}])
+                    st.session_state.crypto_df = pd.concat([st.session_state.crypto_df, new_row], ignore_index=True)
+                    save_crypto(st.session_state.crypto_df)
+                    st.session_state.crypto_table_version += 1
+                    st.session_state.ui_version += 1
+                    st.success(f"✅ Executed {tx_type}: {coin_amt} {ticker}")
+                    st.rerun()
 
     df_display = st.session_state.crypto_df.copy()
     df_display['orig_idx'] = df_display.index
     df_display = df_display.dropna(how='all')
     df_display = df_display.sort_values(by='Datum', ascending=False)
 
-    st.markdown("<h4 style='color: white; margin-top: 20px; margin-bottom: 15px;'>Transaction History</h4>", unsafe_allow_html=True)
+    st.markdown("<h4 style='color: white; margin-top: 10px; margin-bottom: 10px;'>Transaction History</h4>", unsafe_allow_html=True)
     
     # 2. SCROLLABLE TRANSACTION LIST
-    with st.container(height=550, border=False):
+    with st.container(height=650, border=False):
         for i, r in df_display.iterrows():
             orig_idx = r['orig_idx']
             logo_url = get_ticker_logo(r['Ticker'])
@@ -3073,10 +2955,9 @@ with tab_crypto:
             price_formatted = format_price(price)
             date_str = format_datum(r['Datum'])
 
-            # If user clicked delete, show confirmation dialog replacing the row
             if st.session_state.get('confirm_delete_crypto') == orig_idx:
                 with st.container(border=True):
-                    st.markdown("<div class='del-warn'></div><h4 style='color: #ff4d4d; margin-top: 0; margin-bottom: 5px; font-size: 1.1rem; font-weight: 600;'>Delete this transaction?</h4>", unsafe_allow_html=True)
+                    st.markdown("<div class='del-warn'></div><h4 style='color: #ff4d4d; margin-top: 0; margin-bottom: 5px; font-size: 1rem; font-weight: 600;'>Delete this transaction?</h4>", unsafe_allow_html=True)
                     c_yes, c_no = st.columns(2)
                     with c_yes:
                         if st.button("Delete", key=f"yes_del_{orig_idx}", use_container_width=True):
@@ -3091,29 +2972,29 @@ with tab_crypto:
                             st.session_state['confirm_delete_crypto'] = None
                             st.rerun()
             else:
-                # Standard Row Display
+                # Standard Compact Row Display
                 with st.container(border=True):
                     st.markdown("<div class='tx-row'></div>", unsafe_allow_html=True)
                     
-                    # STRICT 5 COLUMNS: Logo, Ticker/Date, Values, Edit, Delete
-                    col_logo, col_ticker, col_vals, col_edit, col_del = st.columns([0.5, 2, 2.5, 0.5, 0.5])
+                    # Optimized columns for compactness
+                    col_logo, col_ticker, col_vals, col_edit, col_del = st.columns([0.3, 2, 2.5, 0.3, 0.3])
                     
                     with col_logo:
-                        st.markdown(f"<img src='{logo_url}' class='mobile-logo' style='width:42px;height:42px;border-radius:50%;object-fit:contain;margin-top:6px;' onerror=\"this.src='https://via.placeholder.com/42/1e2a44/ffffff?text={r['Ticker'][0]}';\">", unsafe_allow_html=True)
+                        st.markdown(f"<img src='{logo_url}' class='mobile-logo' style='width:34px;height:34px;border-radius:50%;object-fit:contain;margin-top:2px;' onerror=\"this.src='https://via.placeholder.com/34/1e2a44/ffffff?text={r['Ticker'][0]}';\">", unsafe_allow_html=True)
                         
                     with col_ticker:
                         st.markdown(f"""
-                            <div style="line-height: 1.2; margin-top: 6px; overflow: hidden; text-overflow: ellipsis;">
-                                <div class="mobile-tx-ticker" style="font-weight: 700; font-size: 1.15rem; color: #ffffff; white-space: nowrap;">{r['Ticker']}</div>
-                                <div class="mobile-tx-sub" style="font-size: 0.85rem; color: #94a3b8; white-space: nowrap;">{date_str}</div>
+                            <div style="line-height: 1.1; margin-top: 4px; overflow: hidden; text-overflow: ellipsis;">
+                                <div class="mobile-tx-ticker" style="font-weight: 700; font-size: 1.05rem; color: #ffffff; white-space: nowrap;">{r['Ticker']}</div>
+                                <div class="mobile-tx-sub" style="font-size: 0.75rem; color: #94a3b8; white-space: nowrap;">{date_str}</div>
                             </div>
                         """, unsafe_allow_html=True)
                         
                     with col_vals:
                         st.markdown(f"""
-                            <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; margin-top: 6px;">
-                                <div class="mobile-tx-amount" style="font-weight: 700; font-size: 1.15rem; color: {color}; white-space: nowrap;">{sign}{amount_formatted}</div>
-                                <div class="mobile-tx-sub" style="font-size: 0.85rem; color: #cbd5e1; white-space: nowrap;">{action_text}: {invested_formatted} @ ${price_formatted}</div>
+                            <div style="display: flex; flex-direction: column; align-items: flex-end; justify-content: center; gap: 0px; margin-top: 4px;">
+                                <div class="mobile-tx-amount" style="font-weight: 700; font-size: 1.05rem; color: {color}; white-space: nowrap;">{sign}{amount_formatted}</div>
+                                <div class="mobile-tx-sub" style="font-size: 0.75rem; color: #cbd5e1; white-space: nowrap;">{action_text}: {invested_formatted} @ ${price_formatted}</div>
                             </div>
                         """, unsafe_allow_html=True)
                         
@@ -3133,7 +3014,7 @@ with tab_crypto:
                 # 3. ROLL OUT EDIT FORM Directly Attached
                 if st.session_state.get('edit_crypto_row') == orig_idx:
                     with st.form(f"edit_crypto_form_{orig_idx}", border=False):
-                        st.markdown("<div class='edit-rollout form-compact-marker'></div><h4 style='color: #00ff9d; margin-top: 0px; margin-bottom: 15px;'>✏️ Edit Row Details</h4>", unsafe_allow_html=True)
+                        st.markdown("<div class='edit-rollout form-compact-marker'></div><h5 style='color: #00ff9d; margin-top: 0px; margin-bottom: 10px;'>✏️ Edit Row Details</h5>", unsafe_allow_html=True)
                         
                         e_r1c1, e_r1c2, e_r1c3 = st.columns([1,1,1])
                         with e_r1c1: new_date = st.date_input("Date", value=datetime(1899, 12, 30) + timedelta(days=int(r['Datum'])))
@@ -3177,7 +3058,7 @@ with tab_fiat:
     glossy_header("Fiat Transactions", FIAT_ICON)
 
     summary_html = f"""
-<div style="display:flex;flex-wrap:wrap;justify-content:center;gap:12px;margin-bottom:30px;">
+<div style="display:flex;flex-wrap:wrap;justify-content:center;gap:12px;margin-bottom:20px;">
 <div class="glossy-box swapped"><div class="dash-value">{total_czk:,.2f}</div><div class="dash-label">Total CZK</div></div>
 <div class="glossy-box swapped"><div class="dash-value">{total_eur:,.2f}</div><div class="dash-label">Total EUR</div></div>
 <div class="glossy-box swapped"><div class="dash-value">{format_money(total_stables)}</div><div class="dash-label">Total Stables</div></div>
@@ -3189,46 +3070,47 @@ with tab_fiat:
 """
     st.markdown(summary_html, unsafe_allow_html=True)
 
-    # 1. ADD NEW FIAT TRANSACTION CARD
-    with st.form("add_fiat", border=False):
-        st.markdown("<div class='add-tx-card'></div><h3 style='text-align: center; color: white; margin-top: 0px; margin-bottom: 10px;'>New Fiat Deposit</h3>", unsafe_allow_html=True)
-        
-        # Row 1: Inputs
-        f1, f2, f3 = st.columns(3)
-        with f1: selected_date = st.date_input("Date", value=date(2026, 3, 25))
-        with f2: czk = st.number_input("CZK Invested", value=1000.0, step=0.01)
-        with f3: eur = st.number_input("EUR Equivalent", value=40.0, step=0.01)
-        
-        f4, f5, f6 = st.columns(3)
-        with f4: fee = st.number_input("Fee (EUR)", value=1.0, step=0.01)
-        with f5: stable_ticker = st.selectbox("Received Stablecoin", STABLECOINS_LIST, index=0)
-        with f6: stable_amt = st.number_input("Stablecoin Amount", value=44.67, step=0.01)
-        
-        action_col1, action_col2 = st.columns(2)
-        with action_col1:
-            st.markdown("<div style='color: transparent;'>Spacing</div>", unsafe_allow_html=True)
-        with action_col2:
-            submitted_fiat = st.form_submit_button("+ Add Entry")
+    # 1. ADD NEW FIAT TRANSACTION CARD (TUCKED IN EXPANDER)
+    with st.expander("➕ Add New Fiat Deposit", expanded=False):
+        with st.form("add_fiat", border=False):
+            st.markdown("<div class='add-tx-card'></div>", unsafe_allow_html=True)
             
-        if submitted_fiat:
-            czk_eur = round(czk / eur, 5) if eur > 0 else 0.0
-            new_row = pd.DataFrame([{"Datum": date_to_excel_serial(selected_date), "CZK": czk, "EUR": eur, "Fee": fee, "CZK/EUR": czk_eur, "Stable_Amt": stable_amt, "Stable_Ticker": stable_ticker, "NI": "", "GG": "", "ER": ""}])
-            st.session_state.fiat_df = pd.concat([st.session_state.fiat_df, new_row], ignore_index=True)
-            save_fiat(st.session_state.fiat_df)
-            st.session_state.fiat_table_version += 1
-            st.session_state.ui_version += 1
-            st.success(f"✅ Executed fiat deposit!")
-            st.rerun()
+            # Row 1: Inputs
+            f1, f2, f3 = st.columns(3)
+            with f1: selected_date = st.date_input("Date", value=date(2026, 3, 25))
+            with f2: czk = st.number_input("CZK Invested", value=1000.0, step=0.01)
+            with f3: eur = st.number_input("EUR Equivalent", value=40.0, step=0.01)
+            
+            f4, f5, f6 = st.columns(3)
+            with f4: fee = st.number_input("Fee (EUR)", value=1.0, step=0.01)
+            with f5: stable_ticker = st.selectbox("Received Stablecoin", STABLECOINS_LIST, index=0)
+            with f6: stable_amt = st.number_input("Stablecoin Amount", value=44.67, step=0.01)
+            
+            action_col1, action_col2 = st.columns(2)
+            with action_col1:
+                st.markdown("<div style='color: transparent;'>Spacing</div>", unsafe_allow_html=True)
+            with action_col2:
+                submitted_fiat = st.form_submit_button("+ Add Entry")
+                
+            if submitted_fiat:
+                czk_eur = round(czk / eur, 5) if eur > 0 else 0.0
+                new_row = pd.DataFrame([{"Datum": date_to_excel_serial(selected_date), "CZK": czk, "EUR": eur, "Fee": fee, "CZK/EUR": czk_eur, "Stable_Amt": stable_amt, "Stable_Ticker": stable_ticker, "NI": "", "GG": "", "ER": ""}])
+                st.session_state.fiat_df = pd.concat([st.session_state.fiat_df, new_row], ignore_index=True)
+                save_fiat(st.session_state.fiat_df)
+                st.session_state.fiat_table_version += 1
+                st.session_state.ui_version += 1
+                st.success(f"✅ Executed fiat deposit!")
+                st.rerun()
 
     df_fiat_display = st.session_state.fiat_df.copy()
     df_fiat_display['orig_idx'] = df_fiat_display.index
     df_fiat_display = df_fiat_display.dropna(how='all')
     df_fiat_display = df_fiat_display.sort_values(by='Datum', ascending=False)
 
-    st.markdown("<h4 style='color: white; margin-top: 20px; margin-bottom: 15px;'>Fiat History</h4>", unsafe_allow_html=True)
+    st.markdown("<h4 style='color: white; margin-top: 10px; margin-bottom: 10px;'>Fiat History</h4>", unsafe_allow_html=True)
 
     # 2. SCROLLABLE FIAT TRANSACTION LIST
-    with st.container(height=550, border=False):
+    with st.container(height=650, border=False):
         for i, r in df_fiat_display.iterrows():
             orig_idx = r['orig_idx']
             stable_ticker = r.get('Stable_Ticker', 'USDC')
@@ -3243,10 +3125,9 @@ with tab_fiat:
             fiat_formatted = f"CZK: {czk_val:,.2f} / EUR: {eur_val:,.2f}"
             date_str = format_datum(r['Datum'])
 
-            # If user clicked delete, show confirmation dialog replacing the row
             if st.session_state.get('confirm_delete_fiat') == orig_idx:
                 with st.container(border=True):
-                    st.markdown("<div class='del-warn'></div><h4 style='color: #ff4d4d; margin-top: 0; margin-bottom: 5px; font-size: 1.1rem; font-weight: 600;'>Delete this entry?</h4>", unsafe_allow_html=True)
+                    st.markdown("<div class='del-warn'></div><h4 style='color: #ff4d4d; margin-top: 0; margin-bottom: 5px; font-size: 1rem; font-weight: 600;'>Delete this entry?</h4>", unsafe_allow_html=True)
                     c_yes, c_no = st.columns(2)
                     with c_yes:
                         if st.button("Delete", key=f"yes_fiat_del_{orig_idx}", use_container_width=True):
@@ -3261,29 +3142,29 @@ with tab_fiat:
                             st.session_state['confirm_delete_fiat'] = None
                             st.rerun()
             else:
-                # Standard Row Display
+                # Standard Compact Row Display
                 with st.container(border=True):
                     st.markdown("<div class='tx-row'></div>", unsafe_allow_html=True)
                     
-                    # STRICT 5 COLUMNS: Logo, Dates/Fiat, Stable Amount, Edit, Delete
-                    col_logo, col_fiat, col_vals, col_edit, col_del = st.columns([0.5, 2, 2.5, 0.5, 0.5])
+                    # Optimized columns for compactness
+                    col_logo, col_fiat, col_vals, col_edit, col_del = st.columns([0.3, 2, 2.5, 0.3, 0.3])
                     
                     with col_logo:
-                        st.markdown(f"<img src='{logo_url}' class='mobile-logo' style='width:42px;height:42px;border-radius:50%;object-fit:contain;margin-top:6px;' onerror=\"this.src='https://via.placeholder.com/42/1e2a44/ffffff?text={stable_ticker[0]}';\">", unsafe_allow_html=True)
+                        st.markdown(f"<img src='{logo_url}' class='mobile-logo' style='width:34px;height:34px;border-radius:50%;object-fit:contain;margin-top:2px;' onerror=\"this.src='https://via.placeholder.com/34/1e2a44/ffffff?text={stable_ticker[0]}';\">", unsafe_allow_html=True)
                         
                     with col_fiat:
                         st.markdown(f"""
-                            <div style="line-height: 1.2; margin-top: 6px; overflow: hidden; text-overflow: ellipsis;">
-                                <div class="mobile-tx-ticker" style="font-weight: 700; font-size: 1.15rem; color: #ffffff; white-space: nowrap;">{date_str}</div>
-                                <div class="mobile-tx-sub" style="font-size: 0.85rem; color: #94a3b8; white-space: nowrap;">{fiat_formatted}</div>
+                            <div style="line-height: 1.1; margin-top: 4px; overflow: hidden; text-overflow: ellipsis;">
+                                <div class="mobile-tx-ticker" style="font-weight: 700; font-size: 1.05rem; color: #ffffff; white-space: nowrap;">{date_str}</div>
+                                <div class="mobile-tx-sub" style="font-size: 0.75rem; color: #94a3b8; white-space: nowrap;">{fiat_formatted}</div>
                             </div>
                         """, unsafe_allow_html=True)
                         
                     with col_vals:
                         st.markdown(f"""
-                            <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; margin-top: 6px;">
-                                <div class="mobile-tx-amount" style="font-weight: 700; font-size: 1.15rem; color: #00ff9d; white-space: nowrap;">{stable_formatted}</div>
-                                <div class="mobile-tx-sub" style="font-size: 0.85rem; color: #cbd5e1; white-space: nowrap;">Fee: {fee_val:,.2f} EUR</div>
+                            <div style="display: flex; flex-direction: column; align-items: flex-end; justify-content: center; gap: 0px; margin-top: 4px;">
+                                <div class="mobile-tx-amount" style="font-weight: 700; font-size: 1.05rem; color: #00ff9d; white-space: nowrap;">{stable_formatted}</div>
+                                <div class="mobile-tx-sub" style="font-size: 0.75rem; color: #cbd5e1; white-space: nowrap;">Fee: {fee_val:,.2f} EUR</div>
                             </div>
                         """, unsafe_allow_html=True)
                         
@@ -3303,7 +3184,7 @@ with tab_fiat:
                 # 3. ROLL OUT EDIT FORM Directly Attached
                 if st.session_state.get('edit_fiat_row') == orig_idx:
                     with st.form(f"edit_fiat_form_{orig_idx}", border=False):
-                        st.markdown("<div class='edit-rollout form-compact-marker'></div><h4 style='color: #00ff9d; margin-top: 0px; margin-bottom: 15px;'>✏️ Edit Fiat Details</h4>", unsafe_allow_html=True)
+                        st.markdown("<div class='edit-rollout form-compact-marker'></div><h5 style='color: #00ff9d; margin-top: 0px; margin-bottom: 10px;'>✏️ Edit Fiat Details</h5>", unsafe_allow_html=True)
                         
                         e_f1, e_f2, e_f3 = st.columns(3)
                         with e_f1: new_date = st.date_input("Date", value=datetime(1899, 12, 30) + timedelta(days=int(r['Datum'])))
