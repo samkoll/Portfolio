@@ -289,80 +289,204 @@ div[data-testid="stTabs"] > div[role="tabpanel"] {
     display: block;
 }
 
-/* Subdued and Smaller USDC Banner */
+/* ==============================================================
+   STABLECOINS BANNER & INTERACTIVE DROPDOWN
+   ============================================================== */
 .usdc-banner {
     position: relative;
     overflow: hidden;
     background: rgba(15, 23, 42, 0.5);
-    border: 1px solid rgba(39, 117, 202, 0.2);
+    border: 1px solid rgba(38, 161, 123, 0.2);
     border-radius: 12px;
     box-shadow: 0 4px 12px rgba(0,0,0,0.15);
     padding: 10px 20px;
     width: auto; 
     min-width: 250px;
     max-width: 400px; 
-    margin: 4px 0 8px 24px !important;
+    margin: 4px 0 8px 24px;
     display: flex;
     align-items: center;
     justify-content: space-between;
+    transition: all 0.3s ease;
 }
-.usdc-banner-left {
-    display: flex;
-    align-items: center;
-    gap: 12px;
+.usdc-banner:hover {
+    background: rgba(15, 23, 42, 0.7);
+    border-color: rgba(38, 161, 123, 0.4);
 }
-.usdc-banner-left img, .usdc-banner-left svg {
-    width: 28px;
-    height: 28px;
-    border-radius: 50%;
-    object-fit: contain;
-    opacity: 0.85;
-}
-.usdc-banner-title {
-    font-size: 1.05rem;
-    font-weight: 600;
-    color: #e2e8f0;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-}
-.usdc-banner-subtitle {
-    font-size: 0.75rem;
-    font-weight: 500;
-    color: #64748b;
-}
-.usdc-banner-amount {
-    font-size: 1.2rem;
-    font-weight: 600;
-    color: #e2e8f0;
-}
+.usdc-banner-left { display: flex; align-items: center; gap: 12px; }
+.usdc-banner-left img, .usdc-banner-left svg { width: 28px; height: 28px; border-radius: 50%; object-fit: contain; opacity: 0.85; }
+.usdc-banner-title { font-size: 1.05rem; font-weight: 600; color: #e2e8f0; display: flex; align-items: center; gap: 8px; }
+.usdc-banner-subtitle { font-size: 0.75rem; font-weight: 500; color: #64748b; }
+.usdc-banner-amount { font-size: 1.2rem; font-weight: 600; color: #e2e8f0; }
 
-/* Native CSS Privacy Mode for USDC Banner */
-.dashboard-toggle:not(:checked) ~ .usdc-banner .usdc-banner-amount {
-    font-size: 0 !important;
+.stable-dropdown-wrapper {
+    position: relative; width: auto; min-width: 250px; max-width: 400px; margin: -12px 0 16px 24px; z-index: 5;
 }
-.dashboard-toggle:not(:checked) ~ .usdc-banner .usdc-banner-amount::after {
-    content: '***';
-    font-size: 1.2rem;
-    color: #e2e8f0;
+.stable-dropdown {
+    max-height: 0; overflow: hidden; transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    background: rgba(10, 15, 28, 0.85); border: 1px solid rgba(38, 161, 123, 0); border-top: none;
+    border-radius: 0 0 12px 12px; padding: 0 20px; backdrop-filter: blur(5px);
 }
+#stable-dropdown-toggle:checked ~ .stable-dropdown-wrapper .stable-dropdown {
+    max-height: 300px; border-color: rgba(38, 161, 123, 0.2); padding: 12px 20px; margin-top: 4px; box-shadow: 0 10px 20px rgba(0,0,0,0.3);
+}
+.st-item { display: flex; justify-content: space-between; align-items: center; font-size: 0.9rem; color: #94a3b8; padding: 6px 0; border-bottom: 1px solid rgba(255,255,255,0.05); }
+.st-item:last-child { border-bottom: none; }
+.st-item .val { color: #e2e8f0; font-weight: 600; }
+
+/* Native CSS Privacy Mode integration */
+.dashboard-toggle:not(:checked) ~ label .usdc-banner .usdc-banner-amount { font-size: 0 !important; }
+.dashboard-toggle:not(:checked) ~ label .usdc-banner .usdc-banner-amount::after { content: '***'; font-size: 1.2rem; color: #e2e8f0; }
+.dashboard-toggle:not(:checked) ~ .stable-dropdown-wrapper .stable-dropdown .st-item .val { font-size: 0 !important; }
+.dashboard-toggle:not(:checked) ~ .stable-dropdown-wrapper .stable-dropdown .st-item .val::after { content: '***'; font-size: 0.9rem; color: #e2e8f0; }
 
 /* GLOBALLY HIDE NUMBER INPUT STEP BUTTONS (+ / -) */
 button[aria-label="Step Up"],
 button[aria-label="Step Down"],
 button[data-testid="stNumberInputStepUp"],
-button[data-testid="stNumberInputStepDown"] {
-    display: none !important;
+button[data-testid="stNumberInputStepDown"] { display: none !important; }
+input[type="number"]::-webkit-inner-spin-button, input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+input[type="number"] { -moz-appearance: textfield; }
+
+/* ==============================================================
+   COMPACT EXPANDER FOR FORMS
+   ============================================================== */
+div[data-testid="stExpander"] {
+    background: #0f172a !important; border: 1px solid rgba(255,255,255,0.05) !important;
+    border-radius: 12px !important; box-shadow: 0 4px 15px rgba(0,0,0,0.3) !important; margin-bottom: 24px !important;
 }
-input[type="number"]::-webkit-inner-spin-button, 
-input[type="number"]::-webkit-outer-spin-button { 
-    -webkit-appearance: none; 
-    margin: 0; 
+div[data-testid="stExpander"] summary {
+    color: #00ff9d !important; font-weight: 700 !important; font-size: 1.05rem !important;
+    padding: 12px 16px !important; background: transparent !important; border-bottom: none !important;
 }
-input[type="number"] {
-    -moz-appearance: textfield;
+div[data-testid="stExpander"] summary svg { color: #00ff9d !important; fill: #00ff9d !important; }
+div[data-testid="stExpanderDetails"] { padding: 0 16px 16px 16px !important; }
+div[data-testid="stExpanderDetails"] div[data-testid="stForm"] { padding: 0 !important; border: none !important; box-shadow: none !important; margin-bottom: 0 !important; background: transparent !important; }
+
+/* INPUTS STYLING */
+div[data-testid="stForm"]:has(.add-tx-card) label { font-size: 0.85rem !important; color: #94a3b8 !important; padding-bottom: 2px !important; }
+div[data-testid="stForm"]:has(.add-tx-card) .stTextInput input, div[data-testid="stForm"]:has(.add-tx-card) .stNumberInput input, div[data-testid="stForm"]:has(.add-tx-card) .stDateInput input, div[data-testid="stForm"]:has(.add-tx-card) div[data-baseweb="select"] > div {
+    background: rgba(255,255,255,0.03) !important; border: 1px solid rgba(255,255,255,0.1) !important; color: #fff !important; border-radius: 8px !important; margin-bottom: 0px !important;
+}
+div[data-testid="stForm"]:has(.add-tx-card) div[data-testid="stHorizontalBlock"]:has(> div[data-testid="column"]:nth-child(4)) { display: flex !important; gap: 12px !important; }
+div[data-testid="stForm"]:has(.add-tx-card) div[data-testid="stHorizontalBlock"]:has(> div[data-testid="column"]:nth-child(2):last-child) { display: flex !important; flex-direction: row !important; justify-content: space-between !important; align-items: center !important; margin-top: 12px !important; gap: 12px !important; }
+div[data-testid="stForm"]:has(.add-tx-card) div[data-testid="stHorizontalBlock"]:has(> div[data-testid="column"]:nth-child(2):last-child) > div[data-testid="column"]:nth-child(1) { flex: 0 0 auto !important; width: auto !important; }
+div[data-testid="stForm"]:has(.add-tx-card) div[data-testid="stHorizontalBlock"]:has(> div[data-testid="column"]:nth-child(2):last-child) > div[data-testid="column"]:nth-child(2) { flex: 1 1 auto !important; width: auto !important; }
+
+/* BEAUTIFUL BUY/SELL SWITCH */
+div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] {
+    background: rgba(0,0,0,0.3) !important; padding: 6px !important; border-radius: 12px !important; display: flex !important; flex-direction: row !important; gap: 8px !important; align-items: center !important; margin: 0 !important; height: 48px !important; border: 1px solid rgba(255,255,255,0.05) !important; min-width: 200px !important;
+}
+div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label {
+    margin: 0 !important; cursor: pointer !important; padding: 0 !important; border-radius: 8px !important; border: 1px solid transparent !important; transition: all 0.3s ease !important; background: transparent !important; flex: 1 !important; display: flex !important; justify-content: center !important; align-items: center !important; height: 100% !important;
+}
+div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label:hover { background: rgba(255,255,255,0.05) !important; }
+div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label > div:first-child { display: none !important; } 
+div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label p { font-weight: bold !important; font-size: 1.05rem !important; color: #94a3b8 !important; margin: 0 !important; padding: 0 !important; white-space: nowrap !important; line-height: 1 !important; }
+div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label:has(input:checked):first-child, div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label[aria-checked="true"]:first-child { background: rgba(0, 255, 157, 0.15) !important; border-color: #00ff9d !important; }
+div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label:has(input:checked):first-child p, div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label[aria-checked="true"]:first-child p { color: #00ff9d !important; }
+div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label:has(input:checked):last-child, div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label[aria-checked="true"]:last-child { background: rgba(255, 77, 77, 0.15) !important; border-color: #ff4d4d !important; }
+div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label:has(input:checked):last-child p, div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label[aria-checked="true"]:last-child p { color: #ff4d4d !important; }
+
+div[data-testid="stForm"]:has(.add-tx-card) .stButton { display: flex !important; justify-content: flex-end !important; align-items: center !important; margin: 0 !important; padding: 0 !important; width: 100% !important; }
+div[data-testid="stForm"]:has(.add-tx-card) .stButton > button { background: #1e2a44 !important; color: #e0e0e0 !important; padding: 0 24px !important; border-radius: 10px !important; font-size: 1.05rem !important; font-weight: 700 !important; box-shadow: 0 4px 15px rgba(0,0,0,0.25) !important; transition: all 0.3s ease !important; border: none !important; margin: 0 !important; width: auto !important; height: 48px !important; min-height: 48px !important; }
+div[data-testid="stForm"]:has(.add-tx-card) .stButton > button:hover { transform: translateY(-2px) !important; box-shadow: 0 8px 20px rgba(255, 255, 255, 0.2) !important; color: white !important; }
+
+/* ==============================================================
+   HIGHLY COMPACT, IRONCLAD TRANSACTION ROWS (PC & MOBILE)
+   ============================================================== */
+div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row-marker) {
+    background: #0f172a !important; border: 1px solid rgba(255,255,255,0.05) !important;
+    border-radius: 8px !important; padding: 6px 12px !important; margin-bottom: 6px !important;
+    position: relative; z-index: 2;
+}
+div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row-marker) > div { padding: 0 !important; gap: 0 !important; } 
+
+/* FORCE HORIZONTAL FLEX WRAPPER - STOPS STREAMLIT STACKING */
+div[data-testid="stHorizontalBlock"]:has(.tx-row-marker) {
+    display: flex !important; flex-direction: row !important; flex-wrap: nowrap !important;
+    align-items: center !important; width: 100% !important; gap: 8px !important;
+}
+div[data-testid="stHorizontalBlock"]:has(.tx-row-marker) > div[data-testid="column"] {
+    width: auto !important; min-width: 0 !important; padding: 0 !important; flex: none !important;
+}
+/* Specific Column Sizing */
+div[data-testid="stHorizontalBlock"]:has(.tx-row-marker) > div[data-testid="column"]:nth-child(1) { flex: 0 0 32px !important; } /* Logo */
+div[data-testid="stHorizontalBlock"]:has(.tx-row-marker) > div[data-testid="column"]:nth-child(2) { flex: 1 1 auto !important; overflow: hidden; } /* Info */
+div[data-testid="stHorizontalBlock"]:has(.tx-row-marker) > div[data-testid="column"]:nth-child(3) { flex: 1.2 1 auto !important; text-align: right; } /* Amounts */
+div[data-testid="stHorizontalBlock"]:has(.tx-row-marker) > div[data-testid="column"]:nth-child(4) { flex: 0 0 28px !important; display: flex; justify-content: center; } /* Edit */
+div[data-testid="stHorizontalBlock"]:has(.tx-row-marker) > div[data-testid="column"]:nth-child(5) { flex: 0 0 28px !important; display: flex; justify-content: center; } /* Delete */
+
+/* Sleek Icon Buttons */
+div[data-testid="stHorizontalBlock"]:has(.tx-row-marker) div[data-testid="stButton"] button {
+    background: transparent !important; border: 1px solid rgba(255,255,255,0.05) !important;
+    color: #64748b !important; border-radius: 6px !important; box-shadow: none !important;
+    height: 28px !important; width: 28px !important; padding: 0 !important;
+    display: flex !important; align-items: center !important; justify-content: center !important;
+    font-size: 1rem !important; line-height: 1 !important; transition: all 0.2s ease !important;
+}
+div[data-testid="stHorizontalBlock"]:has(.tx-row-marker) div[data-testid="stButton"] button p { font-size: 1rem !important; line-height: 1 !important; margin: 0; padding: 0; }
+
+div[data-testid="stHorizontalBlock"]:has(.tx-row-marker) div[data-testid="column"]:nth-child(4) div[data-testid="stButton"] button:hover {
+    border-color: #00ff9d !important; color: #00ff9d !important; background: rgba(0, 255, 157, 0.1) !important;
+}
+div[data-testid="stHorizontalBlock"]:has(.tx-row-marker) div[data-testid="column"]:nth-child(5) div[data-testid="stButton"] button:hover {
+    border-color: #ff4d4d !important; color: #ff4d4d !important; background: rgba(255, 77, 77, 0.1) !important;
 }
 
+/* Typography Overrides */
+.mobile-logo { width: 28px !important; height: 28px !important; margin-top: 2px !important; }
+.mobile-tx-ticker { font-size: 1rem !important; font-weight: 700; color: #fff; line-height: 1.1; margin-left: 2px; }
+.mobile-tx-sub { font-size: 0.75rem !important; color: #94a3b8; line-height: 1.1; margin-top: 3px; margin-left: 2px; }
+.mobile-tx-amount { font-size: 1rem !important; font-weight: 700; line-height: 1.1; }
+
+/* 5. SMOOTH EDIT ROLLOUT */
+@keyframes rollDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+div[data-testid="stForm"]:has(.edit-rollout) {
+    animation: rollDown 0.3s ease forwards !important; background: rgba(0,0,0,0.2) !important;
+    border-left: 3px solid #00ff9d !important; border-radius: 0 0 12px 12px !important;
+    border-top: none !important; border-right: none !important; border-bottom: none !important;
+    padding: 12px !important; margin-top: -12px !important; margin-bottom: 12px !important;
+    position: relative; z-index: 1; box-shadow: inset 0 4px 10px rgba(0,0,0,0.15) !important;
+}
+div[data-testid="stForm"]:has(.edit-rollout) div[data-baseweb="select"] > div { background: rgba(255,255,255,0.03) !important; border: 1px solid rgba(255,255,255,0.1) !important; }
+
+/* 6. REDESIGNED DELETE DIALOG */
+div[data-testid="stVerticalBlockBorderWrapper"]:has(.del-warn) {
+    border-color: rgba(255, 77, 77, 0.3) !important; background: rgba(15, 23, 42, 0.95) !important;
+    border-radius: 8px !important; padding: 12px !important; text-align: center !important; margin-bottom: 8px !important; box-shadow: 0 4px 20px rgba(0,0,0,0.4) !important;
+}
+div[data-testid="stVerticalBlockBorderWrapper"]:has(.del-warn) .stButton > button { border-radius: 6px !important; font-weight: 600 !important; transition: all 0.2s !important; width: 100% !important; margin-top: 4px !important; padding: 4px 8px !important; }
+div[data-testid="stVerticalBlockBorderWrapper"]:has(.del-warn) div[data-testid="column"]:nth-child(1) .stButton > button { background: rgba(255, 77, 77, 0.1) !important; color: #ff4d4d !important; border: 1px solid rgba(255, 77, 77, 0.3) !important; }
+div[data-testid="stVerticalBlockBorderWrapper"]:has(.del-warn) div[data-testid="column"]:nth-child(1) .stButton > button:hover { background: #ff4d4d !important; color: white !important; }
+div[data-testid="stVerticalBlockBorderWrapper"]:has(.del-warn) div[data-testid="column"]:nth-child(2) .stButton > button { background: rgba(255, 255, 255, 0.05) !important; color: #cbd5e1 !important; border: 1px solid rgba(255, 255, 255, 0.1) !important; }
+div[data-testid="stVerticalBlockBorderWrapper"]:has(.del-warn) div[data-testid="column"]:nth-child(2) .stButton > button:hover { background: rgba(255, 255, 255, 0.15) !important; color: white !important; }
+
+@media (max-width: 768px) {
+    .glossy-header { margin-top: 0px !important; margin-bottom: 16px !important; padding: 20px 16px !important; font-size: 22px !important; min-height: 90px; }
+    .home-header { margin-bottom: 0 !important; }
+    
+    div[data-testid="stForm"]:has(.add-tx-card) div[data-testid="stHorizontalBlock"] { display: flex !important; flex-direction: row !important; flex-wrap: wrap !important; gap: 12px !important; }
+    div[data-testid="stForm"]:has(.add-tx-card) div[data-testid="stHorizontalBlock"]:has(> div[data-testid="column"]:nth-child(4)) > div[data-testid="column"], div[data-testid="stForm"]:has(.add-tx-card) div[data-testid="stHorizontalBlock"]:has(> div[data-testid="column"]:nth-child(3)) > div[data-testid="column"], div[data-testid="stForm"]:has(.add-tx-card) div[data-testid="stHorizontalBlock"]:has(> div[data-testid="column"]:nth-child(2):last-child) > div[data-testid="column"] { min-width: calc(50% - 12px) !important; width: calc(50% - 12px) !important; flex: 1 1 calc(50% - 12px) !important; }
+    div[data-testid="stForm"]:has(.add-tx-card) input { padding: 6px !important; font-size: 0.95rem !important; }
+    div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] { min-width: 0 !important; width: 100% !important; }
+    div[data-testid="stForm"]:has(.add-tx-card) .stButton { display: flex !important; justify-content: flex-end !important; width: 100% !important; }
+    div[data-testid="stForm"]:has(.add-tx-card) .stButton > button { width: 100% !important; max-width: 120px !important; padding: 0 16px !important; }
+
+    /* Dashboard Mobile Stats Override Fix */
+    .stats-layer-inner { gap: 6px !important; }
+    .stats-layer { margin-top: -60px !important; margin-bottom: 18px; } 
+    .glossy-box.swapped { height: 80px !important; min-height: 80px !important; max-height: 80px !important; padding: 0 !important; min-width: 0 !important; }
+    .dash-value { font-size: clamp(11px, 3.5vw, 15px) !important; top: 24px !important; } 
+    .dash-label { font-size: clamp(8px, 2.5vw, 10px) !important; bottom: 8px !important; white-space: nowrap !important; letter-spacing: 0.5px !important; }
+    
+    .usdc-banner { padding: 8px 14px; width: 92%; margin: 4px auto 8px auto !important; }
+    .usdc-banner-left img { width: 24px; height: 24px; }
+    .usdc-banner-title { font-size: 0.95rem; }
+    .usdc-banner-subtitle { font-size: 0.7rem; }
+    .usdc-banner-amount { font-size: 1.1rem; }
+    .stable-dropdown-wrapper { width: 92%; margin: -8px auto 12px auto !important; }
+}
 </style>
 """, unsafe_allow_html=True)
 
@@ -972,6 +1096,26 @@ with tab_home:
     
     stables_row = df_port[df_port['Ticker'] == 'STABLES'].iloc[0] if not df_port[df_port['Ticker'] == 'STABLES'].empty else None
     stables_holdings = stables_row['Holdings'] if stables_row is not None else 0
+
+    # Calculate individual stablecoin breakdown
+    stable_breakdown = {}
+    for r in st.session_state.fiat_df.to_dict('records'):
+        t = r.get('Stable_Ticker', 'USDC')
+        amt = r.get('Stable_Amt', 0.0)
+        stable_breakdown[t] = stable_breakdown.get(t, 0.0) + amt
+    for r in st.session_state.crypto_df.to_dict('records'):
+        t = r.get('Stable_Ticker', 'USDC')
+        if r.get('Ticker', '').upper() != 'STABLES':
+            amt = r.get('Stable_Amt', 0.0)
+            stable_breakdown[t] = stable_breakdown.get(t, 0.0) - amt
+            
+    dropdown_html = ""
+    for t in STABLECOINS_LIST:
+        amt = stable_breakdown.get(t, 0.0)
+        if amt > 0.01:
+            dropdown_html += f"<div class='st-item'><span>{t}</span><span class='val'>{format_holdings(amt, t)}</span></div>"
+    if dropdown_html == "":
+        dropdown_html = "<div class='st-item'><span>No Stablecoins</span><span class='val'>0.00</span></div>"
 
     # ================== 1. DASHBOARD OVERVIEW ==================
     value_box_html = f"""
@@ -1709,13 +1853,21 @@ with tab_home:
 
     # ================== 3. SUBDUED USDC BANNER ==================
     usdc_banner_html = f"""
+<input type="checkbox" id="stable-dropdown-toggle" style="display:none;">
 <input type="checkbox" id="dash-toggle-usdc" class="dashboard-toggle" style="display:none;">
-<div class="usdc-banner" style="--border: #26a17b;">
-<div class="usdc-banner-left">
-{STABLECOIN_ICON}
-<div class="usdc-banner-title">Stablecoins <span class="usdc-banner-subtitle">(Available Cash)</span></div>
-</div>
-<div class="usdc-banner-amount">{format_holdings(stables_holdings, 'STABLES')}</div>
+<label for="stable-dropdown-toggle" style="display:block;cursor:pointer; -webkit-tap-highlight-color:transparent;">
+    <div class="usdc-banner" style="--border: #26a17b;">
+        <div class="usdc-banner-left">
+            {STABLECOIN_ICON}
+            <div class="usdc-banner-title">Stablecoins <span class="usdc-banner-subtitle">(Available Cash)</span></div>
+        </div>
+        <div class="usdc-banner-amount">{format_holdings(stables_holdings, 'STABLES')}</div>
+    </div>
+</label>
+<div class="stable-dropdown-wrapper">
+    <div class="stable-dropdown">
+        {dropdown_html}
+    </div>
 </div>
 """
     st.markdown(usdc_banner_html, unsafe_allow_html=True)
@@ -2765,7 +2917,7 @@ with tab_crypto:
     /* ==============================================================
        4. HIGHLY COMPACT TRANSACTION ROW STYLING 
        ============================================================== */
-    div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row) {
+    div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row-marker) {
         background: #0f172a !important;
         border: 1px solid rgba(255,255,255,0.05) !important;
         border-radius: 8px !important; /* Smaller radius */
@@ -2774,105 +2926,79 @@ with tab_crypto:
         position: relative;
         z-index: 2;
     }
-    div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row) > div { padding: 0 !important; } 
-    
-    div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row) div[data-testid="stButton"] button {
-        background: rgba(255,255,255,0.05) !important;
-        border-radius: 6px !important; border: none !important;
-        height: 30px !important; width: 30px !important; /* Smaller Buttons */
-        display: flex !important; align-items: center !important;
-        justify-content: center !important; padding: 0 !important; margin: 0 auto !important; font-size: 1rem !important;
-        transition: all 0.2s !important;
+    div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row-marker) > div { padding: 0 !important; gap: 0 !important; } 
+
+    /* FORCE HORIZONTAL FLEX WRAPPER - STOPS STREAMLIT STACKING */
+    div[data-testid="stHorizontalBlock"]:has(.tx-row-marker) {
+        display: flex !important; flex-direction: row !important; flex-wrap: nowrap !important;
+        align-items: center !important; width: 100% !important; gap: 8px !important;
     }
-    div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row) div[data-testid="stButton"] button:hover {
-        background: rgba(255,255,255,0.15) !important; transform: scale(1.05) !important;
+    div[data-testid="stHorizontalBlock"]:has(.tx-row-marker) > div[data-testid="column"] {
+        width: auto !important; min-width: 0 !important; padding: 0 !important; flex: none !important;
     }
+    /* Specific Column Sizing */
+    div[data-testid="stHorizontalBlock"]:has(.tx-row-marker) > div[data-testid="column"]:nth-child(1) { flex: 0 0 32px !important; } /* Logo */
+    div[data-testid="stHorizontalBlock"]:has(.tx-row-marker) > div[data-testid="column"]:nth-child(2) { flex: 1 1 auto !important; overflow: hidden; } /* Info */
+    div[data-testid="stHorizontalBlock"]:has(.tx-row-marker) > div[data-testid="column"]:nth-child(3) { flex: 1.2 1 auto !important; text-align: right; } /* Amounts */
+    div[data-testid="stHorizontalBlock"]:has(.tx-row-marker) > div[data-testid="column"]:nth-child(4) { flex: 0 0 28px !important; display: flex; justify-content: center; } /* Edit */
+    div[data-testid="stHorizontalBlock"]:has(.tx-row-marker) > div[data-testid="column"]:nth-child(5) { flex: 0 0 28px !important; display: flex; justify-content: center; } /* Delete */
+
+    /* Sleek Icon Buttons */
+    div[data-testid="stHorizontalBlock"]:has(.tx-row-marker) div[data-testid="stButton"] button {
+        background: transparent !important; border: 1px solid rgba(255,255,255,0.05) !important;
+        color: #64748b !important; border-radius: 6px !important; box-shadow: none !important;
+        height: 28px !important; width: 28px !important; padding: 0 !important;
+        display: flex !important; align-items: center !important; justify-content: center !important;
+        font-size: 1rem !important; line-height: 1 !important; transition: all 0.2s ease !important;
+    }
+    div[data-testid="stHorizontalBlock"]:has(.tx-row-marker) div[data-testid="stButton"] button p { font-size: 1rem !important; line-height: 1 !important; margin: 0; padding: 0; }
+
+    div[data-testid="stHorizontalBlock"]:has(.tx-row-marker) div[data-testid="column"]:nth-child(4) div[data-testid="stButton"] button:hover {
+        border-color: #00ff9d !important; color: #00ff9d !important; background: rgba(0, 255, 157, 0.1) !important;
+    }
+    div[data-testid="stHorizontalBlock"]:has(.tx-row-marker) div[data-testid="column"]:nth-child(5) div[data-testid="stButton"] button:hover {
+        border-color: #ff4d4d !important; color: #ff4d4d !important; background: rgba(255, 77, 77, 0.1) !important;
+    }
+
+    /* Typography Overrides */
+    .mobile-logo { width: 28px !important; height: 28px !important; margin-top: 2px !important; }
+    .mobile-tx-ticker { font-size: 1rem !important; font-weight: 700; color: #fff; line-height: 1.1; margin-left: 2px; }
+    .mobile-tx-sub { font-size: 0.75rem !important; color: #94a3b8; line-height: 1.1; margin-top: 3px; margin-left: 2px; }
+    .mobile-tx-amount { font-size: 1rem !important; font-weight: 700; line-height: 1.1; }
 
     /* 5. SMOOTH EDIT ROLLOUT */
     @keyframes rollDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
     div[data-testid="stForm"]:has(.edit-rollout) {
-        animation: rollDown 0.3s ease forwards !important;
-        background: rgba(0,0,0,0.2) !important;
+        animation: rollDown 0.3s ease forwards !important; background: rgba(0,0,0,0.2) !important;
         border-left: 3px solid #00ff9d !important; border-radius: 0 0 12px 12px !important;
         border-top: none !important; border-right: none !important; border-bottom: none !important;
-        padding: 12px !important; margin-top: -16px !important; margin-bottom: 12px !important; /* Tighter spacing */
-        position: relative; z-index: 1;
-        box-shadow: inset 0 4px 10px rgba(0,0,0,0.15) !important;
+        padding: 12px !important; margin-top: -12px !important; margin-bottom: 12px !important;
+        position: relative; z-index: 1; box-shadow: inset 0 4px 10px rgba(0,0,0,0.15) !important;
     }
-    div[data-testid="stForm"]:has(.edit-rollout) div[data-baseweb="select"] > div {
-        background: rgba(255,255,255,0.03) !important; border: 1px solid rgba(255,255,255,0.1) !important;
-    }
+    div[data-testid="stForm"]:has(.edit-rollout) div[data-baseweb="select"] > div { background: rgba(255,255,255,0.03) !important; border: 1px solid rgba(255,255,255,0.1) !important; }
 
     /* 6. REDESIGNED DELETE DIALOG */
     div[data-testid="stVerticalBlockBorderWrapper"]:has(.del-warn) {
         border-color: rgba(255, 77, 77, 0.3) !important; background: rgba(15, 23, 42, 0.95) !important;
-        border-radius: 8px !important; padding: 12px !important; text-align: center !important;
-        margin-bottom: 8px !important; box-shadow: 0 4px 20px rgba(0,0,0,0.4) !important;
+        border-radius: 8px !important; padding: 12px !important; text-align: center !important; margin-bottom: 8px !important; box-shadow: 0 4px 20px rgba(0,0,0,0.4) !important;
     }
-    div[data-testid="stVerticalBlockBorderWrapper"]:has(.del-warn) .stButton > button {
-        border-radius: 6px !important; font-weight: 600 !important; transition: all 0.2s !important; 
-        width: 100% !important; margin-top: 4px !important; padding: 4px 8px !important;
-    }
-    div[data-testid="stVerticalBlockBorderWrapper"]:has(.del-warn) div[data-testid="column"]:nth-child(1) .stButton > button {
-        background: rgba(255, 77, 77, 0.1) !important; color: #ff4d4d !important; border: 1px solid rgba(255, 77, 77, 0.3) !important;
-    }
-    div[data-testid="stVerticalBlockBorderWrapper"]:has(.del-warn) div[data-testid="column"]:nth-child(1) .stButton > button:hover {
-        background: #ff4d4d !important; color: white !important;
-    }
-    div[data-testid="stVerticalBlockBorderWrapper"]:has(.del-warn) div[data-testid="column"]:nth-child(2) .stButton > button {
-        background: rgba(255, 255, 255, 0.05) !important; color: #cbd5e1 !important; border: 1px solid rgba(255, 255, 255, 0.1) !important;
-    }
-    div[data-testid="stVerticalBlockBorderWrapper"]:has(.del-warn) div[data-testid="column"]:nth-child(2) .stButton > button:hover {
-        background: rgba(255, 255, 255, 0.15) !important; color: white !important;
-    }
+    div[data-testid="stVerticalBlockBorderWrapper"]:has(.del-warn) .stButton > button { border-radius: 6px !important; font-weight: 600 !important; transition: all 0.2s !important; width: 100% !important; margin-top: 4px !important; padding: 4px 8px !important; }
+    div[data-testid="stVerticalBlockBorderWrapper"]:has(.del-warn) div[data-testid="column"]:nth-child(1) .stButton > button { background: rgba(255, 77, 77, 0.1) !important; color: #ff4d4d !important; border: 1px solid rgba(255, 77, 77, 0.3) !important; }
+    div[data-testid="stVerticalBlockBorderWrapper"]:has(.del-warn) div[data-testid="column"]:nth-child(1) .stButton > button:hover { background: #ff4d4d !important; color: white !important; }
+    div[data-testid="stVerticalBlockBorderWrapper"]:has(.del-warn) div[data-testid="column"]:nth-child(2) .stButton > button { background: rgba(255, 255, 255, 0.05) !important; color: #cbd5e1 !important; border: 1px solid rgba(255, 255, 255, 0.1) !important; }
+    div[data-testid="stVerticalBlockBorderWrapper"]:has(.del-warn) div[data-testid="column"]:nth-child(2) .stButton > button:hover { background: rgba(255, 255, 255, 0.15) !important; color: white !important; }
 
-    /* ==============================================================
-       7. MOBILE OVERRIDES (IRONCLAD)
-       ============================================================== */
     @media (max-width: 768px) {
-        .glossy-header { margin-top: 0px !important; margin-bottom: 16px !important;
-        padding: 20px 16px !important; font-size: 22px !important; min-height: 90px; }
+        .glossy-header { margin-top: 0px !important; margin-bottom: 16px !important; padding: 20px 16px !important; font-size: 22px !important; min-height: 90px; }
         .home-header { margin-bottom: 0 !important; }
         
-        /* Fix Add Form Mobile Grid */
-        div[data-testid="stForm"]:has(.add-tx-card) div[data-testid="stHorizontalBlock"] {
-            display: flex !important; flex-direction: row !important; flex-wrap: wrap !important; gap: 12px !important;
-        }
-        div[data-testid="stForm"]:has(.add-tx-card) div[data-testid="stHorizontalBlock"]:has(> div[data-testid="column"]:nth-child(4)) > div[data-testid="column"],
-        div[data-testid="stForm"]:has(.add-tx-card) div[data-testid="stHorizontalBlock"]:has(> div[data-testid="column"]:nth-child(3)) > div[data-testid="column"],
-        div[data-testid="stForm"]:has(.add-tx-card) div[data-testid="stHorizontalBlock"]:has(> div[data-testid="column"]:nth-child(2):last-child) > div[data-testid="column"] {
-            min-width: calc(50% - 12px) !important; width: calc(50% - 12px) !important; flex: 1 1 calc(50% - 12px) !important;
-        }
+        div[data-testid="stForm"]:has(.add-tx-card) div[data-testid="stHorizontalBlock"] { display: flex !important; flex-direction: row !important; flex-wrap: wrap !important; gap: 12px !important; }
+        div[data-testid="stForm"]:has(.add-tx-card) div[data-testid="stHorizontalBlock"]:has(> div[data-testid="column"]:nth-child(4)) > div[data-testid="column"], div[data-testid="stForm"]:has(.add-tx-card) div[data-testid="stHorizontalBlock"]:has(> div[data-testid="column"]:nth-child(3)) > div[data-testid="column"], div[data-testid="stForm"]:has(.add-tx-card) div[data-testid="stHorizontalBlock"]:has(> div[data-testid="column"]:nth-child(2):last-child) > div[data-testid="column"] { min-width: calc(50% - 12px) !important; width: calc(50% - 12px) !important; flex: 1 1 calc(50% - 12px) !important; }
         div[data-testid="stForm"]:has(.add-tx-card) input { padding: 6px !important; font-size: 0.95rem !important; }
         div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] { min-width: 0 !important; width: 100% !important; }
         div[data-testid="stForm"]:has(.add-tx-card) .stButton { display: flex !important; justify-content: flex-end !important; width: 100% !important; }
         div[data-testid="stForm"]:has(.add-tx-card) .stButton > button { width: 100% !important; max-width: 120px !important; padding: 0 16px !important; }
 
-        /* Force Mobile Transaction Rows to stay perfectly horizontal and COMPACT */
-        div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row) > div > div[data-testid="stVerticalBlock"] > div[data-testid="stHorizontalBlock"] {
-            display: flex !important; flex-direction: row !important; flex-wrap: nowrap !important; align-items: center !important; overflow: hidden !important; gap: 4px !important;
-        }
-        div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row) div[data-testid="column"] {
-            min-width: 0 !important; padding: 0 !important; width: auto !important; flex-shrink: 1 !important;
-        }
-        
-        /* Strict proportional compact grid for mobile */
-        div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row) > div > div[data-testid="stVerticalBlock"] > div[data-testid="stHorizontalBlock"] > div[data-testid="column"]:nth-child(1) { flex: 0 0 28px !important; width: 28px !important; } /* Logo */
-        div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row) > div > div[data-testid="stVerticalBlock"] > div[data-testid="stHorizontalBlock"] > div[data-testid="column"]:nth-child(2) { flex: 1.2 1 auto !important; overflow: hidden !important; text-align: left; } /* Ticker */
-        div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row) > div > div[data-testid="stVerticalBlock"] > div[data-testid="stHorizontalBlock"] > div[data-testid="column"]:nth-child(3) { flex: 1.5 1 auto !important; overflow: hidden !important; text-align: right; } /* Amounts Right Aligned */
-        div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row) > div > div[data-testid="stVerticalBlock"] > div[data-testid="stHorizontalBlock"] > div[data-testid="column"]:nth-child(4) { flex: 0 0 28px !important; width: 28px !important; } /* Edit */
-        div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row) > div > div[data-testid="stVerticalBlock"] > div[data-testid="stHorizontalBlock"] > div[data-testid="column"]:nth-child(5) { flex: 0 0 28px !important; width: 28px !important; } /* Delete */
-        
-        div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row) div[data-testid="stButton"] button {
-            width: 26px !important; height: 26px !important; font-size: 0.85rem !important; margin: 0 auto !important;
-        }
-        
-        /* Shrunk Text for Mobile */
-        .mobile-logo { width: 26px !important; height: 26px !important; margin-top: 4px !important; }
-        .mobile-tx-ticker { font-size: 0.95rem !important; margin-left: 2px !important;}
-        .mobile-tx-amount { font-size: 0.95rem !important; white-space: nowrap !important; }
-        .mobile-tx-sub { font-size: 0.65rem !important; white-space: nowrap !important; margin-left: 2px !important; margin-top: -2px !important;}
-        
         /* Dashboard Mobile Stats Override Fix */
         .stats-layer-inner { gap: 6px !important; }
         .stats-layer { margin-top: -60px !important; margin-bottom: 18px; } 
@@ -2880,12 +3006,12 @@ with tab_crypto:
         .dash-value { font-size: clamp(11px, 3.5vw, 15px) !important; top: 24px !important; } 
         .dash-label { font-size: clamp(8px, 2.5vw, 10px) !important; bottom: 8px !important; white-space: nowrap !important; letter-spacing: 0.5px !important; }
         
-        /* Restyled Subdued USDC Banner Mobile */
         .usdc-banner { padding: 8px 14px; width: 92%; margin: 4px auto 8px auto !important; }
-        .usdc-banner-left img { width: 24px; height: 24px; }
+        .usdc-banner-left img, .usdc-banner-left svg { width: 24px; height: 24px; }
         .usdc-banner-title { font-size: 0.95rem; }
         .usdc-banner-subtitle { font-size: 0.7rem; }
         .usdc-banner-amount { font-size: 1.1rem; }
+        .stable-dropdown-wrapper { width: 92%; margin: -8px auto 12px auto !important; }
     }
     </style>
     """, unsafe_allow_html=True)
@@ -2974,17 +3100,15 @@ with tab_crypto:
             else:
                 # Standard Compact Row Display
                 with st.container(border=True):
-                    st.markdown("<div class='tx-row'></div>", unsafe_allow_html=True)
-                    
-                    # Optimized columns for compactness
-                    col_logo, col_ticker, col_vals, col_edit, col_del = st.columns([0.3, 2, 2.5, 0.3, 0.3])
+                    # Hook for strict horizontal flex CSS
+                    col_logo, col_ticker, col_vals, col_edit, col_del = st.columns(5)
                     
                     with col_logo:
-                        st.markdown(f"<img src='{logo_url}' class='mobile-logo' style='width:34px;height:34px;border-radius:50%;object-fit:contain;margin-top:2px;' onerror=\"this.src='https://via.placeholder.com/34/1e2a44/ffffff?text={r['Ticker'][0]}';\">", unsafe_allow_html=True)
+                        st.markdown(f"<div class='tx-row-marker'></div><img src='{logo_url}' class='mobile-logo' style='width:32px;height:32px;border-radius:50%;object-fit:contain;' onerror=\"this.src='https://via.placeholder.com/32/1e2a44/ffffff?text={r['Ticker'][0]}';\">", unsafe_allow_html=True)
                         
                     with col_ticker:
                         st.markdown(f"""
-                            <div style="line-height: 1.1; margin-top: 4px; overflow: hidden; text-overflow: ellipsis;">
+                            <div style="line-height: 1.1; overflow: hidden; text-overflow: ellipsis;">
                                 <div class="mobile-tx-ticker" style="font-weight: 700; font-size: 1.05rem; color: #ffffff; white-space: nowrap;">{r['Ticker']}</div>
                                 <div class="mobile-tx-sub" style="font-size: 0.75rem; color: #94a3b8; white-space: nowrap;">{date_str}</div>
                             </div>
@@ -2992,14 +3116,14 @@ with tab_crypto:
                         
                     with col_vals:
                         st.markdown(f"""
-                            <div style="display: flex; flex-direction: column; align-items: flex-end; justify-content: center; gap: 0px; margin-top: 4px;">
+                            <div style="display: flex; flex-direction: column; align-items: flex-end; justify-content: center; gap: 0px;">
                                 <div class="mobile-tx-amount" style="font-weight: 700; font-size: 1.05rem; color: {color}; white-space: nowrap;">{sign}{amount_formatted}</div>
                                 <div class="mobile-tx-sub" style="font-size: 0.75rem; color: #cbd5e1; white-space: nowrap;">{action_text}: {invested_formatted} @ ${price_formatted}</div>
                             </div>
                         """, unsafe_allow_html=True)
                         
                     with col_edit:
-                        if st.button("✏️", key=f"edit_btn_{orig_idx}"):
+                        if st.button("✎", key=f"edit_btn_{orig_idx}"):
                             if st.session_state.get('edit_crypto_row') == orig_idx:
                                 st.session_state['edit_crypto_row'] = None
                             else:
@@ -3007,7 +3131,7 @@ with tab_crypto:
                             st.rerun()
                             
                     with col_del:
-                        if st.button("🗑️", key=f"del_btn_{orig_idx}"):
+                        if st.button("✕", key=f"del_btn_{orig_idx}"):
                             st.session_state['confirm_delete_crypto'] = orig_idx
                             st.rerun()
 
@@ -3144,17 +3268,14 @@ with tab_fiat:
             else:
                 # Standard Compact Row Display
                 with st.container(border=True):
-                    st.markdown("<div class='tx-row'></div>", unsafe_allow_html=True)
-                    
-                    # Optimized columns for compactness
-                    col_logo, col_fiat, col_vals, col_edit, col_del = st.columns([0.3, 2, 2.5, 0.3, 0.3])
+                    col_logo, col_fiat, col_vals, col_edit, col_del = st.columns(5)
                     
                     with col_logo:
-                        st.markdown(f"<img src='{logo_url}' class='mobile-logo' style='width:34px;height:34px;border-radius:50%;object-fit:contain;margin-top:2px;' onerror=\"this.src='https://via.placeholder.com/34/1e2a44/ffffff?text={stable_ticker[0]}';\">", unsafe_allow_html=True)
+                        st.markdown(f"<div class='tx-row-marker'></div><img src='{logo_url}' class='mobile-logo' style='width:32px;height:32px;border-radius:50%;object-fit:contain;' onerror=\"this.src='https://via.placeholder.com/32/1e2a44/ffffff?text={stable_ticker[0]}';\">", unsafe_allow_html=True)
                         
                     with col_fiat:
                         st.markdown(f"""
-                            <div style="line-height: 1.1; margin-top: 4px; overflow: hidden; text-overflow: ellipsis;">
+                            <div style="line-height: 1.1; overflow: hidden; text-overflow: ellipsis;">
                                 <div class="mobile-tx-ticker" style="font-weight: 700; font-size: 1.05rem; color: #ffffff; white-space: nowrap;">{date_str}</div>
                                 <div class="mobile-tx-sub" style="font-size: 0.75rem; color: #94a3b8; white-space: nowrap;">{fiat_formatted}</div>
                             </div>
@@ -3162,14 +3283,14 @@ with tab_fiat:
                         
                     with col_vals:
                         st.markdown(f"""
-                            <div style="display: flex; flex-direction: column; align-items: flex-end; justify-content: center; gap: 0px; margin-top: 4px;">
+                            <div style="display: flex; flex-direction: column; align-items: flex-end; justify-content: center; gap: 0px;">
                                 <div class="mobile-tx-amount" style="font-weight: 700; font-size: 1.05rem; color: #00ff9d; white-space: nowrap;">{stable_formatted}</div>
                                 <div class="mobile-tx-sub" style="font-size: 0.75rem; color: #cbd5e1; white-space: nowrap;">Fee: {fee_val:,.2f} EUR</div>
                             </div>
                         """, unsafe_allow_html=True)
                         
                     with col_edit:
-                        if st.button("✏️", key=f"edit_fiat_btn_{orig_idx}"):
+                        if st.button("✎", key=f"edit_fiat_btn_{orig_idx}"):
                             if st.session_state.get('edit_fiat_row') == orig_idx:
                                 st.session_state['edit_fiat_row'] = None
                             else:
@@ -3177,7 +3298,7 @@ with tab_fiat:
                             st.rerun()
                             
                     with col_del:
-                        if st.button("🗑️", key=f"del_fiat_btn_{orig_idx}"):
+                        if st.button("✕", key=f"del_fiat_btn_{orig_idx}"):
                             st.session_state['confirm_delete_fiat'] = orig_idx
                             st.rerun()
 
