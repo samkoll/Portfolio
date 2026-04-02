@@ -380,193 +380,116 @@ div[data-testid="stExpanderDetails"] { padding: 0 16px 16px 16px !important; }
 div[data-testid="stExpanderDetails"] div[data-testid="stForm"] { padding: 0 !important; border: none !important; box-shadow: none !important; margin-bottom: 0 !important; background: transparent !important; }
 
 /* INPUTS STYLING */
-div[data-testid="stForm"]:has(.add-tx-card) label { font-size: 0.85rem !important; color: #94a3b8 !important;
-padding-bottom: 2px !important; }
+div[data-testid="stForm"]:has(.add-tx-card) label { font-size: 0.85rem !important; color: #94a3b8 !important; padding-bottom: 2px !important; }
 div[data-testid="stForm"]:has(.add-tx-card) .stTextInput input, div[data-testid="stForm"]:has(.add-tx-card) .stNumberInput input, div[data-testid="stForm"]:has(.add-tx-card) .stDateInput input, div[data-testid="stForm"]:has(.add-tx-card) div[data-baseweb="select"] > div {
-    background: rgba(255,255,255,0.03) !important;
-    border: 1px solid rgba(255,255,255,0.1) !important; color: #fff !important; border-radius: 8px !important; margin-bottom: 0px !important;
+    background: rgba(255,255,255,0.03) !important; border: 1px solid rgba(255,255,255,0.1) !important; color: #fff !important; border-radius: 8px !important; margin-bottom: 0px !important;
 }
-div[data-testid="stForm"]:has(.add-tx-card) div[data-testid="stHorizontalBlock"]:has(> div[data-testid="column"]:nth-child(4)) { display: flex !important; gap: 12px !important;
-}
+div[data-testid="stForm"]:has(.add-tx-card) div[data-testid="stHorizontalBlock"]:has(> div[data-testid="column"]:nth-child(4)) { display: flex !important; gap: 12px !important; }
 
 /* BEAUTIFUL BUY/SELL SWITCH */
 div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] {
-    background: rgba(0,0,0,0.3) !important; padding: 6px !important; border-radius: 12px !important;
-    display: flex !important; flex-direction: row !important; gap: 8px !important; align-items: center !important; margin: 0 !important; height: 48px !important;
-    border: 1px solid rgba(255,255,255,0.05) !important;
+    background: rgba(0,0,0,0.3) !important; padding: 6px !important; border-radius: 12px !important; display: flex !important; flex-direction: row !important; gap: 8px !important; align-items: center !important; margin: 0 !important; height: 48px !important; border: 1px solid rgba(255,255,255,0.05) !important;
 }
 div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label {
-    margin: 0 !important; cursor: pointer !important;
-    padding: 0 !important; border-radius: 8px !important; border: 1px solid transparent !important; transition: all 0.3s ease !important; background: transparent !important;
-    flex: 1 !important; display: flex !important; justify-content: center !important; align-items: center !important; height: 100% !important;
+    margin: 0 !important; cursor: pointer !important; padding: 0 !important; border-radius: 8px !important; border: 1px solid transparent !important; transition: all 0.3s ease !important; background: transparent !important; flex: 1 !important; display: flex !important; justify-content: center !important; align-items: center !important; height: 100% !important;
 }
 div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label:hover { background: rgba(255,255,255,0.05) !important; }
-div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label > div:first-child { display: none !important;
-} 
-div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label p { font-weight: bold !important; font-size: 1.05rem !important; color: #94a3b8 !important; margin: 0 !important;
-padding: 0 !important; white-space: nowrap !important; line-height: 1 !important; }
-div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label:has(input:checked):first-child, div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label[aria-checked="true"]:first-child { background: rgba(0, 255, 157, 0.15) !important;
-border-color: #00ff9d !important; }
-div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label:has(input:checked):first-child p, div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label[aria-checked="true"]:first-child p { color: #00ff9d !important;
-}
-div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label:has(input:checked):last-child, div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label[aria-checked="true"]:last-child { background: rgba(255, 77, 77, 0.15) !important; border-color: #ff4d4d !important;
-}
-div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label:has(input:checked):last-child p, div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label[aria-checked="true"]:last-child p { color: #ff4d4d !important; }
+div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label > div:first-child { display: none !important; } 
+div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label p { font-weight: bold !important; font-size: 1.05rem !important; color: #94a3b8 !important; margin: 0 !important; padding: 0 !important; white-space: nowrap !important; line-height: 1 !important; }
+div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label:has(input:checked):first-child { background: rgba(0, 255, 157, 0.15) !important; border-color: #00ff9d !important; }
+div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label:has(input:checked):first-child p { color: #00ff9d !important; }
+div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label:has(input:checked):last-child { background: rgba(255, 77, 77, 0.15) !important; border-color: #ff4d4d !important; }
+div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label:has(input:checked):last-child p { color: #ff4d4d !important; }
 
-div[data-testid="stForm"]:has(.add-tx-card) .stButton { display: flex !important;
-justify-content: flex-end !important; align-items: center !important; margin: 0 !important; padding: 0 !important; width: 100% !important;
-}
-div[data-testid="stForm"]:has(.add-tx-card) .stButton > button { background: #1e2a44 !important; color: #e0e0e0 !important; padding: 0 24px !important; border-radius: 10px !important;
-font-size: 1.05rem !important; font-weight: 700 !important; box-shadow: 0 4px 15px rgba(0,0,0,0.25) !important; transition: all 0.3s ease !important; border: none !important;
-margin: 0 !important; width: auto !important; height: 48px !important; min-height: 48px !important; }
-div[data-testid="stForm"]:has(.add-tx-card) .stButton > button:hover { transform: translateY(-2px) !important;
-box-shadow: 0 8px 20px rgba(255, 255, 255, 0.2) !important; color: white !important;
-}
+div[data-testid="stForm"]:has(.add-tx-card) .stButton { display: flex !important; justify-content: flex-end !important; align-items: center !important; margin: 0 !important; padding: 0 !important; width: 100% !important; }
+div[data-testid="stForm"]:has(.add-tx-card) .stButton > button { background: #1e2a44 !important; color: #e0e0e0 !important; padding: 0 24px !important; border-radius: 10px !important; font-size: 1.05rem !important; font-weight: 700 !important; box-shadow: 0 4px 15px rgba(0,0,0,0.25) !important; transition: all 0.3s ease !important; border: none !important; margin: 0 !important; width: auto !important; height: 48px !important; min-height: 48px !important; }
+div[data-testid="stForm"]:has(.add-tx-card) .stButton > button:hover { transform: translateY(-2px) !important; box-shadow: 0 8px 20px rgba(255, 255, 255, 0.2) !important; color: white !important; }
 
 /* ==============================================================
-   NEW COMPACT HTML-GRID TRANSACTION ROWS (PC & MOBILE)
+   NEW COMPACT HTML-GRID TRANSACTION ROWS (SWIPE TO REVEAL)
    ============================================================== */
 div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row) {
-    background: #0f172a !important;
-    border: 1px solid rgba(255,255,255,0.05) !important;
-    border-radius: 12px !important; padding: 8px 12px !important; margin-bottom: 8px !important;
-    transition: background 0.3s ease;
+    background: #0f172a !important; border: 1px solid rgba(255,255,255,0.05) !important; border-radius: 12px !important; 
+    padding: 0 !important; /* Zero padding to let swipe go edge-to-edge */
+    margin-bottom: 8px !important; transition: background 0.3s ease; overflow: hidden !important;
 }
-div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row):hover {
-    background: rgba(30, 41, 59, 0.8) !important;
-}
+div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row):hover { background: rgba(30, 41, 59, 0.8) !important; }
+div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row) div[data-testid="stVerticalBlock"] { gap: 0 !important; }
 
-/* Eliminate Streamlit's Internal Column Gaps */
-div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row) div[data-testid="stVerticalBlock"] {
-    gap: 0 !important;
-}
-
-/* FORCE HORIZONTAL FLEX WRAPPER - STOPS STREAMLIT STACKING */
 div[data-testid="stHorizontalBlock"]:has(.tx-row) {
-    display: flex !important; flex-direction: row !important;
-    flex-wrap: nowrap !important; align-items: center !important; 
-    width: 100% !important; gap: 12px !important; overflow: hidden !important;
-    box-sizing: border-box !important;
+    display: flex !important; flex-direction: row !important; flex-wrap: nowrap !important; align-items: stretch !important; 
+    width: 100% !important; gap: 0 !important; box-sizing: border-box !important;
 }
-div[data-testid="stHorizontalBlock"]:has(.tx-row) > div[data-testid="column"] {
-    padding: 0 !important; margin: 0 !important; min-width: 0 !important;
-}
+div[data-testid="stHorizontalBlock"]:has(.tx-row) > div[data-testid="column"] { padding: 0 !important; margin: 0 !important; min-width: 0 !important; }
 
-/* Specific Column Sizing: Info HTML takes everything, Edit/Del take tiny spaces */
-div[data-testid="stHorizontalBlock"]:has(.tx-row) > div[data-testid="column"]:nth-child(1) { 
-    flex: 1 1 0% !important; width: auto !important; min-width: 0 !important;
-}
-div[data-testid="stHorizontalBlock"]:has(.tx-row) > div[data-testid="column"]:nth-child(2),
-div[data-testid="stHorizontalBlock"]:has(.tx-row) > div[data-testid="column"]:nth-child(3) { 
-    flex: 0 0 34px !important; width: 34px !important; 
-    display: flex !important; justify-content: center !important; align-items: center !important; 
-}
-
-/* Sleek Icon Buttons */
-div[data-testid="stHorizontalBlock"]:has(.tx-row) div[data-testid="stButton"] button {
-    background: transparent !important;
-    border: 1px solid rgba(255,255,255,0.05) !important;
-    color: #94a3b8 !important; border-radius: 8px !important; box-shadow: none !important;
-    height: 32px !important; width: 32px !important; padding: 0 !important;
-    display: flex !important; align-items: center !important; justify-content: center !important;
-    transition: all 0.2s ease !important;
-}
-div[data-testid="stHorizontalBlock"]:has(.tx-row) div[data-testid="stButton"] button p { 
-    font-size: 1.1rem !important; margin: 0; padding: 0; 
-}
-
-div[data-testid="stHorizontalBlock"]:has(.tx-row) div[data-testid="column"]:nth-child(2) div[data-testid="stButton"] button:hover {
-    border-color: #00ff9d !important; color: #00ff9d !important; background: rgba(0, 255, 157, 0.1) !important;
-}
-div[data-testid="stHorizontalBlock"]:has(.tx-row) div[data-testid="column"]:nth-child(3) div[data-testid="stButton"] button:hover {
-    border-color: #ff4d4d !important; color: #ff4d4d !important; background: rgba(255, 77, 77, 0.1) !important;
-}
-
-/* IN-PLACE EDIT FORM (Replaces Row smoothly) */
-div[data-testid="stForm"]:has(.edit-form-marker) {
-    background: rgba(15, 23, 42, 0.95) !important;
-    border: 1px solid #00ff9d !important;
-    border-radius: 8px !important; padding: 12px 16px !important; margin-bottom: 6px !important;
-    box-shadow: 0 4px 15px rgba(0, 255, 157, 0.1) !important;
-}
-div[data-testid="stForm"]:has(.edit-form-marker) div[data-baseweb="select"] > div { background: rgba(255,255,255,0.03) !important;
-border: 1px solid rgba(255,255,255,0.1) !important; }
-
-/* IN-PLACE DELETE DIALOG (Replaces Row smoothly) */
-div[data-testid="stVerticalBlockBorderWrapper"]:has(.del-warn-marker) {
-    border-color: rgba(255, 77, 77, 0.3) !important;
-    background: rgba(15, 23, 42, 0.95) !important;
-    border-radius: 8px !important; padding: 8px 12px !important; margin-bottom: 6px !important;
-    box-shadow: 0 4px 15px rgba(255, 77, 77, 0.1) !important;
-}
-div[data-testid="stVerticalBlockBorderWrapper"]:has(.del-warn-marker) div[data-testid="stHorizontalBlock"] {
-    display: flex !important;
-    flex-direction: row !important; align-items: center !important; gap: 8px !important;
-}
-div[data-testid="stVerticalBlockBorderWrapper"]:has(.del-warn-marker) div[data-testid="column"]:nth-child(1) { flex: 1 1 auto !important;
-}
-div[data-testid="stVerticalBlockBorderWrapper"]:has(.del-warn-marker) div[data-testid="column"]:nth-child(2) { flex: 0 0 80px !important; }
-div[data-testid="stVerticalBlockBorderWrapper"]:has(.del-warn-marker) div[data-testid="column"]:nth-child(3) { flex: 0 0 80px !important;
-}
-div[data-testid="stVerticalBlockBorderWrapper"]:has(.del-warn-marker) .stButton > button {
-    border-radius: 6px !important; font-weight: 600 !important; width: 100% !important; padding: 4px !important;
-    height: 32px !important; min-height: 32px !important; font-size: 0.9rem !important; transition: all 0.2s !important;
-}
-div[data-testid="stVerticalBlockBorderWrapper"]:has(.del-warn-marker) div[data-testid="column"]:nth-child(2) .stButton > button { background: rgba(255, 77, 77, 0.1) !important; color: #ff4d4d !important;
-border: 1px solid rgba(255, 77, 77, 0.3) !important; }
-div[data-testid="stVerticalBlockBorderWrapper"]:has(.del-warn-marker) div[data-testid="column"]:nth-child(2) .stButton > button:hover { background: #ff4d4d !important; color: white !important;
-}
-div[data-testid="stVerticalBlockBorderWrapper"]:has(.del-warn-marker) div[data-testid="column"]:nth-child(3) .stButton > button { background: rgba(255, 255, 255, 0.05) !important; color: #cbd5e1 !important;
-border: 1px solid rgba(255, 255, 255, 0.1) !important; }
-div[data-testid="stVerticalBlockBorderWrapper"]:has(.del-warn-marker) div[data-testid="column"]:nth-child(3) .stButton > button:hover { background: rgba(255, 255, 255, 0.15) !important;
-color: white !important; }
-
-/* ==============================================================
-   MOBILE OVERRIDES
-   ============================================================== */
-@media (max-width: 768px) {
-    .glossy-header { margin-top: 0px !important;
-    margin-bottom: 16px !important; padding: 20px 16px !important; font-size: 22px !important; min-height: 90px;
+/* --- PC LAYOUT (Default) --- */
+@media (min-width: 769px) {
+    div[data-testid="stHorizontalBlock"]:has(.tx-row) > div[data-testid="column"]:nth-child(1) { 
+        flex: 1 1 auto !important; width: auto !important; padding: 12px 16px !important;
     }
-    .home-header { margin-bottom: 0 !important; }
-    
-    div[data-testid="stForm"]:has(.add-tx-card) input { padding: 6px !important;
-    font-size: 0.95rem !important; }
-    div[data-testid="stForm"]:has(.add-tx-card) .stButton { width: 100% !important; justify-content: center !important;
-    }
-    div[data-testid="stForm"]:has(.add-tx-card) .stButton > button { width: 100% !important; max-width: none !important;
-    }
-
-    div[data-testid="stHorizontalBlock"]:has(.tx-row) { gap: 4px !important; }
     div[data-testid="stHorizontalBlock"]:has(.tx-row) > div[data-testid="column"]:nth-child(2),
     div[data-testid="stHorizontalBlock"]:has(.tx-row) > div[data-testid="column"]:nth-child(3) { 
-        flex: 0 0 28px !important; width: 28px !important; 
+        flex: 0 0 45px !important; width: 45px !important; display: flex !important; justify-content: center !important; align-items: center !important; 
     }
-    div[data-testid="stHorizontalBlock"]:has(.tx-row) div[data-testid="stButton"] button { 
-        width: 28px !important; height: 28px !important; 
+    div[data-testid="stHorizontalBlock"]:has(.tx-row) div[data-testid="stButton"] button {
+        background: transparent !important; border: 1px solid rgba(255,255,255,0.05) !important; color: #94a3b8 !important; border-radius: 8px !important; box-shadow: none !important; height: 32px !important; width: 32px !important; padding: 0 !important; display: flex !important; align-items: center !important; justify-content: center !important; transition: all 0.2s ease !important;
     }
+    div[data-testid="stHorizontalBlock"]:has(.tx-row) div[data-testid="stButton"] button p { font-size: 1.1rem !important; margin: 0; padding: 0; }
+    div[data-testid="stHorizontalBlock"]:has(.tx-row) div[data-testid="column"]:nth-child(2) div[data-testid="stButton"] button:hover { border-color: #00ff9d !important; color: #00ff9d !important; background: rgba(0, 255, 157, 0.1) !important; }
+    div[data-testid="stHorizontalBlock"]:has(.tx-row) div[data-testid="column"]:nth-child(3) div[data-testid="stButton"] button:hover { border-color: #ff4d4d !important; color: #ff4d4d !important; background: rgba(255, 77, 77, 0.1) !important; }
+}
+
+/* --- MOBILE LAYOUT (SWIPE TO REVEAL) --- */
+@media (max-width: 768px) {
+    .glossy-header { margin-top: 0px !important; margin-bottom: 16px !important; padding: 20px 16px !important; font-size: 22px !important; min-height: 90px; }
+    .home-header { margin-bottom: 0 !important; }
+    
+    div[data-testid="stForm"]:has(.add-tx-card) input { padding: 6px !important; font-size: 0.95rem !important; }
+    div[data-testid="stForm"]:has(.add-tx-card) .stButton { width: 100% !important; justify-content: center !important; }
+    div[data-testid="stForm"]:has(.add-tx-card) .stButton > button { width: 100% !important; max-width: none !important; }
+
+    /* The Scrollable Row */
+    div[data-testid="stHorizontalBlock"]:has(.tx-row) {
+        overflow-x: auto !important; scroll-snap-type: x mandatory !important; scrollbar-width: none !important; -ms-overflow-style: none !important; scroll-behavior: smooth !important;
+    }
+    div[data-testid="stHorizontalBlock"]:has(.tx-row)::-webkit-scrollbar { display: none !important; }
+    
+    /* Main Info Box (100vw) */
+    div[data-testid="stHorizontalBlock"]:has(.tx-row) > div[data-testid="column"]:nth-child(1) { 
+        flex: 0 0 100% !important; width: 100% !important; scroll-snap-align: start !important; padding: 12px 14px !important; position: relative;
+    }
+    /* Swipe Hint Arrow */
+    div[data-testid="stHorizontalBlock"]:has(.tx-row) > div[data-testid="column"]:nth-child(1)::after {
+        content: '❮'; position: absolute; right: 6px; top: 50%; transform: translateY(-50%); color: rgba(255,255,255,0.2); font-size: 10px; pointer-events: none;
+    }
+    /* Hidden Actions */
+    div[data-testid="stHorizontalBlock"]:has(.tx-row) > div[data-testid="column"]:nth-child(2) { 
+        flex: 0 0 65px !important; width: 65px !important; scroll-snap-align: end !important; background: rgba(0, 255, 157, 0.1) !important; border-left: 1px solid rgba(255,255,255,0.05);
+    }
+    div[data-testid="stHorizontalBlock"]:has(.tx-row) > div[data-testid="column"]:nth-child(3) { 
+        flex: 0 0 65px !important; width: 65px !important; scroll-snap-align: end !important; background: rgba(255, 77, 77, 0.1) !important; border-left: 1px solid rgba(255,255,255,0.05);
+    }
+    
+    /* Fill Action Zones with Buttons */
+    div[data-testid="stHorizontalBlock"]:has(.tx-row) div[data-testid="stButton"],
+    div[data-testid="stHorizontalBlock"]:has(.tx-row) div[data-testid="stButton"] > button {
+        width: 100% !important; height: 100% !important; min-height: 56px !important; border-radius: 0 !important; border: none !important; box-shadow: none !important; background: transparent !important; display: flex !important; align-items: center !important; justify-content: center !important;
+    }
+    div[data-testid="stHorizontalBlock"]:has(.tx-row) div[data-testid="column"]:nth-child(2) div[data-testid="stButton"] button p { color: #00ff9d !important; font-size: 1.2rem !important; }
+    div[data-testid="stHorizontalBlock"]:has(.tx-row) div[data-testid="column"]:nth-child(3) div[data-testid="stButton"] button p { color: #ff4d4d !important; font-size: 1.2rem !important; }
 
     /* Dashboard Mobile Stats */
-    .stats-layer-inner { gap: 6px !important;
-    }
-    .stats-layer { margin-top: -60px !important; margin-bottom: 18px;
-    } 
-    .glossy-box.swapped { height: 80px !important; min-height: 80px !important; max-height: 80px !important; padding: 0 !important;
-    min-width: 0 !important; }
-    .dash-value { font-size: clamp(11px, 3.5vw, 15px) !important; top: 24px !important;
-    } 
-    .dash-label { font-size: clamp(8px, 2.5vw, 10px) !important; bottom: 8px !important; white-space: nowrap !important;
-    letter-spacing: 0.5px !important; }
+    .stats-layer-inner { gap: 6px !important; }
+    .stats-layer { margin-top: -60px !important; margin-bottom: 18px; } 
+    .glossy-box.swapped { height: 80px !important; min-height: 80px !important; max-height: 80px !important; padding: 0 !important; min-width: 0 !important; }
+    .dash-value { font-size: clamp(11px, 3.5vw, 15px) !important; top: 24px !important; } 
+    .dash-label { font-size: clamp(8px, 2.5vw, 10px) !important; bottom: 8px !important; white-space: nowrap !important; letter-spacing: 0.5px !important; }
     
-    .usdc-banner { padding: 8px 14px; width: 92%;
-    margin: 4px auto 8px auto !important; }
-    .usdc-banner-title { font-size: 0.95rem;
-    }
+    .usdc-banner { padding: 8px 14px; width: 92%; margin: 4px auto 8px auto !important; }
+    .usdc-banner-title { font-size: 0.95rem; }
     .usdc-banner-subtitle { font-size: 0.7rem; }
-    .usdc-banner-amount { font-size: 1.1rem;
-    }
-    .stable-dropdown-wrapper { width: 92%; margin: -8px auto 12px auto !important;
-    }
+    .usdc-banner-amount { font-size: 1.1rem; }
+    .stable-dropdown-wrapper { width: 92%; margin: -8px auto 12px auto !important; }
 }
 </style>
 """, unsafe_allow_html=True)
@@ -695,23 +618,26 @@ def get_with_retry(url: str, headers: dict, timeout: int = 12, retries: int = 4)
 # ====================== NETWORK FETCHING ======================
 def get_all_cryptocompare_prices(tickers: tuple, refresh_key=0):
     prices = {"STABLES": 1.0}
+    changes = {"STABLES": 0.0}
     symbols = [CRYPTOCOMPARE_SYMBOL_MAP.get(t.upper()) for t in tickers if t.upper() != "STABLES"]
     symbols = [s for s in symbols if s]
-    if not symbols: return prices
+    if not symbols: return prices, changes
     try:
         fsyms = ",".join(symbols)
-        url = f"https://min-api.cryptocompare.com/data/pricemulti?fsyms={fsyms}&tsyms=USD"
+        url = f"https://min-api.cryptocompare.com/data/pricemultifull?fsyms={fsyms}&tsyms=USD"
         headers = {"User-Agent": "Mozilla/5.0 (compatible; StreamlitPortfolio/1.0)"}
         data = get_with_retry(url, headers)
-        if data:
-            for sym, price_data in data.items():
-                if isinstance(price_data, dict) and "USD" in price_data:
+        if data and "RAW" in data:
+            for sym, price_data in data["RAW"].items():
+                if "USD" in price_data:
                     ticker = next((k for k, v in CRYPTOCOMPARE_SYMBOL_MAP.items() if v == sym), None)
-                    if ticker: prices[ticker] = float(price_data["USD"])
-            return prices
+                    if ticker: 
+                        prices[ticker] = float(price_data["USD"]["PRICE"])
+                        changes[ticker] = float(price_data["USD"].get("CHANGEPCT24HOUR", 0.0))
+        return prices, changes
     except:
         pass
-    return prices
+    return prices, changes
 
 def fetch_all_historical_data(coins_tuple: tuple, limit: int, refresh_key: int):
     prices_dict = {}
@@ -878,9 +804,9 @@ def build_portfolio_history(crypto_df, fiat_df, last_prices, hist_dict):
         
     return history_data, allocation_series_js, pnl_df
 
-def calculate_portfolio(crypto_df, fiat_df, live_prices, base_prices):
+def calculate_portfolio(crypto_df, fiat_df, live_prices, live_changes, base_prices):
     if crypto_df.empty:
-        return pd.DataFrame(columns=['Ticker','Holdings','Stable_Amt','AVG','Live','PnL','PnL %','Value','Price7d','Price30d','Price90d','PriceYTD']), 0, 0, 0
+        return pd.DataFrame(columns=['Ticker','Holdings','Stable_Amt','AVG','Live','PnL','PnL %','Value','Price7d','Price30d','Price90d','PriceYTD', 'Change24h']), 0, 0, 0
    
     crypto_df = crypto_df.copy()
     crypto_df['Ticker'] = crypto_df['Ticker'].astype(str).str.upper()
@@ -904,10 +830,11 @@ def calculate_portfolio(crypto_df, fiat_df, live_prices, base_prices):
         pnl_pct = (pnl / total_invested * 100) if total_invested > 0 else 0
         
         bp = base_prices.get(ticker, {'7d': live_price, '30d': live_price, '90d': live_price, 'ytd': live_price})
+        c24h = live_changes.get(ticker, 0.0)
         
-        portfolio.append({'Ticker':ticker,'Holdings':total_holdings,'Stable_Amt':total_invested,'AVG':avg_price,'Live':live_price,'PnL':pnl,'PnL %':pnl_pct,'Value':value, 'Price7d':bp['7d'], 'Price30d':bp['30d'], 'Price90d':bp['90d'], 'PriceYTD':bp['ytd']})
+        portfolio.append({'Ticker':ticker,'Holdings':total_holdings,'Stable_Amt':total_invested,'AVG':avg_price,'Live':live_price,'PnL':pnl,'PnL %':pnl_pct,'Value':value, 'Price7d':bp['7d'], 'Price30d':bp['30d'], 'Price90d':bp['90d'], 'PriceYTD':bp['ytd'], 'Change24h':c24h})
     
-    portfolio.append({'Ticker':'STABLES','Holdings':stable_holdings,'Stable_Amt':stable_holdings,'AVG':1.0,'Live':1.0,'PnL':0,'PnL %':0,'Value':stable_holdings, 'Price7d':1.0, 'Price30d':1.0, 'Price90d':1.0, 'PriceYTD':1.0})
+    portfolio.append({'Ticker':'STABLES','Holdings':stable_holdings,'Stable_Amt':stable_holdings,'AVG':1.0,'Live':1.0,'PnL':0,'PnL %':0,'Value':stable_holdings, 'Price7d':1.0, 'Price30d':1.0, 'Price90d':1.0, 'PriceYTD':1.0, 'Change24h': 0.0})
     df_port = pd.DataFrame(portfolio)
     df_port = df_port.sort_values(by='Stable_Amt', ascending=False).reset_index(drop=True)
     total_value = df_port['Value'].sum()
@@ -1093,8 +1020,8 @@ components.html("""
             const yDiff = Math.abs(endY - startY);
             
              if (xDiff > yDiff && xDiff > 80) {
-                const isScrollable = e.target.closest('.scroll-wrapper') || e.target.closest('.charts-scroll-wrapper') || e.target.closest('canvas');
-                if(isScrollable) return;
+                const isScrollable = e.target.closest('.scroll-wrapper') || e.target.closest('.charts-scroll-wrapper') || e.target.closest('canvas') || e.target.closest('div[data-testid="stHorizontalBlock"]');
+                if(isScrollable) return; // Prevent tab switch when swiping rows or charts
 
                 let currentTab = 0;
                 const tabs = parentDoc.querySelectorAll('button[data-baseweb="tab"]');
@@ -1138,26 +1065,28 @@ with tab_home:
         
         limit = 2000 
         
-        live_prices = get_all_cryptocompare_prices(fetch_tickers, st.session_state.refresh_key)
+        live_prices, live_changes = get_all_cryptocompare_prices(fetch_tickers, st.session_state.refresh_key)
         for t, p in live_prices.items():
             if p > 0: st.session_state.last_known_prices[t] = p
             
         for t in fetch_tickers:
             if t not in live_prices or live_prices[t] == 0:
                 live_prices[t] = st.session_state.last_known_prices.get(t, 0)
+            if t not in live_changes:
+                live_changes[t] = 0.0
                 
         hist_dict = fetch_all_historical_data(fetch_tickers, limit, st.session_state.refresh_key)
         base_prices = get_base_prices(hist_dict, fetch_tickers)
 
         df_port, total_value, total_pnl, total_pnl_pct = calculate_portfolio(
-            st.session_state.crypto_df, st.session_state.fiat_df, live_prices, base_prices
+            st.session_state.crypto_df, st.session_state.fiat_df, live_prices, live_changes, base_prices
         )
         history_data_raw, allocation_series_js, pnl_df = build_portfolio_history(
              st.session_state.crypto_df, st.session_state.fiat_df, live_prices, hist_dict
         )
 
         st.session_state.portfolio_cache = {
-             'hash': current_hash,
+            'hash': current_hash,
             'df_port': df_port,
             'total_value': total_value,
             'total_pnl': total_pnl,
@@ -1166,7 +1095,9 @@ with tab_home:
             'allocation_series_js': allocation_series_js,
             'pnl_df': pnl_df,
             'live_prices': live_prices,
-            'base_prices': base_prices
+            'live_changes': live_changes,
+            'base_prices': base_prices,
+            'hist_dict': hist_dict
         }
 
     vault = st.session_state.portfolio_cache
@@ -1177,6 +1108,7 @@ with tab_home:
     history_data_raw = vault['history_data_raw']
     allocation_series_js = vault['allocation_series_js']
     pnl_df = vault['pnl_df']
+    hist_dict = vault['hist_dict']
     
     stables_row = df_port[df_port['Ticker'] == 'STABLES'].iloc[0] if not df_port[df_port['Ticker'] == 'STABLES'].empty else None
     stables_holdings = stables_row['Holdings'] if stables_row is not None else 0
@@ -1984,9 +1916,21 @@ with tab_home:
         live_price_formatted = format_price(live_price)
         avg_price_formatted = format_price(avg_price)
         chart_color = border_color
+
+        c24 = r.get('Change24h', 0.0)
+        c24_sign = "▲" if c24 >= 0 else "▼"
+        c24_color = "#00ff9d" if c24 >= 0 else "#ff4d4d"
+        c24_formatted = f"<span style='color:{c24_color};'>{c24_sign} {abs(c24):.2f}%</span>"
+
+        hist_data = hist_dict.get(ticker, {})
+        chart_labels, chart_prices = [], []
+        if hist_data:
+            sorted_dates = sorted(hist_data.keys())[-30:]
+            chart_labels = [d.strftime("%d/%m") for d in sorted_dates]
+            chart_prices = [hist_data[d] for d in sorted_dates]
         
         cards_html += f"""
-<div class="flip-card" data-ticker="{ticker}" data-holdings="{r['Holdings']}" data-invested="{r['Stable_Amt']}" data-current-price="{live_price}" data-avg-price="{avg_price}" data-price-7d="{r.get('Price7d', live_price)}" data-price-30d="{r.get('Price30d', live_price)}" data-price-90d="{r.get('Price90d', live_price)}" data-price-ytd="{r.get('PriceYTD', live_price)}" data-refresh="{st.session_state.refresh_key}" data-border="{border_color}" data-chart-color="{chart_color}" data-logo="{logo_url}">
+<div class="flip-card" data-ticker="{ticker}" data-holdings="{r['Holdings']}" data-invested="{r['Stable_Amt']}" data-current-price="{live_price}" data-avg-price="{avg_price}" data-price-7d="{r.get('Price7d', live_price)}" data-price-30d="{r.get('Price30d', live_price)}" data-price-90d="{r.get('Price90d', live_price)}" data-price-ytd="{r.get('PriceYTD', live_price)}" data-refresh="{st.session_state.refresh_key}" data-border="{border_color}" data-chart-color="{chart_color}" data-logo="{logo_url}" data-chart-labels='{json.dumps(chart_labels)}' data-chart-prices='{json.dumps(chart_prices)}'>
 <div class="flip-card-inner">
     <div class="flip-card-front">
         <div class="card-header" style="align-items: center; margin-bottom: 4px;">
@@ -2005,7 +1949,7 @@ with tab_home:
         </div>
         
         <div class="metrics-row">
-            <div class="metric-col"><span class="metric-lbl">24H</span><span class="metric-val" id="change-24h-{ticker}">...</span></div>
+            <div class="metric-col"><span class="metric-lbl">24H</span><span class="metric-val" id="change-24h-{ticker}">{c24_formatted}</span></div>
             <div class="metric-col"><span class="metric-lbl">7D</span><span class="metric-val" id="change-7d-{ticker}">...</span></div>
             <div class="metric-col"><span class="metric-lbl">30D</span><span class="metric-val" id="change-30d-{ticker}">...</span></div>
             <div class="metric-col"><span class="metric-lbl">90D</span><span class="metric-val" id="change-90d-{ticker}">...</span></div>
@@ -2494,8 +2438,6 @@ with tab_home:
                         const color = change >= 0 ? '#00ff9d' : '#ff4d4d';
                         changeSpan.innerHTML = `<span style="color:${{color}};">${{sign}} ${{Math.abs(change).toFixed(2)}}%</span>`;
                     }}
-                }} else if (changeSpan && changeSpan.innerText === '...') {{
-                     changeSpan.innerHTML = `N/A`;
                 }}
                 
                 totalCoinValue += (holdings * price);
@@ -2665,98 +2607,6 @@ with tab_home:
     const chartCache = window.chartCache;
     const refreshKey = '{st.session_state.refresh_key}';
 
-    async function fetchAll24hChanges() {{
-        const cards = Array.from(document.querySelectorAll('.flip-card'));
-        if (cards.length === 0) return;
-
-        const tickers = cards.map(card => card.getAttribute('data-ticker'));
-        const symbolMap = {{
-            'BTC':'BTC','ETH':'ETH','SOL':'SOL','HBAR':'HBAR',
-            'XRP':'XRP','BNB':'BNB','TRX':'TRX','LINK':'LINK','SUI':'SUI'
-        }};
-        const mappedTickers = tickers.map(t => symbolMap[t.toUpperCase()] || t.toUpperCase());
-
-        const url = `https://min-api.cryptocompare.com/data/pricemultifull?fsyms=${{mappedTickers.join(',')}}&tsyms=USD`;
-
-        try {{
-            const resp = await fetch(url, {{ headers: {{ 'User-Agent': 'Mozilla/5.0' }} }});
-            const data = await resp.json();
-            
-            let init24h = {{}};
-
-            cards.forEach(card => {{
-                const ticker = card.getAttribute('data-ticker');
-                const sym = symbolMap[ticker.toUpperCase()] || ticker.toUpperCase();
-                const changeSpan = card.querySelector(`#change-24h-${{ticker}}`);
-
-                if (changeSpan && data.RAW && data.RAW[sym] && data.RAW[sym].USD && data.RAW[sym].USD.CHANGEPCT24HOUR !== undefined) {{
-                    const change = data.RAW[sym].USD.CHANGEPCT24HOUR;
-                    init24h[ticker] = change;
-                    const sign = change >= 0 ? '▲' : '▼';
-                    const color = change >= 0 ? '#00ff9d' : '#ff4d4d';
-                    changeSpan.innerHTML = `<span style="color:${{color}};">${{sign}} ${{Math.abs(change).toFixed(2)}}%</span>`;
-                }} else if (changeSpan) {{
-                     changeSpan.innerHTML = `N/A`;
-                }}
-            }});
-
-            try {{
-                let hcWin = window;
-                if (window !== window.parent) {{
-                    const iframes = window.parent.document.querySelectorAll('iframe');
-                    for (let i = 0; i < iframes.length; i++) {{
-                        if (iframes[i].contentWindow && iframes[i].contentWindow.Highcharts) {{
-                            hcWin = iframes[i].contentWindow;
-                            break;
-                        }}
-                    }}
-                }}
-                if (hcWin && hcWin.Highcharts) {{
-                    const dailyC = hcWin.Highcharts.charts.find(c => c && c.renderTo.id === 'daily-container');
-                    if (dailyC && dailyC.series[0]) {{
-                        dailyC.series[0].points.forEach(pt => {{
-                            if (init24h[pt.name] !== undefined) {{
-                                 const val = init24h[pt.name];
-                                 pt.update({{y: val, color: val >= 0 ? 'rgba(0, 255, 157, 0.65)' : 'rgba(255, 77, 77, 0.65)'}}, false);
-                            }}
-                         }});
-                        dailyC.redraw();
-                    }}
-                }}
-            }} catch(e) {{}}
-            
-        }} catch(e) {{
-            console.error("Bulk 24h change error", e);
-        }}
-    }}
-    
-    async function fetchHistoricalData(ticker) {{
-        const symbolMap = {{
-            'BTC':'BTC','ETH':'ETH','SOL':'SOL','HBAR':'HBAR',
-            'XRP':'XRP','BNB':'BNB','TRX':'TRX','LINK':'LINK','SUI':'SUI'
-        }};
-        const sym = symbolMap[ticker.toUpperCase()];
-        if (!sym) return null;
-        const url = `https://min-api.cryptocompare.com/data/v2/histoday?fsym=${{sym}}&tsym=USD&limit=30`;
-        try {{
-            const resp = await fetch(url, {{ headers: {{ 'User-Agent': 'Mozilla/5.0' }} }});
-            const data = await resp.json();
-            if (data && data.Data && data.Data.Data) {{
-                const ohlc = data.Data.Data;
-                const labels = ohlc.map(d => {{
-                    const dt = new Date(d.time * 1000);
-                    return `${{dt.getDate().toString().padStart(2,'0')}}/${{(dt.getMonth()+1).toString().padStart(2,'0')}}`;
-                }});
-                const prices = ohlc.map(d => d.close);
-                return {{ labels, prices }};
-            }}
-            return null;
-        }} catch(e) {{
-            console.error("Fetch error for", ticker, e);
-            return null;
-        }}
-    }}
-    
     async function renderChart(card, ticker, currentPrice, avgPrice, chartColor) {{
         const canvas = card.querySelector(`canvas#chart-${{ticker}}`);
         const loadingDiv = card.querySelector(`.chart-loading`);
@@ -2765,14 +2615,20 @@ with tab_home:
             if (loadingDiv) loadingDiv.style.display = 'none';
             return;
         }}
-        if (loadingDiv) loadingDiv.style.display = 'block';
-        const hist = await fetchHistoricalData(ticker);
-        if (!hist || hist.prices.length === 0) {{
-            if (loadingDiv) loadingDiv.innerText = 'Failed to load chart data';
+        
+        let labels = [];
+        let prices = [];
+        try {{
+            labels = JSON.parse(card.getAttribute('data-chart-labels') || '[]');
+            prices = JSON.parse(card.getAttribute('data-chart-prices') || '[]');
+        }} catch(e) {{}}
+        
+        if (prices.length === 0) {{
+            if (loadingDiv) loadingDiv.innerText = 'No chart data';
             return;
         }}
         
-        hist.prices[hist.prices.length - 1] = currentPrice;
+        prices[prices.length - 1] = currentPrice;
         const ctx = canvas.getContext('2d');
         if (chartCache[ticker] && chartCache[ticker].chartObj) {{
             chartCache[ticker].chartObj.destroy();
@@ -2780,7 +2636,7 @@ with tab_home:
         const datasets = [
             {{
                 label: 'Close Price ($)',
-                data: hist.prices,
+                data: prices,
                 borderColor: chartColor,
                 backgroundColor: chartColor + '20',
                 borderWidth: 2,
@@ -2791,7 +2647,7 @@ with tab_home:
             }},
             {{
                 label: 'Avg Price ($)',
-                data: new Array(hist.labels.length).fill(avgPrice),
+                data: new Array(labels.length).fill(avgPrice),
                 borderColor: '#ffaa00',
                 borderWidth: 2,
                 borderDash: [5, 5],
@@ -2803,7 +2659,7 @@ with tab_home:
         const newChart = new Chart(ctx, {{
             type: 'line',
             data: {{
-                labels: hist.labels,
+                labels: labels,
                 datasets: datasets
             }},
              options: {{
@@ -2820,7 +2676,7 @@ with tab_home:
                 }}
             }}
          }});
-        chartCache[ticker] = {{ chartObj: newChart, data: hist }};
+        chartCache[ticker] = {{ chartObj: newChart, data: {{labels, prices}} }};
         if (loadingDiv) loadingDiv.style.display = 'none';
     }}
     
@@ -2953,154 +2809,90 @@ box-shadow: 0 8px 20px rgba(255, 255, 255, 0.2) !important; color: white !import
 }
 
     /* ==============================================================
-       NEW COMPACT HTML-GRID TRANSACTION ROWS (PC & MOBILE)
+       NEW COMPACT HTML-GRID TRANSACTION ROWS (SWIPE TO REVEAL)
        ============================================================== */
     div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row) {
-        background: #0f172a !important;
-        border: 1px solid rgba(255,255,255,0.05) !important;
-        border-radius: 12px !important; padding: 8px 12px !important; margin-bottom: 8px !important;
-        transition: background 0.3s ease;
+        background: #0f172a !important; border: 1px solid rgba(255,255,255,0.05) !important; border-radius: 12px !important; 
+        padding: 0 !important; /* Zero padding to let swipe go edge-to-edge */
+        margin-bottom: 8px !important; transition: background 0.3s ease; overflow: hidden !important;
     }
-    div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row):hover {
-        background: rgba(30, 41, 59, 0.8) !important;
-    }
+    div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row):hover { background: rgba(30, 41, 59, 0.8) !important; }
+    div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row) div[data-testid="stVerticalBlock"] { gap: 0 !important; }
 
-    /* Eliminate Streamlit's Internal Column Gaps */
-    div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row) div[data-testid="stVerticalBlock"] {
-        gap: 0 !important;
-    }
-
-    /* FORCE HORIZONTAL FLEX WRAPPER - STOPS STREAMLIT STACKING */
     div[data-testid="stHorizontalBlock"]:has(.tx-row) {
-        display: flex !important; flex-direction: row !important;
-        flex-wrap: nowrap !important; align-items: center !important; 
-        width: 100% !important; gap: 12px !important; overflow: hidden !important;
-        box-sizing: border-box !important;
+        display: flex !important; flex-direction: row !important; flex-wrap: nowrap !important; align-items: stretch !important; 
+        width: 100% !important; gap: 0 !important; box-sizing: border-box !important;
     }
-    div[data-testid="stHorizontalBlock"]:has(.tx-row) > div[data-testid="column"] {
-        padding: 0 !important; margin: 0 !important; min-width: 0 !important;
-    }
+    div[data-testid="stHorizontalBlock"]:has(.tx-row) > div[data-testid="column"] { padding: 0 !important; margin: 0 !important; min-width: 0 !important; }
 
-    /* Specific Column Sizing: Info HTML takes everything, Edit/Del take tiny spaces */
-    div[data-testid="stHorizontalBlock"]:has(.tx-row) > div[data-testid="column"]:nth-child(1) { 
-        flex: 1 1 0% !important; width: auto !important; min-width: 0 !important;
-    }
-    div[data-testid="stHorizontalBlock"]:has(.tx-row) > div[data-testid="column"]:nth-child(2),
-    div[data-testid="stHorizontalBlock"]:has(.tx-row) > div[data-testid="column"]:nth-child(3) { 
-        flex: 0 0 34px !important; width: 34px !important; 
-        display: flex !important; justify-content: center !important; align-items: center !important; 
-    }
-
-    /* Sleek Icon Buttons */
-    div[data-testid="stHorizontalBlock"]:has(.tx-row) div[data-testid="stButton"] button {
-        background: transparent !important;
-        border: 1px solid rgba(255,255,255,0.05) !important;
-        color: #94a3b8 !important; border-radius: 8px !important; box-shadow: none !important;
-        height: 32px !important; width: 32px !important; padding: 0 !important;
-        display: flex !important; align-items: center !important; justify-content: center !important;
-        transition: all 0.2s ease !important;
-    }
-    div[data-testid="stHorizontalBlock"]:has(.tx-row) div[data-testid="stButton"] button p { 
-        font-size: 1.1rem !important; margin: 0; padding: 0; 
-    }
-
-    div[data-testid="stHorizontalBlock"]:has(.tx-row) div[data-testid="column"]:nth-child(2) div[data-testid="stButton"] button:hover {
-        border-color: #00ff9d !important; color: #00ff9d !important; background: rgba(0, 255, 157, 0.1) !important;
-    }
-    div[data-testid="stHorizontalBlock"]:has(.tx-row) div[data-testid="column"]:nth-child(3) div[data-testid="stButton"] button:hover {
-        border-color: #ff4d4d !important; color: #ff4d4d !important; background: rgba(255, 77, 77, 0.1) !important;
-    }
-
-    /* IN-PLACE EDIT FORM (Replaces Row smoothly) */
-    div[data-testid="stForm"]:has(.edit-form-marker) {
-        background: rgba(15, 23, 42, 0.95) !important;
-border: 1px solid #00ff9d !important;
-        border-radius: 8px !important; padding: 12px 16px !important; margin-bottom: 6px !important;
-box-shadow: 0 4px 15px rgba(0, 255, 157, 0.1) !important;
-    }
-    div[data-testid="stForm"]:has(.edit-form-marker) div[data-baseweb="select"] > div { background: rgba(255,255,255,0.03) !important;
-border: 1px solid rgba(255,255,255,0.1) !important; }
-
-    /* IN-PLACE DELETE DIALOG (Replaces Row smoothly) */
-    div[data-testid="stVerticalBlockBorderWrapper"]:has(.del-warn-marker) {
-        border-color: rgba(255, 77, 77, 0.3) !important;
-background: rgba(15, 23, 42, 0.95) !important;
-        border-radius: 8px !important; padding: 8px 12px !important; margin-bottom: 6px !important;
-box-shadow: 0 4px 15px rgba(255, 77, 77, 0.1) !important;
-    }
-    div[data-testid="stVerticalBlockBorderWrapper"]:has(.del-warn-marker) div[data-testid="stHorizontalBlock"] {
-        display: flex !important;
-flex-direction: row !important; align-items: center !important; gap: 8px !important;
-    }
-    div[data-testid="stVerticalBlockBorderWrapper"]:has(.del-warn-marker) div[data-testid="column"]:nth-child(1) { flex: 1 1 auto !important;
-}
-    div[data-testid="stVerticalBlockBorderWrapper"]:has(.del-warn-marker) div[data-testid="column"]:nth-child(2) { flex: 0 0 80px !important;
-}
-    div[data-testid="stVerticalBlockBorderWrapper"]:has(.del-warn-marker) div[data-testid="column"]:nth-child(3) { flex: 0 0 80px !important;
-}
-    div[data-testid="stVerticalBlockBorderWrapper"]:has(.del-warn-marker) .stButton > button {
-        border-radius: 6px !important;
-font-weight: 600 !important; width: 100% !important; padding: 4px !important; height: 32px !important; min-height: 32px !important; font-size: 0.9rem !important;
-transition: all 0.2s !important;
-    }
-    div[data-testid="stVerticalBlockBorderWrapper"]:has(.del-warn-marker) div[data-testid="column"]:nth-child(2) .stButton > button { background: rgba(255, 77, 77, 0.1) !important;
-color: #ff4d4d !important; border: 1px solid rgba(255, 77, 77, 0.3) !important;
-}
-    div[data-testid="stVerticalBlockBorderWrapper"]:has(.del-warn-marker) div[data-testid="column"]:nth-child(2) .stButton > button:hover { background: #ff4d4d !important; color: white !important;
-}
-    div[data-testid="stVerticalBlockBorderWrapper"]:has(.del-warn-marker) div[data-testid="column"]:nth-child(3) .stButton > button { background: rgba(255, 255, 255, 0.05) !important; color: #cbd5e1 !important;
-border: 1px solid rgba(255, 255, 255, 0.1) !important; }
-    div[data-testid="stVerticalBlockBorderWrapper"]:has(.del-warn-marker) div[data-testid="column"]:nth-child(3) .stButton > button:hover { background: rgba(255, 255, 255, 0.15) !important;
-color: white !important; }
-
-    /* ==============================================================
-       MOBILE OVERRIDES
-       ============================================================== */
-    @media (max-width: 768px) {
-        .glossy-header { margin-top: 0px !important;
-margin-bottom: 16px !important; padding: 20px 16px !important; font-size: 22px !important; min-height: 90px;
-}
-        .home-header { margin-bottom: 0 !important;
-}
-        
-        div[data-testid="stForm"]:has(.add-tx-card) input { padding: 6px !important;
-font-size: 0.95rem !important; }
-        div[data-testid="stForm"]:has(.add-tx-card) .stButton { width: 100% !important; justify-content: center !important;
-}
-        div[data-testid="stForm"]:has(.add-tx-card) .stButton > button { width: 100% !important; max-width: none !important;
-}
-
-        div[data-testid="stHorizontalBlock"]:has(.tx-row) { gap: 4px !important; }
+    /* --- PC LAYOUT (Default) --- */
+    @media (min-width: 769px) {
+        div[data-testid="stHorizontalBlock"]:has(.tx-row) > div[data-testid="column"]:nth-child(1) { 
+            flex: 1 1 auto !important; width: auto !important; padding: 12px 16px !important;
+        }
         div[data-testid="stHorizontalBlock"]:has(.tx-row) > div[data-testid="column"]:nth-child(2),
         div[data-testid="stHorizontalBlock"]:has(.tx-row) > div[data-testid="column"]:nth-child(3) { 
-            flex: 0 0 28px !important; width: 28px !important; 
+            flex: 0 0 45px !important; width: 45px !important; display: flex !important; justify-content: center !important; align-items: center !important; 
         }
-        div[data-testid="stHorizontalBlock"]:has(.tx-row) div[data-testid="stButton"] button { 
-            width: 28px !important; height: 28px !important; 
+        div[data-testid="stHorizontalBlock"]:has(.tx-row) div[data-testid="stButton"] button {
+            background: transparent !important; border: 1px solid rgba(255,255,255,0.05) !important; color: #94a3b8 !important; border-radius: 8px !important; box-shadow: none !important; height: 32px !important; width: 32px !important; padding: 0 !important; display: flex !important; align-items: center !important; justify-content: center !important; transition: all 0.2s ease !important;
         }
+        div[data-testid="stHorizontalBlock"]:has(.tx-row) div[data-testid="stButton"] button p { font-size: 1.1rem !important; margin: 0; padding: 0; }
+        div[data-testid="stHorizontalBlock"]:has(.tx-row) div[data-testid="column"]:nth-child(2) div[data-testid="stButton"] button:hover { border-color: #00ff9d !important; color: #00ff9d !important; background: rgba(0, 255, 157, 0.1) !important; }
+        div[data-testid="stHorizontalBlock"]:has(.tx-row) div[data-testid="column"]:nth-child(3) div[data-testid="stButton"] button:hover { border-color: #ff4d4d !important; color: #ff4d4d !important; background: rgba(255, 77, 77, 0.1) !important; }
+    }
+
+    /* --- MOBILE LAYOUT (SWIPE TO REVEAL) --- */
+    @media (max-width: 768px) {
+        .glossy-header { margin-top: 0px !important; margin-bottom: 16px !important; padding: 20px 16px !important; font-size: 22px !important; min-height: 90px; }
+        .home-header { margin-bottom: 0 !important; }
+        
+        div[data-testid="stForm"]:has(.add-tx-card) input { padding: 6px !important; font-size: 0.95rem !important; }
+        div[data-testid="stForm"]:has(.add-tx-card) .stButton { width: 100% !important; justify-content: center !important; }
+        div[data-testid="stForm"]:has(.add-tx-card) .stButton > button { width: 100% !important; max-width: none !important; }
+
+        /* The Scrollable Row */
+        div[data-testid="stHorizontalBlock"]:has(.tx-row) {
+            overflow-x: auto !important; scroll-snap-type: x mandatory !important; scrollbar-width: none !important; -ms-overflow-style: none !important; scroll-behavior: smooth !important;
+        }
+        div[data-testid="stHorizontalBlock"]:has(.tx-row)::-webkit-scrollbar { display: none !important; }
+        
+        /* Main Info Box (100vw) */
+        div[data-testid="stHorizontalBlock"]:has(.tx-row) > div[data-testid="column"]:nth-child(1) { 
+            flex: 0 0 100% !important; width: 100% !important; scroll-snap-align: start !important; padding: 12px 14px !important; position: relative;
+        }
+        /* Swipe Hint Arrow */
+        div[data-testid="stHorizontalBlock"]:has(.tx-row) > div[data-testid="column"]:nth-child(1)::after {
+            content: '❮'; position: absolute; right: 6px; top: 50%; transform: translateY(-50%); color: rgba(255,255,255,0.2); font-size: 10px; pointer-events: none;
+        }
+        /* Hidden Actions */
+        div[data-testid="stHorizontalBlock"]:has(.tx-row) > div[data-testid="column"]:nth-child(2) { 
+            flex: 0 0 65px !important; width: 65px !important; scroll-snap-align: end !important; background: rgba(0, 255, 157, 0.1) !important; border-left: 1px solid rgba(255,255,255,0.05);
+        }
+        div[data-testid="stHorizontalBlock"]:has(.tx-row) > div[data-testid="column"]:nth-child(3) { 
+            flex: 0 0 65px !important; width: 65px !important; scroll-snap-align: end !important; background: rgba(255, 77, 77, 0.1) !important; border-left: 1px solid rgba(255,255,255,0.05);
+        }
+        
+        /* Fill Action Zones with Buttons */
+        div[data-testid="stHorizontalBlock"]:has(.tx-row) div[data-testid="stButton"],
+        div[data-testid="stHorizontalBlock"]:has(.tx-row) div[data-testid="stButton"] > button {
+            width: 100% !important; height: 100% !important; min-height: 56px !important; border-radius: 0 !important; border: none !important; box-shadow: none !important; background: transparent !important; display: flex !important; align-items: center !important; justify-content: center !important;
+        }
+        div[data-testid="stHorizontalBlock"]:has(.tx-row) div[data-testid="column"]:nth-child(2) div[data-testid="stButton"] button p { color: #00ff9d !important; font-size: 1.2rem !important; }
+        div[data-testid="stHorizontalBlock"]:has(.tx-row) div[data-testid="column"]:nth-child(3) div[data-testid="stButton"] button p { color: #ff4d4d !important; font-size: 1.2rem !important; }
 
         /* Dashboard Mobile Stats */
-        .stats-layer-inner { gap: 6px !important;
-}
-        .stats-layer { margin-top: -60px !important; margin-bottom: 18px;
-} 
-        .glossy-box.swapped { height: 80px !important; min-height: 80px !important; max-height: 80px !important;
-padding: 0 !important; min-width: 0 !important; }
-        .dash-value { font-size: clamp(11px, 3.5vw, 15px) !important;
-top: 24px !important; } 
-        .dash-label { font-size: clamp(8px, 2.5vw, 10px) !important;
-bottom: 8px !important; white-space: nowrap !important; letter-spacing: 0.5px !important; }
+        .stats-layer-inner { gap: 6px !important; }
+        .stats-layer { margin-top: -60px !important; margin-bottom: 18px; } 
+        .glossy-box.swapped { height: 80px !important; min-height: 80px !important; max-height: 80px !important; padding: 0 !important; min-width: 0 !important; }
+        .dash-value { font-size: clamp(11px, 3.5vw, 15px) !important; top: 24px !important; } 
+        .dash-label { font-size: clamp(8px, 2.5vw, 10px) !important; bottom: 8px !important; white-space: nowrap !important; letter-spacing: 0.5px !important; }
         
-        .usdc-banner { padding: 8px 14px;
-width: 92%; margin: 4px auto 8px auto !important; }
-        .usdc-banner-title { font-size: 0.95rem;
-}
-        .usdc-banner-subtitle { font-size: 0.7rem;
-}
-        .usdc-banner-amount { font-size: 1.1rem;
-}
-        .stable-dropdown-wrapper { width: 92%; margin: -8px auto 12px auto !important;
-}
+        .usdc-banner { padding: 8px 14px; width: 92%; margin: 4px auto 8px auto !important; }
+        .usdc-banner-title { font-size: 0.95rem; }
+        .usdc-banner-subtitle { font-size: 0.7rem; }
+        .usdc-banner-amount { font-size: 1.1rem; }
+        .stable-dropdown-wrapper { width: 92%; margin: -8px auto 12px auto !important; }
     }
     </style>
     """, unsafe_allow_html=True)
@@ -3125,7 +2917,7 @@ width: 92%; margin: 4px auto 8px auto !important; }
             with action_col1:
                 tx_type = st.radio("Type", ["Buy", "Sell"], horizontal=True, label_visibility="collapsed")
             with action_col2:
-                submitted = st.form_submit_button("+ Add")
+                submitted = st.form_submit_button("Add")
             
             if submitted:
                 if ticker:
@@ -3165,6 +2957,7 @@ width: 92%; margin: 4px auto 8px auto !important; }
             sign = "+" if is_buy else "-"
             color = "#00ff9d" if is_buy else "#ff4d4d"
             action_text = "Spent" if is_buy else "Received"
+            bg_style = "background-color:#ffffff;" if r['Ticker'] in STABLECOINS_LIST else ""
             
             invested_formatted = f"{abs_stable:,.2f} {stable_ticker}"
             amount_formatted = format_holdings(abs_amount, r['Ticker'])
@@ -3226,13 +3019,13 @@ width: 92%; margin: 4px auto 8px auto !important; }
             else:
                 # NEW HTML-GRID COMPACT ROW DISPLAY
                 with st.container(border=True):
-                    col_info, col_edit, col_del = st.columns([1, 0.1, 0.1])
+                    col_info, col_edit, col_del = st.columns(3)
                     
                     with col_info:
                         st.markdown(f"""
-                        <div class="tx-row" style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+                        <div class="tx-row" style="display: flex; justify-content: space-between; align-items: center; width: 100%; height: 100%; min-height: 48px;">
                             <div style="display: flex; align-items: center; gap: 12px; overflow: hidden; flex: 1;">
-                                <img src="{logo_url}" style="width: 32px; height: 32px; border-radius: 50%; object-fit: contain; flex-shrink: 0;" onerror="this.src='https://via.placeholder.com/32/1e2a44/ffffff?text={r['Ticker'][0]}';">
+                                <img src="{logo_url}" style="width: 32px; height: 32px; border-radius: 50%; object-fit: contain; flex-shrink: 0; {bg_style}" onerror="this.src='https://via.placeholder.com/32/1e2a44/ffffff?text={r['Ticker'][0]}';">
                                 <div style="display: flex; flex-direction: column; overflow: hidden; min-width: 0; padding-bottom: 2px;">
                                     <span style="font-weight: 700; font-size: 1rem; color: #ffffff; white-space: nowrap; text-overflow: ellipsis; overflow: hidden; line-height: 1.3;">{r['Ticker']}</span>
                                     <span style="font-size: 0.75rem; color: #94a3b8; white-space: nowrap; text-overflow: ellipsis; overflow: hidden; line-height: 1.3;">{date_str}</span>
@@ -3299,120 +3092,4 @@ with tab_fiat:
             action_col1, action_col2 = st.columns(2)
             with action_col1:
                 st.markdown("<div style='color: transparent;'>Spacing</div>", unsafe_allow_html=True)
-            with action_col2:
-                submitted_fiat = st.form_submit_button("+ Add Entry")
-                
-            if submitted_fiat:
-                czk_eur = round(czk / eur, 5) if eur > 0 else 0.0
-                new_row = pd.DataFrame([{"Datum": date_to_excel_serial(selected_date), "CZK": czk, "EUR": eur, "Fee": fee, "CZK/EUR": czk_eur, "Stable_Amt": stable_amt, "Stable_Ticker": stable_ticker, "NI": "", "GG": "", "ER": ""}])
-                st.session_state.fiat_df = pd.concat([st.session_state.fiat_df, new_row], ignore_index=True)
-                save_fiat(st.session_state.fiat_df)
-                st.session_state.fiat_table_version += 1
-                st.session_state.ui_version += 1
-                st.success(f"✅ Executed fiat deposit!")
-                st.rerun()
-
-    df_fiat_display = st.session_state.fiat_df.copy()
-    df_fiat_display['orig_idx'] = df_fiat_display.index
-    df_fiat_display = df_fiat_display.dropna(how='all')
-    df_fiat_display = df_fiat_display.sort_values(by='Datum', ascending=False)
-
-    st.markdown("<h4 style='color: white; margin-top: 10px; margin-bottom: 10px;'>Fiat History</h4>", unsafe_allow_html=True)
-
-    # 2. SCROLLABLE FIAT TRANSACTION LIST
-    with st.container(height=650, border=False):
-        for i, r in df_fiat_display.iterrows():
-            orig_idx = r['orig_idx']
-            stable_ticker = r.get('Stable_Ticker', 'USDC')
-            logo_url = get_ticker_logo(stable_ticker)
-            
-            stable_amt = r.get('Stable_Amt', 0.0)
-            czk_val = r.get('CZK', 0.0)
-            eur_val = r.get('EUR', 0.0)
-            fee_val = r.get('Fee', 0.0)
-            
-            stable_formatted = f"+{stable_amt:,.2f} {stable_ticker}"
-            fiat_formatted = f"CZK: {czk_val:,.2f} / EUR: {eur_val:,.2f}"
-            date_str = format_datum(r['Datum'])
-
-            if st.session_state.get('confirm_delete_fiat') == orig_idx:
-                with st.container(border=True):
-                    st.markdown("<div class='del-warn-marker'></div>", unsafe_allow_html=True)
-                    c_txt, c_yes, c_no = st.columns([2, 1, 1])
-                    with c_txt: st.markdown("<span style='color: #ff4d4d; font-size: 1rem; font-weight: 600;'>Delete entry?</span>", unsafe_allow_html=True)
-                    with c_yes:
-                        if st.button("Delete", key=f"yes_fiat_del_{orig_idx}", use_container_width=True):
-                            st.session_state.fiat_df = st.session_state.fiat_df.drop(orig_idx).reset_index(drop=True)
-                            save_fiat(st.session_state.fiat_df)
-                            st.session_state['confirm_delete_fiat'] = None
-                            st.session_state.fiat_table_version += 1
-                            st.session_state.ui_version += 1
-                            st.rerun()
-                    with c_no:
-                        if st.button("Cancel", key=f"no_fiat_del_{orig_idx}", use_container_width=True):
-                            st.session_state['confirm_delete_fiat'] = None
-                            st.rerun()
-            elif st.session_state.get('edit_fiat_row') == orig_idx:
-                with st.form(f"edit_fiat_form_{orig_idx}", border=False):
-                    st.markdown("<div class='edit-form-marker'></div><h5 style='color: #00ff9d; margin-top: 0px; margin-bottom: 10px;'>✎ Edit Fiat Details</h5>", unsafe_allow_html=True)
-                    
-                    e_f1, e_f2, e_f3 = st.columns(3)
-                    with e_f1: new_date = st.date_input("Date", value=datetime(1899, 12, 30) + timedelta(days=int(r['Datum'])))
-                    with e_f2: new_czk = st.number_input("CZK", value=float(czk_val), step=0.01)
-                    with e_f3: new_eur = st.number_input("EUR", value=float(eur_val), step=0.01)
-                    
-                    e_f4, e_f5, e_f6 = st.columns(3)
-                    with e_f4: new_fee = st.number_input("Fee", value=float(fee_val), step=0.01)
-                    with e_f5: new_stable_ticker = st.selectbox("Stablecoin", STABLECOINS_LIST, index=STABLECOINS_LIST.index(stable_ticker) if stable_ticker in STABLECOINS_LIST else 0)
-                    with e_f6: new_stable = st.number_input("Stable Amount", value=float(stable_amt), step=0.01)
-                     
-                    e_save, e_cancel = st.columns(2)
-                    with e_save: 
-                        if st.form_submit_button("💾 Save Changes"):
-                            new_czk_eur = round(new_czk / new_eur, 5) if new_eur > 0 else 0.0
-                            
-                            st.session_state.fiat_df.loc[orig_idx] = {"Datum": date_to_excel_serial(new_date), "CZK": new_czk, "EUR": new_eur, "Fee": new_fee, "CZK/EUR": new_czk_eur, "Stable_Amt": new_stable, "Stable_Ticker": new_stable_ticker, "NI": r.get('NI', ""), "GG": r.get('GG', ""), "ER": r.get('ER', "")}
-                            save_fiat(st.session_state.fiat_df)
-                            st.session_state['edit_fiat_row'] = None
-                            st.session_state.fiat_table_version += 1
-                            st.session_state.ui_version += 1
-                            st.success("✅ Entry updated!")
-                            st.rerun()
-                            
-                    with e_cancel:
-                        if st.form_submit_button("❌ Cancel"):
-                            st.session_state['edit_fiat_row'] = None
-                            st.rerun()
-            else:
-                # NEW HTML-GRID COMPACT ROW DISPLAY
-                with st.container(border=True):
-                    col_info, col_edit, col_del = st.columns([1, 0.1, 0.1])
-                    
-                    with col_info:
-                        st.markdown(f"""
-                        <div class="tx-row" style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
-                            <div style="display: flex; align-items: center; gap: 12px; overflow: hidden; flex: 1;">
-                                <img src="{logo_url}" style="width: 32px; height: 32px; border-radius: 50%; object-fit: contain; flex-shrink: 0;" onerror="this.src='https://via.placeholder.com/32/1e2a44/ffffff?text={stable_ticker[0]}';">
-                                <div style="display: flex; flex-direction: column; overflow: hidden; min-width: 0; padding-bottom: 2px;">
-                                    <span style="font-weight: 700; font-size: 1rem; color: #ffffff; white-space: nowrap; text-overflow: ellipsis; overflow: hidden; line-height: 1.3;">{date_str}</span>
-                                    <span style="font-size: 0.75rem; color: #94a3b8; white-space: nowrap; text-overflow: ellipsis; overflow: hidden; line-height: 1.3;">{fiat_formatted}</span>
-                                </div>
-                            </div>
-                            <div style="display: flex; flex-direction: column; align-items: flex-end; justify-content: center; overflow: hidden; padding-left: 4px; padding-bottom: 2px; flex-shrink: 0;">
-                                <span style="font-weight: 700; font-size: 1rem; color: #00ff9d; white-space: nowrap; text-overflow: ellipsis; overflow: hidden; line-height: 1.3;">{stable_formatted}</span>
-                                <span style="font-size: 0.75rem; color: #cbd5e1; white-space: nowrap; text-overflow: ellipsis; overflow: hidden; line-height: 1.3;">Fee: {fee_val:,.2f} EUR</span>
-                            </div>
-                        </div>
-                        """, unsafe_allow_html=True)
-                        
-                    with col_edit:
-                        if st.button("✎", key=f"edit_fiat_btn_{orig_idx}"):
-                            st.session_state['edit_fiat_row'] = orig_idx
-                            st.session_state['confirm_delete_fiat'] = None
-                            st.rerun()
-                            
-                    with col_del:
-                        if st.button("✕", key=f"del_fiat_btn_{orig_idx}"):
-                            st.session_state['confirm_delete_fiat'] = orig_idx
-                            st.session_state['edit_fiat_row'] = None
-                            st.rerun()
+            with action_col
