@@ -31,7 +31,7 @@ div[data-testid="stDecoration"] {
 div[data-testid="stMainBlockContainer"] {
     padding-left: 14px !important;
     padding-right: 14px !important;
-    padding-top: 0rem !important; 
+    padding-top: 0rem !important;
     margin-top: -2rem !important; 
     padding-bottom: 90px !important; 
     max-width: 100% !important;
@@ -147,14 +147,16 @@ div[data-testid="stTabs"] > div[role="tabpanel"] {
 @media (hover: hover) and (pointer: fine) {
     .glossy-header-label:hover .pull-indicator {
         color: #cbd5e1;
-    }
+}
 }
 .pull-indicator .eye-open { display: none; }
 .pull-indicator .eye-closed { display: block; }
 
-.dashboard-toggle:checked ~ .dashboard-wrapper .glossy-header-label .pull-indicator .eye-open { display: block; }
+.dashboard-toggle:checked ~ .dashboard-wrapper .glossy-header-label .pull-indicator .eye-open { display: block;
+}
 .dashboard-toggle:checked ~ .dashboard-wrapper .glossy-header-label .pull-indicator .eye-closed { display: none; }
-.dashboard-toggle:checked ~ .dashboard-wrapper .glossy-header-label .pull-indicator { color: #ffffff; }
+.dashboard-toggle:checked ~ .dashboard-wrapper .glossy-header-label .pull-indicator { color: #ffffff;
+}
 
 .stats-layer {
     position: relative;
@@ -239,7 +241,7 @@ div[data-testid="stTabs"] > div[role="tabpanel"] {
         transform: translateY(-4px) scale(1.01);
         box-shadow: 0 15px 40px rgba(0, 0, 0, 0.5);
         border-color: rgba(255, 255, 255, 0.15);
-    }
+}
 }
 .dashboard-toggle:checked ~ .dashboard-wrapper .glossy-header {
     transform: translateY(-4px) scale(1.01);
@@ -314,10 +316,13 @@ div[data-testid="stTabs"] > div[role="tabpanel"] {
     border-color: rgba(38, 161, 123, 0.4);
 }
 .usdc-banner-left { display: flex; align-items: center; gap: 12px; }
-.usdc-banner-left svg { width: 28px; height: 28px; border-radius: 50%; object-fit: contain; opacity: 0.85; }
-.usdc-banner-title { font-size: 1.05rem; font-weight: 600; color: #e2e8f0; display: flex; align-items: center; gap: 8px; }
+.usdc-banner-left svg { width: 28px; height: 28px;
+    border-radius: 50%; object-fit: contain; opacity: 0.85; }
+.usdc-banner-title { font-size: 1.05rem; font-weight: 600; color: #e2e8f0; display: flex; align-items: center; gap: 8px;
+}
 .usdc-banner-subtitle { font-size: 0.75rem; font-weight: 500; color: #64748b; }
-.usdc-banner-amount { font-size: 1.2rem; font-weight: 600; color: #e2e8f0; }
+.usdc-banner-amount { font-size: 1.2rem; font-weight: 600; color: #e2e8f0;
+}
 
 .stable-dropdown-wrapper {
     position: relative; width: auto; min-width: 250px; max-width: 400px; margin: -12px 0 16px 24px; z-index: 5;
@@ -325,191 +330,238 @@ div[data-testid="stTabs"] > div[role="tabpanel"] {
 .stable-dropdown {
     max-height: 0; overflow: hidden; transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
     background: rgba(10, 15, 28, 0.85); border: 1px solid rgba(38, 161, 123, 0); border-top: none;
-    border-radius: 0 0 12px 12px; padding: 0 20px; backdrop-filter: blur(5px);
+    border-radius: 0 0 12px 12px;
+    padding: 0 20px; backdrop-filter: blur(5px);
 }
 #stable-dropdown-toggle:checked ~ .stable-dropdown-wrapper .stable-dropdown {
-    max-height: 300px; border-color: rgba(38, 161, 123, 0.2); padding: 12px 20px; margin-top: 4px; box-shadow: 0 10px 20px rgba(0,0,0,0.3);
+    max-height: 300px; border-color: rgba(38, 161, 123, 0.2);
+    padding: 12px 20px; margin-top: 4px; box-shadow: 0 10px 20px rgba(0,0,0,0.3);
 }
-.st-item { display: flex; justify-content: space-between; align-items: center; font-size: 0.95rem; color: #94a3b8; padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,0.05); }
+.st-item { display: flex; justify-content: space-between; align-items: center; font-size: 0.95rem;
+color: #94a3b8; padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,0.05); }
 .st-item:last-child { border-bottom: none; }
-.st-item .val { color: #e2e8f0; font-weight: 600; }
+.st-item .val { color: #e2e8f0; font-weight: 600;
+}
 .st-item-left { display: flex; align-items: center; gap: 10px; }
 
 /* Native CSS Privacy Mode integration */
-.dashboard-toggle:not(:checked) ~ label .usdc-banner .usdc-banner-amount { font-size: 0 !important; }
-.dashboard-toggle:not(:checked) ~ label .usdc-banner .usdc-banner-amount::after { content: '***'; font-size: 1.2rem; color: #e2e8f0; }
+.dashboard-toggle:not(:checked) ~ label .usdc-banner .usdc-banner-amount { font-size: 0 !important;
+}
+.dashboard-toggle:not(:checked) ~ label .usdc-banner .usdc-banner-amount::after { content: '***'; font-size: 1.2rem; color: #e2e8f0;
+}
 .dashboard-toggle:not(:checked) ~ .stable-dropdown-wrapper .stable-dropdown .st-item .val { font-size: 0 !important; }
-.dashboard-toggle:not(:checked) ~ .stable-dropdown-wrapper .stable-dropdown .st-item .val::after { content: '***'; font-size: 0.9rem; color: #e2e8f0; }
+.dashboard-toggle:not(:checked) ~ .stable-dropdown-wrapper .stable-dropdown .st-item .val::after { content: '***';
+font-size: 0.9rem; color: #e2e8f0; }
 
 /* GLOBALLY HIDE NUMBER INPUT STEP BUTTONS (+ / -) */
 button[aria-label="Step Up"],
 button[aria-label="Step Down"],
 button[data-testid="stNumberInputStepUp"],
-button[data-testid="stNumberInputStepDown"] { display: none !important; }
+button[data-testid="stNumberInputStepDown"] { display: none !important;
+}
 input[type="number"]::-webkit-inner-spin-button, input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
-input[type="number"] { -moz-appearance: textfield; }
+input[type="number"] { -moz-appearance: textfield;
+}
 
 /* ==============================================================
    COMPACT EXPANDER FOR FORMS
    ============================================================== */
 div[data-testid="stExpander"] {
-    background: #0f172a !important; border: 1px solid rgba(255,255,255,0.05) !important;
+    background: #0f172a !important;
+    border: 1px solid rgba(255,255,255,0.05) !important;
     border-radius: 12px !important; box-shadow: 0 4px 15px rgba(0,0,0,0.3) !important; margin-bottom: 24px !important;
 }
 div[data-testid="stExpander"] summary {
     color: #00ff9d !important; font-weight: 700 !important; font-size: 1.05rem !important;
-    padding: 12px 16px !important; background: transparent !important; border-bottom: none !important;
+    padding: 12px 16px !important;
+    background: transparent !important; border-bottom: none !important;
 }
-div[data-testid="stExpander"] summary svg { color: #00ff9d !important; fill: #00ff9d !important; }
+div[data-testid="stExpander"] summary svg { color: #00ff9d !important; fill: #00ff9d !important;
+}
 div[data-testid="stExpanderDetails"] { padding: 0 16px 16px 16px !important; }
-div[data-testid="stExpanderDetails"] div[data-testid="stForm"] { padding: 0 !important; border: none !important; box-shadow: none !important; margin-bottom: 0 !important; background: transparent !important; }
+div[data-testid="stExpanderDetails"] div[data-testid="stForm"] { padding: 0 !important; border: none !important; box-shadow: none !important;
+margin-bottom: 0 !important; background: transparent !important; }
 
 /* INPUTS STYLING */
-div[data-testid="stForm"]:has(.add-tx-card) label { font-size: 0.85rem !important; color: #94a3b8 !important; padding-bottom: 2px !important; }
+div[data-testid="stForm"]:has(.add-tx-card) label { font-size: 0.85rem !important; color: #94a3b8 !important;
+padding-bottom: 2px !important; }
 div[data-testid="stForm"]:has(.add-tx-card) .stTextInput input, div[data-testid="stForm"]:has(.add-tx-card) .stNumberInput input, div[data-testid="stForm"]:has(.add-tx-card) .stDateInput input, div[data-testid="stForm"]:has(.add-tx-card) div[data-baseweb="select"] > div {
-    background: rgba(255,255,255,0.03) !important; border: 1px solid rgba(255,255,255,0.1) !important; color: #fff !important; border-radius: 8px !important; margin-bottom: 0px !important;
+    background: rgba(255,255,255,0.03) !important;
+    border: 1px solid rgba(255,255,255,0.1) !important; color: #fff !important; border-radius: 8px !important; margin-bottom: 0px !important;
 }
-div[data-testid="stForm"]:has(.add-tx-card) div[data-testid="stHorizontalBlock"]:has(> div[data-testid="column"]:nth-child(4)) { display: flex !important; gap: 12px !important; }
+div[data-testid="stForm"]:has(.add-tx-card) div[data-testid="stHorizontalBlock"]:has(> div[data-testid="column"]:nth-child(4)) { display: flex !important; gap: 12px !important;
+}
 
 /* BEAUTIFUL BUY/SELL SWITCH */
 div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] {
-    background: rgba(0,0,0,0.3) !important; padding: 6px !important; border-radius: 12px !important; display: flex !important; flex-direction: row !important; gap: 8px !important; align-items: center !important; margin: 0 !important; height: 48px !important; border: 1px solid rgba(255,255,255,0.05) !important;
+    background: rgba(0,0,0,0.3) !important; padding: 6px !important; border-radius: 12px !important;
+    display: flex !important; flex-direction: row !important; gap: 8px !important; align-items: center !important; margin: 0 !important; height: 48px !important;
+    border: 1px solid rgba(255,255,255,0.05) !important;
 }
 div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label {
-    margin: 0 !important; cursor: pointer !important; padding: 0 !important; border-radius: 8px !important; border: 1px solid transparent !important; transition: all 0.3s ease !important; background: transparent !important; flex: 1 !important; display: flex !important; justify-content: center !important; align-items: center !important; height: 100% !important;
+    margin: 0 !important; cursor: pointer !important;
+    padding: 0 !important; border-radius: 8px !important; border: 1px solid transparent !important; transition: all 0.3s ease !important; background: transparent !important;
+    flex: 1 !important; display: flex !important; justify-content: center !important; align-items: center !important; height: 100% !important;
 }
 div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label:hover { background: rgba(255,255,255,0.05) !important; }
-div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label > div:first-child { display: none !important; } 
-div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label p { font-weight: bold !important; font-size: 1.05rem !important; color: #94a3b8 !important; margin: 0 !important; padding: 0 !important; white-space: nowrap !important; line-height: 1 !important; }
-div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label:has(input:checked):first-child, div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label[aria-checked="true"]:first-child { background: rgba(0, 255, 157, 0.15) !important; border-color: #00ff9d !important; }
-div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label:has(input:checked):first-child p, div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label[aria-checked="true"]:first-child p { color: #00ff9d !important; }
-div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label:has(input:checked):last-child, div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label[aria-checked="true"]:last-child { background: rgba(255, 77, 77, 0.15) !important; border-color: #ff4d4d !important; }
+div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label > div:first-child { display: none !important;
+} 
+div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label p { font-weight: bold !important; font-size: 1.05rem !important; color: #94a3b8 !important; margin: 0 !important;
+padding: 0 !important; white-space: nowrap !important; line-height: 1 !important; }
+div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label:has(input:checked):first-child, div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label[aria-checked="true"]:first-child { background: rgba(0, 255, 157, 0.15) !important;
+border-color: #00ff9d !important; }
+div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label:has(input:checked):first-child p, div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label[aria-checked="true"]:first-child p { color: #00ff9d !important;
+}
+div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label:has(input:checked):last-child, div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label[aria-checked="true"]:last-child { background: rgba(255, 77, 77, 0.15) !important; border-color: #ff4d4d !important;
+}
 div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label:has(input:checked):last-child p, div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label[aria-checked="true"]:last-child p { color: #ff4d4d !important; }
 
-div[data-testid="stForm"]:has(.add-tx-card) .stButton { display: flex !important; justify-content: flex-end !important; align-items: center !important; margin: 0 !important; padding: 0 !important; width: 100% !important; }
-div[data-testid="stForm"]:has(.add-tx-card) .stButton > button { background: #1e2a44 !important; color: #e0e0e0 !important; padding: 0 24px !important; border-radius: 10px !important; font-size: 1.05rem !important; font-weight: 700 !important; box-shadow: 0 4px 15px rgba(0,0,0,0.25) !important; transition: all 0.3s ease !important; border: none !important; margin: 0 !important; width: auto !important; height: 48px !important; min-height: 48px !important; }
-div[data-testid="stForm"]:has(.add-tx-card) .stButton > button:hover { transform: translateY(-2px) !important; box-shadow: 0 8px 20px rgba(255, 255, 255, 0.2) !important; color: white !important; }
+div[data-testid="stForm"]:has(.add-tx-card) .stButton { display: flex !important;
+justify-content: flex-end !important; align-items: center !important; margin: 0 !important; padding: 0 !important; width: 100% !important;
+}
+div[data-testid="stForm"]:has(.add-tx-card) .stButton > button { background: #1e2a44 !important; color: #e0e0e0 !important; padding: 0 24px !important; border-radius: 10px !important;
+font-size: 1.05rem !important; font-weight: 700 !important; box-shadow: 0 4px 15px rgba(0,0,0,0.25) !important; transition: all 0.3s ease !important; border: none !important;
+margin: 0 !important; width: auto !important; height: 48px !important; min-height: 48px !important; }
+div[data-testid="stForm"]:has(.add-tx-card) .stButton > button:hover { transform: translateY(-2px) !important;
+box-shadow: 0 8px 20px rgba(255, 255, 255, 0.2) !important; color: white !important;
+}
 
 /* ==============================================================
-   HIGHLY COMPACT, IRONCLAD TRANSACTION ROWS (PC & MOBILE)
+   NEW COMPACT HTML-GRID TRANSACTION ROWS (PC & MOBILE)
    ============================================================== */
-div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row-marker) {
-    background: #0f172a !important; border: 1px solid rgba(255,255,255,0.05) !important;
-    border-radius: 8px !important; padding: 4px 8px !important; margin-bottom: 6px !important;
+div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row) {
+    background: #0f172a !important;
+    border: 1px solid rgba(255,255,255,0.05) !important;
+    border-radius: 12px !important; padding: 8px 12px !important; margin-bottom: 8px !important;
+    transition: background 0.3s ease;
+}
+div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row):hover {
+    background: rgba(30, 41, 59, 0.8) !important;
 }
 
 /* Eliminate Streamlit's Internal Column Gaps */
-div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row-marker) div[data-testid="stVerticalBlock"] {
+div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row) div[data-testid="stVerticalBlock"] {
     gap: 0 !important;
 }
 
 /* FORCE HORIZONTAL FLEX WRAPPER - STOPS STREAMLIT STACKING */
-div[data-testid="stHorizontalBlock"]:has(.tx-row-marker) {
-    display: flex !important; flex-direction: row !important; flex-wrap: nowrap !important;
-    align-items: center !important; width: 100% !important; gap: 8px !important; overflow: hidden !important;
+div[data-testid="stHorizontalBlock"]:has(.tx-row) {
+    display: flex !important; flex-direction: row !important;
+    flex-wrap: nowrap !important; align-items: center !important; 
+    width: 100% !important; gap: 12px !important; overflow: hidden !important;
 }
-div[data-testid="stHorizontalBlock"]:has(.tx-row-marker) > div[data-testid="column"] {
-    width: auto !important; min-width: 0 !important; padding: 0 !important; flex: none !important;
+div[data-testid="stHorizontalBlock"]:has(.tx-row) > div[data-testid="column"] {
+    padding: 0 !important; margin: 0 !important; min-width: 0 !important;
 }
 
-/* Specific Column Sizing */
-div[data-testid="stHorizontalBlock"]:has(.tx-row-marker) > div[data-testid="column"]:nth-child(1) { flex: 0 0 32px !important; } /* Logo */
-div[data-testid="stHorizontalBlock"]:has(.tx-row-marker) > div[data-testid="column"]:nth-child(2) { flex: 1 1 auto !important; overflow: hidden; } /* Info */
-div[data-testid="stHorizontalBlock"]:has(.tx-row-marker) > div[data-testid="column"]:nth-child(3) { flex: 1.2 1 auto !important; text-align: right; } /* Amounts */
-div[data-testid="stHorizontalBlock"]:has(.tx-row-marker) > div[data-testid="column"]:nth-child(4) { flex: 0 0 28px !important; display: flex; justify-content: center; } /* Edit */
-div[data-testid="stHorizontalBlock"]:has(.tx-row-marker) > div[data-testid="column"]:nth-child(5) { flex: 0 0 28px !important; display: flex; justify-content: center; } /* Delete */
+/* Specific Column Sizing: Info HTML takes everything, Edit/Del take tiny spaces */
+div[data-testid="stHorizontalBlock"]:has(.tx-row) > div[data-testid="column"]:nth-child(1) { 
+    flex: 1 1 auto !important; width: auto !important; 
+}
+div[data-testid="stHorizontalBlock"]:has(.tx-row) > div[data-testid="column"]:nth-child(2),
+div[data-testid="stHorizontalBlock"]:has(.tx-row) > div[data-testid="column"]:nth-child(3) { 
+    flex: 0 0 32px !important; width: 32px !important; 
+    display: flex !important; justify-content: center !important; align-items: center !important; 
+}
 
 /* Sleek Icon Buttons */
-div[data-testid="stHorizontalBlock"]:has(.tx-row-marker) div[data-testid="stButton"] button {
-    background: transparent !important; border: 1px solid rgba(255,255,255,0.05) !important;
-    color: #94a3b8 !important; border-radius: 6px !important; box-shadow: none !important;
-    height: 28px !important; width: 28px !important; padding: 0 !important;
+div[data-testid="stHorizontalBlock"]:has(.tx-row) div[data-testid="stButton"] button {
+    background: transparent !important;
+    border: 1px solid rgba(255,255,255,0.05) !important;
+    color: #94a3b8 !important; border-radius: 8px !important; box-shadow: none !important;
+    height: 32px !important; width: 32px !important; padding: 0 !important;
     display: flex !important; align-items: center !important; justify-content: center !important;
-    font-size: 1rem !important; line-height: 1 !important; transition: all 0.2s ease !important;
+    transition: all 0.2s ease !important;
 }
-div[data-testid="stHorizontalBlock"]:has(.tx-row-marker) div[data-testid="stButton"] button p { font-size: 1.1rem !important; line-height: 1 !important; margin: 0; padding: 0; }
+div[data-testid="stHorizontalBlock"]:has(.tx-row) div[data-testid="stButton"] button p { 
+    font-size: 1.1rem !important; margin: 0; padding: 0; 
+}
 
-div[data-testid="stHorizontalBlock"]:has(.tx-row-marker) div[data-testid="column"]:nth-child(4) div[data-testid="stButton"] button:hover {
+div[data-testid="stHorizontalBlock"]:has(.tx-row) div[data-testid="column"]:nth-child(2) div[data-testid="stButton"] button:hover {
     border-color: #00ff9d !important; color: #00ff9d !important; background: rgba(0, 255, 157, 0.1) !important;
 }
-div[data-testid="stHorizontalBlock"]:has(.tx-row-marker) div[data-testid="column"]:nth-child(5) div[data-testid="stButton"] button:hover {
+div[data-testid="stHorizontalBlock"]:has(.tx-row) div[data-testid="column"]:nth-child(3) div[data-testid="stButton"] button:hover {
     border-color: #ff4d4d !important; color: #ff4d4d !important; background: rgba(255, 77, 77, 0.1) !important;
 }
 
-/* Typography Overrides */
-.mobile-logo { width: 28px !important; height: 28px !important; margin-top: 2px !important; }
-.mobile-tx-ticker { font-size: 1rem !important; font-weight: 700; color: #fff; line-height: 1.1; margin-left: 2px; }
-.mobile-tx-sub { font-size: 0.75rem !important; color: #94a3b8; line-height: 1.1; margin-top: 3px; margin-left: 2px; }
-.mobile-tx-amount { font-size: 1rem !important; font-weight: 700; line-height: 1.1; }
-
 /* IN-PLACE EDIT FORM (Replaces Row smoothly) */
 div[data-testid="stForm"]:has(.edit-form-marker) {
-    background: rgba(15, 23, 42, 0.95) !important; border: 1px solid #00ff9d !important;
+    background: rgba(15, 23, 42, 0.95) !important;
+    border: 1px solid #00ff9d !important;
     border-radius: 8px !important; padding: 12px 16px !important; margin-bottom: 6px !important;
     box-shadow: 0 4px 15px rgba(0, 255, 157, 0.1) !important;
 }
-div[data-testid="stForm"]:has(.edit-form-marker) div[data-baseweb="select"] > div { background: rgba(255,255,255,0.03) !important; border: 1px solid rgba(255,255,255,0.1) !important; }
+div[data-testid="stForm"]:has(.edit-form-marker) div[data-baseweb="select"] > div { background: rgba(255,255,255,0.03) !important;
+border: 1px solid rgba(255,255,255,0.1) !important; }
 
 /* IN-PLACE DELETE DIALOG (Replaces Row smoothly) */
 div[data-testid="stVerticalBlockBorderWrapper"]:has(.del-warn-marker) {
-    border-color: rgba(255, 77, 77, 0.3) !important; background: rgba(15, 23, 42, 0.95) !important;
+    border-color: rgba(255, 77, 77, 0.3) !important;
+    background: rgba(15, 23, 42, 0.95) !important;
     border-radius: 8px !important; padding: 8px 12px !important; margin-bottom: 6px !important;
     box-shadow: 0 4px 15px rgba(255, 77, 77, 0.1) !important;
 }
 div[data-testid="stVerticalBlockBorderWrapper"]:has(.del-warn-marker) div[data-testid="stHorizontalBlock"] {
-    display: flex !important; flex-direction: row !important; align-items: center !important; gap: 8px !important;
+    display: flex !important;
+    flex-direction: row !important; align-items: center !important; gap: 8px !important;
 }
-div[data-testid="stVerticalBlockBorderWrapper"]:has(.del-warn-marker) div[data-testid="column"]:nth-child(1) { flex: 1 1 auto !important; }
+div[data-testid="stVerticalBlockBorderWrapper"]:has(.del-warn-marker) div[data-testid="column"]:nth-child(1) { flex: 1 1 auto !important;
+}
 div[data-testid="stVerticalBlockBorderWrapper"]:has(.del-warn-marker) div[data-testid="column"]:nth-child(2) { flex: 0 0 80px !important; }
-div[data-testid="stVerticalBlockBorderWrapper"]:has(.del-warn-marker) div[data-testid="column"]:nth-child(3) { flex: 0 0 80px !important; }
-div[data-testid="stVerticalBlockBorderWrapper"]:has(.del-warn-marker) .stButton > button {
-    border-radius: 6px !important; font-weight: 600 !important; width: 100% !important; padding: 4px !important; height: 32px !important; min-height: 32px !important; font-size: 0.9rem !important; transition: all 0.2s !important;
+div[data-testid="stVerticalBlockBorderWrapper"]:has(.del-warn-marker) div[data-testid="column"]:nth-child(3) { flex: 0 0 80px !important;
 }
-div[data-testid="stVerticalBlockBorderWrapper"]:has(.del-warn-marker) div[data-testid="column"]:nth-child(2) .stButton > button { background: rgba(255, 77, 77, 0.1) !important; color: #ff4d4d !important; border: 1px solid rgba(255, 77, 77, 0.3) !important; }
-div[data-testid="stVerticalBlockBorderWrapper"]:has(.del-warn-marker) div[data-testid="column"]:nth-child(2) .stButton > button:hover { background: #ff4d4d !important; color: white !important; }
-div[data-testid="stVerticalBlockBorderWrapper"]:has(.del-warn-marker) div[data-testid="column"]:nth-child(3) .stButton > button { background: rgba(255, 255, 255, 0.05) !important; color: #cbd5e1 !important; border: 1px solid rgba(255, 255, 255, 0.1) !important; }
-div[data-testid="stVerticalBlockBorderWrapper"]:has(.del-warn-marker) div[data-testid="column"]:nth-child(3) .stButton > button:hover { background: rgba(255, 255, 255, 0.15) !important; color: white !important; }
+div[data-testid="stVerticalBlockBorderWrapper"]:has(.del-warn-marker) .stButton > button {
+    border-radius: 6px !important; font-weight: 600 !important; width: 100% !important; padding: 4px !important;
+    height: 32px !important; min-height: 32px !important; font-size: 0.9rem !important; transition: all 0.2s !important;
+}
+div[data-testid="stVerticalBlockBorderWrapper"]:has(.del-warn-marker) div[data-testid="column"]:nth-child(2) .stButton > button { background: rgba(255, 77, 77, 0.1) !important; color: #ff4d4d !important;
+border: 1px solid rgba(255, 77, 77, 0.3) !important; }
+div[data-testid="stVerticalBlockBorderWrapper"]:has(.del-warn-marker) div[data-testid="column"]:nth-child(2) .stButton > button:hover { background: #ff4d4d !important; color: white !important;
+}
+div[data-testid="stVerticalBlockBorderWrapper"]:has(.del-warn-marker) div[data-testid="column"]:nth-child(3) .stButton > button { background: rgba(255, 255, 255, 0.05) !important; color: #cbd5e1 !important;
+border: 1px solid rgba(255, 255, 255, 0.1) !important; }
+div[data-testid="stVerticalBlockBorderWrapper"]:has(.del-warn-marker) div[data-testid="column"]:nth-child(3) .stButton > button:hover { background: rgba(255, 255, 255, 0.15) !important;
+color: white !important; }
 
 /* ==============================================================
    MOBILE OVERRIDES
    ============================================================== */
 @media (max-width: 768px) {
-    .glossy-header { margin-top: 0px !important; margin-bottom: 16px !important; padding: 20px 16px !important; font-size: 22px !important; min-height: 90px; }
+    .glossy-header { margin-top: 0px !important;
+    margin-bottom: 16px !important; padding: 20px 16px !important; font-size: 22px !important; min-height: 90px;
+    }
     .home-header { margin-bottom: 0 !important; }
     
-    div[data-testid="stForm"]:has(.add-tx-card) input { padding: 6px !important; font-size: 0.95rem !important; }
-    div[data-testid="stForm"]:has(.add-tx-card) .stButton { width: 100% !important; justify-content: center !important; }
-    div[data-testid="stForm"]:has(.add-tx-card) .stButton > button { width: 100% !important; max-width: none !important; }
-
-    /* Ultra Compact Mobile Rows */
-    div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row-marker) {
-        padding: 4px 6px !important; margin-bottom: 6px !important;
+    div[data-testid="stForm"]:has(.add-tx-card) input { padding: 6px !important;
+    font-size: 0.95rem !important; }
+    div[data-testid="stForm"]:has(.add-tx-card) .stButton { width: 100% !important; justify-content: center !important;
     }
-    div[data-testid="stHorizontalBlock"]:has(.tx-row-marker) { gap: 4px !important; }
-    div[data-testid="stHorizontalBlock"]:has(.tx-row-marker) > div[data-testid="column"]:nth-child(1) { flex: 0 0 24px !important; width: 24px !important; }
-    div[data-testid="stHorizontalBlock"]:has(.tx-row-marker) > div[data-testid="column"]:nth-child(4) { flex: 0 0 26px !important; width: 26px !important; }
-    div[data-testid="stHorizontalBlock"]:has(.tx-row-marker) > div[data-testid="column"]:nth-child(5) { flex: 0 0 26px !important; width: 26px !important; }
-    
-    div[data-testid="stHorizontalBlock"]:has(.tx-row-marker) div[data-testid="stButton"] button { width: 26px !important; height: 26px !important; }
-    div[data-testid="stHorizontalBlock"]:has(.tx-row-marker) div[data-testid="stButton"] button p { font-size: 0.9rem !important; }
-    
-    .mobile-logo { width: 22px !important; height: 22px !important; margin-top: 2px !important; }
-    .mobile-tx-ticker { font-size: 0.95rem !important; }
-    .mobile-tx-sub { font-size: 0.65rem !important; margin-top: 1px !important;}
-    .mobile-tx-amount { font-size: 0.95rem !important; }
+    div[data-testid="stForm"]:has(.add-tx-card) .stButton > button { width: 100% !important; max-width: none !important;
+    }
+
+    div[data-testid="stHorizontalBlock"]:has(.tx-row) { gap: 6px !important; }
 
     /* Dashboard Mobile Stats */
-    .stats-layer-inner { gap: 6px !important; }
-    .stats-layer { margin-top: -60px !important; margin-bottom: 18px; } 
-    .glossy-box.swapped { height: 80px !important; min-height: 80px !important; max-height: 80px !important; padding: 0 !important; min-width: 0 !important; }
-    .dash-value { font-size: clamp(11px, 3.5vw, 15px) !important; top: 24px !important; } 
-    .dash-label { font-size: clamp(8px, 2.5vw, 10px) !important; bottom: 8px !important; white-space: nowrap !important; letter-spacing: 0.5px !important; }
+    .stats-layer-inner { gap: 6px !important;
+    }
+    .stats-layer { margin-top: -60px !important; margin-bottom: 18px;
+    } 
+    .glossy-box.swapped { height: 80px !important; min-height: 80px !important; max-height: 80px !important; padding: 0 !important;
+    min-width: 0 !important; }
+    .dash-value { font-size: clamp(11px, 3.5vw, 15px) !important; top: 24px !important;
+    } 
+    .dash-label { font-size: clamp(8px, 2.5vw, 10px) !important; bottom: 8px !important; white-space: nowrap !important;
+    letter-spacing: 0.5px !important; }
     
-    .usdc-banner { padding: 8px 14px; width: 92%; margin: 4px auto 8px auto !important; }
-    .usdc-banner-title { font-size: 0.95rem; }
+    .usdc-banner { padding: 8px 14px; width: 92%;
+    margin: 4px auto 8px auto !important; }
+    .usdc-banner-title { font-size: 0.95rem;
+    }
     .usdc-banner-subtitle { font-size: 0.7rem; }
-    .usdc-banner-amount { font-size: 1.1rem; }
-    .stable-dropdown-wrapper { width: 92%; margin: -8px auto 12px auto !important; }
+    .usdc-banner-amount { font-size: 1.1rem;
+    }
+    .stable-dropdown-wrapper { width: 92%; margin: -8px auto 12px auto !important;
+    }
 }
 </style>
 """, unsafe_allow_html=True)
@@ -762,7 +814,7 @@ def build_portfolio_history(crypto_df, fiat_df, last_prices, hist_dict):
         live_p = last_prices.get(coin, 0.0)
         if live_p == 0.0 and coin == 'BTC':
             live_p = 65000.0 
-            
+    
         if coin not in prices_df.columns:
             prices_df[coin] = live_p
         
@@ -824,6 +876,7 @@ def build_portfolio_history(crypto_df, fiat_df, last_prices, hist_dict):
 def calculate_portfolio(crypto_df, fiat_df, live_prices, base_prices):
     if crypto_df.empty:
         return pd.DataFrame(columns=['Ticker','Holdings','Stable_Amt','AVG','Live','PnL','PnL %','Value','Price7d','Price30d','Price90d','PriceYTD']), 0, 0, 0
+   
     crypto_df = crypto_df.copy()
     crypto_df['Ticker'] = crypto_df['Ticker'].astype(str).str.upper()
     
@@ -837,6 +890,7 @@ def calculate_portfolio(crypto_df, fiat_df, live_prices, base_prices):
     for ticker in coin_tickers:
         sub = crypto_df[crypto_df['Ticker'] == ticker]
         total_holdings = sub['Amount'].sum()
+    
         total_invested = sub['Stable_Amt'].sum()
         avg_price = total_invested / total_holdings if total_holdings > 0 else 0
         live_price = live_prices.get(ticker, 0.0)
@@ -1016,16 +1070,16 @@ components.html("""
         const n0 = parentDoc.getElementById('nav-item-0');
         const n1 = parentDoc.getElementById('nav-item-1');
         const n2 = parentDoc.getElementById('nav-item-2');
-        
         if(n0) n0.addEventListener('click', () => switchTab(0));
         if(n1) n1.addEventListener('click', () => switchTab(1));
         if(n2) n2.addEventListener('click', () => switchTab(2));
-
+        
         let startX = 0, startY = 0, endX = 0, endY = 0;
         parentDoc.addEventListener('touchstart', e => {
             startX = e.changedTouches[0].screenX;
             startY = e.changedTouches[0].screenY;
         }, {passive: true});
+        
         parentDoc.addEventListener('touchend', e => {
             endX = e.changedTouches[0].screenX;
             endY = e.changedTouches[0].screenY;
@@ -1033,7 +1087,7 @@ components.html("""
             const xDiff = Math.abs(endX - startX);
             const yDiff = Math.abs(endY - startY);
             
-            if (xDiff > yDiff && xDiff > 80) {
+             if (xDiff > yDiff && xDiff > 80) {
                 const isScrollable = e.target.closest('.scroll-wrapper') || e.target.closest('.charts-scroll-wrapper') || e.target.closest('canvas');
                 if(isScrollable) return;
 
@@ -1052,6 +1106,7 @@ components.html("""
                 }
             }
         }, {passive: true});
+        
         setTimeout(() => {
             let currentTab = 0;
             const tabs = parentDoc.querySelectorAll('button[data-baseweb="tab"]');
@@ -1097,7 +1152,7 @@ with tab_home:
         )
 
         st.session_state.portfolio_cache = {
-            'hash': current_hash,
+             'hash': current_hash,
             'df_port': df_port,
             'total_value': total_value,
             'total_pnl': total_pnl,
@@ -1140,7 +1195,7 @@ with tab_home:
         if amt > 0.01:
             owned_stables.append(t)
             logo = get_ticker_logo(t)
-            dropdown_html += f"<div class='st-item'><div class='st-item-left'><img src='{logo}' width='20' height='20' style='border-radius:50%;object-fit:contain;' onerror=\"this.src='https://via.placeholder.com/20/1e2a44/ffffff?text={t[0]}';\"><span>{t}</span></div><span class='val'>{format_holdings(amt, t)}</span></div>"
+            dropdown_html += f"<div class='st-item'><div class='st-item-left'><img src='{logo}' width='20' height='20' style='border-radius:50%;object-fit:contain;background-color:#ffffff;' onerror=\"this.src='https://via.placeholder.com/20/1e2a44/ffffff?text={t[0]}';\"><span>{t}</span></div><span class='val'>{format_holdings(amt, t)}</span></div>"
     if dropdown_html == "":
         dropdown_html = "<div class='st-item'><span>No Stablecoins</span><span class='val'>0.00</span></div>"
 
@@ -1149,7 +1204,7 @@ with tab_home:
     top_logos = [get_ticker_logo(t) for t in owned_stables[:3]]
     
     if top_logos:
-        logos_html = "".join([f"<img src='{l}' style='width:28px;height:28px;border-radius:50%;margin-left:-10px;border:2px solid #0f172a;'>" for l in top_logos])
+        logos_html = "".join([f"<img src='{l}' style='width:28px;height:28px;border-radius:50%;margin-left:-10px;border:2px solid #0f172a;background-color:#ffffff;'>" for l in top_logos])
         logos_html = logos_html.replace("margin-left:-10px;", "margin-left:0;", 1)
         main_icon_html = f"<div style='display:flex; align-items:center;'>{logos_html}</div>"
     else:
@@ -1197,7 +1252,7 @@ with tab_home:
             if idx == len(history_data_raw) - 1 and ts == today_ts:
                 val = float(total_value)
                 inv = float(fiat_stables_total)
-            
+             
             hist_val_js_list.append(f"[{ts}, {val}]")
             hist_inv_js_list.append(f"[{ts}, {inv}]")
             hist_btc_js_list.append(f"[{ts}, {btc}]")
@@ -1737,7 +1792,7 @@ with tab_home:
                 
                 const screenW = window.parent ? window.parent.innerWidth : window.innerWidth;
                 const screenH = window.parent ? window.parent.innerHeight : window.innerHeight;
-
+                
                 if (el.classList.contains('expanded-chart')) {{
                     overlay.classList.remove('active');
                     const origTop = parseFloat(el.getAttribute('data-orig-top')) || 0;
@@ -1745,15 +1800,13 @@ with tab_home:
                     el.classList.remove('expanded-chart');
                     el.style.transition = 'transform 0.4s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.4s ease, box-shadow 0.4s ease';
                     el.style.transform = `translate(${{origLeft}}px, ${{origTop}}px) scale(1)`;
-
                     const finishClose = (e) => {{
                         if (e && e.propertyName !== 'transform') return;
                         el.removeEventListener('transitionend', finishClose);
                         clearTimeout(el._closeTimeout);
                         if (parentIframe) parentIframe.classList.remove('fullscreen-mode');
                         el.style.cssText = ''; 
-                        wrapper.style.overflowX = 'auto'; 
-                        
+                        wrapper.style.overflowX = 'auto';
                         document.querySelectorAll('.chart-box').forEach(c => {{
                             c.style.opacity = '1';
                             c.style.pointerEvents = 'auto';
@@ -1774,7 +1827,6 @@ with tab_home:
                 const chartRect = el.getBoundingClientRect();
                 let visualTop = chartRect.top;
                 let visualLeft = chartRect.left;
-
                 if (parentIframe) {{
                     const iframeRect = parentIframe.getBoundingClientRect();
                     visualTop += iframeRect.top;
@@ -1802,7 +1854,6 @@ with tab_home:
 
                 el.setAttribute('data-orig-top', visualTop);
                 el.setAttribute('data-orig-left', visualLeft);
-
                 el.style.position = 'fixed';
                 el.style.top = '0px';
                 el.style.left = '0px';
@@ -1814,8 +1865,7 @@ with tab_home:
                 el.style.transition = 'none';
                 el.style.transform = `translate(${{visualLeft}}px, ${{visualTop}}px) scale(1)`;
                 
-                void el.offsetWidth; 
-
+                void el.offsetWidth;
                 el.classList.add('expanded-chart');
                 el.style.transition = 'transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.4s ease, box-shadow 0.4s ease';
                 el.style.transform = `translate(${{centerLeft}}px, ${{centerTop}}px) scale(${{targetScale}})`;
@@ -1845,7 +1895,7 @@ with tab_home:
             setupDoubleTap('daily-wrapper');
             setupDoubleTap('allocation-container');
             setupDoubleTap('inv-val-container');
-
+            
             document.getElementById('chart-overlay').addEventListener('click', () => {{
                 document.querySelectorAll('.expanded-chart').forEach(el => {{
                     if (el.classList.contains('expanded-chart')) {{
@@ -2289,7 +2339,7 @@ with tab_home:
             }}
         }} catch(e) {{}}
     }}, 150);
-    
+
     try {{
         const dt = window.parent.document.getElementById('dash-toggle');
         const dtUsdc = window.parent.document.getElementById('dash-toggle-usdc');
@@ -2339,9 +2389,11 @@ with tab_home:
     }}
 
     const stablesHoldings = {stables_holdings};
+
     async function updateLivePrices() {{
         const cards = Array.from(document.querySelectorAll('.flip-card'));
         if (cards.length === 0) return;
+
         const tickers = cards.map(card => card.getAttribute('data-ticker'));
         const symbolMap = {{
             'BTC':'BTC','ETH':'ETH','SOL':'SOL','HBAR':'HBAR',
@@ -2350,6 +2402,7 @@ with tab_home:
         const mappedTickers = tickers.map(t => symbolMap[t.toUpperCase()] || t.toUpperCase());
 
         const url = `https://min-api.cryptocompare.com/data/pricemultifull?fsyms=${{mappedTickers.join(',')}}&tsyms=USD`;
+
         try {{
             const resp = await fetch(url, {{ headers: {{ 'User-Agent': 'Mozilla/5.0' }} }});
             const data = await resp.json();
@@ -2360,6 +2413,7 @@ with tab_home:
             let tickerDiffs = {{}};
             let tickerRoi = {{}};
             let ticker24h = {{}};
+
             cards.forEach(card => {{
                 const ticker = card.getAttribute('data-ticker');
                 const sym = symbolMap[ticker.toUpperCase()] || ticker.toUpperCase();
@@ -2387,6 +2441,7 @@ with tab_home:
                         const pnl = value - invested;
                         const pnlPct = invested > 0 ? (pnl / invested) * 100 : 0;
                         tickerRoi[ticker] = pnlPct;
+
                         const valStr = '$' + value.toLocaleString('en-US', {{minimumFractionDigits: 2, maximumFractionDigits: 2}});
                         const pnlStr = (pnl >= 0 ? '▲ $' : '▼ $') + Math.abs(pnl).toLocaleString('en-US', {{minimumFractionDigits: 2, maximumFractionDigits: 2}});
                         const pnlPctStr = (pnl >= 0 ? '▲ ' : '▼ ') + Math.abs(pnlPct).toFixed(2) + '%';
@@ -2394,6 +2449,7 @@ with tab_home:
                         
                         const valEl = card.querySelector('.total-value');
                         if (valEl) valEl.innerText = valStr;
+
                         const pnlEl = card.querySelector('.card-pnl');
                         if (pnlEl) {{
                             pnlEl.innerText = pnlStr;
@@ -2415,6 +2471,7 @@ with tab_home:
                         updateMetricUI(card, ticker, '30d', p30d, price);
                         updateMetricUI(card, ticker, '90d', p90d, price);
                         updateMetricUI(card, ticker, 'ytd', pytd, price);
+
                         if (window.chartCache && window.chartCache[ticker] && window.chartCache[ticker].chartObj) {{
                             const chart = window.chartCache[ticker].chartObj;
                             const dataLen = chart.data.datasets[0].data.length;
@@ -2444,6 +2501,7 @@ with tab_home:
             const totalPnL = totalCoinValue - totalCoinInvested;
             const totalInvestedBase = totalPortfolioValue - totalPnL;
             const totalPnLPct = totalInvestedBase !== 0 ? (totalPnL / totalInvestedBase) * 100 : 0;
+
             const dashValStr = '$' + totalPortfolioValue.toLocaleString('en-US', {{minimumFractionDigits: 2, maximumFractionDigits: 2}});
             const dashPnlStr = (totalPnL >= 0 ? '▲ $' : '▼ $') + Math.abs(totalPnL).toLocaleString('en-US', {{minimumFractionDigits: 2, maximumFractionDigits: 2}});
             const dashPnlPctStr = (totalPnL >= 0 ? '▲ ' : '▼ ') + Math.abs(totalPnLPct).toFixed(2) + '%';
@@ -2455,10 +2513,8 @@ with tab_home:
             const dPnlPct = parentDoc.getElementById('dash-pnl-pct');
             
             if (dValue) dValue.innerText = dashValStr;
-            if (dPnl) {{ dPnl.innerText = dashPnlStr;
-            dPnl.style.color = dashColor; }}
-            if (dPnlPct) {{ dPnlPct.innerText = dashPnlPctStr;
-            dPnlPct.style.color = dashColor; }}
+            if (dPnl) {{ dPnl.innerText = dashPnlStr; dPnl.style.color = dashColor; }}
+            if (dPnlPct) {{ dPnlPct.innerText = dashPnlPctStr; dPnlPct.style.color = dashColor; }}
 
             try {{
                 let hcWin = null;
@@ -2479,7 +2535,7 @@ with tab_home:
                     const dailyChart = HC.charts.find(c => c && c.renderTo.id === 'daily-container');
                     const allocChart = HC.charts.find(c => c && c.renderTo.id === 'allocation-container');
                     const invValChart = HC.charts.find(c => c && c.renderTo.id === 'inv-val-container');
-                    
+
                     if (pieChart && pieChart.series[0]) {{
                         pieChart.series[0].points.forEach(point => {{
                             if (tickerValues[point.name] !== undefined) {{
@@ -2507,10 +2563,10 @@ with tab_home:
                         if (typeof hcWin.pnlDataMap !== 'undefined') {{
                             Object.keys(hcWin.pnlDataMap).forEach(key => {{
                                 hcWin.pnlDataMap[key].forEach(pt => {{
-                                      if (tickerDiffs[pt.name] !== undefined) {{
+                                       if (tickerDiffs[pt.name] !== undefined) {{
                                         pt.y += tickerDiffs[pt.name];
                                      }}
-                                 }});
+                                }});
                             }});
                         }}
                         pnlChart.redraw(true);
@@ -2527,7 +2583,7 @@ with tab_home:
                     
                     if (dailyChart && dailyChart.series[0]) {{
                          dailyChart.series[0].points.forEach(point => {{
-                             if (ticker24h[point.name] !== undefined) {{
+                            if (ticker24h[point.name] !== undefined) {{
                                 const val = ticker24h[point.name];
                                 const color = val >= 0 ? 'rgba(0, 255, 157, 0.65)' : 'rgba(255, 77, 77, 0.65)'; 
                                 point.update({{y: val, color: color}}, false);
@@ -2567,7 +2623,7 @@ with tab_home:
         }}
     }}
     setInterval(updateLivePrices, 10000);
-    
+
     function saveFlippedState() {{
         const flippedCards = [];
         document.querySelectorAll('.flip-card').forEach(card => {{
@@ -2589,7 +2645,7 @@ with tab_home:
                 card.classList.add('flipped');
                 card.classList.add('touch-hover');
                 const currentPrice = parseFloat(card.getAttribute('data-current-price'));
-                 const avgPrice = parseFloat(card.getAttribute('data-avg-price'));
+                const avgPrice = parseFloat(card.getAttribute('data-avg-price'));
                 const chartColor = card.getAttribute('data-chart-color');
                 if (!chartCache[ticker] || !chartCache[ticker].chartObj) {{
                      renderChart(card, ticker, currentPrice, avgPrice, chartColor);
@@ -2603,10 +2659,11 @@ with tab_home:
     window.chartCache = window.chartCache || {{}};
     const chartCache = window.chartCache;
     const refreshKey = '{st.session_state.refresh_key}';
-    
+
     async function fetchAll24hChanges() {{
         const cards = Array.from(document.querySelectorAll('.flip-card'));
         if (cards.length === 0) return;
+
         const tickers = cards.map(card => card.getAttribute('data-ticker'));
         const symbolMap = {{
             'BTC':'BTC','ETH':'ETH','SOL':'SOL','HBAR':'HBAR',
@@ -2615,6 +2672,7 @@ with tab_home:
         const mappedTickers = tickers.map(t => symbolMap[t.toUpperCase()] || t.toUpperCase());
 
         const url = `https://min-api.cryptocompare.com/data/pricemultifull?fsyms=${{mappedTickers.join(',')}}&tsyms=USD`;
+
         try {{
             const resp = await fetch(url, {{ headers: {{ 'User-Agent': 'Mozilla/5.0' }} }});
             const data = await resp.json();
@@ -2636,7 +2694,7 @@ with tab_home:
                      changeSpan.innerHTML = `N/A`;
                 }}
             }});
-            
+
             try {{
                 let hcWin = window;
                 if (window !== window.parent) {{
@@ -2654,7 +2712,7 @@ with tab_home:
                         dailyC.series[0].points.forEach(pt => {{
                             if (init24h[pt.name] !== undefined) {{
                                  const val = init24h[pt.name];
-                                pt.update({{y: val, color: val >= 0 ? 'rgba(0, 255, 157, 0.65)' : 'rgba(255, 77, 77, 0.65)'}}, false);
+                                 pt.update({{y: val, color: val >= 0 ? 'rgba(0, 255, 157, 0.65)' : 'rgba(255, 77, 77, 0.65)'}}, false);
                             }}
                          }});
                         dailyC.redraw();
@@ -2749,10 +2807,11 @@ with tab_home:
                 plugins: {{
                     legend: {{ display: false }},
                     tooltip: {{ mode: 'index', intersect: false }}
-                 }},
+                  }},
                 scales: {{
                      x: {{ ticks: {{ color: '#ccc', maxRotation: 45, autoSkip: true, maxTicksLimit: 6 }}, grid: {{ color: 'rgba(255,255,255,0.1)' }} }},
-                    y: {{ position: 'right', ticks: {{ color: '#ccc' }}, grid: {{ color: 'rgba(255,255,255,0.1)' }} }}
+                    y: {{ position: 'right', ticks: {{ color: '#ccc' }}, grid: {{ color: 'rgba(255,255,255,0.1)' }} 
+                }}
                 }}
             }}
          }});
@@ -2777,7 +2836,7 @@ with tab_home:
         updateMetricUI(card, ticker, '30d', p30d, currentPrice);
         updateMetricUI(card, ticker, '90d', p90d, currentPrice);
         updateMetricUI(card, ticker, 'ytd', pytd, currentPrice);
-        
+
         const front = card.querySelector('.flip-card-front');
         front.addEventListener('click', (e) => {{
             e.stopPropagation();
@@ -2789,11 +2848,13 @@ with tab_home:
                 }}
             }}
         }});
+
         const backDiv = card.querySelector('.flip-card-back');
         backDiv.addEventListener('click', (e) => {{
             card.classList.remove('flipped');
             card.classList.remove('touch-hover');
         }});
+
         const extBtn = card.querySelector('.tv-external-btn');
         if (extBtn) {{
             extBtn.addEventListener('click', (e) => {{
@@ -2835,156 +2896,201 @@ with tab_crypto:
         color: #00ff9d !important; font-weight: 700 !important; font-size: 1.05rem !important;
         padding: 12px 16px !important; background: transparent !important; border-bottom: none !important;
     }
-    div[data-testid="stExpander"] summary svg { color: #00ff9d !important; fill: #00ff9d !important; }
-    div[data-testid="stExpanderDetails"] { padding: 0 16px 16px 16px !important; }
-    div[data-testid="stExpanderDetails"] div[data-testid="stForm"] { padding: 0 !important; border: none !important; box-shadow: none !important; margin-bottom: 0 !important; background: transparent !important; }
+    div[data-testid="stExpander"] summary svg { color: #00ff9d !important; fill: #00ff9d !important;
+}
+    div[data-testid="stExpanderDetails"] { padding: 0 16px 16px 16px !important;
+}
+    div[data-testid="stExpanderDetails"] div[data-testid="stForm"] { padding: 0 !important; border: none !important; box-shadow: none !important; margin-bottom: 0 !important;
+background: transparent !important; }
 
     /* INPUTS STYLING */
-    div[data-testid="stForm"]:has(.add-tx-card) label { font-size: 0.85rem !important; color: #94a3b8 !important; padding-bottom: 2px !important; }
+    div[data-testid="stForm"]:has(.add-tx-card) label { font-size: 0.85rem !important;
+color: #94a3b8 !important; padding-bottom: 2px !important; }
     div[data-testid="stForm"]:has(.add-tx-card) .stTextInput input, div[data-testid="stForm"]:has(.add-tx-card) .stNumberInput input, div[data-testid="stForm"]:has(.add-tx-card) .stDateInput input, div[data-testid="stForm"]:has(.add-tx-card) div[data-baseweb="select"] > div {
-        background: rgba(255,255,255,0.03) !important; border: 1px solid rgba(255,255,255,0.1) !important; color: #fff !important; border-radius: 8px !important; margin-bottom: 0px !important;
-    }
-    div[data-testid="stForm"]:has(.add-tx-card) div[data-testid="stHorizontalBlock"]:has(> div[data-testid="column"]:nth-child(4)) { display: flex !important; gap: 12px !important; }
+        background: rgba(255,255,255,0.03) !important;
+border: 1px solid rgba(255,255,255,0.1) !important; color: #fff !important; border-radius: 8px !important; margin-bottom: 0px !important;
+}
+    div[data-testid="stForm"]:has(.add-tx-card) div[data-testid="stHorizontalBlock"]:has(> div[data-testid="column"]:nth-child(4)) { display: flex !important; gap: 12px !important;
+}
 
     /* BEAUTIFUL BUY/SELL SWITCH */
     div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] {
-        background: rgba(0,0,0,0.3) !important; padding: 6px !important; border-radius: 12px !important; display: flex !important; flex-direction: row !important; gap: 8px !important; align-items: center !important; margin: 0 !important; height: 48px !important; border: 1px solid rgba(255,255,255,0.05) !important;
-    }
+        background: rgba(0,0,0,0.3) !important;
+padding: 6px !important; border-radius: 12px !important; display: flex !important; flex-direction: row !important; gap: 8px !important; align-items: center !important;
+margin: 0 !important; height: 48px !important; border: 1px solid rgba(255,255,255,0.05) !important;
+}
     div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label {
-        margin: 0 !important; cursor: pointer !important; padding: 0 !important; border-radius: 8px !important; border: 1px solid transparent !important; transition: all 0.3s ease !important; background: transparent !important; flex: 1 !important; display: flex !important; justify-content: center !important; align-items: center !important; height: 100% !important;
-    }
-    div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label:hover { background: rgba(255,255,255,0.05) !important; }
-    div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label > div:first-child { display: none !important; } 
-    div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label p { font-weight: bold !important; font-size: 1.05rem !important; color: #94a3b8 !important; margin: 0 !important; padding: 0 !important; white-space: nowrap !important; line-height: 1 !important; }
-    div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label:has(input:checked):first-child, div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label[aria-checked="true"]:first-child { background: rgba(0, 255, 157, 0.15) !important; border-color: #00ff9d !important; }
-    div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label:has(input:checked):first-child p, div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label[aria-checked="true"]:first-child p { color: #00ff9d !important; }
-    div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label:has(input:checked):last-child, div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label[aria-checked="true"]:last-child { background: rgba(255, 77, 77, 0.15) !important; border-color: #ff4d4d !important; }
-    div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label:has(input:checked):last-child p, div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label[aria-checked="true"]:last-child p { color: #ff4d4d !important; }
+        margin: 0 !important;
+cursor: pointer !important; padding: 0 !important; border-radius: 8px !important; border: 1px solid transparent !important; transition: all 0.3s ease !important;
+background: transparent !important; flex: 1 !important; display: flex !important; justify-content: center !important; align-items: center !important; height: 100% !important;
+}
+    div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label:hover { background: rgba(255,255,255,0.05) !important;
+}
+    div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label > div:first-child { display: none !important;
+} 
+    div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label p { font-weight: bold !important; font-size: 1.05rem !important; color: #94a3b8 !important;
+margin: 0 !important; padding: 0 !important; white-space: nowrap !important; line-height: 1 !important;
+}
+    div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label:has(input:checked):first-child, div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label[aria-checked="true"]:first-child { background: rgba(0, 255, 157, 0.15) !important; border-color: #00ff9d !important;
+}
+    div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label:has(input:checked):first-child p, div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label[aria-checked="true"]:first-child p { color: #00ff9d !important;
+}
+    div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label:has(input:checked):last-child, div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label[aria-checked="true"]:last-child { background: rgba(255, 77, 77, 0.15) !important; border-color: #ff4d4d !important;
+}
+    div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label:has(input:checked):last-child p, div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label[aria-checked="true"]:last-child p { color: #ff4d4d !important;
+}
 
-    div[data-testid="stForm"]:has(.add-tx-card) .stButton { display: flex !important; justify-content: flex-end !important; align-items: center !important; margin: 0 !important; padding: 0 !important; width: 100% !important; }
-    div[data-testid="stForm"]:has(.add-tx-card) .stButton > button { background: #1e2a44 !important; color: #e0e0e0 !important; padding: 0 24px !important; border-radius: 10px !important; font-size: 1.05rem !important; font-weight: 700 !important; box-shadow: 0 4px 15px rgba(0,0,0,0.25) !important; transition: all 0.3s ease !important; border: none !important; margin: 0 !important; width: auto !important; height: 48px !important; min-height: 48px !important; }
-    div[data-testid="stForm"]:has(.add-tx-card) .stButton > button:hover { transform: translateY(-2px) !important; box-shadow: 0 8px 20px rgba(255, 255, 255, 0.2) !important; color: white !important; }
+    div[data-testid="stForm"]:has(.add-tx-card) .stButton { display: flex !important; justify-content: flex-end !important; align-items: center !important; margin: 0 !important;
+padding: 0 !important; width: 100% !important; }
+    div[data-testid="stForm"]:has(.add-tx-card) .stButton > button { background: #1e2a44 !important;
+color: #e0e0e0 !important; padding: 0 24px !important; border-radius: 10px !important; font-size: 1.05rem !important; font-weight: 700 !important;
+box-shadow: 0 4px 15px rgba(0,0,0,0.25) !important; transition: all 0.3s ease !important; border: none !important; margin: 0 !important; width: auto !important;
+height: 48px !important; min-height: 48px !important; }
+    div[data-testid="stForm"]:has(.add-tx-card) .stButton > button:hover { transform: translateY(-2px) !important;
+box-shadow: 0 8px 20px rgba(255, 255, 255, 0.2) !important; color: white !important;
+}
 
     /* ==============================================================
-       HIGHLY COMPACT, IRONCLAD TRANSACTION ROWS (PC & MOBILE)
+       NEW COMPACT HTML-GRID TRANSACTION ROWS (PC & MOBILE)
        ============================================================== */
-    div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row-marker) {
-        background: #0f172a !important; border: 1px solid rgba(255,255,255,0.05) !important;
-        border-radius: 8px !important; padding: 4px 8px !important; margin-bottom: 6px !important;
+    div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row) {
+        background: #0f172a !important;
+        border: 1px solid rgba(255,255,255,0.05) !important;
+        border-radius: 12px !important; padding: 8px 12px !important; margin-bottom: 8px !important;
+        transition: background 0.3s ease;
+    }
+    div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row):hover {
+        background: rgba(30, 41, 59, 0.8) !important;
     }
 
     /* Eliminate Streamlit's Internal Column Gaps */
-    div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row-marker) div[data-testid="stVerticalBlock"] {
+    div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row) div[data-testid="stVerticalBlock"] {
         gap: 0 !important;
     }
 
     /* FORCE HORIZONTAL FLEX WRAPPER - STOPS STREAMLIT STACKING */
-    div[data-testid="stHorizontalBlock"]:has(.tx-row-marker) {
-        display: flex !important; flex-direction: row !important; flex-wrap: nowrap !important;
-        align-items: center !important; width: 100% !important; gap: 8px !important; overflow: hidden !important;
+    div[data-testid="stHorizontalBlock"]:has(.tx-row) {
+        display: flex !important; flex-direction: row !important;
+        flex-wrap: nowrap !important; align-items: center !important; 
+        width: 100% !important; gap: 12px !important; overflow: hidden !important;
     }
-    div[data-testid="stHorizontalBlock"]:has(.tx-row-marker) > div[data-testid="column"] {
-        width: auto !important; min-width: 0 !important; padding: 0 !important; flex: none !important;
+    div[data-testid="stHorizontalBlock"]:has(.tx-row) > div[data-testid="column"] {
+        padding: 0 !important; margin: 0 !important; min-width: 0 !important;
     }
 
-    /* Specific Column Sizing */
-    div[data-testid="stHorizontalBlock"]:has(.tx-row-marker) > div[data-testid="column"]:nth-child(1) { flex: 0 0 32px !important; } /* Logo */
-    div[data-testid="stHorizontalBlock"]:has(.tx-row-marker) > div[data-testid="column"]:nth-child(2) { flex: 1 1 auto !important; overflow: hidden; } /* Info */
-    div[data-testid="stHorizontalBlock"]:has(.tx-row-marker) > div[data-testid="column"]:nth-child(3) { flex: 1.2 1 auto !important; text-align: right; } /* Amounts */
-    div[data-testid="stHorizontalBlock"]:has(.tx-row-marker) > div[data-testid="column"]:nth-child(4) { flex: 0 0 28px !important; display: flex; justify-content: center; } /* Edit */
-    div[data-testid="stHorizontalBlock"]:has(.tx-row-marker) > div[data-testid="column"]:nth-child(5) { flex: 0 0 28px !important; display: flex; justify-content: center; } /* Delete */
+    /* Specific Column Sizing: Info HTML takes everything, Edit/Del take tiny spaces */
+    div[data-testid="stHorizontalBlock"]:has(.tx-row) > div[data-testid="column"]:nth-child(1) { 
+        flex: 1 1 auto !important; width: auto !important; 
+    }
+    div[data-testid="stHorizontalBlock"]:has(.tx-row) > div[data-testid="column"]:nth-child(2),
+    div[data-testid="stHorizontalBlock"]:has(.tx-row) > div[data-testid="column"]:nth-child(3) { 
+        flex: 0 0 32px !important; width: 32px !important; 
+        display: flex !important; justify-content: center !important; align-items: center !important; 
+    }
 
     /* Sleek Icon Buttons */
-    div[data-testid="stHorizontalBlock"]:has(.tx-row-marker) div[data-testid="stButton"] button {
-        background: transparent !important; border: 1px solid rgba(255,255,255,0.05) !important;
-        color: #94a3b8 !important; border-radius: 6px !important; box-shadow: none !important;
-        height: 28px !important; width: 28px !important; padding: 0 !important;
+    div[data-testid="stHorizontalBlock"]:has(.tx-row) div[data-testid="stButton"] button {
+        background: transparent !important;
+        border: 1px solid rgba(255,255,255,0.05) !important;
+        color: #94a3b8 !important; border-radius: 8px !important; box-shadow: none !important;
+        height: 32px !important; width: 32px !important; padding: 0 !important;
         display: flex !important; align-items: center !important; justify-content: center !important;
-        font-size: 1rem !important; line-height: 1 !important; transition: all 0.2s ease !important;
+        transition: all 0.2s ease !important;
     }
-    div[data-testid="stHorizontalBlock"]:has(.tx-row-marker) div[data-testid="stButton"] button p { font-size: 1.1rem !important; line-height: 1 !important; margin: 0; padding: 0; }
+    div[data-testid="stHorizontalBlock"]:has(.tx-row) div[data-testid="stButton"] button p { 
+        font-size: 1.1rem !important; margin: 0; padding: 0; 
+    }
 
-    div[data-testid="stHorizontalBlock"]:has(.tx-row-marker) div[data-testid="column"]:nth-child(4) div[data-testid="stButton"] button:hover {
+    div[data-testid="stHorizontalBlock"]:has(.tx-row) div[data-testid="column"]:nth-child(2) div[data-testid="stButton"] button:hover {
         border-color: #00ff9d !important; color: #00ff9d !important; background: rgba(0, 255, 157, 0.1) !important;
     }
-    div[data-testid="stHorizontalBlock"]:has(.tx-row-marker) div[data-testid="column"]:nth-child(5) div[data-testid="stButton"] button:hover {
+    div[data-testid="stHorizontalBlock"]:has(.tx-row) div[data-testid="column"]:nth-child(3) div[data-testid="stButton"] button:hover {
         border-color: #ff4d4d !important; color: #ff4d4d !important; background: rgba(255, 77, 77, 0.1) !important;
     }
 
-    /* Typography Overrides */
-    .mobile-logo { width: 28px !important; height: 28px !important; margin-top: 2px !important; }
-    .mobile-tx-ticker { font-size: 1rem !important; font-weight: 700; color: #fff; line-height: 1.1; margin-left: 2px; }
-    .mobile-tx-sub { font-size: 0.75rem !important; color: #94a3b8; line-height: 1.1; margin-top: 3px; margin-left: 2px; }
-    .mobile-tx-amount { font-size: 1rem !important; font-weight: 700; line-height: 1.1; }
-
     /* IN-PLACE EDIT FORM (Replaces Row smoothly) */
     div[data-testid="stForm"]:has(.edit-form-marker) {
-        background: rgba(15, 23, 42, 0.95) !important; border: 1px solid #00ff9d !important;
+        background: rgba(15, 23, 42, 0.95) !important;
+border: 1px solid #00ff9d !important;
         border-radius: 8px !important; padding: 12px 16px !important; margin-bottom: 6px !important;
-        box-shadow: 0 4px 15px rgba(0, 255, 157, 0.1) !important;
+box-shadow: 0 4px 15px rgba(0, 255, 157, 0.1) !important;
     }
-    div[data-testid="stForm"]:has(.edit-form-marker) div[data-baseweb="select"] > div { background: rgba(255,255,255,0.03) !important; border: 1px solid rgba(255,255,255,0.1) !important; }
+    div[data-testid="stForm"]:has(.edit-form-marker) div[data-baseweb="select"] > div { background: rgba(255,255,255,0.03) !important;
+border: 1px solid rgba(255,255,255,0.1) !important; }
 
     /* IN-PLACE DELETE DIALOG (Replaces Row smoothly) */
     div[data-testid="stVerticalBlockBorderWrapper"]:has(.del-warn-marker) {
-        border-color: rgba(255, 77, 77, 0.3) !important; background: rgba(15, 23, 42, 0.95) !important;
+        border-color: rgba(255, 77, 77, 0.3) !important;
+background: rgba(15, 23, 42, 0.95) !important;
         border-radius: 8px !important; padding: 8px 12px !important; margin-bottom: 6px !important;
-        box-shadow: 0 4px 15px rgba(255, 77, 77, 0.1) !important;
+box-shadow: 0 4px 15px rgba(255, 77, 77, 0.1) !important;
     }
     div[data-testid="stVerticalBlockBorderWrapper"]:has(.del-warn-marker) div[data-testid="stHorizontalBlock"] {
-        display: flex !important; flex-direction: row !important; align-items: center !important; gap: 8px !important;
+        display: flex !important;
+flex-direction: row !important; align-items: center !important; gap: 8px !important;
     }
-    div[data-testid="stVerticalBlockBorderWrapper"]:has(.del-warn-marker) div[data-testid="column"]:nth-child(1) { flex: 1 1 auto !important; }
-    div[data-testid="stVerticalBlockBorderWrapper"]:has(.del-warn-marker) div[data-testid="column"]:nth-child(2) { flex: 0 0 80px !important; }
-    div[data-testid="stVerticalBlockBorderWrapper"]:has(.del-warn-marker) div[data-testid="column"]:nth-child(3) { flex: 0 0 80px !important; }
+    div[data-testid="stVerticalBlockBorderWrapper"]:has(.del-warn-marker) div[data-testid="column"]:nth-child(1) { flex: 1 1 auto !important;
+}
+    div[data-testid="stVerticalBlockBorderWrapper"]:has(.del-warn-marker) div[data-testid="column"]:nth-child(2) { flex: 0 0 80px !important;
+}
+    div[data-testid="stVerticalBlockBorderWrapper"]:has(.del-warn-marker) div[data-testid="column"]:nth-child(3) { flex: 0 0 80px !important;
+}
     div[data-testid="stVerticalBlockBorderWrapper"]:has(.del-warn-marker) .stButton > button {
-        border-radius: 6px !important; font-weight: 600 !important; width: 100% !important; padding: 4px !important; height: 32px !important; min-height: 32px !important; font-size: 0.9rem !important; transition: all 0.2s !important;
+        border-radius: 6px !important;
+font-weight: 600 !important; width: 100% !important; padding: 4px !important; height: 32px !important; min-height: 32px !important; font-size: 0.9rem !important;
+transition: all 0.2s !important;
     }
-    div[data-testid="stVerticalBlockBorderWrapper"]:has(.del-warn-marker) div[data-testid="column"]:nth-child(2) .stButton > button { background: rgba(255, 77, 77, 0.1) !important; color: #ff4d4d !important; border: 1px solid rgba(255, 77, 77, 0.3) !important; }
-    div[data-testid="stVerticalBlockBorderWrapper"]:has(.del-warn-marker) div[data-testid="column"]:nth-child(2) .stButton > button:hover { background: #ff4d4d !important; color: white !important; }
-    div[data-testid="stVerticalBlockBorderWrapper"]:has(.del-warn-marker) div[data-testid="column"]:nth-child(3) .stButton > button { background: rgba(255, 255, 255, 0.05) !important; color: #cbd5e1 !important; border: 1px solid rgba(255, 255, 255, 0.1) !important; }
-    div[data-testid="stVerticalBlockBorderWrapper"]:has(.del-warn-marker) div[data-testid="column"]:nth-child(3) .stButton > button:hover { background: rgba(255, 255, 255, 0.15) !important; color: white !important; }
+    div[data-testid="stVerticalBlockBorderWrapper"]:has(.del-warn-marker) div[data-testid="column"]:nth-child(2) .stButton > button { background: rgba(255, 77, 77, 0.1) !important;
+color: #ff4d4d !important; border: 1px solid rgba(255, 77, 77, 0.3) !important;
+}
+    div[data-testid="stVerticalBlockBorderWrapper"]:has(.del-warn-marker) div[data-testid="column"]:nth-child(2) .stButton > button:hover { background: #ff4d4d !important; color: white !important;
+}
+    div[data-testid="stVerticalBlockBorderWrapper"]:has(.del-warn-marker) div[data-testid="column"]:nth-child(3) .stButton > button { background: rgba(255, 255, 255, 0.05) !important; color: #cbd5e1 !important;
+border: 1px solid rgba(255, 255, 255, 0.1) !important; }
+    div[data-testid="stVerticalBlockBorderWrapper"]:has(.del-warn-marker) div[data-testid="column"]:nth-child(3) .stButton > button:hover { background: rgba(255, 255, 255, 0.15) !important;
+color: white !important; }
 
     /* ==============================================================
        MOBILE OVERRIDES
        ============================================================== */
     @media (max-width: 768px) {
-        .glossy-header { margin-top: 0px !important; margin-bottom: 16px !important; padding: 20px 16px !important; font-size: 22px !important; min-height: 90px; }
-        .home-header { margin-bottom: 0 !important; }
+        .glossy-header { margin-top: 0px !important;
+margin-bottom: 16px !important; padding: 20px 16px !important; font-size: 22px !important; min-height: 90px;
+}
+        .home-header { margin-bottom: 0 !important;
+}
         
-        div[data-testid="stForm"]:has(.add-tx-card) input { padding: 6px !important; font-size: 0.95rem !important; }
-        div[data-testid="stForm"]:has(.add-tx-card) .stButton { width: 100% !important; justify-content: center !important; }
-        div[data-testid="stForm"]:has(.add-tx-card) .stButton > button { width: 100% !important; max-width: none !important; }
+        div[data-testid="stForm"]:has(.add-tx-card) input { padding: 6px !important;
+font-size: 0.95rem !important; }
+        div[data-testid="stForm"]:has(.add-tx-card) .stButton { width: 100% !important; justify-content: center !important;
+}
+        div[data-testid="stForm"]:has(.add-tx-card) .stButton > button { width: 100% !important; max-width: none !important;
+}
 
-        /* Ultra Compact Mobile Rows */
-        div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row-marker) {
-            padding: 4px 6px !important; margin-bottom: 6px !important;
-        }
-        div[data-testid="stHorizontalBlock"]:has(.tx-row-marker) { gap: 4px !important; }
-        div[data-testid="stHorizontalBlock"]:has(.tx-row-marker) > div[data-testid="column"]:nth-child(1) { flex: 0 0 24px !important; width: 24px !important; }
-        div[data-testid="stHorizontalBlock"]:has(.tx-row-marker) > div[data-testid="column"]:nth-child(4) { flex: 0 0 26px !important; width: 26px !important; }
-        div[data-testid="stHorizontalBlock"]:has(.tx-row-marker) > div[data-testid="column"]:nth-child(5) { flex: 0 0 26px !important; width: 26px !important; }
-        
-        div[data-testid="stHorizontalBlock"]:has(.tx-row-marker) div[data-testid="stButton"] button { width: 26px !important; height: 26px !important; }
-        div[data-testid="stHorizontalBlock"]:has(.tx-row-marker) div[data-testid="stButton"] button p { font-size: 0.9rem !important; }
-        
-        .mobile-logo { width: 22px !important; height: 22px !important; margin-top: 2px !important; }
-        .mobile-tx-ticker { font-size: 0.95rem !important; }
-        .mobile-tx-sub { font-size: 0.65rem !important; margin-top: 1px !important;}
-        .mobile-tx-amount { font-size: 0.95rem !important; }
+        div[data-testid="stHorizontalBlock"]:has(.tx-row) { gap: 6px !important; }
 
         /* Dashboard Mobile Stats */
-        .stats-layer-inner { gap: 6px !important; }
-        .stats-layer { margin-top: -60px !important; margin-bottom: 18px; } 
-        .glossy-box.swapped { height: 80px !important; min-height: 80px !important; max-height: 80px !important; padding: 0 !important; min-width: 0 !important; }
-        .dash-value { font-size: clamp(11px, 3.5vw, 15px) !important; top: 24px !important; } 
-        .dash-label { font-size: clamp(8px, 2.5vw, 10px) !important; bottom: 8px !important; white-space: nowrap !important; letter-spacing: 0.5px !important; }
+        .stats-layer-inner { gap: 6px !important;
+}
+        .stats-layer { margin-top: -60px !important; margin-bottom: 18px;
+} 
+        .glossy-box.swapped { height: 80px !important; min-height: 80px !important; max-height: 80px !important;
+padding: 0 !important; min-width: 0 !important; }
+        .dash-value { font-size: clamp(11px, 3.5vw, 15px) !important;
+top: 24px !important; } 
+        .dash-label { font-size: clamp(8px, 2.5vw, 10px) !important;
+bottom: 8px !important; white-space: nowrap !important; letter-spacing: 0.5px !important; }
         
-        .usdc-banner { padding: 8px 14px; width: 92%; margin: 4px auto 8px auto !important; }
-        .usdc-banner-title { font-size: 0.95rem; }
-        .usdc-banner-subtitle { font-size: 0.7rem; }
-        .usdc-banner-amount { font-size: 1.1rem; }
-        .stable-dropdown-wrapper { width: 92%; margin: -8px auto 12px auto !important; }
+        .usdc-banner { padding: 8px 14px;
+width: 92%; margin: 4px auto 8px auto !important; }
+        .usdc-banner-title { font-size: 0.95rem;
+}
+        .usdc-banner-subtitle { font-size: 0.7rem;
+}
+        .usdc-banner-amount { font-size: 1.1rem;
+}
+        .stable-dropdown-wrapper { width: 92%; margin: -8px auto 12px auto !important;
+}
     }
     </style>
     """, unsafe_allow_html=True)
@@ -2995,6 +3101,7 @@ with tab_crypto:
             st.markdown("<div class='add-tx-card'></div>", unsafe_allow_html=True) # Hidden hook for CSS overrides
             
             # Row 1: Inputs
+        
             r1c1, r1c2, r1c3, r1c4 = st.columns(4)
             with r1c1: selected_date = st.date_input("Date", value=date(2026, 3, 25))
             with r1c2: ticker = st.text_input("Coin Ticker", value="BTC").upper().strip()
@@ -3086,7 +3193,7 @@ with tab_crypto:
                     with e_r2c2: new_amount = st.number_input("Coin Amount", value=float(abs(r['Amount'])), step=0.000001, format="%.8f")
                     
                     tx_type_edit = st.radio("Type", ["Buy", "Sell"], horizontal=True, index=0 if is_buy else 1, label_visibility="collapsed")
-                     
+                    
                     e_save, e_cancel = st.columns(2)
                     with e_save: 
                         if st.form_submit_button("💾 Save Changes"):
@@ -3107,28 +3214,25 @@ with tab_crypto:
                             st.session_state['edit_crypto_row'] = None
                             st.rerun()
             else:
-                # Standard Compact Row Display
+                # NEW HTML-GRID COMPACT ROW DISPLAY
                 with st.container(border=True):
-                    # Hook for strict horizontal flex CSS
-                    col_logo, col_ticker, col_vals, col_edit, col_del = st.columns(5)
+                    col_info, col_edit, col_del = st.columns([1, 0.1, 0.1])
                     
-                    with col_logo:
-                        st.markdown(f"<div class='tx-row-marker'></div><img src='{logo_url}' class='mobile-logo' style='width:32px;height:32px;border-radius:50%;object-fit:contain;' onerror=\"this.src='https://via.placeholder.com/32/1e2a44/ffffff?text={r['Ticker'][0]}';\">", unsafe_allow_html=True)
-                        
-                    with col_ticker:
+                    with col_info:
                         st.markdown(f"""
-                            <div style="line-height: 1.1; overflow: hidden; text-overflow: ellipsis;">
-                                <div class="mobile-tx-ticker" style="font-weight: 700; font-size: 1.05rem; color: #ffffff; white-space: nowrap;">{r['Ticker']}</div>
-                                <div class="mobile-tx-sub" style="font-size: 0.75rem; color: #94a3b8; white-space: nowrap;">{date_str}</div>
+                        <div class="tx-row" style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+                            <div style="display: flex; align-items: center; gap: 12px; overflow: hidden; flex: 1;">
+                                <img src="{logo_url}" style="width: 32px; height: 32px; border-radius: 50%; object-fit: contain; flex-shrink: 0;" onerror="this.src='https://via.placeholder.com/32/1e2a44/ffffff?text={r['Ticker'][0]}';">
+                                <div style="display: flex; flex-direction: column; overflow: hidden; min-width: 0;">
+                                    <span style="font-weight: 700; font-size: 1rem; color: #ffffff; white-space: nowrap; text-overflow: ellipsis; overflow: hidden; line-height: 1.2;">{r['Ticker']}</span>
+                                    <span style="font-size: 0.75rem; color: #94a3b8; white-space: nowrap; text-overflow: ellipsis; overflow: hidden; line-height: 1.2;">{date_str}</span>
+                                </div>
                             </div>
-                        """, unsafe_allow_html=True)
-                        
-                    with col_vals:
-                        st.markdown(f"""
-                            <div style="display: flex; flex-direction: column; align-items: flex-end; justify-content: center; gap: 0px;">
-                                <div class="mobile-tx-amount" style="font-weight: 700; font-size: 1.05rem; color: {color}; white-space: nowrap;">{sign}{amount_formatted}</div>
-                                <div class="mobile-tx-sub" style="font-size: 0.75rem; color: #cbd5e1; white-space: nowrap;">{action_text}: {invested_formatted} @ ${price_formatted}</div>
+                            <div style="display: flex; flex-direction: column; align-items: flex-end; justify-content: center; overflow: hidden; padding-left: 8px; flex-shrink: 0;">
+                                <span style="font-weight: 700; font-size: 1rem; color: {color}; white-space: nowrap; line-height: 1.2;">{sign}{amount_formatted}</span>
+                                <span style="font-size: 0.75rem; color: #cbd5e1; white-space: nowrap; line-height: 1.2;">{action_text}: {invested_formatted}</span>
                             </div>
+                        </div>
                         """, unsafe_allow_html=True)
                         
                     with col_edit:
@@ -3270,27 +3374,25 @@ with tab_fiat:
                             st.session_state['edit_fiat_row'] = None
                             st.rerun()
             else:
-                # Standard Compact Row Display
+                # NEW HTML-GRID COMPACT ROW DISPLAY
                 with st.container(border=True):
-                    col_logo, col_fiat, col_vals, col_edit, col_del = st.columns(5)
+                    col_info, col_edit, col_del = st.columns([1, 0.1, 0.1])
                     
-                    with col_logo:
-                        st.markdown(f"<div class='tx-row-marker'></div><img src='{logo_url}' class='mobile-logo' style='width:32px;height:32px;border-radius:50%;object-fit:contain;' onerror=\"this.src='https://via.placeholder.com/32/1e2a44/ffffff?text={stable_ticker[0]}';\">", unsafe_allow_html=True)
-                        
-                    with col_fiat:
+                    with col_info:
                         st.markdown(f"""
-                            <div style="line-height: 1.1; overflow: hidden; text-overflow: ellipsis;">
-                                <div class="mobile-tx-ticker" style="font-weight: 700; font-size: 1.05rem; color: #ffffff; white-space: nowrap;">{date_str}</div>
-                                <div class="mobile-tx-sub" style="font-size: 0.75rem; color: #94a3b8; white-space: nowrap;">{fiat_formatted}</div>
+                        <div class="tx-row" style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+                            <div style="display: flex; align-items: center; gap: 12px; overflow: hidden; flex: 1;">
+                                <img src="{logo_url}" style="width: 32px; height: 32px; border-radius: 50%; object-fit: contain; flex-shrink: 0;" onerror="this.src='https://via.placeholder.com/32/1e2a44/ffffff?text={stable_ticker[0]}';\">
+                                <div style="display: flex; flex-direction: column; overflow: hidden; min-width: 0;">
+                                    <span style="font-weight: 700; font-size: 1rem; color: #ffffff; white-space: nowrap; text-overflow: ellipsis; overflow: hidden; line-height: 1.2;">{date_str}</span>
+                                    <span style="font-size: 0.75rem; color: #94a3b8; white-space: nowrap; text-overflow: ellipsis; overflow: hidden; line-height: 1.2;">{fiat_formatted}</span>
+                                </div>
                             </div>
-                        """, unsafe_allow_html=True)
-                        
-                    with col_vals:
-                        st.markdown(f"""
-                            <div style="display: flex; flex-direction: column; align-items: flex-end; justify-content: center; gap: 0px;">
-                                <div class="mobile-tx-amount" style="font-weight: 700; font-size: 1.05rem; color: #00ff9d; white-space: nowrap;">{stable_formatted}</div>
-                                <div class="mobile-tx-sub" style="font-size: 0.75rem; color: #cbd5e1; white-space: nowrap;">Fee: {fee_val:,.2f} EUR</div>
+                            <div style="display: flex; flex-direction: column; align-items: flex-end; justify-content: center; overflow: hidden; padding-left: 8px; flex-shrink: 0;">
+                                <span style="font-weight: 700; font-size: 1rem; color: #00ff9d; white-space: nowrap; text-overflow: ellipsis; overflow: hidden; line-height: 1.2;">{stable_formatted}</span>
+                                <span style="font-size: 0.75rem; color: #cbd5e1; white-space: nowrap; text-overflow: ellipsis; overflow: hidden; line-height: 1.2;">Fee: {fee_val:,.2f} EUR</span>
                             </div>
+                        </div>
                         """, unsafe_allow_html=True)
                         
                     with col_edit:
