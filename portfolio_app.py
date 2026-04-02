@@ -372,15 +372,12 @@ div[data-testid="stExpander"] {
     border-radius: 12px !important; box-shadow: 0 4px 15px rgba(0,0,0,0.3) !important; margin-bottom: 24px !important;
 }
 div[data-testid="stExpander"] summary {
-    color: #00ff9d !important; font-weight: 700 !important; font-size: 1.05rem !important;
-    padding: 12px 16px !important;
-    background: transparent !important; border-bottom: none !important;
+    color: #ffffff !important; font-weight: 700 !important; font-size: 1.05rem !important;
+    padding: 12px 16px !important; background: transparent !important; border-bottom: none !important;
 }
-div[data-testid="stExpander"] summary svg { color: #00ff9d !important; fill: #00ff9d !important;
-}
+div[data-testid="stExpander"] summary svg { color: #ffffff !important; fill: #ffffff !important; }
 div[data-testid="stExpanderDetails"] { padding: 0 16px 16px 16px !important; }
-div[data-testid="stExpanderDetails"] div[data-testid="stForm"] { padding: 0 !important; border: none !important; box-shadow: none !important;
-margin-bottom: 0 !important; background: transparent !important; }
+div[data-testid="stExpanderDetails"] div[data-testid="stForm"] { padding: 0 !important; border: none !important; box-shadow: none !important; margin-bottom: 0 !important; background: transparent !important; }
 
 /* INPUTS STYLING */
 div[data-testid="stForm"]:has(.add-tx-card) label { font-size: 0.85rem !important; color: #94a3b8 !important;
@@ -449,6 +446,7 @@ div[data-testid="stHorizontalBlock"]:has(.tx-row) {
     display: flex !important; flex-direction: row !important;
     flex-wrap: nowrap !important; align-items: center !important; 
     width: 100% !important; gap: 12px !important; overflow: hidden !important;
+    box-sizing: border-box !important;
 }
 div[data-testid="stHorizontalBlock"]:has(.tx-row) > div[data-testid="column"] {
     padding: 0 !important; margin: 0 !important; min-width: 0 !important;
@@ -456,11 +454,11 @@ div[data-testid="stHorizontalBlock"]:has(.tx-row) > div[data-testid="column"] {
 
 /* Specific Column Sizing: Info HTML takes everything, Edit/Del take tiny spaces */
 div[data-testid="stHorizontalBlock"]:has(.tx-row) > div[data-testid="column"]:nth-child(1) { 
-    flex: 1 1 auto !important; width: auto !important; 
+    flex: 1 1 0% !important; width: auto !important; min-width: 0 !important;
 }
 div[data-testid="stHorizontalBlock"]:has(.tx-row) > div[data-testid="column"]:nth-child(2),
 div[data-testid="stHorizontalBlock"]:has(.tx-row) > div[data-testid="column"]:nth-child(3) { 
-    flex: 0 0 32px !important; width: 32px !important; 
+    flex: 0 0 34px !important; width: 34px !important; 
     display: flex !important; justify-content: center !important; align-items: center !important; 
 }
 
@@ -539,7 +537,14 @@ color: white !important; }
     div[data-testid="stForm"]:has(.add-tx-card) .stButton > button { width: 100% !important; max-width: none !important;
     }
 
-    div[data-testid="stHorizontalBlock"]:has(.tx-row) { gap: 6px !important; }
+    div[data-testid="stHorizontalBlock"]:has(.tx-row) { gap: 4px !important; }
+    div[data-testid="stHorizontalBlock"]:has(.tx-row) > div[data-testid="column"]:nth-child(2),
+    div[data-testid="stHorizontalBlock"]:has(.tx-row) > div[data-testid="column"]:nth-child(3) { 
+        flex: 0 0 28px !important; width: 28px !important; 
+    }
+    div[data-testid="stHorizontalBlock"]:has(.tx-row) div[data-testid="stButton"] button { 
+        width: 28px !important; height: 28px !important; 
+    }
 
     /* Dashboard Mobile Stats */
     .stats-layer-inner { gap: 6px !important;
@@ -2893,15 +2898,12 @@ with tab_crypto:
         border-radius: 12px !important; box-shadow: 0 4px 15px rgba(0,0,0,0.3) !important; margin-bottom: 24px !important;
     }
     div[data-testid="stExpander"] summary {
-        color: #00ff9d !important; font-weight: 700 !important; font-size: 1.05rem !important;
+        color: #ffffff !important; font-weight: 700 !important; font-size: 1.05rem !important;
         padding: 12px 16px !important; background: transparent !important; border-bottom: none !important;
     }
-    div[data-testid="stExpander"] summary svg { color: #00ff9d !important; fill: #00ff9d !important;
-}
-    div[data-testid="stExpanderDetails"] { padding: 0 16px 16px 16px !important;
-}
-    div[data-testid="stExpanderDetails"] div[data-testid="stForm"] { padding: 0 !important; border: none !important; box-shadow: none !important; margin-bottom: 0 !important;
-background: transparent !important; }
+    div[data-testid="stExpander"] summary svg { color: #ffffff !important; fill: #ffffff !important; }
+    div[data-testid="stExpanderDetails"] { padding: 0 16px 16px 16px !important; }
+    div[data-testid="stExpanderDetails"] div[data-testid="stForm"] { padding: 0 !important; border: none !important; box-shadow: none !important; margin-bottom: 0 !important; background: transparent !important; }
 
     /* INPUTS STYLING */
     div[data-testid="stForm"]:has(.add-tx-card) label { font-size: 0.85rem !important;
@@ -2973,6 +2975,7 @@ box-shadow: 0 8px 20px rgba(255, 255, 255, 0.2) !important; color: white !import
         display: flex !important; flex-direction: row !important;
         flex-wrap: nowrap !important; align-items: center !important; 
         width: 100% !important; gap: 12px !important; overflow: hidden !important;
+        box-sizing: border-box !important;
     }
     div[data-testid="stHorizontalBlock"]:has(.tx-row) > div[data-testid="column"] {
         padding: 0 !important; margin: 0 !important; min-width: 0 !important;
@@ -2980,11 +2983,11 @@ box-shadow: 0 8px 20px rgba(255, 255, 255, 0.2) !important; color: white !import
 
     /* Specific Column Sizing: Info HTML takes everything, Edit/Del take tiny spaces */
     div[data-testid="stHorizontalBlock"]:has(.tx-row) > div[data-testid="column"]:nth-child(1) { 
-        flex: 1 1 auto !important; width: auto !important; 
+        flex: 1 1 0% !important; width: auto !important; min-width: 0 !important;
     }
     div[data-testid="stHorizontalBlock"]:has(.tx-row) > div[data-testid="column"]:nth-child(2),
     div[data-testid="stHorizontalBlock"]:has(.tx-row) > div[data-testid="column"]:nth-child(3) { 
-        flex: 0 0 32px !important; width: 32px !important; 
+        flex: 0 0 34px !important; width: 34px !important; 
         display: flex !important; justify-content: center !important; align-items: center !important; 
     }
 
@@ -3067,7 +3070,14 @@ font-size: 0.95rem !important; }
         div[data-testid="stForm"]:has(.add-tx-card) .stButton > button { width: 100% !important; max-width: none !important;
 }
 
-        div[data-testid="stHorizontalBlock"]:has(.tx-row) { gap: 6px !important; }
+        div[data-testid="stHorizontalBlock"]:has(.tx-row) { gap: 4px !important; }
+        div[data-testid="stHorizontalBlock"]:has(.tx-row) > div[data-testid="column"]:nth-child(2),
+        div[data-testid="stHorizontalBlock"]:has(.tx-row) > div[data-testid="column"]:nth-child(3) { 
+            flex: 0 0 28px !important; width: 28px !important; 
+        }
+        div[data-testid="stHorizontalBlock"]:has(.tx-row) div[data-testid="stButton"] button { 
+            width: 28px !important; height: 28px !important; 
+        }
 
         /* Dashboard Mobile Stats */
         .stats-layer-inner { gap: 6px !important;
@@ -3096,7 +3106,7 @@ width: 92%; margin: 4px auto 8px auto !important; }
     """, unsafe_allow_html=True)
 
     # 1. ADD NEW TRANSACTION CARD (TUCKED IN EXPANDER)
-    with st.expander("➕ Add New Crypto Transaction", expanded=False):
+    with st.expander("Add Transaction", expanded=False):
         with st.form("add_crypto", border=False):
             st.markdown("<div class='add-tx-card'></div>", unsafe_allow_html=True) # Hidden hook for CSS overrides
             
@@ -3223,14 +3233,14 @@ width: 92%; margin: 4px auto 8px auto !important; }
                         <div class="tx-row" style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
                             <div style="display: flex; align-items: center; gap: 12px; overflow: hidden; flex: 1;">
                                 <img src="{logo_url}" style="width: 32px; height: 32px; border-radius: 50%; object-fit: contain; flex-shrink: 0;" onerror="this.src='https://via.placeholder.com/32/1e2a44/ffffff?text={r['Ticker'][0]}';">
-                                <div style="display: flex; flex-direction: column; overflow: hidden; min-width: 0;">
-                                    <span style="font-weight: 700; font-size: 1rem; color: #ffffff; white-space: nowrap; text-overflow: ellipsis; overflow: hidden; line-height: 1.2;">{r['Ticker']}</span>
-                                    <span style="font-size: 0.75rem; color: #94a3b8; white-space: nowrap; text-overflow: ellipsis; overflow: hidden; line-height: 1.2;">{date_str}</span>
+                                <div style="display: flex; flex-direction: column; overflow: hidden; min-width: 0; padding-bottom: 2px;">
+                                    <span style="font-weight: 700; font-size: 1rem; color: #ffffff; white-space: nowrap; text-overflow: ellipsis; overflow: hidden; line-height: 1.3;">{r['Ticker']}</span>
+                                    <span style="font-size: 0.75rem; color: #94a3b8; white-space: nowrap; text-overflow: ellipsis; overflow: hidden; line-height: 1.3;">{date_str}</span>
                                 </div>
                             </div>
-                            <div style="display: flex; flex-direction: column; align-items: flex-end; justify-content: center; overflow: hidden; padding-left: 8px; flex-shrink: 0;">
-                                <span style="font-weight: 700; font-size: 1rem; color: {color}; white-space: nowrap; line-height: 1.2;">{sign}{amount_formatted}</span>
-                                <span style="font-size: 0.75rem; color: #cbd5e1; white-space: nowrap; line-height: 1.2;">{action_text}: {invested_formatted}</span>
+                            <div style="display: flex; flex-direction: column; align-items: flex-end; justify-content: center; overflow: hidden; padding-left: 4px; padding-bottom: 2px; flex-shrink: 0;">
+                                <span style="font-weight: 700; font-size: 1rem; color: {color}; white-space: nowrap; line-height: 1.3;">{sign}{amount_formatted}</span>
+                                <span style="font-size: 0.75rem; color: #cbd5e1; white-space: nowrap; line-height: 1.3;">{action_text}: {invested_formatted}</span>
                             </div>
                         </div>
                         """, unsafe_allow_html=True)
@@ -3271,7 +3281,7 @@ with tab_fiat:
     st.markdown(summary_html, unsafe_allow_html=True)
 
     # 1. ADD NEW FIAT TRANSACTION CARD (TUCKED IN EXPANDER)
-    with st.expander("➕ Add New Fiat Deposit", expanded=False):
+    with st.expander("Add Deposit", expanded=False):
         with st.form("add_fiat", border=False):
             st.markdown("<div class='add-tx-card'></div>", unsafe_allow_html=True)
             
@@ -3382,15 +3392,15 @@ with tab_fiat:
                         st.markdown(f"""
                         <div class="tx-row" style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
                             <div style="display: flex; align-items: center; gap: 12px; overflow: hidden; flex: 1;">
-                                <img src="{logo_url}" style="width: 32px; height: 32px; border-radius: 50%; object-fit: contain; flex-shrink: 0;" onerror="this.src='https://via.placeholder.com/32/1e2a44/ffffff?text={stable_ticker[0]}';\">
-                                <div style="display: flex; flex-direction: column; overflow: hidden; min-width: 0;">
-                                    <span style="font-weight: 700; font-size: 1rem; color: #ffffff; white-space: nowrap; text-overflow: ellipsis; overflow: hidden; line-height: 1.2;">{date_str}</span>
-                                    <span style="font-size: 0.75rem; color: #94a3b8; white-space: nowrap; text-overflow: ellipsis; overflow: hidden; line-height: 1.2;">{fiat_formatted}</span>
+                                <img src="{logo_url}" style="width: 32px; height: 32px; border-radius: 50%; object-fit: contain; flex-shrink: 0;" onerror="this.src='https://via.placeholder.com/32/1e2a44/ffffff?text={stable_ticker[0]}';">
+                                <div style="display: flex; flex-direction: column; overflow: hidden; min-width: 0; padding-bottom: 2px;">
+                                    <span style="font-weight: 700; font-size: 1rem; color: #ffffff; white-space: nowrap; text-overflow: ellipsis; overflow: hidden; line-height: 1.3;">{date_str}</span>
+                                    <span style="font-size: 0.75rem; color: #94a3b8; white-space: nowrap; text-overflow: ellipsis; overflow: hidden; line-height: 1.3;">{fiat_formatted}</span>
                                 </div>
                             </div>
-                            <div style="display: flex; flex-direction: column; align-items: flex-end; justify-content: center; overflow: hidden; padding-left: 8px; flex-shrink: 0;">
-                                <span style="font-weight: 700; font-size: 1rem; color: #00ff9d; white-space: nowrap; text-overflow: ellipsis; overflow: hidden; line-height: 1.2;">{stable_formatted}</span>
-                                <span style="font-size: 0.75rem; color: #cbd5e1; white-space: nowrap; text-overflow: ellipsis; overflow: hidden; line-height: 1.2;">Fee: {fee_val:,.2f} EUR</span>
+                            <div style="display: flex; flex-direction: column; align-items: flex-end; justify-content: center; overflow: hidden; padding-left: 4px; padding-bottom: 2px; flex-shrink: 0;">
+                                <span style="font-weight: 700; font-size: 1rem; color: #00ff9d; white-space: nowrap; text-overflow: ellipsis; overflow: hidden; line-height: 1.3;">{stable_formatted}</span>
+                                <span style="font-size: 0.75rem; color: #cbd5e1; white-space: nowrap; text-overflow: ellipsis; overflow: hidden; line-height: 1.3;">Fee: {fee_val:,.2f} EUR</span>
                             </div>
                         </div>
                         """, unsafe_allow_html=True)
