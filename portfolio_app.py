@@ -330,9 +330,10 @@ div[data-testid="stTabs"] > div[role="tabpanel"] {
 #stable-dropdown-toggle:checked ~ .stable-dropdown-wrapper .stable-dropdown {
     max-height: 300px; border-color: rgba(38, 161, 123, 0.2); padding: 12px 20px; margin-top: 4px; box-shadow: 0 10px 20px rgba(0,0,0,0.3);
 }
-.st-item { display: flex; justify-content: space-between; align-items: center; font-size: 0.9rem; color: #94a3b8; padding: 6px 0; border-bottom: 1px solid rgba(255,255,255,0.05); }
+.st-item { display: flex; justify-content: space-between; align-items: center; font-size: 0.95rem; color: #94a3b8; padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,0.05); }
 .st-item:last-child { border-bottom: none; }
 .st-item .val { color: #e2e8f0; font-weight: 600; }
+.st-item-left { display: flex; align-items: center; gap: 10px; }
 
 /* Native CSS Privacy Mode integration */
 .dashboard-toggle:not(:checked) ~ label .usdc-banner .usdc-banner-amount { font-size: 0 !important; }
@@ -395,21 +396,31 @@ div[data-testid="stForm"]:has(.add-tx-card) .stButton > button:hover { transform
 /* ==============================================================
    HIGHLY COMPACT, IRONCLAD TRANSACTION ROWS (PC & MOBILE)
    ============================================================== */
-div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row-marker) {
+div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row-marker),
+div[data-testid="stVerticalBlockBorderWrapper"]:has(.del-replace) {
     background: #0f172a !important; border: 1px solid rgba(255,255,255,0.05) !important;
     border-radius: 8px !important; padding: 6px 12px !important; margin-bottom: 6px !important;
-    position: relative; z-index: 2;
+    position: relative !important; z-index: 2; overflow: visible !important;
 }
-div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row-marker) > div { padding: 0 !important; gap: 0 !important; } 
+
+/* Allow absolute overlays to escape container */
+div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row-marker) > div[data-testid="stVerticalBlock"] {
+    overflow: visible !important; padding: 0 !important; gap: 0 !important;
+}
+/* Pop active editing row to front */
+div[data-testid="stVerticalBlockBorderWrapper"]:has(.edit-overlay) {
+    z-index: 100 !important; 
+}
 
 /* FORCE HORIZONTAL FLEX WRAPPER - STOPS STREAMLIT STACKING */
 div[data-testid="stHorizontalBlock"]:has(.tx-row-marker) {
     display: flex !important; flex-direction: row !important; flex-wrap: nowrap !important;
-    align-items: center !important; width: 100% !important; gap: 8px !important;
+    align-items: center !important; width: 100% !important; gap: 8px !important; overflow: hidden !important;
 }
 div[data-testid="stHorizontalBlock"]:has(.tx-row-marker) > div[data-testid="column"] {
     width: auto !important; min-width: 0 !important; padding: 0 !important; flex: none !important;
 }
+
 /* Specific Column Sizing */
 div[data-testid="stHorizontalBlock"]:has(.tx-row-marker) > div[data-testid="column"]:nth-child(1) { flex: 0 0 32px !important; } /* Logo */
 div[data-testid="stHorizontalBlock"]:has(.tx-row-marker) > div[data-testid="column"]:nth-child(2) { flex: 1 1 auto !important; overflow: hidden; } /* Info */
@@ -420,12 +431,12 @@ div[data-testid="stHorizontalBlock"]:has(.tx-row-marker) > div[data-testid="colu
 /* Sleek Icon Buttons */
 div[data-testid="stHorizontalBlock"]:has(.tx-row-marker) div[data-testid="stButton"] button {
     background: transparent !important; border: 1px solid rgba(255,255,255,0.05) !important;
-    color: #64748b !important; border-radius: 6px !important; box-shadow: none !important;
+    color: #94a3b8 !important; border-radius: 6px !important; box-shadow: none !important;
     height: 28px !important; width: 28px !important; padding: 0 !important;
     display: flex !important; align-items: center !important; justify-content: center !important;
     font-size: 1rem !important; line-height: 1 !important; transition: all 0.2s ease !important;
 }
-div[data-testid="stHorizontalBlock"]:has(.tx-row-marker) div[data-testid="stButton"] button p { font-size: 1rem !important; line-height: 1 !important; margin: 0; padding: 0; }
+div[data-testid="stHorizontalBlock"]:has(.tx-row-marker) div[data-testid="stButton"] button p { font-size: 1.1rem !important; line-height: 1 !important; margin: 0; padding: 0; }
 
 div[data-testid="stHorizontalBlock"]:has(.tx-row-marker) div[data-testid="column"]:nth-child(4) div[data-testid="stButton"] button:hover {
     border-color: #00ff9d !important; color: #00ff9d !important; background: rgba(0, 255, 157, 0.1) !important;
@@ -440,28 +451,52 @@ div[data-testid="stHorizontalBlock"]:has(.tx-row-marker) div[data-testid="column
 .mobile-tx-sub { font-size: 0.75rem !important; color: #94a3b8; line-height: 1.1; margin-top: 3px; margin-left: 2px; }
 .mobile-tx-amount { font-size: 1rem !important; font-weight: 700; line-height: 1.1; }
 
-/* 5. SMOOTH EDIT ROLLOUT */
-@keyframes rollDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
-div[data-testid="stForm"]:has(.edit-rollout) {
-    animation: rollDown 0.3s ease forwards !important; background: rgba(0,0,0,0.2) !important;
-    border-left: 3px solid #00ff9d !important; border-radius: 0 0 12px 12px !important;
-    border-top: none !important; border-right: none !important; border-bottom: none !important;
-    padding: 12px !important; margin-top: -12px !important; margin-bottom: 12px !important;
-    position: relative; z-index: 1; box-shadow: inset 0 4px 10px rgba(0,0,0,0.15) !important;
+/* ==============================================================
+   ABSOLUTE OVERLAY EDIT FORM
+   ============================================================== */
+div[data-testid="stForm"]:has(.edit-overlay) {
+    position: absolute !important;
+    top: -4px !important;
+    left: -4px !important;
+    width: calc(100% + 8px) !important;
+    z-index: 9999 !important;
+    background: rgba(15, 23, 42, 0.95) !important;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid #00ff9d !important;
+    border-radius: 10px !important;
+    padding: 12px 16px !important;
+    margin: 0 !important;
+    box-shadow: 0 20px 40px rgba(0,0,0,0.8) !important;
 }
-div[data-testid="stForm"]:has(.edit-rollout) div[data-baseweb="select"] > div { background: rgba(255,255,255,0.03) !important; border: 1px solid rgba(255,255,255,0.1) !important; }
+div[data-testid="stForm"]:has(.edit-overlay) div[data-baseweb="select"] > div { background: rgba(255,255,255,0.03) !important; border: 1px solid rgba(255,255,255,0.1) !important; }
 
-/* 6. REDESIGNED DELETE DIALOG */
-div[data-testid="stVerticalBlockBorderWrapper"]:has(.del-warn) {
-    border-color: rgba(255, 77, 77, 0.3) !important; background: rgba(15, 23, 42, 0.95) !important;
-    border-radius: 8px !important; padding: 12px !important; text-align: center !important; margin-bottom: 8px !important; box-shadow: 0 4px 20px rgba(0,0,0,0.4) !important;
+/* ==============================================================
+   REPLACE DELETE WARNING (Doesn't push screen, exactly matches row size)
+   ============================================================== */
+div[data-testid="stHorizontalBlock"]:has(.del-replace) {
+    display: flex !important; flex-direction: row !important; align-items: center !important; justify-content: space-between !important; padding: 2px 0 !important; gap: 12px !important;
 }
-div[data-testid="stVerticalBlockBorderWrapper"]:has(.del-warn) .stButton > button { border-radius: 6px !important; font-weight: 600 !important; transition: all 0.2s !important; width: 100% !important; margin-top: 4px !important; padding: 4px 8px !important; }
-div[data-testid="stVerticalBlockBorderWrapper"]:has(.del-warn) div[data-testid="column"]:nth-child(1) .stButton > button { background: rgba(255, 77, 77, 0.1) !important; color: #ff4d4d !important; border: 1px solid rgba(255, 77, 77, 0.3) !important; }
-div[data-testid="stVerticalBlockBorderWrapper"]:has(.del-warn) div[data-testid="column"]:nth-child(1) .stButton > button:hover { background: #ff4d4d !important; color: white !important; }
-div[data-testid="stVerticalBlockBorderWrapper"]:has(.del-warn) div[data-testid="column"]:nth-child(2) .stButton > button { background: rgba(255, 255, 255, 0.05) !important; color: #cbd5e1 !important; border: 1px solid rgba(255, 255, 255, 0.1) !important; }
-div[data-testid="stVerticalBlockBorderWrapper"]:has(.del-warn) div[data-testid="column"]:nth-child(2) .stButton > button:hover { background: rgba(255, 255, 255, 0.15) !important; color: white !important; }
+div[data-testid="stHorizontalBlock"]:has(.del-replace) > div[data-testid="column"] { min-width: 0 !important; padding: 0 !important; }
+div[data-testid="stHorizontalBlock"]:has(.del-replace) > div[data-testid="column"]:nth-child(1) { flex: 1 1 auto !important; }
+div[data-testid="stHorizontalBlock"]:has(.del-replace) > div[data-testid="column"]:nth-child(2) { flex: 0 0 80px !important; }
+div[data-testid="stHorizontalBlock"]:has(.del-replace) > div[data-testid="column"]:nth-child(3) { flex: 0 0 80px !important; }
 
+div[data-testid="stHorizontalBlock"]:has(.del-replace) .stButton > button {
+    border-radius: 6px !important; font-weight: 600 !important; transition: all 0.2s !important; width: 100% !important; padding: 4px !important; height: 32px !important; min-height: 32px !important; font-size: 0.9rem !important;
+}
+div[data-testid="stHorizontalBlock"]:has(.del-replace) div[data-testid="column"]:nth-child(2) .stButton > button {
+    background: rgba(255, 77, 77, 0.1) !important; color: #ff4d4d !important; border: 1px solid rgba(255, 77, 77, 0.3) !important;
+}
+div[data-testid="stHorizontalBlock"]:has(.del-replace) div[data-testid="column"]:nth-child(2) .stButton > button:hover { background: #ff4d4d !important; color: white !important; }
+div[data-testid="stHorizontalBlock"]:has(.del-replace) div[data-testid="column"]:nth-child(3) .stButton > button {
+    background: rgba(255, 255, 255, 0.05) !important; color: #cbd5e1 !important; border: 1px solid rgba(255, 255, 255, 0.1) !important;
+}
+div[data-testid="stHorizontalBlock"]:has(.del-replace) div[data-testid="column"]:nth-child(3) .stButton > button:hover { background: rgba(255, 255, 255, 0.15) !important; color: white !important; }
+
+/* ==============================================================
+   MOBILE OVERRIDES
+   ============================================================== */
 @media (max-width: 768px) {
     .glossy-header { margin-top: 0px !important; margin-bottom: 16px !important; padding: 20px 16px !important; font-size: 22px !important; min-height: 90px; }
     .home-header { margin-bottom: 0 !important; }
@@ -473,7 +508,25 @@ div[data-testid="stVerticalBlockBorderWrapper"]:has(.del-warn) div[data-testid="
     div[data-testid="stForm"]:has(.add-tx-card) .stButton { display: flex !important; justify-content: flex-end !important; width: 100% !important; }
     div[data-testid="stForm"]:has(.add-tx-card) .stButton > button { width: 100% !important; max-width: 120px !important; padding: 0 16px !important; }
 
-    /* Dashboard Mobile Stats Override Fix */
+    /* Ultra Compact Mobile Rows */
+    div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row-marker),
+    div[data-testid="stVerticalBlockBorderWrapper"]:has(.del-replace) {
+        padding: 4px 6px !important; margin-bottom: 6px !important;
+    }
+    div[data-testid="stHorizontalBlock"]:has(.tx-row-marker) { gap: 2px !important; }
+    div[data-testid="stHorizontalBlock"]:has(.tx-row-marker) > div[data-testid="column"]:nth-child(1) { flex: 0 0 24px !important; width: 24px !important; }
+    div[data-testid="stHorizontalBlock"]:has(.tx-row-marker) > div[data-testid="column"]:nth-child(4) { flex: 0 0 24px !important; width: 24px !important; }
+    div[data-testid="stHorizontalBlock"]:has(.tx-row-marker) > div[data-testid="column"]:nth-child(5) { flex: 0 0 24px !important; width: 24px !important; }
+    
+    div[data-testid="stHorizontalBlock"]:has(.tx-row-marker) div[data-testid="stButton"] button { width: 24px !important; height: 24px !important; }
+    div[data-testid="stHorizontalBlock"]:has(.tx-row-marker) div[data-testid="stButton"] button p { font-size: 0.9rem !important; }
+    
+    .mobile-logo { width: 22px !important; height: 22px !important; margin-top: 2px !important; }
+    .mobile-tx-ticker { font-size: 0.95rem !important; }
+    .mobile-tx-sub { font-size: 0.65rem !important; margin-top: 1px !important;}
+    .mobile-tx-amount { font-size: 0.95rem !important; }
+
+    /* Dashboard Mobile Stats */
     .stats-layer-inner { gap: 6px !important; }
     .stats-layer { margin-top: -60px !important; margin-bottom: 18px; } 
     .glossy-box.swapped { height: 80px !important; min-height: 80px !important; max-height: 80px !important; padding: 0 !important; min-width: 0 !important; }
@@ -481,7 +534,7 @@ div[data-testid="stVerticalBlockBorderWrapper"]:has(.del-warn) div[data-testid="
     .dash-label { font-size: clamp(8px, 2.5vw, 10px) !important; bottom: 8px !important; white-space: nowrap !important; letter-spacing: 0.5px !important; }
     
     .usdc-banner { padding: 8px 14px; width: 92%; margin: 4px auto 8px auto !important; }
-    .usdc-banner-left img { width: 24px; height: 24px; }
+    .usdc-banner-left img, .usdc-banner-left svg { width: 24px; height: 24px; }
     .usdc-banner-title { font-size: 0.95rem; }
     .usdc-banner-subtitle { font-size: 0.7rem; }
     .usdc-banner-amount { font-size: 1.1rem; }
@@ -923,7 +976,6 @@ if 'crypto_df' not in st.session_state:
 if 'fiat_df' not in st.session_state:
     st.session_state.fiat_df = load_or_init_fiat()
 
-# --- HOTFIX: Force Live Session State Migration ---
 if not st.session_state.crypto_df.empty and 'USDC' in st.session_state.crypto_df.columns and 'Stable_Amt' not in st.session_state.crypto_df.columns:
     st.session_state.crypto_df.rename(columns={'USDC': 'Stable_Amt'}, inplace=True)
     st.session_state.crypto_df['Stable_Ticker'] = 'USDC'
@@ -1113,7 +1165,8 @@ with tab_home:
     for t in STABLECOINS_LIST:
         amt = stable_breakdown.get(t, 0.0)
         if amt > 0.01:
-            dropdown_html += f"<div class='st-item'><span>{t}</span><span class='val'>{format_holdings(amt, t)}</span></div>"
+            logo = get_ticker_logo(t)
+            dropdown_html += f"<div class='st-item'><div class='st-item-left'><img src='{logo}' width='20' height='20' style='border-radius:50%;object-fit:contain;' onerror=\"this.src='https://via.placeholder.com/20/1e2a44/ffffff?text={t[0]}';\"><span>{t}</span></div><span class='val'>{format_holdings(amt, t)}</span></div>"
     if dropdown_html == "":
         dropdown_html = "<div class='st-item'><span>No Stablecoins</span><span class='val'>0.00</span></div>"
 
@@ -2917,25 +2970,31 @@ with tab_crypto:
     /* ==============================================================
        4. HIGHLY COMPACT TRANSACTION ROW STYLING 
        ============================================================== */
-    div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row-marker) {
-        background: #0f172a !important;
-        border: 1px solid rgba(255,255,255,0.05) !important;
-        border-radius: 8px !important; /* Smaller radius */
-        padding: 6px 12px !important;  /* Halved padding */
-        margin-bottom: 6px !important; /* Halved margin */
-        position: relative;
-        z-index: 2;
+    div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row-marker),
+    div[data-testid="stVerticalBlockBorderWrapper"]:has(.del-replace) {
+        background: #0f172a !important; border: 1px solid rgba(255,255,255,0.05) !important;
+        border-radius: 8px !important; padding: 6px 12px !important; margin-bottom: 6px !important;
+        position: relative !important; z-index: 2; overflow: visible !important;
     }
-    div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row-marker) > div { padding: 0 !important; gap: 0 !important; } 
+
+    /* Allow absolute overlays to escape container */
+    div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row-marker) > div[data-testid="stVerticalBlock"] {
+        overflow: visible !important; padding: 0 !important; gap: 0 !important;
+    }
+    /* Pop active editing row to front */
+    div[data-testid="stVerticalBlockBorderWrapper"]:has(.edit-overlay) {
+        z-index: 100 !important; 
+    }
 
     /* FORCE HORIZONTAL FLEX WRAPPER - STOPS STREAMLIT STACKING */
     div[data-testid="stHorizontalBlock"]:has(.tx-row-marker) {
         display: flex !important; flex-direction: row !important; flex-wrap: nowrap !important;
-        align-items: center !important; width: 100% !important; gap: 8px !important;
+        align-items: center !important; width: 100% !important; gap: 8px !important; overflow: hidden !important;
     }
     div[data-testid="stHorizontalBlock"]:has(.tx-row-marker) > div[data-testid="column"] {
         width: auto !important; min-width: 0 !important; padding: 0 !important; flex: none !important;
     }
+    
     /* Specific Column Sizing */
     div[data-testid="stHorizontalBlock"]:has(.tx-row-marker) > div[data-testid="column"]:nth-child(1) { flex: 0 0 32px !important; } /* Logo */
     div[data-testid="stHorizontalBlock"]:has(.tx-row-marker) > div[data-testid="column"]:nth-child(2) { flex: 1 1 auto !important; overflow: hidden; } /* Info */
@@ -2946,12 +3005,12 @@ with tab_crypto:
     /* Sleek Icon Buttons */
     div[data-testid="stHorizontalBlock"]:has(.tx-row-marker) div[data-testid="stButton"] button {
         background: transparent !important; border: 1px solid rgba(255,255,255,0.05) !important;
-        color: #64748b !important; border-radius: 6px !important; box-shadow: none !important;
+        color: #94a3b8 !important; border-radius: 6px !important; box-shadow: none !important;
         height: 28px !important; width: 28px !important; padding: 0 !important;
         display: flex !important; align-items: center !important; justify-content: center !important;
         font-size: 1rem !important; line-height: 1 !important; transition: all 0.2s ease !important;
     }
-    div[data-testid="stHorizontalBlock"]:has(.tx-row-marker) div[data-testid="stButton"] button p { font-size: 1rem !important; line-height: 1 !important; margin: 0; padding: 0; }
+    div[data-testid="stHorizontalBlock"]:has(.tx-row-marker) div[data-testid="stButton"] button p { font-size: 1.1rem !important; line-height: 1 !important; margin: 0; padding: 0; }
 
     div[data-testid="stHorizontalBlock"]:has(.tx-row-marker) div[data-testid="column"]:nth-child(4) div[data-testid="stButton"] button:hover {
         border-color: #00ff9d !important; color: #00ff9d !important; background: rgba(0, 255, 157, 0.1) !important;
@@ -2966,28 +3025,52 @@ with tab_crypto:
     .mobile-tx-sub { font-size: 0.75rem !important; color: #94a3b8; line-height: 1.1; margin-top: 3px; margin-left: 2px; }
     .mobile-tx-amount { font-size: 1rem !important; font-weight: 700; line-height: 1.1; }
 
-    /* 5. SMOOTH EDIT ROLLOUT */
-    @keyframes rollDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
-    div[data-testid="stForm"]:has(.edit-rollout) {
-        animation: rollDown 0.3s ease forwards !important; background: rgba(0,0,0,0.2) !important;
-        border-left: 3px solid #00ff9d !important; border-radius: 0 0 12px 12px !important;
-        border-top: none !important; border-right: none !important; border-bottom: none !important;
-        padding: 12px !important; margin-top: -12px !important; margin-bottom: 12px !important;
-        position: relative; z-index: 1; box-shadow: inset 0 4px 10px rgba(0,0,0,0.15) !important;
+    /* ==============================================================
+       ABSOLUTE OVERLAY EDIT FORM
+       ============================================================== */
+    div[data-testid="stForm"]:has(.edit-overlay) {
+        position: absolute !important;
+        top: -4px !important;
+        left: -4px !important;
+        width: calc(100% + 8px) !important;
+        z-index: 9999 !important;
+        background: rgba(15, 23, 42, 0.95) !important;
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+        border: 1px solid #00ff9d !important;
+        border-radius: 10px !important;
+        padding: 12px 16px !important;
+        margin: 0 !important;
+        box-shadow: 0 20px 40px rgba(0,0,0,0.8) !important;
     }
-    div[data-testid="stForm"]:has(.edit-rollout) div[data-baseweb="select"] > div { background: rgba(255,255,255,0.03) !important; border: 1px solid rgba(255,255,255,0.1) !important; }
+    div[data-testid="stForm"]:has(.edit-overlay) div[data-baseweb="select"] > div { background: rgba(255,255,255,0.03) !important; border: 1px solid rgba(255,255,255,0.1) !important; }
 
-    /* 6. REDESIGNED DELETE DIALOG */
-    div[data-testid="stVerticalBlockBorderWrapper"]:has(.del-warn) {
-        border-color: rgba(255, 77, 77, 0.3) !important; background: rgba(15, 23, 42, 0.95) !important;
-        border-radius: 8px !important; padding: 12px !important; text-align: center !important; margin-bottom: 8px !important; box-shadow: 0 4px 20px rgba(0,0,0,0.4) !important;
+    /* ==============================================================
+       REPLACE DELETE WARNING (Doesn't push screen, exactly matches row size)
+       ============================================================== */
+    div[data-testid="stHorizontalBlock"]:has(.del-replace) {
+        display: flex !important; flex-direction: row !important; align-items: center !important; justify-content: space-between !important; padding: 2px 0 !important; gap: 12px !important;
     }
-    div[data-testid="stVerticalBlockBorderWrapper"]:has(.del-warn) .stButton > button { border-radius: 6px !important; font-weight: 600 !important; transition: all 0.2s !important; width: 100% !important; margin-top: 4px !important; padding: 4px 8px !important; }
-    div[data-testid="stVerticalBlockBorderWrapper"]:has(.del-warn) div[data-testid="column"]:nth-child(1) .stButton > button { background: rgba(255, 77, 77, 0.1) !important; color: #ff4d4d !important; border: 1px solid rgba(255, 77, 77, 0.3) !important; }
-    div[data-testid="stVerticalBlockBorderWrapper"]:has(.del-warn) div[data-testid="column"]:nth-child(1) .stButton > button:hover { background: #ff4d4d !important; color: white !important; }
-    div[data-testid="stVerticalBlockBorderWrapper"]:has(.del-warn) div[data-testid="column"]:nth-child(2) .stButton > button { background: rgba(255, 255, 255, 0.05) !important; color: #cbd5e1 !important; border: 1px solid rgba(255, 255, 255, 0.1) !important; }
-    div[data-testid="stVerticalBlockBorderWrapper"]:has(.del-warn) div[data-testid="column"]:nth-child(2) .stButton > button:hover { background: rgba(255, 255, 255, 0.15) !important; color: white !important; }
+    div[data-testid="stHorizontalBlock"]:has(.del-replace) > div[data-testid="column"] { min-width: 0 !important; padding: 0 !important; }
+    div[data-testid="stHorizontalBlock"]:has(.del-replace) > div[data-testid="column"]:nth-child(1) { flex: 1 1 auto !important; }
+    div[data-testid="stHorizontalBlock"]:has(.del-replace) > div[data-testid="column"]:nth-child(2) { flex: 0 0 80px !important; }
+    div[data-testid="stHorizontalBlock"]:has(.del-replace) > div[data-testid="column"]:nth-child(3) { flex: 0 0 80px !important; }
 
+    div[data-testid="stHorizontalBlock"]:has(.del-replace) .stButton > button {
+        border-radius: 6px !important; font-weight: 600 !important; transition: all 0.2s !important; width: 100% !important; padding: 4px !important; height: 32px !important; min-height: 32px !important; font-size: 0.9rem !important;
+    }
+    div[data-testid="stHorizontalBlock"]:has(.del-replace) div[data-testid="column"]:nth-child(2) .stButton > button {
+        background: rgba(255, 77, 77, 0.1) !important; color: #ff4d4d !important; border: 1px solid rgba(255, 77, 77, 0.3) !important;
+    }
+    div[data-testid="stHorizontalBlock"]:has(.del-replace) div[data-testid="column"]:nth-child(2) .stButton > button:hover { background: #ff4d4d !important; color: white !important; }
+    div[data-testid="stHorizontalBlock"]:has(.del-replace) div[data-testid="column"]:nth-child(3) .stButton > button {
+        background: rgba(255, 255, 255, 0.05) !important; color: #cbd5e1 !important; border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    }
+    div[data-testid="stHorizontalBlock"]:has(.del-replace) div[data-testid="column"]:nth-child(3) .stButton > button:hover { background: rgba(255, 255, 255, 0.15) !important; color: white !important; }
+
+    /* ==============================================================
+       MOBILE OVERRIDES
+       ============================================================== */
     @media (max-width: 768px) {
         .glossy-header { margin-top: 0px !important; margin-bottom: 16px !important; padding: 20px 16px !important; font-size: 22px !important; min-height: 90px; }
         .home-header { margin-bottom: 0 !important; }
@@ -2999,7 +3082,25 @@ with tab_crypto:
         div[data-testid="stForm"]:has(.add-tx-card) .stButton { display: flex !important; justify-content: flex-end !important; width: 100% !important; }
         div[data-testid="stForm"]:has(.add-tx-card) .stButton > button { width: 100% !important; max-width: 120px !important; padding: 0 16px !important; }
 
-        /* Dashboard Mobile Stats Override Fix */
+        /* Ultra Compact Mobile Rows */
+        div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row-marker),
+        div[data-testid="stVerticalBlockBorderWrapper"]:has(.del-replace) {
+            padding: 4px 6px !important; margin-bottom: 6px !important;
+        }
+        div[data-testid="stHorizontalBlock"]:has(.tx-row-marker) { gap: 2px !important; }
+        div[data-testid="stHorizontalBlock"]:has(.tx-row-marker) > div[data-testid="column"]:nth-child(1) { flex: 0 0 24px !important; width: 24px !important; }
+        div[data-testid="stHorizontalBlock"]:has(.tx-row-marker) > div[data-testid="column"]:nth-child(4) { flex: 0 0 24px !important; width: 24px !important; }
+        div[data-testid="stHorizontalBlock"]:has(.tx-row-marker) > div[data-testid="column"]:nth-child(5) { flex: 0 0 24px !important; width: 24px !important; }
+        
+        div[data-testid="stHorizontalBlock"]:has(.tx-row-marker) div[data-testid="stButton"] button { width: 24px !important; height: 24px !important; }
+        div[data-testid="stHorizontalBlock"]:has(.tx-row-marker) div[data-testid="stButton"] button p { font-size: 0.9rem !important; }
+        
+        .mobile-logo { width: 22px !important; height: 22px !important; margin-top: 2px !important; }
+        .mobile-tx-ticker { font-size: 0.95rem !important; }
+        .mobile-tx-sub { font-size: 0.65rem !important; margin-top: 1px !important;}
+        .mobile-tx-amount { font-size: 0.95rem !important; }
+
+        /* Dashboard Mobile Stats */
         .stats-layer-inner { gap: 6px !important; }
         .stats-layer { margin-top: -60px !important; margin-bottom: 18px; } 
         .glossy-box.swapped { height: 80px !important; min-height: 80px !important; max-height: 80px !important; padding: 0 !important; min-width: 0 !important; }
@@ -3083,8 +3184,9 @@ with tab_crypto:
 
             if st.session_state.get('confirm_delete_crypto') == orig_idx:
                 with st.container(border=True):
-                    st.markdown("<div class='del-warn'></div><h4 style='color: #ff4d4d; margin-top: 0; margin-bottom: 5px; font-size: 1rem; font-weight: 600;'>Delete this transaction?</h4>", unsafe_allow_html=True)
-                    c_yes, c_no = st.columns(2)
+                    st.markdown("<div class='del-replace'></div>", unsafe_allow_html=True)
+                    c_txt, c_yes, c_no = st.columns(3)
+                    with c_txt: st.markdown("<h4 style='color: #ff4d4d; margin: 0; font-size: 1rem; font-weight: 600; line-height: 32px;'>Delete entry?</h4>", unsafe_allow_html=True)
                     with c_yes:
                         if st.button("Delete", key=f"yes_del_{orig_idx}", use_container_width=True):
                             st.session_state.crypto_df = st.session_state.crypto_df.drop(orig_idx).reset_index(drop=True)
@@ -3135,10 +3237,10 @@ with tab_crypto:
                             st.session_state['confirm_delete_crypto'] = orig_idx
                             st.rerun()
 
-                # 3. ROLL OUT EDIT FORM Directly Attached
+                # 3. ROLL OUT EDIT FORM Directly Attached (Absolute Overlay)
                 if st.session_state.get('edit_crypto_row') == orig_idx:
                     with st.form(f"edit_crypto_form_{orig_idx}", border=False):
-                        st.markdown("<div class='edit-rollout form-compact-marker'></div><h5 style='color: #00ff9d; margin-top: 0px; margin-bottom: 10px;'>✏️ Edit Row Details</h5>", unsafe_allow_html=True)
+                        st.markdown("<div class='edit-overlay form-compact-marker'></div><h5 style='color: #00ff9d; margin-top: 0px; margin-bottom: 10px;'>✎ Edit Row Details</h5>", unsafe_allow_html=True)
                         
                         e_r1c1, e_r1c2, e_r1c3 = st.columns([1,1,1])
                         with e_r1c1: new_date = st.date_input("Date", value=datetime(1899, 12, 30) + timedelta(days=int(r['Datum'])))
@@ -3251,8 +3353,9 @@ with tab_fiat:
 
             if st.session_state.get('confirm_delete_fiat') == orig_idx:
                 with st.container(border=True):
-                    st.markdown("<div class='del-warn'></div><h4 style='color: #ff4d4d; margin-top: 0; margin-bottom: 5px; font-size: 1rem; font-weight: 600;'>Delete this entry?</h4>", unsafe_allow_html=True)
-                    c_yes, c_no = st.columns(2)
+                    st.markdown("<div class='del-replace'></div>", unsafe_allow_html=True)
+                    c_txt, c_yes, c_no = st.columns(3)
+                    with c_txt: st.markdown("<h4 style='color: #ff4d4d; margin: 0; font-size: 1rem; font-weight: 600; line-height: 32px;'>Delete entry?</h4>", unsafe_allow_html=True)
                     with c_yes:
                         if st.button("Delete", key=f"yes_fiat_del_{orig_idx}", use_container_width=True):
                             st.session_state.fiat_df = st.session_state.fiat_df.drop(orig_idx).reset_index(drop=True)
@@ -3302,10 +3405,10 @@ with tab_fiat:
                             st.session_state['confirm_delete_fiat'] = orig_idx
                             st.rerun()
 
-                # 3. ROLL OUT EDIT FORM Directly Attached
+                # 3. ROLL OUT EDIT FORM Directly Attached (Absolute Overlay)
                 if st.session_state.get('edit_fiat_row') == orig_idx:
                     with st.form(f"edit_fiat_form_{orig_idx}", border=False):
-                        st.markdown("<div class='edit-rollout form-compact-marker'></div><h5 style='color: #00ff9d; margin-top: 0px; margin-bottom: 10px;'>✏️ Edit Fiat Details</h5>", unsafe_allow_html=True)
+                        st.markdown("<div class='edit-overlay form-compact-marker'></div><h5 style='color: #00ff9d; margin-top: 0px; margin-bottom: 10px;'>✎ Edit Fiat Details</h5>", unsafe_allow_html=True)
                         
                         e_f1, e_f2, e_f3 = st.columns(3)
                         with e_f1: new_date = st.date_input("Date", value=datetime(1899, 12, 30) + timedelta(days=int(r['Datum'])))
