@@ -13,11 +13,21 @@ from concurrent.futures import ThreadPoolExecutor
 # ====================== CONFIG ======================
 st.set_page_config(page_title="Portfolio", layout="wide", page_icon="logo.png")
 
+# ====================== SVG ICONS ======================
+DASHBOARD_ICON = '''<svg xmlns="http://www.w3.org/2000/svg" width="100%" height="100%" viewBox="0 0 24 24" fill="none" stroke="#00ff9d" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>'''
+CRYPTO_ICON = '''<svg xmlns="http://www.w3.org/2000/svg" width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="#00ff9d" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M14.5 8.5L9.5 13.5"/><path d="M9.5 8.5L14.5 13.5"/></svg>'''
+FIAT_ICON = '''<svg xmlns="http://www.w3.org/2000/svg" width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="#00ff9d" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M6 8h12"/><path d="M6 12h12"/><path d="M6 16h12"/></svg>'''
+EYE_CLOSED = '''<svg class="eye-closed" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>'''
+EYE_OPEN = '''<svg class="eye-open" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>'''
+EXTERNAL_LINK_ICON = '''<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>'''
+TV_ICON = '''<svg xmlns="http://www.w3.org/2000/svg" width="18" height="14" viewBox="0 0 28 21" fill="currentColor"><path d="M12 21H8V3h4v18zm1.5-6h3.5l3.5-4.5V21h-7v-6zM28 21h-4l-6.5-9L21 6l7 10v5z"/></svg>'''
+STABLECOIN_ICON = '''<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#00ff9d" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="16"></line><line x1="8" y1="12" x2="16" y2="12"></line></svg>'''
+
 # ====================== SPLASH SCREEN & GLOBAL CSS ======================
-st.markdown("""
+st.markdown(f"""
 <style>
 /* --- SPLASH SCREEN LOADING ANIMATION --- */
-#app-splash {
+#app-splash {{
     position: fixed; 
     top: 0; left: 0; 
     width: 100vw; height: 100vh;
@@ -27,77 +37,86 @@ st.markdown("""
     flex-direction: column; 
     justify-content: center; 
     align-items: center;
-    animation: splashFadeOut 0.5s ease-out 1.2s forwards; /* Fades out after 1.2s */
-    pointer-events: none; /* Clicks pass through once hidden */
-}
-@keyframes splashFadeOut {
-    to { opacity: 0; visibility: hidden; z-index: -1; }
-}
-.splash-logo svg {
-    width: 70px; height: 70px;
-    animation: splashPulse 1.2s infinite;
-}
-@keyframes splashPulse {
-    0% { transform: scale(0.9); opacity: 0.7; }
-    50% { transform: scale(1.1); opacity: 1; }
-    100% { transform: scale(0.9); opacity: 0.7; }
-}
+    transition: opacity 0.5s ease-out, visibility 0.5s ease-out;
+}}
+.splash-logo {{
+    width: 80px; height: 80px;
+    object-fit: contain;
+    border-radius: 16px;
+    animation: splashPulse 1.5s infinite ease-in-out;
+}}
+.splash-spinner {{
+    margin-top: 24px;
+    width: 32px; height: 32px;
+    border: 3px solid rgba(0, 255, 157, 0.15);
+    border-top-color: #00ff9d;
+    border-radius: 50%;
+    animation: splashSpin 1s linear infinite;
+}}
+@keyframes splashPulse {{
+    0% {{ transform: scale(0.95); opacity: 0.8; }}
+    50% {{ transform: scale(1.05); opacity: 1; }}
+    100% {{ transform: scale(0.95); opacity: 0.8; }}
+}}
+@keyframes splashSpin {{
+    100% {{ transform: rotate(360deg); }}
+}}
 
 /* Hide Native Streamlit Top Header and Decoration Line */
 header[data-testid="stHeader"],
-div[data-testid="stDecoration"] {
+div[data-testid="stDecoration"] {{
     display: none !important;
     height: 0 !important;
-}
+}}
 
-.stApp {
+.stApp {{
     background: linear-gradient(180deg, #0f1724 0%, #0a0f1c 100%) !important;
-}
+}}
 .main .block-container,
 .stMain .block-container,
-div[data-testid="stMainBlockContainer"] {
+div[data-testid="stMainBlockContainer"] {{
     padding-left: 14px !important;
     padding-right: 14px !important;
     padding-top: 0rem !important;
     margin-top: -2rem !important; 
     padding-bottom: 90px !important; 
     max-width: 100% !important;
-}
-@media (min-width: 1200px) {
+}}
+@media (min-width: 1200px) {{
     .main .block-container,
-    div[data-testid="stMainBlockContainer"] {
+    div[data-testid="stMainBlockContainer"] {{
         padding-left: 18px !important;
         padding-right: 18px !important;
-    }
-}
-@media (max-width: 768px) {
+    }}
+}}
+@media (max-width: 768px) {{
     .main .block-container,
-    div[data-testid="stMainBlockContainer"] {
+    div[data-testid="stMainBlockContainer"] {{
         padding-left: 8px !important;
         padding-right: 8px !important;
-    }
-}
-.main, .block-container, .stMain {
+    }}
+}}
+.main, .block-container, .stMain {{
     padding-top: 0px !important;
-}
+}}
 
 /* ---------------------------------------------------
    NATIVE APP NAVIGATION BAR & TAB HIDING
 --------------------------------------------------- */
 div[data-testid="stTabs"] [role="tablist"],
-div[data-testid="stTabs"] [data-baseweb="tab-list"] {
+div[data-testid="stTabs"] [data-baseweb="tab-list"] {{
     display: none !important;
     height: 0px !important;
     margin: 0px !important;
     padding: 0px !important;
     visibility: hidden !important;
-}
+}}
 div[data-testid="stTabs"] > div[data-baseweb="tab-panel"],
-div[data-testid="stTabs"] > div[role="tabpanel"] {
+div[data-testid="stTabs"] > div[role="tabpanel"] {{
     padding-bottom: 20px !important; 
-}
+}}
 
-#bottom-nav-bar {
+#bottom-nav-bar {{
     position: fixed;
     bottom: 0;
     left: 0;
@@ -112,8 +131,8 @@ div[data-testid="stTabs"] > div[role="tabpanel"] {
     align-items: center;
     z-index: 999999;
     padding-bottom: env(safe-area-inset-bottom);
-}
-.nav-item {
+}}
+.nav-item {{
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -125,44 +144,44 @@ div[data-testid="stTabs"] > div[role="tabpanel"] {
     cursor: pointer;
     transition: color 0.3s ease;
     -webkit-tap-highlight-color: transparent;
-}
-.nav-item.active {
+}}
+.nav-item.active {{
     color: #00ff9d;
-}
-.nav-icon {
+}}
+.nav-icon {{
     width: 24px;
     height: 24px;
     margin-bottom: 4px;
-}
-.nav-icon svg {
+}}
+.nav-icon svg {{
     width: 100%;
     height: 100%;
     stroke: currentColor;
     fill: none;
-}
-.nav-label {
+}}
+.nav-label {{
     font-size: 11px;
     font-weight: 600;
     letter-spacing: 0.5px;
-}
+}}
 
 /* Dashboard Pullable Drawer Styles */
-.dashboard-wrapper {
+.dashboard-wrapper {{
     position: relative;
     z-index: 10;
-}
-.glossy-header-label {
+}}
+.glossy-header-label {{
     cursor: pointer;
     display: block;
     position: relative;
     z-index: 3;
     -webkit-tap-highlight-color: transparent;
-}
-.home-header {
+}}
+.home-header {{
     margin-bottom: 0 !important;
     padding-bottom: 30px !important;
-}
-.pull-indicator {
+}}
+.pull-indicator {{
     position: absolute;
     bottom: 8px;
     left: 50%;
@@ -170,38 +189,36 @@ div[data-testid="stTabs"] > div[role="tabpanel"] {
     color: #64748b;
     opacity: 0.8;
     transition: color 0.3s ease;
-}
-@media (hover: hover) and (pointer: fine) {
-    .glossy-header-label:hover .pull-indicator {
-        color: #cbd5e1;
-    }
-}
-.pull-indicator .eye-open { display: none; }
-.pull-indicator .eye-closed { display: block; }
+}}
+@media (hover: hover) and (pointer: fine) {{
+    .glossy-header-label:hover .pull-indicator {{ color: #cbd5e1; }}
+}}
+.pull-indicator .eye-open {{ display: none; }}
+.pull-indicator .eye-closed {{ display: block; }}
 
-.dashboard-toggle:checked ~ .dashboard-wrapper .glossy-header-label .pull-indicator .eye-open { display: block; }
-.dashboard-toggle:checked ~ .dashboard-wrapper .glossy-header-label .pull-indicator .eye-closed { display: none; }
-.dashboard-toggle:checked ~ .dashboard-wrapper .glossy-header-label .pull-indicator { color: #ffffff; }
+.dashboard-toggle:checked ~ .dashboard-wrapper .glossy-header-label .pull-indicator .eye-open {{ display: block; }}
+.dashboard-toggle:checked ~ .dashboard-wrapper .glossy-header-label .pull-indicator .eye-closed {{ display: none; }}
+.dashboard-toggle:checked ~ .dashboard-wrapper .glossy-header-label .pull-indicator {{ color: #ffffff; }}
 
-.stats-layer {
+.stats-layer {{
     position: relative;
     z-index: 1;
     margin-top: -60px !important; 
     transition: margin-top 0.4s cubic-bezier(0.4, 0, 0.2, 1);
     margin-bottom: 8px;
-}
-.dashboard-toggle:checked ~ .dashboard-wrapper .stats-layer {
+}}
+.dashboard-toggle:checked ~ .dashboard-wrapper .stats-layer {{
     margin-top: 14px !important;
-}
+}}
 
-.stats-layer-inner {
+.stats-layer-inner {{
     display: grid !important;
     grid-template-columns: repeat(3, 1fr) !important;
     gap: 14px;
     width: 100%;
-}
+}}
 
-.dash-value {
+.dash-value {{
     font-size: clamp(14px, 2.5vw, 24px) !important;
     font-weight: 700;
     line-height: 1.05;
@@ -218,13 +235,13 @@ div[data-testid="stTabs"] > div[role="tabpanel"] {
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-}
-.dashboard-toggle:not(:checked) ~ .dashboard-wrapper .stats-layer .dash-value {
+}}
+.dashboard-toggle:not(:checked) ~ .dashboard-wrapper .stats-layer .dash-value {{
     opacity: 0;
     pointer-events: none;
-}
+}}
 
-.dash-label {
+.dash-label {{
     font-size: 11px !important;
     font-weight: 600;
     letter-spacing: 1.5px;
@@ -236,9 +253,9 @@ div[data-testid="stTabs"] > div[role="tabpanel"] {
     left: 0;
     width: 100%;
     text-align: center;
-}
+}}
 
-.glossy-header {
+.glossy-header {{
     position: relative;
     overflow: hidden;
     background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
@@ -259,22 +276,22 @@ div[data-testid="stTabs"] > div[role="tabpanel"] {
     width: 100% !important;
     margin-top: 0px !important;
     margin-bottom: 24px !important;
-}
+}}
 
-@media (hover: hover) and (pointer: fine) {
-    .glossy-header-label:hover .glossy-header {
+@media (hover: hover) and (pointer: fine) {{
+    .glossy-header-label:hover .glossy-header {{
         transform: translateY(-4px) scale(1.01);
         box-shadow: 0 15px 40px rgba(0, 0, 0, 0.5);
         border-color: rgba(255, 255, 255, 0.15);
-    }
-}
-.dashboard-toggle:checked ~ .dashboard-wrapper .glossy-header {
+    }}
+}}
+.dashboard-toggle:checked ~ .dashboard-wrapper .glossy-header {{
     transform: translateY(-4px) scale(1.01);
     box-shadow: 0 15px 40px rgba(0, 0, 0, 0.5);
     border-color: rgba(255, 255, 255, 0.15);
-}
+}}
 
-.glossy-box {
+.glossy-box {{
     position: relative;
     overflow: hidden;
     background: linear-gradient(180deg, #162032 0%, #0f172a 100%);
@@ -289,9 +306,9 @@ div[data-testid="stTabs"] > div[role="tabpanel"] {
     display: flex;
     flex-direction: column;
     justify-content: center;
-}
+}}
 
-.glossy-box:not(.swapped) > div:first-child {
+.glossy-box:not(.swapped) > div:first-child {{
     font-size: 12px;
     font-weight: 600;
     letter-spacing: 1.5px;
@@ -299,27 +316,27 @@ div[data-testid="stTabs"] > div[role="tabpanel"] {
     color: #94a3b8;
     margin-bottom: 6px;
     line-height: 1.2;
-}
-.glossy-box:not(.swapped) > div:last-child {
+}}
+.glossy-box:not(.swapped) > div:last-child {{
     font-size: 27px;
     font-weight: 700;
     line-height: 1.05;
     color: #ffffff;
-}
+}}
 
-.glossy-box.swapped {
+.glossy-box.swapped {{
     min-width: 0 !important;
     height: 80px !important;
     min-height: 80px !important;
     max-height: 80px !important;
     padding: 0;
     display: block;
-}
+}}
 
 /* ==============================================================
    STABLECOINS BANNER & INTERACTIVE DROPDOWN
    ============================================================== */
-.usdc-banner {
+.usdc-banner {{
     position: relative;
     overflow: hidden;
     background: rgba(15, 23, 42, 0.5);
@@ -335,153 +352,157 @@ div[data-testid="stTabs"] > div[role="tabpanel"] {
     align-items: center;
     justify-content: space-between;
     transition: all 0.3s ease;
-}
-.usdc-banner:hover {
+}}
+.usdc-banner:hover {{
     background: rgba(15, 23, 42, 0.7);
     border-color: rgba(38, 161, 123, 0.4);
-}
-.usdc-banner-left { display: flex; align-items: center; gap: 12px; }
-.usdc-banner-left svg { width: 28px; height: 28px; border-radius: 50%; object-fit: contain; opacity: 0.85; }
-.usdc-banner-title { font-size: 1.05rem; font-weight: 600; color: #e2e8f0; display: flex; align-items: center; gap: 8px; }
-.usdc-banner-subtitle { font-size: 0.75rem; font-weight: 500; color: #64748b; }
-.usdc-banner-amount { font-size: 1.2rem; font-weight: 600; color: #e2e8f0; }
+}}
+.usdc-banner-left {{ display: flex; align-items: center; gap: 12px; }}
+.usdc-banner-left svg {{ width: 28px; height: 28px; border-radius: 50%; object-fit: contain; opacity: 0.85; }}
+.usdc-banner-title {{ font-size: 1.05rem; font-weight: 600; color: #e2e8f0; display: flex; align-items: center; gap: 8px; }}
+.usdc-banner-subtitle {{ font-size: 0.75rem; font-weight: 500; color: #64748b; }}
+.usdc-banner-amount {{ font-size: 1.2rem; font-weight: 600; color: #e2e8f0; }}
 
-.stable-dropdown-wrapper {
+.stable-dropdown-wrapper {{
     position: relative; width: auto; min-width: 250px; max-width: 400px; margin: -12px 0 16px 24px; z-index: 5;
-}
-.stable-dropdown {
+}}
+.stable-dropdown {{
     max-height: 0; overflow: hidden; transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
     background: rgba(10, 15, 28, 0.85); border: 1px solid rgba(38, 161, 123, 0); border-top: none;
     border-radius: 0 0 12px 12px;
     padding: 0 20px; backdrop-filter: blur(5px);
-}
-#stable-dropdown-toggle:checked ~ .stable-dropdown-wrapper .stable-dropdown {
+}}
+#stable-dropdown-toggle:checked ~ .stable-dropdown-wrapper .stable-dropdown {{
     max-height: 300px; border-color: rgba(38, 161, 123, 0.2);
     padding: 12px 20px; margin-top: 4px; box-shadow: 0 10px 20px rgba(0,0,0,0.3);
-}
-.st-item { display: flex; justify-content: space-between; align-items: center; font-size: 0.95rem; color: #94a3b8; padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,0.05); }
-.st-item:last-child { border-bottom: none; }
-.st-item .val { color: #e2e8f0; font-weight: 600; }
-.st-item-left { display: flex; align-items: center; gap: 10px; }
+}}
+.st-item {{ display: flex; justify-content: space-between; align-items: center; font-size: 0.95rem; color: #94a3b8; padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,0.05); }}
+.st-item:last-child {{ border-bottom: none; }}
+.st-item .val {{ color: #e2e8f0; font-weight: 600; }}
+.st-item-left {{ display: flex; align-items: center; gap: 10px; }}
 
 /* Native CSS Privacy Mode integration */
-.dashboard-toggle:not(:checked) ~ label .usdc-banner .usdc-banner-amount { font-size: 0 !important; }
-.dashboard-toggle:not(:checked) ~ label .usdc-banner .usdc-banner-amount::after { content: '***'; font-size: 1.2rem; color: #e2e8f0; }
-.dashboard-toggle:not(:checked) ~ .stable-dropdown-wrapper .stable-dropdown .st-item .val { font-size: 0 !important; }
-.dashboard-toggle:not(:checked) ~ .stable-dropdown-wrapper .stable-dropdown .st-item .val::after { content: '***'; font-size: 0.9rem; color: #e2e8f0; }
+.dashboard-toggle:not(:checked) ~ label .usdc-banner .usdc-banner-amount {{ font-size: 0 !important; }}
+.dashboard-toggle:not(:checked) ~ label .usdc-banner .usdc-banner-amount::after {{ content: '***'; font-size: 1.2rem; color: #e2e8f0; }}
+.dashboard-toggle:not(:checked) ~ .stable-dropdown-wrapper .stable-dropdown .st-item .val {{ font-size: 0 !important; }}
+.dashboard-toggle:not(:checked) ~ .stable-dropdown-wrapper .stable-dropdown .st-item .val::after {{ content: '***'; font-size: 0.9rem; color: #e2e8f0; }}
 
 /* GLOBALLY HIDE NUMBER INPUT STEP BUTTONS (+ / -) */
 button[aria-label="Step Up"],
 button[aria-label="Step Down"],
 button[data-testid="stNumberInputStepUp"],
-button[data-testid="stNumberInputStepDown"] { display: none !important; }
-input[type="number"]::-webkit-inner-spin-button, input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
-input[type="number"] { -moz-appearance: textfield; }
+button[data-testid="stNumberInputStepDown"] {{ display: none !important; }}
+input[type="number"]::-webkit-inner-spin-button, input[type="number"]::-webkit-outer-spin-button {{ -webkit-appearance: none; margin: 0; }}
+input[type="number"] {{ -moz-appearance: textfield; }}
 
 /* ==============================================================
    COMPACT EXPANDER FOR FORMS
    ============================================================== */
-div[data-testid="stExpander"] {
+div[data-testid="stExpander"] {{
     background: #0f172a !important;
     border: 1px solid rgba(255,255,255,0.05) !important;
     border-radius: 12px !important; box-shadow: 0 4px 15px rgba(0,0,0,0.3) !important; margin-bottom: 24px !important;
-}
-div[data-testid="stExpander"] summary {
+}}
+div[data-testid="stExpander"] summary {{
     color: #ffffff !important; font-weight: 700 !important; font-size: 1.05rem !important;
     padding: 12px 16px !important;
     background: transparent !important; border-bottom: none !important;
-}
-div[data-testid="stExpander"] summary svg { color: #ffffff !important; fill: #ffffff !important; }
-div[data-testid="stExpanderDetails"] { padding: 0 16px 16px 16px !important; }
-div[data-testid="stExpanderDetails"] div[data-testid="stForm"] { padding: 0 !important; border: none !important; box-shadow: none !important; margin-bottom: 0 !important; background: transparent !important; }
+}}
+div[data-testid="stExpander"] summary svg {{ color: #ffffff !important; fill: #ffffff !important; }}
+div[data-testid="stExpanderDetails"] {{ padding: 0 16px 16px 16px !important; }}
+div[data-testid="stExpanderDetails"] div[data-testid="stForm"] {{ padding: 0 !important; border: none !important; box-shadow: none !important; margin-bottom: 0 !important; background: transparent !important; }}
 
 /* INPUTS STYLING */
-div[data-testid="stForm"]:has(.add-tx-card) label { font-size: 0.85rem !important; color: #94a3b8 !important; padding-bottom: 2px !important; }
-div[data-testid="stForm"]:has(.add-tx-card) .stTextInput input, div[data-testid="stForm"]:has(.add-tx-card) .stNumberInput input, div[data-testid="stForm"]:has(.add-tx-card) .stDateInput input, div[data-testid="stForm"]:has(.add-tx-card) div[data-baseweb="select"] > div {
+div[data-testid="stForm"]:has(.add-tx-card) label {{ font-size: 0.85rem !important; color: #94a3b8 !important; padding-bottom: 2px !important; }}
+div[data-testid="stForm"]:has(.add-tx-card) .stTextInput input, div[data-testid="stForm"]:has(.add-tx-card) .stNumberInput input, div[data-testid="stForm"]:has(.add-tx-card) .stDateInput input, div[data-testid="stForm"]:has(.add-tx-card) div[data-baseweb="select"] > div {{
     background: rgba(255,255,255,0.03) !important;
     border: 1px solid rgba(255,255,255,0.1) !important; color: #fff !important; border-radius: 8px !important; margin-bottom: 0px !important;
-}
-div[data-testid="stForm"]:has(.add-tx-card) div[data-testid="stHorizontalBlock"]:has(> div[data-testid="column"]:nth-child(4)) { display: flex !important; gap: 12px !important; }
+}}
+div[data-testid="stForm"]:has(.add-tx-card) div[data-testid="stHorizontalBlock"]:has(> div[data-testid="column"]:nth-child(4)) {{ display: flex !important; gap: 12px !important; }}
 
 /* BEAUTIFUL BUY/SELL SWITCH */
-div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] {
+div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] {{
     background: rgba(0,0,0,0.3) !important; padding: 6px !important; border-radius: 12px !important;
     display: flex !important; flex-direction: row !important; gap: 8px !important; align-items: center !important; margin: 0 !important; height: 48px !important;
     border: 1px solid rgba(255,255,255,0.05) !important;
-}
-div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label {
+}}
+div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label {{
     margin: 0 !important; cursor: pointer !important;
     padding: 0 !important; border-radius: 8px !important; border: 1px solid transparent !important; transition: all 0.3s ease !important; background: transparent !important;
     flex: 1 !important; display: flex !important; justify-content: center !important; align-items: center !important; height: 100% !important;
-}
-div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label:hover { background: rgba(255,255,255,0.05) !important; }
-div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label > div:first-child { display: none !important; } 
-div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label p { font-weight: bold !important; font-size: 1.05rem !important; color: #94a3b8 !important; margin: 0 !important; padding: 0 !important; white-space: nowrap !important; line-height: 1 !important; }
-div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label:has(input:checked):first-child { background: rgba(0, 255, 157, 0.15) !important; border-color: #00ff9d !important; }
-div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label:has(input:checked):first-child p { color: #00ff9d !important; }
-div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label:has(input:checked):last-child { background: rgba(255, 77, 77, 0.15) !important; border-color: #ff4d4d !important; }
-div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label:has(input:checked):last-child p { color: #ff4d4d !important; }
+}}
+div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label:hover {{ background: rgba(255,255,255,0.05) !important; }}
+div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label > div:first-child {{ display: none !important; }} 
+div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label p {{ font-weight: bold !important; font-size: 1.05rem !important; color: #94a3b8 !important; margin: 0 !important; padding: 0 !important; white-space: nowrap !important; line-height: 1 !important; }}
+div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label:has(input:checked):first-child {{ background: rgba(0, 255, 157, 0.15) !important; border-color: #00ff9d !important; }}
+div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label:has(input:checked):first-child p {{ color: #00ff9d !important; }}
+div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label:has(input:checked):last-child {{ background: rgba(255, 77, 77, 0.15) !important; border-color: #ff4d4d !important; }}
+div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label:has(input:checked):last-child p {{ color: #ff4d4d !important; }}
 
-div[data-testid="stForm"]:has(.add-tx-card) .stButton { display: flex !important; justify-content: flex-end !important; align-items: center !important; margin: 0 !important; padding: 0 !important; width: 100% !important; }
-div[data-testid="stForm"]:has(.add-tx-card) .stButton > button { background: #1e2a44 !important; color: #e0e0e0 !important; padding: 0 24px !important; border-radius: 10px !important; font-size: 1.05rem !important; font-weight: 700 !important; box-shadow: 0 4px 15px rgba(0,0,0,0.25) !important; transition: all 0.3s ease !important; border: none !important; margin: 0 !important; width: auto !important; height: 48px !important; min-height: 48px !important; }
-div[data-testid="stForm"]:has(.add-tx-card) .stButton > button:hover { transform: translateY(-2px) !important; box-shadow: 0 8px 20px rgba(255, 255, 255, 0.2) !important; color: white !important; }
-
+div[data-testid="stForm"]:has(.add-tx-card) .stButton {{ display: flex !important; justify-content: flex-end !important; align-items: center !important; margin: 0 !important; padding: 0 !important; width: 100% !important; }}
+div[data-testid="stForm"]:has(.add-tx-card) .stButton > button {{ background: #1e2a44 !important; color: #e0e0e0 !important; padding: 0 24px !important; border-radius: 10px !important; font-size: 1.05rem !important; font-weight: 700 !important; box-shadow: 0 4px 15px rgba(0,0,0,0.25) !important; transition: all 0.3s ease !important; border: none !important; margin: 0 !important; width: auto !important; height: 48px !important; min-height: 48px !important; }}
+div[data-testid="stForm"]:has(.add-tx-card) .stButton > button:hover {{ transform: translateY(-2px) !important; box-shadow: 0 8px 20px rgba(255, 255, 255, 0.2) !important; color: white !important; }}
 
 /* ==============================================================
    SMOOTH EDIT / DELETE PANEL ANIMATION
    ============================================================== */
-@keyframes slideDownFade {
-    from { opacity: 0; transform: translateY(-10px); }
-    to { opacity: 1; transform: translateY(0); }
-}
-.edit-form-container {
+@keyframes slideDownFade {{
+    from {{ opacity: 0; transform: translateY(-10px); }}
+    to {{ opacity: 1; transform: translateY(0); }}
+}}
+.edit-form-container {{
     animation: slideDownFade 0.3s ease-out forwards;
-}
-
+}}
 
 /* ==============================================================
    COMPACT TRANSACTION ROWS & INLINE ACTION BUTTONS (MOBILE SAFE)
    ============================================================== */
-div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row) {
+div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row) {{
     background: #0f172a !important;
     border: 1px solid rgba(255,255,255,0.05) !important; 
     border-radius: 12px !important; 
     padding: 8px 12px !important; 
     margin-bottom: 8px !important; 
     transition: background 0.3s ease;
-}
-div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row):hover { background: rgba(30, 41, 59, 0.8) !important; }
+}}
+div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row):hover {{ background: rgba(30, 41, 59, 0.8) !important; }}
 
 /* OVERRIDE STREAMLIT MOBILE COLUMN STACKING FOR TX ROWS BRUTALLY */
-div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row) div[data-testid="stHorizontalBlock"] {
+div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row) div[data-testid="stHorizontalBlock"] {{
     display: flex !important;
     flex-direction: row !important;
     flex-wrap: nowrap !important;
     align-items: center !important;
     gap: 8px !important;
-}
+}}
+
+/* Brutal override for inner columns to prevent mobile flex-basis 100% wrapping */
+div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row) div[data-testid="column"] {{
+    width: auto !important;
+    min-width: 0 !important;
+    flex-basis: auto !important;
+    margin-bottom: 0 !important;
+}}
 
 /* Left side takes most space */
-div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row) div[data-testid="stHorizontalBlock"] > div[data-testid="column"]:nth-child(1) {
-    width: 100% !important;
-    flex: 1 1 auto !important;
-    min-width: 0 !important;
-}
+div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row) div[data-testid="column"]:nth-child(1) {{
+    flex: 1 1 0% !important;
+}}
+
 /* Right side buttons take fixed tiny space natively without wrapping */
-div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row) div[data-testid="stHorizontalBlock"] > div[data-testid="column"]:nth-child(2),
-div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row) div[data-testid="stHorizontalBlock"] > div[data-testid="column"]:nth-child(3) {
-    width: 32px !important;
-    min-width: 32px !important;
+div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row) div[data-testid="column"]:nth-child(2),
+div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row) div[data-testid="column"]:nth-child(3) {{
     flex: 0 0 32px !important;
-    display: flex;
-    justify-content: center;
-    align-items: center;
+    width: 32px !important;
     padding: 0 !important;
-}
+    display: flex !important;
+    justify-content: center !important;
+    align-items: center !important;
+}}
 
 /* SLEEK NATIVE BUTTON STYLING */
 div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row) div[data-testid="column"]:nth-child(2) button,
-div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row) div[data-testid="column"]:nth-child(3) button {
+div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row) div[data-testid="column"]:nth-child(3) button {{
     background: transparent !important;
     border: none !important;
     box-shadow: none !important;
@@ -496,65 +517,56 @@ div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row) div[data-testid="co
     align-items: center;
     transition: all 0.2s ease;
     border-radius: 8px !important;
-}
-div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row) div[data-testid="column"]:nth-child(2) button:hover {
+}}
+div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row) div[data-testid="column"]:nth-child(2) button:hover {{
     color: #00ff9d !important;
     background: rgba(0, 255, 157, 0.1) !important;
     transform: scale(1.05);
-}
-div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row) div[data-testid="column"]:nth-child(3) button:hover {
+}}
+div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row) div[data-testid="column"]:nth-child(3) button:hover {{
     color: #ff4d4d !important;
     background: rgba(255, 77, 77, 0.1) !important;
     transform: scale(1.05);
-}
-div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row) div[data-testid="column"] button p {
+}}
+div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row) div[data-testid="column"] button p {{
     font-size: 1.1rem !important;
     margin: 0 !important;
-}
+}}
 
 /* Mobile Adjustments */
-@media (max-width: 768px) {
-    .glossy-header { margin-top: 0px !important; margin-bottom: 16px !important; padding: 20px 16px !important; font-size: 22px !important; min-height: 90px; }
-    .home-header { margin-bottom: 0 !important; }
+@media (max-width: 768px) {{
+    .glossy-header {{ margin-top: 0px !important; margin-bottom: 16px !important; padding: 20px 16px !important; font-size: 22px !important; min-height: 90px; }}
+    .home-header {{ margin-bottom: 0 !important; }}
     
-    div[data-testid="stForm"]:has(.add-tx-card) input { padding: 6px !important; font-size: 0.95rem !important; }
-    div[data-testid="stForm"]:has(.add-tx-card) .stButton { width: 100% !important; justify-content: center !important; }
-    div[data-testid="stForm"]:has(.add-tx-card) .stButton > button { width: 100% !important; max-width: none !important; }
+    div[data-testid="stForm"]:has(.add-tx-card) input {{ padding: 6px !important; font-size: 0.95rem !important; }}
+    div[data-testid="stForm"]:has(.add-tx-card) .stButton {{ width: 100% !important; justify-content: center !important; }}
+    div[data-testid="stForm"]:has(.add-tx-card) .stButton > button {{ width: 100% !important; max-width: none !important; }}
 
-    div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row) {
+    div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row) {{
         padding: 8px 10px !important;
-    }
+    }}
     
     /* Dashboard Mobile Stats */
-    .stats-layer-inner { gap: 6px !important; }
-    .stats-layer { margin-top: -60px !important; margin-bottom: 18px; } 
-    .glossy-box.swapped { height: 80px !important; min-height: 80px !important; max-height: 80px !important; padding: 0 !important; min-width: 0 !important; }
-    .dash-value { font-size: clamp(11px, 3.5vw, 15px) !important; top: 24px !important; } 
-    .dash-label { font-size: clamp(8px, 2.5vw, 10px) !important; bottom: 8px !important; white-space: nowrap !important; letter-spacing: 0.5px !important; }
+    .stats-layer-inner {{ gap: 6px !important; }}
+    .stats-layer {{ margin-top: -60px !important; margin-bottom: 18px; }} 
+    .glossy-box.swapped {{ height: 80px !important; min-height: 80px !important; max-height: 80px !important; padding: 0 !important; min-width: 0 !important; }}
+    .dash-value {{ font-size: clamp(11px, 3.5vw, 15px) !important; top: 24px !important; }} 
+    .dash-label {{ font-size: clamp(8px, 2.5vw, 10px) !important; bottom: 8px !important; white-space: nowrap !important; letter-spacing: 0.5px !important; }}
     
-    .usdc-banner { padding: 8px 14px; width: 92%; margin: 4px auto 8px auto !important; }
-    .usdc-banner-title { font-size: 0.95rem; }
-    .usdc-banner-subtitle { font-size: 0.7rem; }
-    .usdc-banner-amount { font-size: 1.1rem; }
-    .stable-dropdown-wrapper { width: 92%; margin: -8px auto 12px auto !important; }
-}
+    .usdc-banner {{ padding: 8px 14px; width: 92%; margin: 4px auto 8px auto !important; }}
+    .usdc-banner-title {{ font-size: 0.95rem; }}
+    .usdc-banner-subtitle {{ font-size: 0.7rem; }}
+    .usdc-banner-amount {{ font-size: 1.1rem; }}
+    .stable-dropdown-wrapper {{ width: 92%; margin: -8px auto 12px auto !important; }}
+}}
 </style>
+
 <div id="app-splash">
-    <div class="splash-logo">
-        <svg xmlns="http://www.w3.org/2000/svg" width="100%" height="100%" viewBox="0 0 24 24" fill="none" stroke="#00ff9d" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
-    </div>
+    <img src="logo.png" class="splash-logo" alt="Logo" onerror="this.style.display='none'; document.getElementById('fallback-logo').style.display='block';">
+    <div id="fallback-logo" class="splash-logo" style="display:none;">{DASHBOARD_ICON}</div>
+    <div class="splash-spinner"></div>
 </div>
 """, unsafe_allow_html=True)
-
-# ====================== SVG ICONS ======================
-DASHBOARD_ICON = '''<svg xmlns="http://www.w3.org/2000/svg" width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="#00ff9d" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>'''
-CRYPTO_ICON = '''<svg xmlns="http://www.w3.org/2000/svg" width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="#00ff9d" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M14.5 8.5L9.5 13.5"/><path d="M9.5 8.5L14.5 13.5"/></svg>'''
-FIAT_ICON = '''<svg xmlns="http://www.w3.org/2000/svg" width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="#00ff9d" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M6 8h12"/><path d="M6 12h12"/><path d="M6 16h12"/></svg>'''
-EYE_CLOSED = '''<svg class="eye-closed" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>'''
-EYE_OPEN = '''<svg class="eye-open" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>'''
-EXTERNAL_LINK_ICON = '''<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>'''
-TV_ICON = '''<svg xmlns="http://www.w3.org/2000/svg" width="18" height="14" viewBox="0 0 28 21" fill="currentColor"><path d="M12 21H8V3h4v18zm1.5-6h3.5l3.5-4.5V21h-7v-6zM28 21h-4l-6.5-9L21 6l7 10v5z"/></svg>'''
-STABLECOIN_ICON = '''<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#00ff9d" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="16"></line><line x1="8" y1="12" x2="16" y2="12"></line></svg>'''
 
 DATA_DIR = Path("data")
 DATA_DIR.mkdir(exist_ok=True)
@@ -1060,77 +1072,6 @@ st.markdown(f"""
     </div>
 </div>
 """, unsafe_allow_html=True)
-
-# Inject JS router and swipe handler
-components.html("""
-    <script>
-    (function() {
-        const parentDoc = window.parent.document;
-        function switchTab(index) {
-            const tabs = parentDoc.querySelectorAll('button[data-baseweb="tab"]');
-            if (tabs && tabs.length > index) {
-                tabs[index].click();
-            }
-            updateActiveNav(index);
-        }
-
-        function updateActiveNav(index) {
-            const navItems = parentDoc.querySelectorAll('.nav-item');
-            navItems.forEach(item => item.classList.remove('active'));
-            const activeItem = parentDoc.getElementById('nav-item-' + index);
-            if (activeItem) activeItem.classList.add('active');
-        }
-
-        const n0 = parentDoc.getElementById('nav-item-0');
-        const n1 = parentDoc.getElementById('nav-item-1');
-        const n2 = parentDoc.getElementById('nav-item-2');
-        if(n0) n0.addEventListener('click', () => switchTab(0));
-        if(n1) n1.addEventListener('click', () => switchTab(1));
-        if(n2) n2.addEventListener('click', () => switchTab(2));
-        
-        let startX = 0, startY = 0;
-        parentDoc.addEventListener('touchstart', e => {
-            startX = e.changedTouches[0].screenX;
-            startY = e.changedTouches[0].screenY;
-        }, {passive: true});
-        
-        parentDoc.addEventListener('touchend', e => {
-            const endX = e.changedTouches[0].screenX;
-            const endY = e.changedTouches[0].screenY;
-            const xDiff = endX - startX;
-            const yDiff = endY - startY;
-            
-            // TAB SWIPE ONLY (Removed Row Swiping)
-            if (Math.abs(xDiff) > Math.abs(yDiff) && Math.abs(xDiff) > 80) {
-                const isScrollable = e.target.closest('.scroll-wrapper') || e.target.closest('.charts-scroll-wrapper') || e.target.closest('canvas');
-                if(isScrollable) return;
-
-                let currentTab = 0;
-                const tabs = parentDoc.querySelectorAll('button[data-baseweb="tab"]');
-                tabs.forEach((t, i) => {
-                    if(t.getAttribute('aria-selected') === 'true') {
-                        currentTab = i;
-                    }
-                });
- 
-                if (xDiff < 0 && currentTab < 2) { switchTab(currentTab + 1); }
-                if (xDiff > 0 && currentTab > 0) { switchTab(currentTab - 1); }
-            }
-        }, {passive: true});
-        
-        setTimeout(() => {
-            let currentTab = 0;
-            const tabs = parentDoc.querySelectorAll('button[data-baseweb="tab"]');
-            if(tabs) {
-                tabs.forEach((t, i) => {
-                    if(t.getAttribute('aria-selected') === 'true') currentTab = i;
-                });
-                updateActiveNav(currentTab);
-            }
-        }, 500);
-    })();
-    </script>
-""", height=0, width=0)
 
 # ====================== MAIN CONTENT TABS ======================
 tab_home, tab_crypto, tab_fiat = st.tabs(["Overview", "Crypto", "Fiat"])
@@ -2331,9 +2272,100 @@ with tab_home:
 
 <script>
 (function() {{
+    const parentDoc = window.parent.document;
+
+    // --- ADAPTIVE SPLASH HIDE & BULLETPROOF EVENT ATTACHMENT ---
+    function initApp() {{
+        const tabs = parentDoc.querySelectorAll('button[data-baseweb="tab"]');
+        if (!tabs || tabs.length < 3) return false;
+
+        const splash = parentDoc.getElementById('app-splash');
+        if (splash) {{
+            setTimeout(() => {{
+                splash.style.opacity = '0';
+                splash.style.visibility = 'hidden';
+                splash.style.pointerEvents = 'none';
+            }}, 200); 
+        }}
+
+        if (parentDoc.__portfolioInitialized) {{
+            updateActiveNav();
+            return true;
+        }}
+        
+        const n0 = parentDoc.getElementById('nav-item-0');
+        const n1 = parentDoc.getElementById('nav-item-1');
+        const n2 = parentDoc.getElementById('nav-item-2');
+        if(n0) n0.addEventListener('click', () => switchTab(0));
+        if(n1) n1.addEventListener('click', () => switchTab(1));
+        if(n2) n2.addEventListener('click', () => switchTab(2));
+        
+        let startX = 0, startY = 0;
+        parentDoc.addEventListener('touchstart', e => {{
+            startX = e.changedTouches[0].screenX;
+            startY = e.changedTouches[0].screenY;
+        }}, {{passive: true}});
+        
+        parentDoc.addEventListener('touchend', e => {{
+            const endX = e.changedTouches[0].screenX;
+            const endY = e.changedTouches[0].screenY;
+            const xDiff = endX - startX;
+            const yDiff = endY - startY;
+            
+            if (Math.abs(xDiff) > Math.abs(yDiff) && Math.abs(xDiff) > 80) {{
+                const isScrollable = e.target.closest('.scroll-wrapper') || e.target.closest('.charts-scroll-wrapper') || e.target.closest('canvas');
+                if(isScrollable) return;
+
+                let currentTab = 0;
+                const currentTabs = parentDoc.querySelectorAll('button[data-baseweb="tab"]');
+                currentTabs.forEach((t, i) => {{
+                    if(t.getAttribute('aria-selected') === 'true') currentTab = i;
+                }});
+                
+                if (xDiff < 0 && currentTab < 2) switchTab(currentTab + 1);
+                if (xDiff > 0 && currentTab > 0) switchTab(currentTab - 1);
+            }}
+        }}, {{passive: true}});
+        
+        parentDoc.__portfolioInitialized = true;
+        updateActiveNav();
+        return true;
+    }}
+
+    function switchTab(index) {{
+        const tabs = parentDoc.querySelectorAll('button[data-baseweb="tab"]');
+        if (tabs && tabs.length > index) {{
+            tabs[index].click();
+        }}
+        setTimeout(updateActiveNav, 50);
+    }}
+
+    function updateActiveNav() {{
+        let currentTab = 0;
+        const tabs = parentDoc.querySelectorAll('button[data-baseweb="tab"]');
+        if(tabs && tabs.length > 0) {{
+            tabs.forEach((t, i) => {{
+                if(t.getAttribute('aria-selected') === 'true') currentTab = i;
+            }});
+        }}
+        const navItems = parentDoc.querySelectorAll('.nav-item');
+        navItems.forEach(item => item.classList.remove('active'));
+        const activeItem = parentDoc.getElementById('nav-item-' + currentTab);
+        if (activeItem) activeItem.classList.add('active');
+    }}
+
+    let attempts = 0;
+    const interval = setInterval(() => {{
+        if (initApp() || attempts > 50) {{
+            clearInterval(interval);
+            const splash = parentDoc.getElementById('app-splash');
+            if(splash) {{ splash.style.opacity = '0'; splash.style.visibility = 'hidden'; }}
+        }}
+        attempts++;
+    }}, 100);
+
     function closeAllOpenUI(e) {{
         const isCardClick = e && e.target && typeof e.target.closest === 'function' && e.target.closest('.flip-card');
-        
         if (!isCardClick) {{
             document.querySelectorAll('.flip-card.flipped').forEach(card => {{
                 card.classList.remove('flipped');
@@ -2343,9 +2375,7 @@ with tab_home:
     }}
 
     ['click', 'touchstart'].forEach(evt => {{
-        document.addEventListener(evt, (e) => {{
-            closeAllOpenUI(e);
-        }}, {{ passive: true }});
+        document.addEventListener(evt, closeAllOpenUI, {{ passive: true }});
     }});
 
     let lastDashState = null;
@@ -2394,13 +2424,9 @@ with tab_home:
 
     try {{
         ['click', 'touchstart'].forEach(evt => {{
-            window.parent.document.addEventListener(evt, (e) => {{
-                closeAllOpenUI(e); 
-            }}, {{ passive: true }});
+            window.parent.document.addEventListener(evt, closeAllOpenUI, {{ passive: true }});
         }});
-    }} catch(err) {{
-        console.log("Cannot bind to parent document");
-    }}
+    }} catch(err) {{}}
 
     const scrollContainer = document.getElementById('scrollContainer');
     if (scrollContainer) {{
@@ -2537,7 +2563,6 @@ with tab_home:
             const dashPnlPctStr = (totalPnL >= 0 ? '▲ ' : '▼ ') + Math.abs(totalPnLPct).toFixed(2) + '%';
             const dashColor = totalPnL >= 0 ? '#00ff9d' : '#ff4d4d';
             
-            const parentDoc = window.parent.document;
             const dValue = parentDoc.getElementById('dash-total-value');
             const dPnl = parentDoc.getElementById('dash-pnl');
             const dPnlPct = parentDoc.getElementById('dash-pnl-pct');
@@ -2644,13 +2669,9 @@ with tab_home:
                          invValChart.redraw(true);
                     }}
                 }}
-            }} catch (e) {{
-                console.error("Highcharts Sync Error: ", e);
-            }}
+            }} catch (e) {{}}
             
-        }} catch (e) {{
-            console.error('Auto-refresh error:', e);
-        }}
+        }} catch (e) {{}}
     }}
     setInterval(updateLivePrices, 10000);
 
@@ -2815,345 +2836,3 @@ with tab_home:
 </html>
 """
     components.html(full_html, height=380, scrolling=False)
-
-with tab_crypto:
-    glossy_header("Crypto Transactions", CRYPTO_ICON)
-
-    # 1. ADD NEW TRANSACTION CARD (TUCKED IN EXPANDER)
-    with st.expander("Add Transaction", expanded=False):
-        with st.form("add_crypto", border=False):
-            st.markdown("<div class='add-tx-card'></div>", unsafe_allow_html=True) # Hidden hook for CSS overrides
-            
-            # Row 1: Inputs
-            r1c1, r1c2, r1c3, r1c4 = st.columns(4)
-            with r1c1: selected_date = st.date_input("Date", value=date(2026, 3, 25))
-            with r1c2: ticker = st.text_input("Coin Ticker", value="BTC").upper().strip()
-            with r1c3: stable_ticker = st.selectbox("Stablecoin", STABLECOINS_LIST, index=0)
-            with r1c4: 
-                stable_amt = st.number_input("Stable Amount", value=15.0, step=0.01)
-                coin_amt = st.number_input("Coin Amount", value=0.1, step=0.000001, format="%.8f")
-            
-            # Row 2: Action Row
-            action_col1, action_col2 = st.columns(2)
-            with action_col1:
-                tx_type = st.radio("Type", ["Buy", "Sell"], horizontal=True, label_visibility="collapsed")
-            with action_col2:
-                submitted = st.form_submit_button("Add")
-            
-            if submitted:
-                if ticker:
-                    final_stable_amt = stable_amt if tx_type == "Buy" else -stable_amt
-                    final_amount = coin_amt if tx_type == "Buy" else -coin_amt
-                    price = round(stable_amt / coin_amt, 8) if coin_amt > 0 else 0.0
-                    
-                    new_row = pd.DataFrame([{"Datum": date_to_excel_serial(selected_date), "Stable_Amt": final_stable_amt, "Stable_Ticker": stable_ticker, "Ticker": ticker, "Amount": final_amount, "Price": price}])
-                    st.session_state.crypto_df = pd.concat([st.session_state.crypto_df, new_row], ignore_index=True)
-                    save_crypto(st.session_state.crypto_df)
-                    st.session_state.crypto_table_version += 1
-                    st.session_state.ui_version += 1
-                    st.success(f"✅ Executed {tx_type}: {coin_amt} {ticker}")
-                    st.rerun()
-
-    df_display = st.session_state.crypto_df.copy()
-    df_display['orig_idx'] = df_display.index
-    df_display = df_display.dropna(how='all')
-    df_display = df_display.sort_values(by='Datum', ascending=False)
-
-    st.markdown("<h4 style='color: white; margin-top: 10px; margin-bottom: 10px;'>Transaction History</h4>", unsafe_allow_html=True)
-    
-    # 2. SCROLLABLE TRANSACTION LIST
-    with st.container(height=650, border=False):
-        for i, r in df_display.iterrows():
-            orig_idx = r['orig_idx']
-            
-            # --- EDIT MODE INLINE FORM ---
-            if st.session_state.edit_crypto_id == orig_idx:
-                with st.container(border=True):
-                    st.markdown("<div class='tx-row edit-form-container'><strong>Edit Transaction</strong></div>", unsafe_allow_html=True)
-                    with st.form(f"edit_c_form_{orig_idx}", border=False):
-                        st.markdown("<div class='add-tx-card'></div>", unsafe_allow_html=True)
-                        c_date = parse_excel_date(r['Datum'])
-                        c_ticker = r['Ticker']
-                        c_st_ticker = r.get('Stable_Ticker', 'USDC')
-                        c_st_amt = abs(r.get('Stable_Amt', 0.0))
-                        c_amount = abs(r['Amount'])
-                        c_is_buy = r['Amount'] >= 0
-
-                        ec1, ec2, ec3, ec4 = st.columns(4)
-                        with ec1: ed_date = st.date_input("Date", value=c_date, key=f"ed_{orig_idx}")
-                        with ec2: ed_ticker = st.text_input("Coin", value=c_ticker, key=f"et_{orig_idx}").upper().strip()
-                        with ec3: 
-                            idx_st = STABLECOINS_LIST.index(c_st_ticker) if c_st_ticker in STABLECOINS_LIST else 0
-                            ed_st_ticker = st.selectbox("Stablecoin", STABLECOINS_LIST, index=idx_st, key=f"est_{orig_idx}")
-                        with ec4:
-                            ed_st_amt = st.number_input("Stable Amount", value=float(c_st_amt), step=0.01, key=f"esa_{orig_idx}")
-                            ed_c_amt = st.number_input("Coin Amount", value=float(c_amount), step=0.000001, format="%.8f", key=f"eca_{orig_idx}")
-
-                        eact1, eact2, eact3 = st.columns([2, 1, 1])
-                        with eact1: ed_type = st.radio("Type", ["Buy", "Sell"], index=0 if c_is_buy else 1, horizontal=True, key=f"er_{orig_idx}", label_visibility="collapsed")
-                        with eact2: btn_save = st.form_submit_button("Save", use_container_width=True)
-                        with eact3: btn_cancel = st.form_submit_button("Cancel", use_container_width=True)
-
-                        if btn_save:
-                            f_st_amt = ed_st_amt if ed_type == "Buy" else -ed_st_amt
-                            f_c_amt = ed_c_amt if ed_type == "Buy" else -ed_c_amt
-                            f_price = round(ed_st_amt / ed_c_amt, 8) if ed_c_amt > 0 else 0.0
-
-                            st.session_state.crypto_df.loc[orig_idx, "Datum"] = date_to_excel_serial(ed_date)
-                            st.session_state.crypto_df.loc[orig_idx, "Ticker"] = ed_ticker
-                            st.session_state.crypto_df.loc[orig_idx, "Stable_Ticker"] = ed_st_ticker
-                            st.session_state.crypto_df.loc[orig_idx, "Stable_Amt"] = f_st_amt
-                            st.session_state.crypto_df.loc[orig_idx, "Amount"] = f_c_amt
-                            st.session_state.crypto_df.loc[orig_idx, "Price"] = f_price
-
-                            save_crypto(st.session_state.crypto_df)
-                            st.session_state.edit_crypto_id = None
-                            st.session_state.crypto_table_version += 1
-                            st.rerun()
-
-                        if btn_cancel:
-                            st.session_state.edit_crypto_id = None
-                            st.rerun()
-            
-            # --- DELETE CONFIRMATION DIALOG ---
-            elif st.session_state.delete_crypto_id == orig_idx:
-                with st.container(border=True):
-                    st.markdown("<div class='tx-row edit-form-container'><strong style='color:#ff4d4d; font-size:1.1rem;'>⚠️ Delete this transaction?</strong></div>", unsafe_allow_html=True)
-                    dc1, dc2, dc3 = st.columns([0.6, 0.2, 0.2])
-                    with dc2:
-                        if st.button("Yes, Delete", key=f"conf_del_c_{orig_idx}", use_container_width=True):
-                            st.session_state.crypto_df.drop(orig_idx, inplace=True)
-                            save_crypto(st.session_state.crypto_df)
-                            st.session_state.delete_crypto_id = None
-                            st.session_state.crypto_table_version += 1
-                            st.rerun()
-                    with dc3:
-                        if st.button("Cancel", key=f"canc_del_c_{orig_idx}", use_container_width=True):
-                            st.session_state.delete_crypto_id = None
-                            st.rerun()
-
-            else:
-                # --- STANDARD ROW WITH ACTION BUTTONS ---
-                logo_url = get_ticker_logo(r['Ticker'])
-                amount = r['Amount']
-                stable_amt = r.get('Stable_Amt', 0.0)
-                stable_ticker = r.get('Stable_Ticker', 'USDC')
-                is_buy = amount >= 0
-                
-                abs_amount = abs(amount)
-                abs_stable = abs(stable_amt)
-                
-                sign = "+" if is_buy else "-"
-                color = "#00ff9d" if is_buy else "#ff4d4d"
-                action_text = "Spent" if is_buy else "Received"
-                bg_style = "background-color:#ffffff;" if r['Ticker'] in STABLECOINS_LIST else ""
-                
-                invested_formatted = f"{abs_stable:,.2f} {stable_ticker}"
-                amount_formatted = format_holdings(abs_amount, r['Ticker'])
-                date_str = format_datum(r['Datum'])
-
-                with st.container(border=True):
-                    # 3-Column inline layout forced via CSS overrides to stay intact on mobile without wrapping
-                    col_html, col_edit, col_del = st.columns([0.80, 0.10, 0.10])
-                    
-                    with col_html:
-                        st.markdown(f"""
-                        <div class="tx-row" style="display: flex; justify-content: space-between; align-items: center; width: 100%; height: 100%;">
-                            <div style="display: flex; align-items: center; gap: 14px; overflow: hidden; flex: 1;">
-                                <img src="{logo_url}" style="width: 34px; height: 34px; border-radius: 50%; object-fit: contain; flex-shrink: 0; {bg_style}" onerror="this.src='https://via.placeholder.com/34/1e2a44/ffffff?text={r['Ticker'][0]}';">
-                                <div style="display: flex; flex-direction: column; overflow: hidden; min-width: 0; padding-bottom: 2px;">
-                                    <span style="font-weight: 700; font-size: 1.1rem; color: #ffffff; white-space: nowrap; text-overflow: ellipsis; overflow: hidden; line-height: 1.3;">{r['Ticker']}</span>
-                                    <span style="font-size: 0.8rem; color: #94a3b8; white-space: nowrap; text-overflow: ellipsis; overflow: hidden; line-height: 1.3;">{date_str}</span>
-                                </div>
-                            </div>
-                            <div style="display: flex; flex-direction: column; align-items: flex-end; justify-content: center; overflow: hidden; padding-left: 8px; flex-shrink: 0;">
-                                <span style="font-weight: 700; font-size: 1.1rem; color: {color}; white-space: nowrap; line-height: 1.3;">{sign}{amount_formatted}</span>
-                                <span style="font-size: 0.8rem; color: #cbd5e1; white-space: nowrap; line-height: 1.3;">{action_text} {invested_formatted}</span>
-                            </div>
-                        </div>
-                        """, unsafe_allow_html=True)
-                    
-                    with col_edit:
-                        if st.button("✎", key=f"edit_c_{orig_idx}"):
-                            st.session_state.edit_crypto_id = orig_idx
-                            st.session_state.delete_crypto_id = None
-                            st.rerun()
-                            
-                    with col_del:
-                        if st.button("✕", key=f"del_c_{orig_idx}"):
-                            st.session_state.delete_crypto_id = orig_idx
-                            st.session_state.edit_crypto_id = None
-                            st.rerun()
-
-with tab_fiat:
-    total_czk = pd.to_numeric(st.session_state.fiat_df['CZK'], errors='coerce').fillna(0).sum()
-    total_eur = pd.to_numeric(st.session_state.fiat_df['EUR'], errors='coerce').fillna(0).sum()
-    total_stables = pd.to_numeric(st.session_state.fiat_df['Stable_Amt'], errors='coerce').fillna(0).sum()
-    fees_eur = pd.to_numeric(st.session_state.fiat_df['Fee'], errors='coerce').fillna(0).sum()
-    fees_czk = (pd.to_numeric(st.session_state.fiat_df['Fee'], errors='coerce').fillna(0) *
-         pd.to_numeric(st.session_state.fiat_df['CZK/EUR'], errors='coerce').fillna(0)).sum()
-
-    glossy_header("Fiat Transactions", FIAT_ICON)
-
-    summary_html = f"""
-<div style="display:flex;flex-wrap:wrap;justify-content:center;gap:12px;margin-bottom:20px;">
-<div class="glossy-box swapped"><div class="dash-value">{total_czk:,.2f}</div><div class="dash-label">Total CZK</div></div>
-<div class="glossy-box swapped"><div class="dash-value">{total_eur:,.2f}</div><div class="dash-label">Total EUR</div></div>
-<div class="glossy-box swapped"><div class="dash-value">{format_money(total_stables)}</div><div class="dash-label">Total Stables</div></div>
-<div class="glossy-box swapped">
-<div class="dash-value" style="font-size:13px !important; white-space:normal;">{fees_eur:,.2f} EUR / {fees_czk:,.2f} CZK</div>
-<div class="dash-label">Fees</div>
-</div>
-</div>
-"""
-    st.markdown(summary_html, unsafe_allow_html=True)
-
-    # 1. ADD NEW FIAT TRANSACTION CARD (TUCKED IN EXPANDER)
-    with st.expander("Add Deposit", expanded=False):
-        with st.form("add_fiat", border=False):
-            st.markdown("<div class='add-tx-card'></div>", unsafe_allow_html=True)
-            
-            # Row 1: Inputs
-            f1, f2, f3 = st.columns(3)
-            with f1: selected_date = st.date_input("Date", value=date(2026, 3, 25))
-            with f2: czk = st.number_input("CZK Invested", value=1000.0, step=0.01)
-            with f3: eur = st.number_input("EUR Equivalent", value=40.0, step=0.01)
-            
-            f4, f5, f6 = st.columns(3)
-            with f4: fee = st.number_input("Fee (EUR)", value=1.0, step=0.01)
-            with f5: stable_ticker = st.selectbox("Received Stablecoin", STABLECOINS_LIST, index=0)
-            with f6: stable_amt = st.number_input("Stablecoin Amount", value=44.67, step=0.01)
-            
-            action_col1, action_col2 = st.columns(2)
-            with action_col1:
-                st.markdown("<div style='color: transparent;'>Spacing</div>", unsafe_allow_html=True)
-            with action_col2:
-                submitted_fiat = st.form_submit_button("Add Entry")
-                
-            if submitted_fiat:
-                czk_eur = round(czk / eur, 5) if eur > 0 else 0.0
-                new_row = pd.DataFrame([{"Datum": date_to_excel_serial(selected_date), "CZK": czk, "EUR": eur, "Fee": fee, "CZK/EUR": czk_eur, "Stable_Amt": stable_amt, "Stable_Ticker": stable_ticker, "NI": "", "GG": "", "ER": ""}])
-                st.session_state.fiat_df = pd.concat([st.session_state.fiat_df, new_row], ignore_index=True)
-                save_fiat(st.session_state.fiat_df)
-                st.session_state.fiat_table_version += 1
-                st.session_state.ui_version += 1
-                st.success(f"✅ Executed fiat deposit!")
-                st.rerun()
-
-    df_fiat_display = st.session_state.fiat_df.copy()
-    df_fiat_display['orig_idx'] = df_fiat_display.index
-    df_fiat_display = df_fiat_display.dropna(how='all')
-    df_fiat_display = df_fiat_display.sort_values(by='Datum', ascending=False)
-
-    st.markdown("<h4 style='color: white; margin-top: 10px; margin-bottom: 10px;'>Fiat History</h4>", unsafe_allow_html=True)
-
-    # 2. SCROLLABLE FIAT TRANSACTION LIST
-    with st.container(height=650, border=False):
-        for i, r in df_fiat_display.iterrows():
-            orig_idx = r['orig_idx']
-
-            # --- EDIT MODE INLINE FORM ---
-            if st.session_state.edit_fiat_id == orig_idx:
-                with st.container(border=True):
-                    st.markdown("<div class='tx-row edit-form-container'><strong>Edit Fiat Deposit</strong></div>", unsafe_allow_html=True)
-                    with st.form(f"edit_f_form_{orig_idx}", border=False):
-                        st.markdown("<div class='add-tx-card'></div>", unsafe_allow_html=True)
-                        
-                        ef1, ef2, ef3 = st.columns(3)
-                        with ef1: ed_f_date = st.date_input("Date", value=parse_excel_date(r['Datum']), key=f"efd_{orig_idx}")
-                        with ef2: ed_czk = st.number_input("CZK Invested", value=float(r.get('CZK', 0.0)), step=0.01, key=f"efczk_{orig_idx}")
-                        with ef3: ed_eur = st.number_input("EUR Equivalent", value=float(r.get('EUR', 0.0)), step=0.01, key=f"efeur_{orig_idx}")
-                        
-                        ef4, ef5, ef6 = st.columns(3)
-                        with ef4: ed_fee = st.number_input("Fee (EUR)", value=float(r.get('Fee', 0.0)), step=0.01, key=f"effee_{orig_idx}")
-                        with ef5: 
-                            idx_st = STABLECOINS_LIST.index(r.get('Stable_Ticker', 'USDC')) if r.get('Stable_Ticker', 'USDC') in STABLECOINS_LIST else 0
-                            ed_f_st_ticker = st.selectbox("Received Stablecoin", STABLECOINS_LIST, index=idx_st, key=f"efstt_{orig_idx}")
-                        with ef6: ed_f_st_amt = st.number_input("Stable Amount", value=float(r.get('Stable_Amt', 0.0)), step=0.01, key=f"efsta_{orig_idx}")
-                        
-                        eact1, eact2, eact3 = st.columns([2, 1, 1])
-                        with eact1: st.markdown("<div style='color: transparent;'>Spacing</div>", unsafe_allow_html=True)
-                        with eact2: btn_f_save = st.form_submit_button("Save", use_container_width=True)
-                        with eact3: btn_f_cancel = st.form_submit_button("Cancel", use_container_width=True)
-
-                        if btn_f_save:
-                            czk_eur = round(ed_czk / ed_eur, 5) if ed_eur > 0 else 0.0
-                            st.session_state.fiat_df.loc[orig_idx, "Datum"] = date_to_excel_serial(ed_f_date)
-                            st.session_state.fiat_df.loc[orig_idx, "CZK"] = ed_czk
-                            st.session_state.fiat_df.loc[orig_idx, "EUR"] = ed_eur
-                            st.session_state.fiat_df.loc[orig_idx, "Fee"] = ed_fee
-                            st.session_state.fiat_df.loc[orig_idx, "CZK/EUR"] = czk_eur
-                            st.session_state.fiat_df.loc[orig_idx, "Stable_Amt"] = ed_f_st_amt
-                            st.session_state.fiat_df.loc[orig_idx, "Stable_Ticker"] = ed_f_st_ticker
-
-                            save_fiat(st.session_state.fiat_df)
-                            st.session_state.edit_fiat_id = None
-                            st.session_state.fiat_table_version += 1
-                            st.rerun()
-
-                        if btn_f_cancel:
-                            st.session_state.edit_fiat_id = None
-                            st.rerun()
-
-            # --- DELETE CONFIRMATION DIALOG ---
-            elif st.session_state.delete_fiat_id == orig_idx:
-                with st.container(border=True):
-                    st.markdown("<div class='tx-row edit-form-container'><strong style='color:#ff4d4d; font-size:1.1rem;'>⚠️ Delete this deposit?</strong></div>", unsafe_allow_html=True)
-                    df1, df2, df3 = st.columns([0.6, 0.2, 0.2])
-                    with df2:
-                        if st.button("Yes, Delete", key=f"conf_del_f_{orig_idx}", use_container_width=True):
-                            st.session_state.fiat_df.drop(orig_idx, inplace=True)
-                            save_fiat(st.session_state.fiat_df)
-                            st.session_state.delete_fiat_id = None
-                            st.session_state.fiat_table_version += 1
-                            st.rerun()
-                    with df3:
-                        if st.button("Cancel", key=f"canc_del_f_{orig_idx}", use_container_width=True):
-                            st.session_state.delete_fiat_id = None
-                            st.rerun()
-
-            else:
-                # --- STANDARD ROW WITH ACTION BUTTONS ---
-                stable_ticker = r.get('Stable_Ticker', 'USDC')
-                logo_url = get_ticker_logo(stable_ticker)
-                
-                stable_amt = r.get('Stable_Amt', 0.0)
-                czk_val = r.get('CZK', 0.0)
-                eur_val = r.get('EUR', 0.0)
-                fee_val = r.get('Fee', 0.0)
-                
-                stable_formatted = f"+{stable_amt:,.2f} {stable_ticker}"
-                fiat_formatted = f"CZK: {czk_val:,.2f} / EUR: {eur_val:,.2f}"
-                date_str = format_datum(r['Datum'])
-
-                with st.container(border=True):
-                    col_html, col_edit, col_del = st.columns([0.80, 0.10, 0.10])
-                    
-                    with col_html:
-                        st.markdown(f"""
-                        <div class="tx-row" style="display: flex; justify-content: space-between; align-items: center; width: 100%; height: 100%;">
-                            <div style="display: flex; align-items: center; gap: 12px; overflow: hidden; flex: 1;">
-                                <img src="{logo_url}" style="width: 32px; height: 32px; border-radius: 50%; object-fit: contain; flex-shrink: 0; background-color:#ffffff;" onerror="this.src='https://via.placeholder.com/32/1e2a44/ffffff?text={stable_ticker[0]}';">
-                                <div style="display: flex; flex-direction: column; overflow: hidden; min-width: 0; padding-bottom: 2px;">
-                                    <span style="font-weight: 700; font-size: 1rem; color: #ffffff; white-space: nowrap; text-overflow: ellipsis; overflow: hidden; line-height: 1.3;">{date_str}</span>
-                                    <span style="font-size: 0.75rem; color: #94a3b8; white-space: nowrap; text-overflow: ellipsis; overflow: hidden; line-height: 1.3;">{fiat_formatted}</span>
-                                </div>
-                            </div>
-                            <div style="display: flex; flex-direction: column; align-items: flex-end; justify-content: center; overflow: hidden; padding-left: 4px; padding-bottom: 2px; flex-shrink: 0;">
-                                <span style="font-weight: 700; font-size: 1rem; color: #00ff9d; white-space: nowrap; text-overflow: ellipsis; overflow: hidden; line-height: 1.3;">{stable_formatted}</span>
-                                <span style="font-size: 0.75rem; color: #cbd5e1; white-space: nowrap; text-overflow: ellipsis; overflow: hidden; line-height: 1.3;">Fee: {fee_val:,.2f} EUR</span>
-                            </div>
-                        </div>
-                        """, unsafe_allow_html=True)
-                        
-                    with col_edit:
-                        if st.button("✎", key=f"edit_f_{orig_idx}"):
-                            st.session_state.edit_fiat_id = orig_idx
-                            st.session_state.delete_fiat_id = None
-                            st.rerun()
-                            
-                    with col_del:
-                        if st.button("✕", key=f"del_f_{orig_idx}"):
-                            st.session_state.delete_fiat_id = orig_idx
-                            st.session_state.edit_fiat_id = None
-                            st.rerun()
