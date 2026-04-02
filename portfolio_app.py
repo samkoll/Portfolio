@@ -367,7 +367,8 @@ input[type="number"] { -moz-appearance: textfield;
    COMPACT EXPANDER FOR FORMS
    ============================================================== */
 div[data-testid="stExpander"] {
-    background: #0f172a !important; border: 1px solid rgba(255,255,255,0.05) !important;
+    background: #0f172a !important;
+    border: 1px solid rgba(255,255,255,0.05) !important;
     border-radius: 12px !important; box-shadow: 0 4px 15px rgba(0,0,0,0.3) !important; margin-bottom: 24px !important;
 }
 div[data-testid="stExpander"] summary {
@@ -407,16 +408,15 @@ div[data-testid="stForm"]:has(.add-tx-card) .stButton > button:hover { transform
 /* ==============================================================
    NATIVE SWIPE-TO-REVEAL TRANSACTION ROWS
    ============================================================== */
-/* Wrapper hides everything that overflows, making buttons completely invisible initially */
 div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row) {
     background: #0f172a !important; 
     border: 1px solid rgba(255,255,255,0.05) !important; 
     border-radius: 12px !important; 
     padding: 0 !important; 
     margin-bottom: 8px !important; 
-    overflow: hidden !important; 
+    overflow: hidden !important; /* THIS CLIPS THE BUTTONS */
     position: relative !important;
-    touch-action: pan-y !important; /* Block horizontal scrolling by browser, rely on JS */
+    touch-action: pan-y !important; /* NO NATIVE HORIZONTAL SCROLL */
 }
 div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row) div[data-testid="stVerticalBlock"] {
     gap: 0 !important;
@@ -432,15 +432,15 @@ div[data-testid="stHorizontalBlock"]:has(.tx-row) {
     position: relative !important;
     transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1) !important;
     cursor: pointer !important;
-    overflow: visible !important; /* Let buttons extend past right edge */
+    overflow: visible !important; /* Allow children to overflow so they can be translated */
 }
 
-/* The Swiped State */
+/* The Swiped State (Triggered by JS or Hover) */
 div[data-testid="stHorizontalBlock"]:has(.tx-row).swiped-left {
-    transform: translateX(-130px) !important; /* Slide left exactly 130px (65px * 2) */
+    transform: translateX(-120px) !important; 
 }
 
-/* Column 1: Info Box (Takes exactly 100% of wrapper width) */
+/* Column 1: Info Box */
 div[data-testid="stHorizontalBlock"]:has(.tx-row) > div[data-testid="column"]:nth-child(1) { 
     flex: 0 0 100% !important; 
     width: 100% !important; 
@@ -451,37 +451,35 @@ div[data-testid="stHorizontalBlock"]:has(.tx-row) > div[data-testid="column"]:nt
 
 /* Columns 2 & 3: Action Buttons (Absolutely positioned OFF-SCREEN to the right) */
 div[data-testid="stHorizontalBlock"]:has(.tx-row) > div[data-testid="column"]:nth-child(2) { 
-    position: absolute !important; right: -65px !important; top: 0 !important; bottom: 0 !important; 
-    width: 65px !important; height: 100% !important; flex: 0 0 65px !important;
-    background: rgba(0, 255, 157, 0.1) !important;
-    border-left: 1px solid rgba(255,255,255,0.05) !important;
+    position: absolute !important; right: -60px !important; top: 0 !important; bottom: 0 !important; 
+    width: 60px !important; flex: 0 0 60px !important; margin: 0 !important; padding: 0 !important;
+    background: rgba(0, 255, 157, 0.1) !important; display: flex !important;
 }
 div[data-testid="stHorizontalBlock"]:has(.tx-row) > div[data-testid="column"]:nth-child(3) { 
-    position: absolute !important; right: -130px !important; top: 0 !important; bottom: 0 !important; 
-    width: 65px !important; height: 100% !important; flex: 0 0 65px !important;
-    background: rgba(255, 77, 77, 0.1) !important;
-    border-left: 1px solid rgba(255,255,255,0.05) !important;
+    position: absolute !important; right: -120px !important; top: 0 !important; bottom: 0 !important; 
+    width: 60px !important; flex: 0 0 60px !important; margin: 0 !important; padding: 0 !important;
+    background: rgba(255, 77, 77, 0.1) !important; display: flex !important;
 }
 
-/* Purge Streamlit Button Padding to stretch fully in cells */
+/* Button stretching */
 div[data-testid="stHorizontalBlock"]:has(.tx-row) div[data-testid="stButton"],
 div[data-testid="stHorizontalBlock"]:has(.tx-row) div[data-testid="stButton"] button {
-    width: 100% !important; height: 100% !important; min-height: 100% !important; 
-    margin: 0 !important; padding: 0 !important; 
-    border: none !important; border-radius: 0 !important; 
+    width: 100% !important; height: 100% !important; min-height: 100% !important;
+    margin: 0 !important; padding: 0 !important; border-radius: 0 !important; border: none !important;
     box-shadow: none !important; background: transparent !important; 
     display: flex !important; align-items: center !important; justify-content: center !important;
 }
-div[data-testid="stHorizontalBlock"]:has(.tx-row) div[data-testid="column"]:nth-child(2) div[data-testid="stButton"] button p { font-size: 1.2rem !important; color: #00ff9d !important; margin: 0; padding: 0; }
-div[data-testid="stHorizontalBlock"]:has(.tx-row) div[data-testid="column"]:nth-child(3) div[data-testid="stButton"] button p { font-size: 1.2rem !important; color: #ff4d4d !important; margin: 0; padding: 0; }
+div[data-testid="stHorizontalBlock"]:has(.tx-row) div[data-testid="stButton"] button p { font-size: 1.4rem !important; margin: 0; padding: 0; }
+div[data-testid="stHorizontalBlock"]:has(.tx-row) div[data-testid="column"]:nth-child(2) div[data-testid="stButton"] button p { color: #00ff9d !important; }
+div[data-testid="stHorizontalBlock"]:has(.tx-row) div[data-testid="column"]:nth-child(3) div[data-testid="stButton"] button p { color: #ff4d4d !important; }
 
 /* PC Hover effect */
 @media (hover: hover) and (pointer: fine) {
-    div[data-testid="stHorizontalBlock"]:has(.tx-row):hover {
-        transform: translateX(-130px) !important;
+    div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row):hover div[data-testid="stHorizontalBlock"] {
+        transform: translateX(-120px) !important;
     }
-    div[data-testid="stHorizontalBlock"]:has(.tx-row) div[data-testid="column"]:nth-child(2) div[data-testid="stButton"] button:hover { background: rgba(0, 255, 157, 0.2) !important; }
-    div[data-testid="stHorizontalBlock"]:has(.tx-row) div[data-testid="column"]:nth-child(3) div[data-testid="stButton"] button:hover { background: rgba(255, 77, 77, 0.2) !important; }
+    div[data-testid="stHorizontalBlock"]:has(.tx-row) div[data-testid="column"]:nth-child(2) div[data-testid="stButton"] button:hover { background: rgba(0, 255, 157, 0.3) !important; }
+    div[data-testid="stHorizontalBlock"]:has(.tx-row) div[data-testid="column"]:nth-child(3) div[data-testid="stButton"] button:hover { background: rgba(255, 77, 77, 0.3) !important; }
 }
 
 /* Mobile Adjustments */
@@ -493,18 +491,13 @@ div[data-testid="stHorizontalBlock"]:has(.tx-row) div[data-testid="column"]:nth-
     div[data-testid="stForm"]:has(.add-tx-card) .stButton { width: 100% !important; justify-content: center !important; }
     div[data-testid="stForm"]:has(.add-tx-card) .stButton > button { width: 100% !important; max-width: none !important; }
 
-    /* Slightly smaller swipe distance on mobile (60px per button) */
-    div[data-testid="stHorizontalBlock"]:has(.tx-row).swiped-left {
-        transform: translateX(-120px) !important; 
-    }
     div[data-testid="stHorizontalBlock"]:has(.tx-row) > div[data-testid="column"]:nth-child(1) { 
         padding: 12px 14px !important; 
     }
-    div[data-testid="stHorizontalBlock"]:has(.tx-row) > div[data-testid="column"]:nth-child(2) { 
-        right: -60px !important; width: 60px !important; flex: 0 0 60px !important;
-    }
-    div[data-testid="stHorizontalBlock"]:has(.tx-row) > div[data-testid="column"]:nth-child(3) { 
-        right: -120px !important; width: 60px !important; flex: 0 0 60px !important;
+
+    /* Swipe Hint Arrow */
+    div[data-testid="stHorizontalBlock"]:has(.tx-row) > div[data-testid="column"]:nth-child(1)::after {
+        content: '❮'; position: absolute; right: 6px; top: 50%; transform: translateY(-50%); color: rgba(255,255,255,0.2); font-size: 10px; pointer-events: none;
     }
 
     /* Dashboard Mobile Stats */
@@ -1167,9 +1160,11 @@ with tab_home:
 
     current_hash = f"{st.session_state.crypto_table_version}_{st.session_state.fiat_table_version}_{st.session_state.refresh_key}"
 
-    if st.session_state.portfolio_cache.get('hash') != current_hash:
+    if st.session_state.portfolio_cache.get('hash') != current_hash or \
+       not st.session_state.portfolio_cache.get('hist_dict') or \
+       len(st.session_state.portfolio_cache.get('hist_dict', {})) == 0:
+       
         fetch_tickers = tuple(sorted(set([t.upper() for t in st.session_state.crypto_df['Ticker'] if t.upper() != 'STABLES']) | {'BTC'}))
-        
         limit = 2000 
         
         live_prices, live_changes = get_all_cryptocompare_prices(fetch_tickers, st.session_state.refresh_key)
@@ -2519,6 +2514,16 @@ with tab_home:
                             pnlPctEl.style.color = color;
                         }}
                         
+                        const p7d = parseFloat(card.getAttribute('data-price-7d'));
+                        const p30d = parseFloat(card.getAttribute('data-price-30d'));
+                        const p90d = parseFloat(card.getAttribute('data-price-90d'));
+                        const pytd = parseFloat(card.getAttribute('data-price-ytd'));
+                        
+                        updateMetricUI(card, ticker, '7d', p7d, price);
+                        updateMetricUI(card, ticker, '30d', p30d, price);
+                        updateMetricUI(card, ticker, '90d', p90d, price);
+                        updateMetricUI(card, ticker, 'ytd', pytd, price);
+
                         if (window.chartCache && window.chartCache[ticker] && window.chartCache[ticker].chartObj) {{
                             const chart = window.chartCache[ticker].chartObj;
                             const dataLen = chart.data.datasets[0].data.length;
@@ -2786,6 +2791,16 @@ with tab_home:
         const border = card.getAttribute('data-border');
         card.style.setProperty('--border', border);
         
+        const p7d = parseFloat(card.getAttribute('data-price-7d'));
+        const p30d = parseFloat(card.getAttribute('data-price-30d'));
+        const p90d = parseFloat(card.getAttribute('data-price-90d'));
+        const pytd = parseFloat(card.getAttribute('data-price-ytd'));
+        
+        updateMetricUI(card, ticker, '7d', p7d, currentPrice);
+        updateMetricUI(card, ticker, '30d', p30d, currentPrice);
+        updateMetricUI(card, ticker, '90d', p90d, currentPrice);
+        updateMetricUI(card, ticker, 'ytd', pytd, currentPrice);
+
         const front = card.querySelector('.flip-card-front');
         front.addEventListener('click', (e) => {{
             e.stopPropagation();
@@ -2909,7 +2924,7 @@ with tab_crypto:
 
     /* The Swiped State */
     div[data-testid="stHorizontalBlock"]:has(.tx-row).swiped-left {
-        transform: translateX(-130px) !important; /* Slide left exactly 130px (65px * 2) */
+        transform: translateX(-120px) !important; /* Slide left exactly 120px (60px * 2) */
     }
 
     /* Column 1: Info Box (Takes exactly 100% of wrapper width) */
@@ -2923,37 +2938,39 @@ with tab_crypto:
 
     /* Columns 2 & 3: Action Buttons (Absolutely positioned OFF-SCREEN to the right) */
     div[data-testid="stHorizontalBlock"]:has(.tx-row) > div[data-testid="column"]:nth-child(2) { 
-        position: absolute !important; right: -65px !important; top: 0 !important; bottom: 0 !important; 
-        width: 65px !important; height: 100% !important; flex: 0 0 65px !important;
-        background: rgba(0, 255, 157, 0.1) !important;
-        border-left: 1px solid rgba(255,255,255,0.05) !important;
+        position: absolute !important; right: -60px !important; top: 0 !important; bottom: 0 !important; 
+        width: 60px !important; height: 100% !important; flex: 0 0 60px !important; margin: 0 !important; padding: 0 !important;
+        background: rgba(0, 255, 157, 0.1) !important; display: flex !important;
     }
     div[data-testid="stHorizontalBlock"]:has(.tx-row) > div[data-testid="column"]:nth-child(3) { 
-        position: absolute !important; right: -130px !important; top: 0 !important; bottom: 0 !important; 
-        width: 65px !important; height: 100% !important; flex: 0 0 65px !important;
-        background: rgba(255, 77, 77, 0.1) !important;
-        border-left: 1px solid rgba(255,255,255,0.05) !important;
+        position: absolute !important; right: -120px !important; top: 0 !important; bottom: 0 !important; 
+        width: 60px !important; height: 100% !important; flex: 0 0 60px !important; margin: 0 !important; padding: 0 !important;
+        background: rgba(255, 77, 77, 0.1) !important; display: flex !important;
     }
 
-    /* Purge Streamlit Button Padding to stretch fully in cells */
-    div[data-testid="stHorizontalBlock"]:has(.tx-row) div[data-testid="stButton"],
+    /* Purge Streamlit Button Padding & Sizing */
+    div[data-testid="stHorizontalBlock"]:has(.tx-row) div[data-testid="stButton"] {
+        width: 100% !important; height: 100% !important; display: flex !important; align-items: center !important; justify-content: center !important;
+    }
     div[data-testid="stHorizontalBlock"]:has(.tx-row) div[data-testid="stButton"] button {
-        width: 100% !important; height: 100% !important; min-height: 100% !important; 
+        width: 100% !important; height: 100% !important; min-height: 100% !important; max-height: 100% !important;
         margin: 0 !important; padding: 0 !important; 
         border: none !important; border-radius: 0 !important; 
         box-shadow: none !important; background: transparent !important; 
         display: flex !important; align-items: center !important; justify-content: center !important;
+        transition: all 0.2s ease !important;
     }
-    div[data-testid="stHorizontalBlock"]:has(.tx-row) div[data-testid="column"]:nth-child(2) div[data-testid="stButton"] button p { font-size: 1.2rem !important; color: #00ff9d !important; margin: 0; padding: 0; }
-    div[data-testid="stHorizontalBlock"]:has(.tx-row) div[data-testid="column"]:nth-child(3) div[data-testid="stButton"] button p { font-size: 1.2rem !important; color: #ff4d4d !important; margin: 0; padding: 0; }
+    div[data-testid="stHorizontalBlock"]:has(.tx-row) div[data-testid="stButton"] button p { font-size: 1.4rem !important; margin: 0; padding: 0; line-height: 1 !important; }
+    div[data-testid="stHorizontalBlock"]:has(.tx-row) div[data-testid="column"]:nth-child(2) div[data-testid="stButton"] button p { color: #00ff9d !important; }
+    div[data-testid="stHorizontalBlock"]:has(.tx-row) div[data-testid="column"]:nth-child(3) div[data-testid="stButton"] button p { color: #ff4d4d !important; }
 
     /* PC Hover effect */
     @media (hover: hover) and (pointer: fine) {
-        div[data-testid="stHorizontalBlock"]:has(.tx-row):hover {
-            transform: translateX(-130px) !important;
+        div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row):hover div[data-testid="stHorizontalBlock"] {
+            transform: translateX(-120px) !important;
         }
-        div[data-testid="stHorizontalBlock"]:has(.tx-row) div[data-testid="column"]:nth-child(2) div[data-testid="stButton"] button:hover { background: rgba(0, 255, 157, 0.2) !important; }
-        div[data-testid="stHorizontalBlock"]:has(.tx-row) div[data-testid="column"]:nth-child(3) div[data-testid="stButton"] button:hover { background: rgba(255, 77, 77, 0.2) !important; }
+        div[data-testid="stHorizontalBlock"]:has(.tx-row) div[data-testid="column"]:nth-child(2) div[data-testid="stButton"] button:hover { background: rgba(0, 255, 157, 0.3) !important; }
+        div[data-testid="stHorizontalBlock"]:has(.tx-row) div[data-testid="column"]:nth-child(3) div[data-testid="stButton"] button:hover { background: rgba(255, 77, 77, 0.3) !important; }
     }
 
     /* Mobile Adjustments */
@@ -2965,20 +2982,15 @@ with tab_crypto:
         div[data-testid="stForm"]:has(.add-tx-card) .stButton { width: 100% !important; justify-content: center !important; }
         div[data-testid="stForm"]:has(.add-tx-card) .stButton > button { width: 100% !important; max-width: none !important; }
 
-        /* Slightly smaller swipe distance on mobile (60px per button) */
-        div[data-testid="stHorizontalBlock"]:has(.tx-row).swiped-left {
-            transform: translateX(-120px) !important; 
-        }
         div[data-testid="stHorizontalBlock"]:has(.tx-row) > div[data-testid="column"]:nth-child(1) { 
             padding: 12px 14px !important; 
         }
-        div[data-testid="stHorizontalBlock"]:has(.tx-row) > div[data-testid="column"]:nth-child(2) { 
-            right: -60px !important; width: 60px !important; flex: 0 0 60px !important;
-        }
-        div[data-testid="stHorizontalBlock"]:has(.tx-row) > div[data-testid="column"]:nth-child(3) { 
-            right: -120px !important; width: 60px !important; flex: 0 0 60px !important;
-        }
 
+        /* Swipe Hint Arrow */
+        div[data-testid="stHorizontalBlock"]:has(.tx-row) > div[data-testid="column"]:nth-child(1)::after {
+            content: '❮'; position: absolute; right: 6px; top: 50%; transform: translateY(-50%); color: rgba(255,255,255,0.2); font-size: 10px; pointer-events: none;
+        }
+        
         /* Dashboard Mobile Stats */
         .stats-layer-inner { gap: 6px !important; }
         .stats-layer { margin-top: -60px !important; margin-bottom: 18px; } 
@@ -3090,7 +3102,6 @@ with tab_crypto:
             
             invested_formatted = f"{abs_stable:,.2f} {stable_ticker}"
             amount_formatted = format_holdings(abs_amount, r['Ticker'])
-            price_formatted = format_price(price)
             date_str = format_datum(r['Datum'])
 
             # TRUE REPLACEMENT LOGIC - Only renders 1 state at a time
@@ -3148,21 +3159,21 @@ with tab_crypto:
             else:
                 # NEW HTML-GRID COMPACT ROW DISPLAY
                 with st.container(border=True):
-                    col_info, col_edit, col_del = st.columns([1, 0.1, 0.1])
+                    col_info, col_edit, col_del = st.columns(3)
                     
                     with col_info:
                         st.markdown(f"""
-                        <div class="tx-row" style="display: flex; justify-content: space-between; align-items: center; width: 100%; height: 100%; min-height: 48px;">
-                            <div style="display: flex; align-items: center; gap: 12px; overflow: hidden; flex: 1;">
-                                <img src="{logo_url}" style="width: 32px; height: 32px; border-radius: 50%; object-fit: contain; flex-shrink: 0; {bg_style}" onerror="this.src='https://via.placeholder.com/32/1e2a44/ffffff?text={r['Ticker'][0]}';">
-                                <div style="display: flex; flex-direction: column; overflow: hidden; min-width: 0; padding-bottom: 2px;">
-                                    <span style="font-weight: 700; font-size: 1rem; color: #ffffff; white-space: nowrap; text-overflow: ellipsis; overflow: hidden; line-height: 1.3;">{r['Ticker']}</span>
-                                    <span style="font-size: 0.75rem; color: #94a3b8; white-space: nowrap; text-overflow: ellipsis; overflow: hidden; line-height: 1.3;">{date_str}</span>
+                        <div class="tx-row" style="display: flex; justify-content: space-between; align-items: center; width: 100%; height: 100%; padding: 0;">
+                            <div style="display: flex; align-items: center; gap: 14px; overflow: hidden; flex: 1;">
+                                <img src="{logo_url}" style="width: 34px; height: 34px; border-radius: 50%; object-fit: contain; flex-shrink: 0; {bg_style}" onerror="this.src='https://via.placeholder.com/34/1e2a44/ffffff?text={r['Ticker'][0]}';">
+                                <div style="display: flex; flex-direction: column; overflow: hidden; min-width: 0;">
+                                    <span style="font-weight: 700; font-size: 1.1rem; color: #ffffff; white-space: nowrap; text-overflow: ellipsis; overflow: hidden; line-height: 1.2;">{r['Ticker']}</span>
+                                    <span style="font-size: 0.8rem; color: #94a3b8; white-space: nowrap; text-overflow: ellipsis; overflow: hidden; line-height: 1.2;">{date_str}</span>
                                 </div>
                             </div>
-                            <div style="display: flex; flex-direction: column; align-items: flex-end; justify-content: center; overflow: hidden; padding-left: 4px; padding-bottom: 2px; flex-shrink: 0;">
-                                <span style="font-weight: 700; font-size: 1rem; color: {color}; white-space: nowrap; line-height: 1.3;">{sign}{amount_formatted}</span>
-                                <span style="font-size: 0.75rem; color: #cbd5e1; white-space: nowrap; line-height: 1.3;">{action_text}: {invested_formatted}</span>
+                            <div style="display: flex; flex-direction: column; align-items: flex-end; justify-content: center; overflow: hidden; padding-left: 8px; flex-shrink: 0;">
+                                <span style="font-weight: 700; font-size: 1.1rem; color: {color}; white-space: nowrap; line-height: 1.2;">{sign}{amount_formatted}</span>
+                                <span style="font-size: 0.8rem; color: #cbd5e1; white-space: nowrap; line-height: 1.2;">{action_text} {invested_formatted}</span>
                             </div>
                         </div>
                         """, unsafe_allow_html=True)
@@ -3308,21 +3319,21 @@ with tab_fiat:
             else:
                 # NEW HTML-GRID COMPACT ROW DISPLAY
                 with st.container(border=True):
-                    col_info, col_edit, col_del = st.columns([1, 0.1, 0.1])
+                    col_info, col_edit, col_del = st.columns(3)
                     
                     with col_info:
                         st.markdown(f"""
-                        <div class="tx-row" style="display: flex; justify-content: space-between; align-items: center; width: 100%; height: 100%; min-height: 48px;">
-                            <div style="display: flex; align-items: center; gap: 12px; overflow: hidden; flex: 1;">
-                                <img src="{logo_url}" style="width: 32px; height: 32px; border-radius: 50%; object-fit: contain; flex-shrink: 0; background-color:#ffffff;" onerror="this.src='https://via.placeholder.com/32/1e2a44/ffffff?text={stable_ticker[0]}';">
-                                <div style="display: flex; flex-direction: column; overflow: hidden; min-width: 0; padding-bottom: 2px;">
-                                    <span style="font-weight: 700; font-size: 1rem; color: #ffffff; white-space: nowrap; text-overflow: ellipsis; overflow: hidden; line-height: 1.3;">{date_str}</span>
-                                    <span style="font-size: 0.75rem; color: #94a3b8; white-space: nowrap; text-overflow: ellipsis; overflow: hidden; line-height: 1.3;">{fiat_formatted}</span>
+                        <div class="tx-row" style="display: flex; justify-content: space-between; align-items: center; width: 100%; height: 100%; padding: 0;">
+                            <div style="display: flex; align-items: center; gap: 14px; overflow: hidden; flex: 1;">
+                                <img src="{logo_url}" style="width: 34px; height: 34px; border-radius: 50%; object-fit: contain; flex-shrink: 0; background-color:#ffffff;" onerror="this.src='https://via.placeholder.com/34/1e2a44/ffffff?text={stable_ticker[0]}';">
+                                <div style="display: flex; flex-direction: column; overflow: hidden; min-width: 0;">
+                                    <span style="font-weight: 700; font-size: 1.1rem; color: #ffffff; white-space: nowrap; text-overflow: ellipsis; overflow: hidden; line-height: 1.2;">{date_str}</span>
+                                    <span style="font-size: 0.8rem; color: #94a3b8; white-space: nowrap; text-overflow: ellipsis; overflow: hidden; line-height: 1.2;">{fiat_formatted}</span>
                                 </div>
                             </div>
-                            <div style="display: flex; flex-direction: column; align-items: flex-end; justify-content: center; overflow: hidden; padding-left: 4px; padding-bottom: 2px; flex-shrink: 0;">
-                                <span style="font-weight: 700; font-size: 1rem; color: #00ff9d; white-space: nowrap; text-overflow: ellipsis; overflow: hidden; line-height: 1.3;">{stable_formatted}</span>
-                                <span style="font-size: 0.75rem; color: #cbd5e1; white-space: nowrap; text-overflow: ellipsis; overflow: hidden; line-height: 1.3;">Fee: {fee_val:,.2f} EUR</span>
+                            <div style="display: flex; flex-direction: column; align-items: flex-end; justify-content: center; overflow: hidden; padding-left: 8px; flex-shrink: 0;">
+                                <span style="font-weight: 700; font-size: 1.1rem; color: #00ff9d; white-space: nowrap; line-height: 1.2;">{stable_formatted}</span>
+                                <span style="font-size: 0.8rem; color: #cbd5e1; white-space: nowrap; line-height: 1.2;">Fee: {fee_val:,.2f} EUR</span>
                             </div>
                         </div>
                         """, unsafe_allow_html=True)
