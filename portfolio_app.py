@@ -369,6 +369,7 @@ div[data-testid="stForm"]:has(.add-tx-card) label { font-size: 0.85rem !importan
 div[data-testid="stForm"]:has(.add-tx-card) .stTextInput input, div[data-testid="stForm"]:has(.add-tx-card) .stNumberInput input, div[data-testid="stForm"]:has(.add-tx-card) .stDateInput input, div[data-testid="stForm"]:has(.add-tx-card) div[data-baseweb="select"] > div {
     background: rgba(255,255,255,0.03) !important; border: 1px solid rgba(255,255,255,0.1) !important; color: #fff !important; border-radius: 8px !important; margin-bottom: 0px !important;
 }
+div[data-testid="stForm"]:has(.add-tx-card) div[data-testid="stHorizontalBlock"]:has(> div[data-testid="column"]:nth-child(4)) { display: flex !important; gap: 12px !important; }
 
 /* BEAUTIFUL BUY/SELL SWITCH */
 div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] {
@@ -389,53 +390,42 @@ div[data-testid="stForm"]:has(.add-tx-card) .stButton { display: flex !important
 div[data-testid="stForm"]:has(.add-tx-card) .stButton > button { background: #1e2a44 !important; color: #e0e0e0 !important; padding: 0 24px !important; border-radius: 10px !important; font-size: 1.05rem !important; font-weight: 700 !important; box-shadow: 0 4px 15px rgba(0,0,0,0.25) !important; transition: all 0.3s ease !important; border: none !important; margin: 0 !important; width: auto !important; height: 48px !important; min-height: 48px !important; }
 div[data-testid="stForm"]:has(.add-tx-card) .stButton > button:hover { transform: translateY(-2px) !important; box-shadow: 0 8px 20px rgba(255, 255, 255, 0.2) !important; color: white !important; }
 
-/* PC Grid for Form */
-@media (min-width: 769px) {
-    div[data-testid="stForm"]:has(.add-tx-card) div[data-testid="stHorizontalBlock"] { display: grid !important; grid-template-columns: 1fr 1fr 1fr 1fr !important; gap: 12px !important; }
-    div[data-testid="stForm"]:has(.add-tx-card) div[data-testid="stHorizontalBlock"] > div[data-testid="column"] { width: 100% !important; min-width: 0 !important; padding: 0 !important; }
-    /* Action row PC */
-    div[data-testid="stForm"]:has(.add-tx-card) div[data-testid="stHorizontalBlock"]:last-of-type { grid-template-columns: 200px 1fr !important; margin-top: 12px !important;}
-}
-
 /* ==============================================================
    HIGHLY COMPACT, IRONCLAD TRANSACTION ROWS (PC & MOBILE)
    ============================================================== */
 div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row-marker) {
     background: #0f172a !important; border: 1px solid rgba(255,255,255,0.05) !important;
-    border-radius: 8px !important; padding: 8px 12px !important; margin-bottom: 8px !important;
-    position: relative !important; z-index: 2; overflow: visible !important;
+    border-radius: 8px !important; padding: 4px 8px !important; margin-bottom: 6px !important;
 }
 
 /* Eliminate Streamlit's Internal Column Gaps */
 div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row-marker) div[data-testid="stVerticalBlock"] {
-    gap: 0 !important; padding: 0 !important; overflow: visible !important;
+    gap: 0 !important;
 }
 
-/* FORCE CSS GRID - BLOCKS STREAMLIT STACKING */
+/* FORCE HORIZONTAL FLEX WRAPPER - STOPS STREAMLIT STACKING */
 div[data-testid="stHorizontalBlock"]:has(.tx-row-marker) {
-    display: grid !important;
-    grid-template-columns: 36px 1fr auto 32px 32px !important;
-    gap: 12px !important;
-    align-items: center !important;
-    width: 100% !important;
+    display: flex !important; flex-direction: row !important; flex-wrap: nowrap !important;
+    align-items: center !important; width: 100% !important; gap: 8px !important; overflow: hidden !important;
 }
 div[data-testid="stHorizontalBlock"]:has(.tx-row-marker) > div[data-testid="column"] {
-    width: 100% !important; min-width: 0 !important; padding: 0 !important; flex: none !important; display: block !important;
+    width: auto !important; min-width: 0 !important; padding: 0 !important; flex: none !important;
 }
 
-/* Specific Column Alignments */
-div[data-testid="stHorizontalBlock"]:has(.tx-row-marker) > div[data-testid="column"]:nth-child(2) { text-align: left !important; }
-div[data-testid="stHorizontalBlock"]:has(.tx-row-marker) > div[data-testid="column"]:nth-child(3) { text-align: right !important; }
-div[data-testid="stHorizontalBlock"]:has(.tx-row-marker) > div[data-testid="column"]:nth-child(4) { display: flex !important; justify-content: center !important; }
-div[data-testid="stHorizontalBlock"]:has(.tx-row-marker) > div[data-testid="column"]:nth-child(5) { display: flex !important; justify-content: center !important; }
+/* Specific Column Sizing */
+div[data-testid="stHorizontalBlock"]:has(.tx-row-marker) > div[data-testid="column"]:nth-child(1) { flex: 0 0 32px !important; } /* Logo */
+div[data-testid="stHorizontalBlock"]:has(.tx-row-marker) > div[data-testid="column"]:nth-child(2) { flex: 1 1 auto !important; overflow: hidden; } /* Info */
+div[data-testid="stHorizontalBlock"]:has(.tx-row-marker) > div[data-testid="column"]:nth-child(3) { flex: 1.2 1 auto !important; text-align: right; } /* Amounts */
+div[data-testid="stHorizontalBlock"]:has(.tx-row-marker) > div[data-testid="column"]:nth-child(4) { flex: 0 0 28px !important; display: flex; justify-content: center; } /* Edit */
+div[data-testid="stHorizontalBlock"]:has(.tx-row-marker) > div[data-testid="column"]:nth-child(5) { flex: 0 0 28px !important; display: flex; justify-content: center; } /* Delete */
 
 /* Sleek Icon Buttons */
 div[data-testid="stHorizontalBlock"]:has(.tx-row-marker) div[data-testid="stButton"] button {
     background: transparent !important; border: 1px solid rgba(255,255,255,0.05) !important;
     color: #94a3b8 !important; border-radius: 6px !important; box-shadow: none !important;
-    height: 32px !important; width: 100% !important; padding: 0 !important;
+    height: 28px !important; width: 28px !important; padding: 0 !important;
     display: flex !important; align-items: center !important; justify-content: center !important;
-    font-size: 1.1rem !important; line-height: 1 !important; transition: all 0.2s ease !important;
+    font-size: 1rem !important; line-height: 1 !important; transition: all 0.2s ease !important;
 }
 div[data-testid="stHorizontalBlock"]:has(.tx-row-marker) div[data-testid="stButton"] button p { font-size: 1.1rem !important; line-height: 1 !important; margin: 0; padding: 0; }
 
@@ -448,57 +438,37 @@ div[data-testid="stHorizontalBlock"]:has(.tx-row-marker) div[data-testid="column
 
 /* Typography Overrides */
 .mobile-logo { width: 28px !important; height: 28px !important; margin-top: 2px !important; }
-.mobile-tx-ticker { font-size: 1.05rem !important; font-weight: 700; color: #fff; line-height: 1.2; margin-left: 2px; }
-.mobile-tx-sub { font-size: 0.75rem !important; color: #94a3b8; line-height: 1.2; margin-top: 2px; margin-left: 2px; }
-.mobile-tx-amount { font-size: 1.05rem !important; font-weight: 700; line-height: 1.2; }
+.mobile-tx-ticker { font-size: 1rem !important; font-weight: 700; color: #fff; line-height: 1.1; margin-left: 2px; }
+.mobile-tx-sub { font-size: 0.75rem !important; color: #94a3b8; line-height: 1.1; margin-top: 3px; margin-left: 2px; }
+.mobile-tx-amount { font-size: 1rem !important; font-weight: 700; line-height: 1.1; }
 
-/* ==============================================================
-   ABSOLUTE OVERLAY EDIT FORM (ZERO JUMPING)
-   ============================================================== */
+/* IN-PLACE EDIT FORM (Replaces Row smoothly) */
 div[data-testid="stForm"]:has(.edit-form-marker) {
-    position: absolute !important;
-    top: -6px !important; left: -6px !important; width: calc(100% + 12px) !important;
-    z-index: 9999 !important;
-    background: rgba(15, 23, 42, 0.98) !important;
-    backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
-    border: 1px solid #00ff9d !important;
-    border-radius: 12px !important;
-    padding: 12px !important; margin: 0 !important;
-    box-shadow: 0 20px 40px rgba(0,0,0,0.9), 0 0 20px rgba(0, 255, 157, 0.2) !important;
+    background: rgba(15, 23, 42, 0.95) !important; border: 1px solid #00ff9d !important;
+    border-radius: 8px !important; padding: 12px 16px !important; margin-bottom: 6px !important;
+    box-shadow: 0 4px 15px rgba(0, 255, 157, 0.1) !important;
 }
 div[data-testid="stForm"]:has(.edit-form-marker) div[data-baseweb="select"] > div { background: rgba(255,255,255,0.03) !important; border: 1px solid rgba(255,255,255,0.1) !important; }
 
-/* ==============================================================
-   ABSOLUTE DELETE DIALOG (ZERO JUMPING)
-   ============================================================== */
-div[data-testid="stVerticalBlock"]:has(.del-overlay-container) {
-    position: absolute !important;
-    top: 0 !important; left: 0 !important; width: 100% !important; height: 100% !important;
-    z-index: 9998 !important;
-    background: rgba(15, 23, 42, 0.95) !important;
-    backdrop-filter: blur(5px); -webkit-backdrop-filter: blur(5px);
-    border-radius: 8px !important;
-    border: 1px solid #ff4d4d !important;
-    display: flex !important; align-items: center !important; justify-content: center !important;
-    padding: 0 12px !important;
-    box-shadow: 0 10px 30px rgba(255, 77, 77, 0.2) !important;
+/* IN-PLACE DELETE DIALOG (Replaces Row smoothly) */
+div[data-testid="stVerticalBlockBorderWrapper"]:has(.del-warn-marker) {
+    border-color: rgba(255, 77, 77, 0.3) !important; background: rgba(15, 23, 42, 0.95) !important;
+    border-radius: 8px !important; padding: 8px 12px !important; margin-bottom: 6px !important;
+    box-shadow: 0 4px 15px rgba(255, 77, 77, 0.1) !important;
 }
-div[data-testid="stVerticalBlock"]:has(.del-overlay-container) > div[data-testid="stHorizontalBlock"] {
-    display: grid !important;
-    grid-template-columns: 1fr 80px 80px !important;
-    gap: 12px !important; width: 100% !important; align-items: center !important;
+div[data-testid="stVerticalBlockBorderWrapper"]:has(.del-warn-marker) div[data-testid="stHorizontalBlock"] {
+    display: flex !important; flex-direction: row !important; align-items: center !important; gap: 8px !important;
 }
-div[data-testid="stVerticalBlock"]:has(.del-overlay-container) > div[data-testid="stHorizontalBlock"] > div[data-testid="column"] {
-    width: 100% !important; min-width: 0 !important; padding: 0 !important;
+div[data-testid="stVerticalBlockBorderWrapper"]:has(.del-warn-marker) div[data-testid="column"]:nth-child(1) { flex: 1 1 auto !important; }
+div[data-testid="stVerticalBlockBorderWrapper"]:has(.del-warn-marker) div[data-testid="column"]:nth-child(2) { flex: 0 0 80px !important; }
+div[data-testid="stVerticalBlockBorderWrapper"]:has(.del-warn-marker) div[data-testid="column"]:nth-child(3) { flex: 0 0 80px !important; }
+div[data-testid="stVerticalBlockBorderWrapper"]:has(.del-warn-marker) .stButton > button {
+    border-radius: 6px !important; font-weight: 600 !important; width: 100% !important; padding: 4px !important; height: 32px !important; min-height: 32px !important; font-size: 0.9rem !important; transition: all 0.2s !important;
 }
-div[data-testid="stVerticalBlock"]:has(.del-overlay-container) .stButton > button {
-    border-radius: 6px !important; font-weight: 600 !important; transition: all 0.2s !important; width: 100% !important; height: 32px !important; min-height: 32px !important; font-size: 0.9rem !important; padding: 0 !important;
-}
-div[data-testid="stVerticalBlock"]:has(.del-overlay-container) div[data-testid="column"]:nth-child(2) .stButton > button { background: rgba(255, 77, 77, 0.1) !important; color: #ff4d4d !important; border: 1px solid rgba(255, 77, 77, 0.3) !important; }
-div[data-testid="stVerticalBlock"]:has(.del-overlay-container) div[data-testid="column"]:nth-child(2) .stButton > button:hover { background: #ff4d4d !important; color: white !important; }
-div[data-testid="stVerticalBlock"]:has(.del-overlay-container) div[data-testid="column"]:nth-child(3) .stButton > button { background: rgba(255, 255, 255, 0.05) !important; color: #cbd5e1 !important; border: 1px solid rgba(255, 255, 255, 0.1) !important; }
-div[data-testid="stVerticalBlock"]:has(.del-overlay-container) div[data-testid="column"]:nth-child(3) .stButton > button:hover { background: rgba(255, 255, 255, 0.15) !important; color: white !important; }
-.del-txt { color: #ff4d4d; font-weight: 700; font-size: 1.05rem; }
+div[data-testid="stVerticalBlockBorderWrapper"]:has(.del-warn-marker) div[data-testid="column"]:nth-child(2) .stButton > button { background: rgba(255, 77, 77, 0.1) !important; color: #ff4d4d !important; border: 1px solid rgba(255, 77, 77, 0.3) !important; }
+div[data-testid="stVerticalBlockBorderWrapper"]:has(.del-warn-marker) div[data-testid="column"]:nth-child(2) .stButton > button:hover { background: #ff4d4d !important; color: white !important; }
+div[data-testid="stVerticalBlockBorderWrapper"]:has(.del-warn-marker) div[data-testid="column"]:nth-child(3) .stButton > button { background: rgba(255, 255, 255, 0.05) !important; color: #cbd5e1 !important; border: 1px solid rgba(255, 255, 255, 0.1) !important; }
+div[data-testid="stVerticalBlockBorderWrapper"]:has(.del-warn-marker) div[data-testid="column"]:nth-child(3) .stButton > button:hover { background: rgba(255, 255, 255, 0.15) !important; color: white !important; }
 
 /* ==============================================================
    MOBILE OVERRIDES
@@ -507,45 +477,26 @@ div[data-testid="stVerticalBlock"]:has(.del-overlay-container) div[data-testid="
     .glossy-header { margin-top: 0px !important; margin-bottom: 16px !important; padding: 20px 16px !important; font-size: 22px !important; min-height: 90px; }
     .home-header { margin-bottom: 0 !important; }
     
-    /* Mobile Grid for Form */
-    div[data-testid="stForm"]:has(.add-tx-card) div[data-testid="stHorizontalBlock"],
-    div[data-testid="stForm"]:has(.edit-form-marker) div[data-testid="stHorizontalBlock"] { 
-        display: grid !important; grid-template-columns: 1fr 1fr !important; gap: 8px !important; 
-    }
-    div[data-testid="stForm"]:has(.add-tx-card) div[data-testid="column"],
-    div[data-testid="stForm"]:has(.edit-form-marker) div[data-testid="column"] { 
-        width: 100% !important; min-width: 0 !important; padding: 0 !important; 
-    }
-    /* Action row mobile */
-    div[data-testid="stForm"]:has(.add-tx-card) div[data-testid="stHorizontalBlock"]:last-of-type,
-    div[data-testid="stForm"]:has(.edit-form-marker) div[data-testid="stHorizontalBlock"]:last-of-type { 
-        grid-template-columns: 1fr !important; margin-top: 8px !important;
-    }
     div[data-testid="stForm"]:has(.add-tx-card) input { padding: 6px !important; font-size: 0.95rem !important; }
-    div[data-testid="stForm"]:has(.add-tx-card) .stButton { justify-content: center !important; }
-    div[data-testid="stForm"]:has(.add-tx-card) .stButton > button,
-    div[data-testid="stForm"]:has(.edit-form-marker) .stButton > button { width: 100% !important; max-width: none !important; }
+    div[data-testid="stForm"]:has(.add-tx-card) .stButton { width: 100% !important; justify-content: center !important; }
+    div[data-testid="stForm"]:has(.add-tx-card) .stButton > button { width: 100% !important; max-width: none !important; }
 
     /* Ultra Compact Mobile Rows */
     div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row-marker) {
-        padding: 6px 8px !important; margin-bottom: 6px !important;
+        padding: 4px 6px !important; margin-bottom: 6px !important;
     }
-    div[data-testid="stHorizontalBlock"]:has(.tx-row-marker) {
-        grid-template-columns: 28px 1fr auto 28px 28px !important; gap: 6px !important; 
-    }
-    div[data-testid="stHorizontalBlock"]:has(.tx-row-marker) div[data-testid="stButton"] button { height: 28px !important; }
-    div[data-testid="stHorizontalBlock"]:has(.tx-row-marker) div[data-testid="stButton"] button p { font-size: 1rem !important; }
+    div[data-testid="stHorizontalBlock"]:has(.tx-row-marker) { gap: 4px !important; }
+    div[data-testid="stHorizontalBlock"]:has(.tx-row-marker) > div[data-testid="column"]:nth-child(1) { flex: 0 0 24px !important; width: 24px !important; }
+    div[data-testid="stHorizontalBlock"]:has(.tx-row-marker) > div[data-testid="column"]:nth-child(4) { flex: 0 0 26px !important; width: 26px !important; }
+    div[data-testid="stHorizontalBlock"]:has(.tx-row-marker) > div[data-testid="column"]:nth-child(5) { flex: 0 0 26px !important; width: 26px !important; }
     
-    .mobile-logo { width: 28px !important; height: 28px !important; margin-top: 0 !important; }
-    .mobile-tx-ticker { font-size: 0.95rem !important; line-height: 1.2; }
-    .mobile-tx-sub { font-size: 0.7rem !important; line-height: 1.2; margin-top: 2px; }
-    .mobile-tx-amount { font-size: 0.95rem !important; line-height: 1.2; }
-
-    /* Mobile Delete Overlay */
-    div[data-testid="stVerticalBlock"]:has(.del-overlay-container) > div[data-testid="stHorizontalBlock"] {
-        grid-template-columns: 1fr 60px 60px !important; gap: 6px !important; padding: 0 8px !important;
-    }
-    .del-txt { font-size: 0.9rem !important; }
+    div[data-testid="stHorizontalBlock"]:has(.tx-row-marker) div[data-testid="stButton"] button { width: 26px !important; height: 26px !important; }
+    div[data-testid="stHorizontalBlock"]:has(.tx-row-marker) div[data-testid="stButton"] button p { font-size: 0.9rem !important; }
+    
+    .mobile-logo { width: 22px !important; height: 22px !important; margin-top: 2px !important; }
+    .mobile-tx-ticker { font-size: 0.95rem !important; }
+    .mobile-tx-sub { font-size: 0.65rem !important; margin-top: 1px !important;}
+    .mobile-tx-amount { font-size: 0.95rem !important; }
 
     /* Dashboard Mobile Stats */
     .stats-layer-inner { gap: 6px !important; }
@@ -2893,6 +2844,7 @@ with tab_crypto:
     div[data-testid="stForm"]:has(.add-tx-card) .stTextInput input, div[data-testid="stForm"]:has(.add-tx-card) .stNumberInput input, div[data-testid="stForm"]:has(.add-tx-card) .stDateInput input, div[data-testid="stForm"]:has(.add-tx-card) div[data-baseweb="select"] > div {
         background: rgba(255,255,255,0.03) !important; border: 1px solid rgba(255,255,255,0.1) !important; color: #fff !important; border-radius: 8px !important; margin-bottom: 0px !important;
     }
+    div[data-testid="stForm"]:has(.add-tx-card) div[data-testid="stHorizontalBlock"]:has(> div[data-testid="column"]:nth-child(4)) { display: flex !important; gap: 12px !important; }
 
     /* BEAUTIFUL BUY/SELL SWITCH */
     div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] {
@@ -2913,53 +2865,42 @@ with tab_crypto:
     div[data-testid="stForm"]:has(.add-tx-card) .stButton > button { background: #1e2a44 !important; color: #e0e0e0 !important; padding: 0 24px !important; border-radius: 10px !important; font-size: 1.05rem !important; font-weight: 700 !important; box-shadow: 0 4px 15px rgba(0,0,0,0.25) !important; transition: all 0.3s ease !important; border: none !important; margin: 0 !important; width: auto !important; height: 48px !important; min-height: 48px !important; }
     div[data-testid="stForm"]:has(.add-tx-card) .stButton > button:hover { transform: translateY(-2px) !important; box-shadow: 0 8px 20px rgba(255, 255, 255, 0.2) !important; color: white !important; }
 
-    /* PC Grid for Form */
-    @media (min-width: 769px) {
-        div[data-testid="stForm"]:has(.add-tx-card) div[data-testid="stHorizontalBlock"] { display: grid !important; grid-template-columns: 1fr 1fr 1fr 1fr !important; gap: 12px !important; }
-        div[data-testid="stForm"]:has(.add-tx-card) div[data-testid="stHorizontalBlock"] > div[data-testid="column"] { width: 100% !important; min-width: 0 !important; padding: 0 !important; }
-        /* Action row PC */
-        div[data-testid="stForm"]:has(.add-tx-card) div[data-testid="stHorizontalBlock"]:last-of-type { grid-template-columns: 200px 1fr !important; margin-top: 12px !important;}
-    }
-
     /* ==============================================================
        HIGHLY COMPACT, IRONCLAD TRANSACTION ROWS (PC & MOBILE)
        ============================================================== */
     div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row-marker) {
         background: #0f172a !important; border: 1px solid rgba(255,255,255,0.05) !important;
-        border-radius: 8px !important; padding: 8px 12px !important; margin-bottom: 8px !important;
-        position: relative !important; z-index: 2; overflow: visible !important;
+        border-radius: 8px !important; padding: 4px 8px !important; margin-bottom: 6px !important;
     }
 
     /* Eliminate Streamlit's Internal Column Gaps */
     div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row-marker) div[data-testid="stVerticalBlock"] {
-        gap: 0 !important; padding: 0 !important; overflow: visible !important;
+        gap: 0 !important;
     }
 
-    /* FORCE CSS GRID - BLOCKS STREAMLIT STACKING */
+    /* FORCE HORIZONTAL FLEX WRAPPER - STOPS STREAMLIT STACKING */
     div[data-testid="stHorizontalBlock"]:has(.tx-row-marker) {
-        display: grid !important;
-        grid-template-columns: 36px 1fr auto 32px 32px !important;
-        gap: 12px !important;
-        align-items: center !important;
-        width: 100% !important;
+        display: flex !important; flex-direction: row !important; flex-wrap: nowrap !important;
+        align-items: center !important; width: 100% !important; gap: 8px !important; overflow: hidden !important;
     }
     div[data-testid="stHorizontalBlock"]:has(.tx-row-marker) > div[data-testid="column"] {
-        width: 100% !important; min-width: 0 !important; padding: 0 !important; flex: none !important; display: block !important;
+        width: auto !important; min-width: 0 !important; padding: 0 !important; flex: none !important;
     }
 
-    /* Specific Column Alignments */
-    div[data-testid="stHorizontalBlock"]:has(.tx-row-marker) > div[data-testid="column"]:nth-child(2) { text-align: left !important; }
-    div[data-testid="stHorizontalBlock"]:has(.tx-row-marker) > div[data-testid="column"]:nth-child(3) { text-align: right !important; }
-    div[data-testid="stHorizontalBlock"]:has(.tx-row-marker) > div[data-testid="column"]:nth-child(4) { display: flex !important; justify-content: center !important; }
-    div[data-testid="stHorizontalBlock"]:has(.tx-row-marker) > div[data-testid="column"]:nth-child(5) { display: flex !important; justify-content: center !important; }
+    /* Specific Column Sizing */
+    div[data-testid="stHorizontalBlock"]:has(.tx-row-marker) > div[data-testid="column"]:nth-child(1) { flex: 0 0 32px !important; } /* Logo */
+    div[data-testid="stHorizontalBlock"]:has(.tx-row-marker) > div[data-testid="column"]:nth-child(2) { flex: 1 1 auto !important; overflow: hidden; } /* Info */
+    div[data-testid="stHorizontalBlock"]:has(.tx-row-marker) > div[data-testid="column"]:nth-child(3) { flex: 1.2 1 auto !important; text-align: right; } /* Amounts */
+    div[data-testid="stHorizontalBlock"]:has(.tx-row-marker) > div[data-testid="column"]:nth-child(4) { flex: 0 0 28px !important; display: flex; justify-content: center; } /* Edit */
+    div[data-testid="stHorizontalBlock"]:has(.tx-row-marker) > div[data-testid="column"]:nth-child(5) { flex: 0 0 28px !important; display: flex; justify-content: center; } /* Delete */
 
     /* Sleek Icon Buttons */
     div[data-testid="stHorizontalBlock"]:has(.tx-row-marker) div[data-testid="stButton"] button {
         background: transparent !important; border: 1px solid rgba(255,255,255,0.05) !important;
         color: #94a3b8 !important; border-radius: 6px !important; box-shadow: none !important;
-        height: 32px !important; width: 100% !important; padding: 0 !important;
+        height: 28px !important; width: 28px !important; padding: 0 !important;
         display: flex !important; align-items: center !important; justify-content: center !important;
-        font-size: 1.1rem !important; line-height: 1 !important; transition: all 0.2s ease !important;
+        font-size: 1rem !important; line-height: 1 !important; transition: all 0.2s ease !important;
     }
     div[data-testid="stHorizontalBlock"]:has(.tx-row-marker) div[data-testid="stButton"] button p { font-size: 1.1rem !important; line-height: 1 !important; margin: 0; padding: 0; }
 
@@ -2972,57 +2913,37 @@ with tab_crypto:
 
     /* Typography Overrides */
     .mobile-logo { width: 28px !important; height: 28px !important; margin-top: 2px !important; }
-    .mobile-tx-ticker { font-size: 1.05rem !important; font-weight: 700; color: #fff; line-height: 1.2; margin-left: 2px; }
-    .mobile-tx-sub { font-size: 0.75rem !important; color: #94a3b8; line-height: 1.2; margin-top: 2px; margin-left: 2px; }
-    .mobile-tx-amount { font-size: 1.05rem !important; font-weight: 700; line-height: 1.2; }
+    .mobile-tx-ticker { font-size: 1rem !important; font-weight: 700; color: #fff; line-height: 1.1; margin-left: 2px; }
+    .mobile-tx-sub { font-size: 0.75rem !important; color: #94a3b8; line-height: 1.1; margin-top: 3px; margin-left: 2px; }
+    .mobile-tx-amount { font-size: 1rem !important; font-weight: 700; line-height: 1.1; }
 
-    /* ==============================================================
-       ABSOLUTE OVERLAY EDIT FORM (ZERO JUMPING)
-       ============================================================== */
+    /* IN-PLACE EDIT FORM (Replaces Row smoothly) */
     div[data-testid="stForm"]:has(.edit-form-marker) {
-        position: absolute !important;
-        top: -6px !important; left: -6px !important; width: calc(100% + 12px) !important;
-        z-index: 9999 !important;
-        background: rgba(15, 23, 42, 0.98) !important;
-        backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
-        border: 1px solid #00ff9d !important;
-        border-radius: 12px !important;
-        padding: 12px !important; margin: 0 !important;
-        box-shadow: 0 20px 40px rgba(0,0,0,0.9), 0 0 20px rgba(0, 255, 157, 0.2) !important;
+        background: rgba(15, 23, 42, 0.95) !important; border: 1px solid #00ff9d !important;
+        border-radius: 8px !important; padding: 12px 16px !important; margin-bottom: 6px !important;
+        box-shadow: 0 4px 15px rgba(0, 255, 157, 0.1) !important;
     }
     div[data-testid="stForm"]:has(.edit-form-marker) div[data-baseweb="select"] > div { background: rgba(255,255,255,0.03) !important; border: 1px solid rgba(255,255,255,0.1) !important; }
 
-    /* ==============================================================
-       ABSOLUTE DELETE DIALOG (ZERO JUMPING)
-       ============================================================== */
-    div[data-testid="stVerticalBlock"]:has(.del-overlay-container) {
-        position: absolute !important;
-        top: 0 !important; left: 0 !important; width: 100% !important; height: 100% !important;
-        z-index: 9998 !important;
-        background: rgba(15, 23, 42, 0.95) !important;
-        backdrop-filter: blur(5px); -webkit-backdrop-filter: blur(5px);
-        border-radius: 8px !important;
-        border: 1px solid #ff4d4d !important;
-        display: flex !important; align-items: center !important; justify-content: center !important;
-        padding: 0 12px !important;
-        box-shadow: 0 10px 30px rgba(255, 77, 77, 0.2) !important;
+    /* IN-PLACE DELETE DIALOG (Replaces Row smoothly) */
+    div[data-testid="stVerticalBlockBorderWrapper"]:has(.del-warn-marker) {
+        border-color: rgba(255, 77, 77, 0.3) !important; background: rgba(15, 23, 42, 0.95) !important;
+        border-radius: 8px !important; padding: 8px 12px !important; margin-bottom: 6px !important;
+        box-shadow: 0 4px 15px rgba(255, 77, 77, 0.1) !important;
     }
-    div[data-testid="stVerticalBlock"]:has(.del-overlay-container) > div[data-testid="stHorizontalBlock"] {
-        display: grid !important;
-        grid-template-columns: 1fr 80px 80px !important;
-        gap: 12px !important; width: 100% !important; align-items: center !important;
+    div[data-testid="stVerticalBlockBorderWrapper"]:has(.del-warn-marker) div[data-testid="stHorizontalBlock"] {
+        display: flex !important; flex-direction: row !important; align-items: center !important; gap: 8px !important;
     }
-    div[data-testid="stVerticalBlock"]:has(.del-overlay-container) > div[data-testid="stHorizontalBlock"] > div[data-testid="column"] {
-        width: 100% !important; min-width: 0 !important; padding: 0 !important;
+    div[data-testid="stVerticalBlockBorderWrapper"]:has(.del-warn-marker) div[data-testid="column"]:nth-child(1) { flex: 1 1 auto !important; }
+    div[data-testid="stVerticalBlockBorderWrapper"]:has(.del-warn-marker) div[data-testid="column"]:nth-child(2) { flex: 0 0 80px !important; }
+    div[data-testid="stVerticalBlockBorderWrapper"]:has(.del-warn-marker) div[data-testid="column"]:nth-child(3) { flex: 0 0 80px !important; }
+    div[data-testid="stVerticalBlockBorderWrapper"]:has(.del-warn-marker) .stButton > button {
+        border-radius: 6px !important; font-weight: 600 !important; width: 100% !important; padding: 4px !important; height: 32px !important; min-height: 32px !important; font-size: 0.9rem !important; transition: all 0.2s !important;
     }
-    div[data-testid="stVerticalBlock"]:has(.del-overlay-container) .stButton > button {
-        border-radius: 6px !important; font-weight: 600 !important; transition: all 0.2s !important; width: 100% !important; height: 32px !important; min-height: 32px !important; font-size: 0.9rem !important; padding: 0 !important;
-    }
-    div[data-testid="stVerticalBlock"]:has(.del-overlay-container) div[data-testid="column"]:nth-child(2) .stButton > button { background: rgba(255, 77, 77, 0.1) !important; color: #ff4d4d !important; border: 1px solid rgba(255, 77, 77, 0.3) !important; }
-    div[data-testid="stVerticalBlock"]:has(.del-overlay-container) div[data-testid="column"]:nth-child(2) .stButton > button:hover { background: #ff4d4d !important; color: white !important; }
-    div[data-testid="stVerticalBlock"]:has(.del-overlay-container) div[data-testid="column"]:nth-child(3) .stButton > button { background: rgba(255, 255, 255, 0.05) !important; color: #cbd5e1 !important; border: 1px solid rgba(255, 255, 255, 0.1) !important; }
-    div[data-testid="stVerticalBlock"]:has(.del-overlay-container) div[data-testid="column"]:nth-child(3) .stButton > button:hover { background: rgba(255, 255, 255, 0.15) !important; color: white !important; }
-    .del-txt { color: #ff4d4d; font-weight: 700; font-size: 1.05rem; }
+    div[data-testid="stVerticalBlockBorderWrapper"]:has(.del-warn-marker) div[data-testid="column"]:nth-child(2) .stButton > button { background: rgba(255, 77, 77, 0.1) !important; color: #ff4d4d !important; border: 1px solid rgba(255, 77, 77, 0.3) !important; }
+    div[data-testid="stVerticalBlockBorderWrapper"]:has(.del-warn-marker) div[data-testid="column"]:nth-child(2) .stButton > button:hover { background: #ff4d4d !important; color: white !important; }
+    div[data-testid="stVerticalBlockBorderWrapper"]:has(.del-warn-marker) div[data-testid="column"]:nth-child(3) .stButton > button { background: rgba(255, 255, 255, 0.05) !important; color: #cbd5e1 !important; border: 1px solid rgba(255, 255, 255, 0.1) !important; }
+    div[data-testid="stVerticalBlockBorderWrapper"]:has(.del-warn-marker) div[data-testid="column"]:nth-child(3) .stButton > button:hover { background: rgba(255, 255, 255, 0.15) !important; color: white !important; }
 
     /* ==============================================================
        MOBILE OVERRIDES
@@ -3031,45 +2952,26 @@ with tab_crypto:
         .glossy-header { margin-top: 0px !important; margin-bottom: 16px !important; padding: 20px 16px !important; font-size: 22px !important; min-height: 90px; }
         .home-header { margin-bottom: 0 !important; }
         
-        /* Mobile Grid for Form */
-        div[data-testid="stForm"]:has(.add-tx-card) div[data-testid="stHorizontalBlock"],
-        div[data-testid="stForm"]:has(.edit-form-marker) div[data-testid="stHorizontalBlock"] { 
-            display: grid !important; grid-template-columns: 1fr 1fr !important; gap: 8px !important; 
-        }
-        div[data-testid="stForm"]:has(.add-tx-card) div[data-testid="column"],
-        div[data-testid="stForm"]:has(.edit-form-marker) div[data-testid="column"] { 
-            width: 100% !important; min-width: 0 !important; padding: 0 !important; 
-        }
-        /* Action row mobile */
-        div[data-testid="stForm"]:has(.add-tx-card) div[data-testid="stHorizontalBlock"]:last-of-type,
-        div[data-testid="stForm"]:has(.edit-form-marker) div[data-testid="stHorizontalBlock"]:last-of-type { 
-            grid-template-columns: 1fr !important; margin-top: 8px !important;
-        }
         div[data-testid="stForm"]:has(.add-tx-card) input { padding: 6px !important; font-size: 0.95rem !important; }
-        div[data-testid="stForm"]:has(.add-tx-card) .stButton { justify-content: center !important; }
-        div[data-testid="stForm"]:has(.add-tx-card) .stButton > button,
-        div[data-testid="stForm"]:has(.edit-form-marker) .stButton > button { width: 100% !important; max-width: none !important; }
+        div[data-testid="stForm"]:has(.add-tx-card) .stButton { width: 100% !important; justify-content: center !important; }
+        div[data-testid="stForm"]:has(.add-tx-card) .stButton > button { width: 100% !important; max-width: none !important; }
 
         /* Ultra Compact Mobile Rows */
         div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row-marker) {
-            padding: 6px 8px !important; margin-bottom: 6px !important;
+            padding: 4px 6px !important; margin-bottom: 6px !important;
         }
-        div[data-testid="stHorizontalBlock"]:has(.tx-row-marker) {
-            grid-template-columns: 28px 1fr auto 28px 28px !important; gap: 6px !important; 
-        }
-        div[data-testid="stHorizontalBlock"]:has(.tx-row-marker) div[data-testid="stButton"] button { height: 28px !important; }
-        div[data-testid="stHorizontalBlock"]:has(.tx-row-marker) div[data-testid="stButton"] button p { font-size: 1rem !important; }
+        div[data-testid="stHorizontalBlock"]:has(.tx-row-marker) { gap: 4px !important; }
+        div[data-testid="stHorizontalBlock"]:has(.tx-row-marker) > div[data-testid="column"]:nth-child(1) { flex: 0 0 24px !important; width: 24px !important; }
+        div[data-testid="stHorizontalBlock"]:has(.tx-row-marker) > div[data-testid="column"]:nth-child(4) { flex: 0 0 26px !important; width: 26px !important; }
+        div[data-testid="stHorizontalBlock"]:has(.tx-row-marker) > div[data-testid="column"]:nth-child(5) { flex: 0 0 26px !important; width: 26px !important; }
         
-        .mobile-logo { width: 28px !important; height: 28px !important; margin-top: 0 !important; }
-        .mobile-tx-ticker { font-size: 0.95rem !important; line-height: 1.2; }
-        .mobile-tx-sub { font-size: 0.7rem !important; line-height: 1.2; margin-top: 2px; }
-        .mobile-tx-amount { font-size: 0.95rem !important; line-height: 1.2; }
-
-        /* Mobile Delete Overlay */
-        div[data-testid="stVerticalBlock"]:has(.del-overlay-container) > div[data-testid="stHorizontalBlock"] {
-            grid-template-columns: 1fr 60px 60px !important; gap: 6px !important; padding: 0 8px !important;
-        }
-        .del-txt { font-size: 0.9rem !important; }
+        div[data-testid="stHorizontalBlock"]:has(.tx-row-marker) div[data-testid="stButton"] button { width: 26px !important; height: 26px !important; }
+        div[data-testid="stHorizontalBlock"]:has(.tx-row-marker) div[data-testid="stButton"] button p { font-size: 0.9rem !important; }
+        
+        .mobile-logo { width: 22px !important; height: 22px !important; margin-top: 2px !important; }
+        .mobile-tx-ticker { font-size: 0.95rem !important; }
+        .mobile-tx-sub { font-size: 0.65rem !important; margin-top: 1px !important;}
+        .mobile-tx-amount { font-size: 0.95rem !important; }
 
         /* Dashboard Mobile Stats */
         .stats-layer-inner { gap: 6px !important; }
@@ -3153,95 +3055,93 @@ with tab_crypto:
             date_str = format_datum(r['Datum'])
 
             # TRUE REPLACEMENT LOGIC - Only renders 1 state at a time
-            with st.container(border=True):
-                # We render the 5 columns here, and they become the CSS grid anchors.
-                col_logo, col_ticker, col_vals, col_edit, col_del = st.columns(5)
-                
-                with col_logo:
-                    st.markdown(f"<div class='tx-row-marker'></div><img src='{logo_url}' class='mobile-logo' style='width:32px;height:32px;border-radius:50%;object-fit:contain;' onerror=\"this.src='https://via.placeholder.com/32/1e2a44/ffffff?text={r['Ticker'][0]}';\">", unsafe_allow_html=True)
+            if st.session_state.get('confirm_delete_crypto') == orig_idx:
+                with st.container(border=True):
+                    st.markdown("<div class='del-warn-marker'></div>", unsafe_allow_html=True)
+                    c_txt, c_yes, c_no = st.columns([2, 1, 1])
+                    with c_txt: st.markdown("<span style='color: #ff4d4d; font-size: 1rem; font-weight: 600;'>Delete entry?</span>", unsafe_allow_html=True)
+                    with c_yes:
+                        if st.button("Delete", key=f"yes_del_{orig_idx}", use_container_width=True):
+                            st.session_state.crypto_df = st.session_state.crypto_df.drop(orig_idx).reset_index(drop=True)
+                            save_crypto(st.session_state.crypto_df)
+                            st.session_state['confirm_delete_crypto'] = None
+                            st.session_state.crypto_table_version += 1
+                            st.session_state.ui_version += 1
+                            st.rerun()
+                    with c_no:
+                        if st.button("Cancel", key=f"no_del_{orig_idx}", use_container_width=True):
+                            st.session_state['confirm_delete_crypto'] = None
+                            st.rerun()
+            elif st.session_state.get('edit_crypto_row') == orig_idx:
+                with st.form(f"edit_crypto_form_{orig_idx}", border=False):
+                    st.markdown("<div class='edit-form-marker'></div><h5 style='color: #00ff9d; margin-top: 0px; margin-bottom: 10px;'>✎ Edit Row Details</h5>", unsafe_allow_html=True)
                     
-                with col_ticker:
-                    st.markdown(f"""
-                        <div style="line-height: 1.1; overflow: hidden; text-overflow: ellipsis;">
-                            <div class="mobile-tx-ticker">{r['Ticker']}</div>
-                            <div class="mobile-tx-sub">{date_str}</div>
-                        </div>
-                    """, unsafe_allow_html=True)
+                    e_r1c1, e_r1c2, e_r1c3 = st.columns([1,1,1])
+                    with e_r1c1: new_date = st.date_input("Date", value=datetime(1899, 12, 30) + timedelta(days=int(r['Datum'])))
+                    with e_r1c2: new_ticker = st.text_input("Ticker", value=r['Ticker']).upper().strip()
+                    with e_r1c3: new_stable_ticker = st.selectbox("Stablecoin", STABLECOINS_LIST, index=STABLECOINS_LIST.index(stable_ticker) if stable_ticker in STABLECOINS_LIST else 0)
                     
-                with col_vals:
-                    st.markdown(f"""
-                        <div style="display: flex; flex-direction: column; align-items: flex-end; justify-content: center; gap: 0px;">
-                            <div class="mobile-tx-amount" style="color: {color};">{sign}{amount_formatted}</div>
-                            <div class="mobile-tx-sub">{action_text}: {invested_formatted} @ ${price_formatted}</div>
-                        </div>
-                    """, unsafe_allow_html=True)
+                    e_r2c1, e_r2c2 = st.columns(2)
+                    with e_r2c1: new_stable = st.number_input("Stable Amount", value=float(abs(stable_amt)), step=0.01)
+                    with e_r2c2: new_amount = st.number_input("Coin Amount", value=float(abs(r['Amount'])), step=0.000001, format="%.8f")
                     
-                with col_edit:
-                    if st.button("✎", key=f"edit_btn_{orig_idx}"):
-                        st.session_state['edit_crypto_row'] = orig_idx
-                        st.session_state['confirm_delete_crypto'] = None
-                        st.rerun()
+                    tx_type_edit = st.radio("Type", ["Buy", "Sell"], horizontal=True, index=0 if is_buy else 1, label_visibility="collapsed")
+                     
+                    e_save, e_cancel = st.columns(2)
+                    with e_save: 
+                        if st.form_submit_button("💾 Save Changes"):
+                            final_stable = new_stable if tx_type_edit == "Buy" else -new_stable
+                            final_amount = new_amount if tx_type_edit == "Buy" else -new_amount
+                            new_price = round(new_stable / new_amount, 8) if new_amount > 0 else 0.0
+                            
+                            st.session_state.crypto_df.loc[orig_idx] = {"Datum": date_to_excel_serial(new_date), "Stable_Amt": final_stable, "Stable_Ticker": new_stable_ticker, "Ticker": new_ticker, "Amount": final_amount, "Price": new_price}
+                            save_crypto(st.session_state.crypto_df)
+                            st.session_state['edit_crypto_row'] = None
+                            st.session_state.crypto_table_version += 1
+                            st.session_state.ui_version += 1
+                            st.success("✅ Transaction updated!")
+                            st.rerun()
+                            
+                    with e_cancel:
+                        if st.form_submit_button("❌ Cancel"):
+                            st.session_state['edit_crypto_row'] = None
+                            st.rerun()
+            else:
+                # Standard Compact Row Display
+                with st.container(border=True):
+                    # Hook for strict horizontal flex CSS
+                    col_logo, col_ticker, col_vals, col_edit, col_del = st.columns(5)
+                    
+                    with col_logo:
+                        st.markdown(f"<div class='tx-row-marker'></div><img src='{logo_url}' class='mobile-logo' style='width:32px;height:32px;border-radius:50%;object-fit:contain;' onerror=\"this.src='https://via.placeholder.com/32/1e2a44/ffffff?text={r['Ticker'][0]}';\">", unsafe_allow_html=True)
                         
-                with col_del:
-                    if st.button("✕", key=f"del_btn_{orig_idx}"):
-                        st.session_state['confirm_delete_crypto'] = orig_idx
-                        st.session_state['edit_crypto_row'] = None
-                        st.rerun()
-
-                # Overlay Delete Warning
-                if st.session_state.get('confirm_delete_crypto') == orig_idx:
-                    with st.container():
-                        st.markdown("<div class='del-overlay-container'></div>", unsafe_allow_html=True)
-                        c_txt, c_yes, c_no = st.columns(3)
-                        with c_txt: st.markdown("<div class='del-txt'>Delete?</div>", unsafe_allow_html=True)
-                        with c_yes:
-                            if st.button("Delete", key=f"yes_del_{orig_idx}", use_container_width=True):
-                                st.session_state.crypto_df = st.session_state.crypto_df.drop(orig_idx).reset_index(drop=True)
-                                save_crypto(st.session_state.crypto_df)
-                                st.session_state['confirm_delete_crypto'] = None
-                                st.session_state.crypto_table_version += 1
-                                st.session_state.ui_version += 1
-                                st.rerun()
-                        with c_no:
-                            if st.button("Cancel", key=f"no_del_{orig_idx}", use_container_width=True):
-                                st.session_state['confirm_delete_crypto'] = None
-                                st.rerun()
-
-                # Overlay Edit Form
-                if st.session_state.get('edit_crypto_row') == orig_idx:
-                    with st.form(f"edit_crypto_form_{orig_idx}", border=False):
-                        st.markdown("<div class='edit-form-marker'></div><h5 style='color: #00ff9d; margin-top: 0px; margin-bottom: 10px;'>✎ Edit Row Details</h5>", unsafe_allow_html=True)
+                    with col_ticker:
+                        st.markdown(f"""
+                            <div style="line-height: 1.1; overflow: hidden; text-overflow: ellipsis;">
+                                <div class="mobile-tx-ticker" style="font-weight: 700; font-size: 1.05rem; color: #ffffff; white-space: nowrap;">{r['Ticker']}</div>
+                                <div class="mobile-tx-sub" style="font-size: 0.75rem; color: #94a3b8; white-space: nowrap;">{date_str}</div>
+                            </div>
+                        """, unsafe_allow_html=True)
                         
-                        e_r1c1, e_r1c2, e_r1c3 = st.columns([1,1,1])
-                        with e_r1c1: new_date = st.date_input("Date", value=datetime(1899, 12, 30) + timedelta(days=int(r['Datum'])))
-                        with e_r1c2: new_ticker = st.text_input("Ticker", value=r['Ticker']).upper().strip()
-                        with e_r1c3: new_stable_ticker = st.selectbox("Stablecoin", STABLECOINS_LIST, index=STABLECOINS_LIST.index(stable_ticker) if stable_ticker in STABLECOINS_LIST else 0)
+                    with col_vals:
+                        st.markdown(f"""
+                            <div style="display: flex; flex-direction: column; align-items: flex-end; justify-content: center; gap: 0px;">
+                                <div class="mobile-tx-amount" style="font-weight: 700; font-size: 1.05rem; color: {color}; white-space: nowrap;">{sign}{amount_formatted}</div>
+                                <div class="mobile-tx-sub" style="font-size: 0.75rem; color: #cbd5e1; white-space: nowrap;">{action_text}: {invested_formatted} @ ${price_formatted}</div>
+                            </div>
+                        """, unsafe_allow_html=True)
                         
-                        e_r2c1, e_r2c2 = st.columns(2)
-                        with e_r2c1: new_stable = st.number_input("Stable Amount", value=float(abs(stable_amt)), step=0.01)
-                        with e_r2c2: new_amount = st.number_input("Coin Amount", value=float(abs(r['Amount'])), step=0.000001, format="%.8f")
-                        
-                        tx_type_edit = st.radio("Type", ["Buy", "Sell"], horizontal=True, index=0 if is_buy else 1, label_visibility="collapsed")
-                         
-                        e_save, e_cancel = st.columns(2)
-                        with e_save: 
-                            if st.form_submit_button("💾 Save Changes"):
-                                final_stable = new_stable if tx_type_edit == "Buy" else -new_stable
-                                final_amount = new_amount if tx_type_edit == "Buy" else -new_amount
-                                new_price = round(new_stable / new_amount, 8) if new_amount > 0 else 0.0
-                                
-                                st.session_state.crypto_df.loc[orig_idx] = {"Datum": date_to_excel_serial(new_date), "Stable_Amt": final_stable, "Stable_Ticker": new_stable_ticker, "Ticker": new_ticker, "Amount": final_amount, "Price": new_price}
-                                save_crypto(st.session_state.crypto_df)
-                                st.session_state['edit_crypto_row'] = None
-                                st.session_state.crypto_table_version += 1
-                                st.session_state.ui_version += 1
-                                st.success("✅ Transaction updated!")
-                                st.rerun()
-                                
-                        with e_cancel:
-                            if st.form_submit_button("❌ Cancel"):
-                                st.session_state['edit_crypto_row'] = None
-                                st.rerun()
+                    with col_edit:
+                        if st.button("✎", key=f"edit_btn_{orig_idx}"):
+                            st.session_state['edit_crypto_row'] = orig_idx
+                            st.session_state['confirm_delete_crypto'] = None
+                            st.rerun()
+                            
+                    with col_del:
+                        if st.button("✕", key=f"del_btn_{orig_idx}"):
+                            st.session_state['confirm_delete_crypto'] = orig_idx
+                            st.session_state['edit_crypto_row'] = None
+                            st.rerun()
 
 with tab_fiat:
     total_czk = pd.to_numeric(st.session_state.fiat_df['CZK'], errors='coerce').fillna(0).sum()
@@ -3321,53 +3221,86 @@ with tab_fiat:
             fiat_formatted = f"CZK: {czk_val:,.2f} / EUR: {eur_val:,.2f}"
             date_str = format_datum(r['Datum'])
 
-            with st.container(border=True):
-                col_logo, col_fiat, col_vals, col_edit, col_del = st.columns(5)
-                
-                with col_logo:
-                    st.markdown(f"<div class='tx-row-marker'></div><img src='{logo_url}' class='mobile-logo' style='width:32px;height:32px;border-radius:50%;object-fit:contain;' onerror=\"this.src='https://via.placeholder.com/32/1e2a44/ffffff?text={stable_ticker[0]}';\">", unsafe_allow_html=True)
+            if st.session_state.get('confirm_delete_fiat') == orig_idx:
+                with st.container(border=True):
+                    st.markdown("<div class='del-warn-marker'></div>", unsafe_allow_html=True)
+                    c_txt, c_yes, c_no = st.columns([2, 1, 1])
+                    with c_txt: st.markdown("<span style='color: #ff4d4d; font-size: 1rem; font-weight: 600;'>Delete entry?</span>", unsafe_allow_html=True)
+                    with c_yes:
+                        if st.button("Delete", key=f"yes_fiat_del_{orig_idx}", use_container_width=True):
+                            st.session_state.fiat_df = st.session_state.fiat_df.drop(orig_idx).reset_index(drop=True)
+                            save_fiat(st.session_state.fiat_df)
+                            st.session_state['confirm_delete_fiat'] = None
+                            st.session_state.fiat_table_version += 1
+                            st.session_state.ui_version += 1
+                            st.rerun()
+                    with c_no:
+                        if st.button("Cancel", key=f"no_fiat_del_{orig_idx}", use_container_width=True):
+                            st.session_state['confirm_delete_fiat'] = None
+                            st.rerun()
+            elif st.session_state.get('edit_fiat_row') == orig_idx:
+                with st.form(f"edit_fiat_form_{orig_idx}", border=False):
+                    st.markdown("<div class='edit-form-marker'></div><h5 style='color: #00ff9d; margin-top: 0px; margin-bottom: 10px;'>✎ Edit Fiat Details</h5>", unsafe_allow_html=True)
                     
-                with col_fiat:
-                    st.markdown(f"""
-                        <div style="line-height: 1.1; overflow: hidden; text-overflow: ellipsis;">
-                            <div class="mobile-tx-ticker">{date_str}</div>
-                            <div class="mobile-tx-sub">{fiat_formatted}</div>
-                        </div>
-                    """, unsafe_allow_html=True)
+                    e_f1, e_f2, e_f3 = st.columns(3)
+                    with e_f1: new_date = st.date_input("Date", value=datetime(1899, 12, 30) + timedelta(days=int(r['Datum'])))
+                    with e_f2: new_czk = st.number_input("CZK", value=float(czk_val), step=0.01)
+                    with e_f3: new_eur = st.number_input("EUR", value=float(eur_val), step=0.01)
                     
-                with col_vals:
-                    st.markdown(f"""
-                        <div style="display: flex; flex-direction: column; align-items: flex-end; justify-content: center; gap: 0px;">
-                            <div class="mobile-tx-amount" style="color: #00ff9d;">{stable_formatted}</div>
-                            <div class="mobile-tx-sub">Fee: {fee_val:,.2f} EUR</div>
-                        </div>
-                    """, unsafe_allow_html=True)
+                    e_f4, e_f5, e_f6 = st.columns(3)
+                    with e_f4: new_fee = st.number_input("Fee", value=float(fee_val), step=0.01)
+                    with e_f5: new_stable_ticker = st.selectbox("Stablecoin", STABLECOINS_LIST, index=STABLECOINS_LIST.index(stable_ticker) if stable_ticker in STABLECOINS_LIST else 0)
+                    with e_f6: new_stable = st.number_input("Stable Amount", value=float(stable_amt), step=0.01)
+                     
+                    e_save, e_cancel = st.columns(2)
+                    with e_save: 
+                        if st.form_submit_button("💾 Save Changes"):
+                            new_czk_eur = round(new_czk / new_eur, 5) if new_eur > 0 else 0.0
+                            
+                            st.session_state.fiat_df.loc[orig_idx] = {"Datum": date_to_excel_serial(new_date), "CZK": new_czk, "EUR": new_eur, "Fee": new_fee, "CZK/EUR": new_czk_eur, "Stable_Amt": new_stable, "Stable_Ticker": new_stable_ticker, "NI": r.get('NI', ""), "GG": r.get('GG', ""), "ER": r.get('ER', "")}
+                            save_fiat(st.session_state.fiat_df)
+                            st.session_state['edit_fiat_row'] = None
+                            st.session_state.fiat_table_version += 1
+                            st.session_state.ui_version += 1
+                            st.success("✅ Entry updated!")
+                            st.rerun()
+                            
+                    with e_cancel:
+                        if st.form_submit_button("❌ Cancel"):
+                            st.session_state['edit_fiat_row'] = None
+                            st.rerun()
+            else:
+                # Standard Compact Row Display
+                with st.container(border=True):
+                    col_logo, col_fiat, col_vals, col_edit, col_del = st.columns(5)
                     
-                with col_edit:
-                    if st.button("✎", key=f"edit_fiat_btn_{orig_idx}"):
-                        st.session_state['edit_fiat_row'] = orig_idx
-                        st.session_state['confirm_delete_fiat'] = None
-                        st.rerun()
+                    with col_logo:
+                        st.markdown(f"<div class='tx-row-marker'></div><img src='{logo_url}' class='mobile-logo' style='width:32px;height:32px;border-radius:50%;object-fit:contain;' onerror=\"this.src='https://via.placeholder.com/32/1e2a44/ffffff?text={stable_ticker[0]}';\">", unsafe_allow_html=True)
                         
-                with col_del:
-                    if st.button("✕", key=f"del_fiat_btn_{orig_idx}"):
-                        st.session_state['confirm_delete_fiat'] = orig_idx
-                        st.session_state['edit_fiat_row'] = None
-                        st.rerun()
-
-                # Overlay Delete Warning
-                if st.session_state.get('confirm_delete_fiat') == orig_idx:
-                    with st.container():
-                        st.markdown("<div class='del-overlay-container'></div>", unsafe_allow_html=True)
-                        c_txt, c_yes, c_no = st.columns(3)
-                        with c_txt: st.markdown("<div class='del-txt'>Delete?</div>", unsafe_allow_html=True)
-                        with c_yes:
-                            if st.button("Delete", key=f"yes_fiat_del_{orig_idx}", use_container_width=True):
-                                st.session_state.fiat_df = st.session_state.fiat_df.drop(orig_idx).reset_index(drop=True)
-                                save_fiat(st.session_state.fiat_df)
-                                st.session_state['confirm_delete_fiat'] = None
-                                st.session_state.fiat_table_version += 1
-                                st.session_state.ui_version += 1
-                                st.rerun()
-                        with c_no:
-                            if st.button("
+                    with col_fiat:
+                        st.markdown(f"""
+                            <div style="line-height: 1.1; overflow: hidden; text-overflow: ellipsis;">
+                                <div class="mobile-tx-ticker" style="font-weight: 700; font-size: 1.05rem; color: #ffffff; white-space: nowrap;">{date_str}</div>
+                                <div class="mobile-tx-sub" style="font-size: 0.75rem; color: #94a3b8; white-space: nowrap;">{fiat_formatted}</div>
+                            </div>
+                        """, unsafe_allow_html=True)
+                        
+                    with col_vals:
+                        st.markdown(f"""
+                            <div style="display: flex; flex-direction: column; align-items: flex-end; justify-content: center; gap: 0px;">
+                                <div class="mobile-tx-amount" style="font-weight: 700; font-size: 1.05rem; color: #00ff9d; white-space: nowrap;">{stable_formatted}</div>
+                                <div class="mobile-tx-sub" style="font-size: 0.75rem; color: #cbd5e1; white-space: nowrap;">Fee: {fee_val:,.2f} EUR</div>
+                            </div>
+                        """, unsafe_allow_html=True)
+                        
+                    with col_edit:
+                        if st.button("✎", key=f"edit_fiat_btn_{orig_idx}"):
+                            st.session_state['edit_fiat_row'] = orig_idx
+                            st.session_state['confirm_delete_fiat'] = None
+                            st.rerun()
+                            
+                    with col_del:
+                        if st.button("✕", key=f"del_fiat_btn_{orig_idx}"):
+                            st.session_state['confirm_delete_fiat'] = orig_idx
+                            st.session_state['edit_fiat_row'] = None
+                            st.rerun()
