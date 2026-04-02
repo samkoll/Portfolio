@@ -2789,13 +2789,13 @@ background: transparent !important; flex: 1 !important; display: flex !important
     div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label p { font-weight: bold !important; font-size: 1.05rem !important; color: #94a3b8 !important;
 margin: 0 !important; padding: 0 !important; white-space: nowrap !important; line-height: 1 !important;
 }
-    div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label:has(input:checked):first-child, div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label[aria-checked="true"]:first-child { background: rgba(0, 255, 157, 0.15) !important; border-color: #00ff9d !important;
+    div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label:has(input:checked):first-child { background: rgba(0, 255, 157, 0.15) !important; border-color: #00ff9d !important;
 }
-    div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label:has(input:checked):first-child p, div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label[aria-checked="true"]:first-child p { color: #00ff9d !important;
+    div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label:has(input:checked):first-child p { color: #00ff9d !important;
 }
-    div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label:has(input:checked):last-child, div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label[aria-checked="true"]:last-child { background: rgba(255, 77, 77, 0.15) !important; border-color: #ff4d4d !important;
+    div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label:has(input:checked):last-child { background: rgba(255, 77, 77, 0.15) !important; border-color: #ff4d4d !important;
 }
-    div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label:has(input:checked):last-child p, div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label[aria-checked="true"]:last-child p { color: #ff4d4d !important;
+    div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label:has(input:checked):last-child p { color: #ff4d4d !important;
 }
 
     div[data-testid="stForm"]:has(.add-tx-card) .stButton { display: flex !important; justify-content: flex-end !important; align-items: center !important; margin: 0 !important;
@@ -3019,11 +3019,11 @@ box-shadow: 0 8px 20px rgba(255, 255, 255, 0.2) !important; color: white !import
             else:
                 # NEW HTML-GRID COMPACT ROW DISPLAY
                 with st.container(border=True):
-                    col_info, col_edit, col_del = st.columns(3)
+                    col_info, col_edit, col_del = st.columns([1, 0.1, 0.1])
                     
                     with col_info:
                         st.markdown(f"""
-                        <div class="tx-row" style="display: flex; justify-content: space-between; align-items: center; width: 100%; height: 100%; min-height: 48px;">
+                        <div class="tx-row" style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
                             <div style="display: flex; align-items: center; gap: 12px; overflow: hidden; flex: 1;">
                                 <img src="{logo_url}" style="width: 32px; height: 32px; border-radius: 50%; object-fit: contain; flex-shrink: 0; {bg_style}" onerror="this.src='https://via.placeholder.com/32/1e2a44/ffffff?text={r['Ticker'][0]}';">
                                 <div style="display: flex; flex-direction: column; overflow: hidden; min-width: 0; padding-bottom: 2px;">
@@ -3092,4 +3092,120 @@ with tab_fiat:
             action_col1, action_col2 = st.columns(2)
             with action_col1:
                 st.markdown("<div style='color: transparent;'>Spacing</div>", unsafe_allow_html=True)
-            with action_col
+            with action_col2:
+                submitted_fiat = st.form_submit_button("Add Entry")
+                
+            if submitted_fiat:
+                czk_eur = round(czk / eur, 5) if eur > 0 else 0.0
+                new_row = pd.DataFrame([{"Datum": date_to_excel_serial(selected_date), "CZK": czk, "EUR": eur, "Fee": fee, "CZK/EUR": czk_eur, "Stable_Amt": stable_amt, "Stable_Ticker": stable_ticker, "NI": "", "GG": "", "ER": ""}])
+                st.session_state.fiat_df = pd.concat([st.session_state.fiat_df, new_row], ignore_index=True)
+                save_fiat(st.session_state.fiat_df)
+                st.session_state.fiat_table_version += 1
+                st.session_state.ui_version += 1
+                st.success(f"✅ Executed fiat deposit!")
+                st.rerun()
+
+    df_fiat_display = st.session_state.fiat_df.copy()
+    df_fiat_display['orig_idx'] = df_fiat_display.index
+    df_fiat_display = df_fiat_display.dropna(how='all')
+    df_fiat_display = df_fiat_display.sort_values(by='Datum', ascending=False)
+
+    st.markdown("<h4 style='color: white; margin-top: 10px; margin-bottom: 10px;'>Fiat History</h4>", unsafe_allow_html=True)
+
+    # 2. SCROLLABLE FIAT TRANSACTION LIST
+    with st.container(height=650, border=False):
+        for i, r in df_fiat_display.iterrows():
+            orig_idx = r['orig_idx']
+            stable_ticker = r.get('Stable_Ticker', 'USDC')
+            logo_url = get_ticker_logo(stable_ticker)
+            
+            stable_amt = r.get('Stable_Amt', 0.0)
+            czk_val = r.get('CZK', 0.0)
+            eur_val = r.get('EUR', 0.0)
+            fee_val = r.get('Fee', 0.0)
+            
+            stable_formatted = f"+{stable_amt:,.2f} {stable_ticker}"
+            fiat_formatted = f"CZK: {czk_val:,.2f} / EUR: {eur_val:,.2f}"
+            date_str = format_datum(r['Datum'])
+
+            if st.session_state.get('confirm_delete_fiat') == orig_idx:
+                with st.container(border=True):
+                    st.markdown("<div class='del-warn-marker'></div>", unsafe_allow_html=True)
+                    c_txt, c_yes, c_no = st.columns([2, 1, 1])
+                    with c_txt: st.markdown("<span style='color: #ff4d4d; font-size: 1rem; font-weight: 600;'>Delete entry?</span>", unsafe_allow_html=True)
+                    with c_yes:
+                        if st.button("Delete", key=f"yes_fiat_del_{orig_idx}", use_container_width=True):
+                            st.session_state.fiat_df = st.session_state.fiat_df.drop(orig_idx).reset_index(drop=True)
+                            save_fiat(st.session_state.fiat_df)
+                            st.session_state['confirm_delete_fiat'] = None
+                            st.session_state.fiat_table_version += 1
+                            st.session_state.ui_version += 1
+                            st.rerun()
+                    with c_no:
+                        if st.button("Cancel", key=f"no_fiat_del_{orig_idx}", use_container_width=True):
+                            st.session_state['confirm_delete_fiat'] = None
+                            st.rerun()
+            elif st.session_state.get('edit_fiat_row') == orig_idx:
+                with st.form(f"edit_fiat_form_{orig_idx}", border=False):
+                    st.markdown("<div class='edit-form-marker'></div><h5 style='color: #00ff9d; margin-top: 0px; margin-bottom: 10px;'>✎ Edit Fiat Details</h5>", unsafe_allow_html=True)
+                    
+                    e_f1, e_f2, e_f3 = st.columns(3)
+                    with e_f1: new_date = st.date_input("Date", value=datetime(1899, 12, 30) + timedelta(days=int(r['Datum'])))
+                    with e_f2: new_czk = st.number_input("CZK", value=float(czk_val), step=0.01)
+                    with e_f3: new_eur = st.number_input("EUR", value=float(eur_val), step=0.01)
+                    
+                    e_f4, e_f5, e_f6 = st.columns(3)
+                    with e_f4: new_fee = st.number_input("Fee", value=float(fee_val), step=0.01)
+                    with e_f5: new_stable_ticker = st.selectbox("Stablecoin", STABLECOINS_LIST, index=STABLECOINS_LIST.index(stable_ticker) if stable_ticker in STABLECOINS_LIST else 0)
+                    with e_f6: new_stable = st.number_input("Stable Amount", value=float(stable_amt), step=0.01)
+                     
+                    e_save, e_cancel = st.columns(2)
+                    with e_save: 
+                        if st.form_submit_button("💾 Save Changes"):
+                            new_czk_eur = round(new_czk / new_eur, 5) if new_eur > 0 else 0.0
+                            
+                            st.session_state.fiat_df.loc[orig_idx] = {"Datum": date_to_excel_serial(new_date), "CZK": new_czk, "EUR": new_eur, "Fee": new_fee, "CZK/EUR": new_czk_eur, "Stable_Amt": new_stable, "Stable_Ticker": new_stable_ticker, "NI": r.get('NI', ""), "GG": r.get('GG', ""), "ER": r.get('ER', "")}
+                            save_fiat(st.session_state.fiat_df)
+                            st.session_state['edit_fiat_row'] = None
+                            st.session_state.fiat_table_version += 1
+                            st.session_state.ui_version += 1
+                            st.success("✅ Entry updated!")
+                            st.rerun()
+                            
+                    with e_cancel:
+                        if st.form_submit_button("❌ Cancel"):
+                            st.session_state['edit_fiat_row'] = None
+                            st.rerun()
+            else:
+                # NEW HTML-GRID COMPACT ROW DISPLAY
+                with st.container(border=True):
+                    col_info, col_edit, col_del = st.columns([1, 0.1, 0.1])
+                    
+                    with col_info:
+                        st.markdown(f"""
+                        <div class="tx-row" style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+                            <div style="display: flex; align-items: center; gap: 12px; overflow: hidden; flex: 1;">
+                                <img src="{logo_url}" style="width: 32px; height: 32px; border-radius: 50%; object-fit: contain; flex-shrink: 0; background-color:#ffffff;" onerror="this.src='https://via.placeholder.com/32/1e2a44/ffffff?text={stable_ticker[0]}';">
+                                <div style="display: flex; flex-direction: column; overflow: hidden; min-width: 0; padding-bottom: 2px;">
+                                    <span style="font-weight: 700; font-size: 1rem; color: #ffffff; white-space: nowrap; text-overflow: ellipsis; overflow: hidden; line-height: 1.3;">{date_str}</span>
+                                    <span style="font-size: 0.75rem; color: #94a3b8; white-space: nowrap; text-overflow: ellipsis; overflow: hidden; line-height: 1.3;">{fiat_formatted}</span>
+                                </div>
+                            </div>
+                            <div style="display: flex; flex-direction: column; align-items: flex-end; justify-content: center; overflow: hidden; padding-left: 4px; padding-bottom: 2px; flex-shrink: 0;">
+                                <span style="font-weight: 700; font-size: 1rem; color: #00ff9d; white-space: nowrap; text-overflow: ellipsis; overflow: hidden; line-height: 1.3;">{stable_formatted}</span>
+                                <span style="font-size: 0.75rem; color: #cbd5e1; white-space: nowrap; text-overflow: ellipsis; overflow: hidden; line-height: 1.3;">Fee: {fee_val:,.2f} EUR</span>
+                            </div>
+                        </div>
+                        """, unsafe_allow_html=True)
+                        
+                    with col_edit:
+                        if st.button("✎", key=f"edit_fiat_btn_{orig_idx}"):
+                            st.session_state['edit_fiat_row'] = orig_idx
+                            st.session_state['confirm_delete_fiat'] = None
+                            st.rerun()
+                            
+                    with col_del:
+                        if st.button("✕", key=f"del_fiat_btn_{orig_idx}"):
+                            st.session_state['confirm_delete_fiat'] = orig_idx
+                            st.session_state['edit_fiat_row'] = None
+                            st.rerun()
