@@ -367,8 +367,7 @@ input[type="number"] { -moz-appearance: textfield;
    COMPACT EXPANDER FOR FORMS
    ============================================================== */
 div[data-testid="stExpander"] {
-    background: #0f172a !important;
-    border: 1px solid rgba(255,255,255,0.05) !important;
+    background: #0f172a !important; border: 1px solid rgba(255,255,255,0.05) !important;
     border-radius: 12px !important; box-shadow: 0 4px 15px rgba(0,0,0,0.3) !important; margin-bottom: 24px !important;
 }
 div[data-testid="stExpander"] summary {
@@ -408,74 +407,81 @@ div[data-testid="stForm"]:has(.add-tx-card) .stButton > button:hover { transform
 /* ==============================================================
    NATIVE SWIPE-TO-REVEAL TRANSACTION ROWS
    ============================================================== */
+/* Wrapper hides everything that overflows, making buttons completely invisible initially */
 div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row) {
     background: #0f172a !important; 
     border: 1px solid rgba(255,255,255,0.05) !important; 
     border-radius: 12px !important; 
-    padding: 0 !important; /* Zero padding to let swipe go edge-to-edge */
-    margin-bottom: 8px !important; transition: background 0.3s ease; 
-    overflow: hidden !important; /* Crucial for hiding buttons */
+    padding: 0 !important; 
+    margin-bottom: 8px !important; 
+    overflow: hidden !important; 
     position: relative !important;
-    touch-action: pan-y !important; 
+    touch-action: pan-y !important; /* Block horizontal scrolling by browser, rely on JS */
 }
-div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row):hover { background: rgba(30, 41, 59, 0.8) !important; }
-div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row) div[data-testid="stVerticalBlock"] { gap: 0 !important; }
+div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row) div[data-testid="stVerticalBlock"] {
+    gap: 0 !important;
+}
 
 /* The Sliding Track */
 div[data-testid="stHorizontalBlock"]:has(.tx-row) {
-    display: flex !important; flex-direction: row !important; flex-wrap: nowrap !important; align-items: stretch !important; 
-    width: 100% !important; gap: 0 !important; box-sizing: border-box !important;
+    display: flex !important; 
+    flex-direction: row !important; 
+    flex-wrap: nowrap !important; 
+    width: 100% !important; 
+    gap: 0 !important; 
     position: relative !important;
     transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1) !important;
     cursor: pointer !important;
-    overflow: visible !important; /* Stop inner scrolling */
+    overflow: visible !important; /* Let buttons extend past right edge */
 }
 
-/* The Swiped State (Triggered by JS or Hover) */
+/* The Swiped State */
 div[data-testid="stHorizontalBlock"]:has(.tx-row).swiped-left {
-    transform: translateX(-100px) !important; 
+    transform: translateX(-130px) !important; /* Slide left exactly 130px (65px * 2) */
 }
 
-/* Column 1: Info Box (Takes exactly 100% of the visible container) */
+/* Column 1: Info Box (Takes exactly 100% of wrapper width) */
 div[data-testid="stHorizontalBlock"]:has(.tx-row) > div[data-testid="column"]:nth-child(1) { 
-    flex: 1 1 100% !important; width: 100% !important; min-width: 100% !important; 
-    padding: 12px 16px !important; box-sizing: border-box !important;
+    flex: 0 0 100% !important; 
+    width: 100% !important; 
+    min-width: 100% !important; 
+    padding: 12px 16px !important; 
+    box-sizing: border-box !important;
 }
 
 /* Columns 2 & 3: Action Buttons (Absolutely positioned OFF-SCREEN to the right) */
 div[data-testid="stHorizontalBlock"]:has(.tx-row) > div[data-testid="column"]:nth-child(2) { 
-    position: absolute !important; right: -50px !important; top: 0 !important; bottom: 0 !important; 
-    width: 50px !important; flex: 0 0 50px !important; display: flex !important; justify-content: center !important; align-items: center !important;
-    background: rgba(0, 255, 157, 0.1) !important; border-left: 1px solid rgba(255,255,255,0.05) !important;
+    position: absolute !important; right: -65px !important; top: 0 !important; bottom: 0 !important; 
+    width: 65px !important; height: 100% !important; flex: 0 0 65px !important;
+    background: rgba(0, 255, 157, 0.1) !important;
+    border-left: 1px solid rgba(255,255,255,0.05) !important;
 }
 div[data-testid="stHorizontalBlock"]:has(.tx-row) > div[data-testid="column"]:nth-child(3) { 
-    position: absolute !important; right: -100px !important; top: 0 !important; bottom: 0 !important; 
-    width: 50px !important; flex: 0 0 50px !important; display: flex !important; justify-content: center !important; align-items: center !important;
-    background: rgba(255, 77, 77, 0.1) !important; border-left: 1px solid rgba(255,255,255,0.05) !important;
+    position: absolute !important; right: -130px !important; top: 0 !important; bottom: 0 !important; 
+    width: 65px !important; height: 100% !important; flex: 0 0 65px !important;
+    background: rgba(255, 77, 77, 0.1) !important;
+    border-left: 1px solid rgba(255,255,255,0.05) !important;
 }
 
-/* Purge Streamlit Button Padding & Sizing */
-div[data-testid="stHorizontalBlock"]:has(.tx-row) div[data-testid="stButton"] {
-    width: 100% !important; height: 100% !important; display: flex !important; align-items: center !important; justify-content: center !important;
-}
+/* Purge Streamlit Button Padding to stretch fully in cells */
+div[data-testid="stHorizontalBlock"]:has(.tx-row) div[data-testid="stButton"],
 div[data-testid="stHorizontalBlock"]:has(.tx-row) div[data-testid="stButton"] button {
-    width: 32px !important; height: 32px !important; min-height: 32px !important; max-height: 32px !important;
-    margin: 0 auto !important; padding: 0 !important; 
-    border: 1px solid rgba(255,255,255,0.1) !important; border-radius: 8px !important; 
+    width: 100% !important; height: 100% !important; min-height: 100% !important; 
+    margin: 0 !important; padding: 0 !important; 
+    border: none !important; border-radius: 0 !important; 
     box-shadow: none !important; background: transparent !important; 
     display: flex !important; align-items: center !important; justify-content: center !important;
-    transition: all 0.2s ease !important;
 }
-div[data-testid="stHorizontalBlock"]:has(.tx-row) div[data-testid="column"]:nth-child(2) div[data-testid="stButton"] button p { color: #00ff9d !important; font-size: 1.1rem !important; margin: 0; padding: 0; }
-div[data-testid="stHorizontalBlock"]:has(.tx-row) div[data-testid="column"]:nth-child(3) div[data-testid="stButton"] button p { color: #ff4d4d !important; font-size: 1.1rem !important; margin: 0; padding: 0; }
+div[data-testid="stHorizontalBlock"]:has(.tx-row) div[data-testid="column"]:nth-child(2) div[data-testid="stButton"] button p { font-size: 1.2rem !important; color: #00ff9d !important; margin: 0; padding: 0; }
+div[data-testid="stHorizontalBlock"]:has(.tx-row) div[data-testid="column"]:nth-child(3) div[data-testid="stButton"] button p { font-size: 1.2rem !important; color: #ff4d4d !important; margin: 0; padding: 0; }
 
 /* PC Hover effect */
 @media (hover: hover) and (pointer: fine) {
     div[data-testid="stHorizontalBlock"]:has(.tx-row):hover {
-        transform: translateX(-100px) !important;
+        transform: translateX(-130px) !important;
     }
-    div[data-testid="stHorizontalBlock"]:has(.tx-row) div[data-testid="column"]:nth-child(2) div[data-testid="stButton"] button:hover { background: rgba(0, 255, 157, 0.2) !important; border-color: #00ff9d !important; }
-    div[data-testid="stHorizontalBlock"]:has(.tx-row) div[data-testid="column"]:nth-child(3) div[data-testid="stButton"] button:hover { background: rgba(255, 77, 77, 0.2) !important; border-color: #ff4d4d !important; }
+    div[data-testid="stHorizontalBlock"]:has(.tx-row) div[data-testid="column"]:nth-child(2) div[data-testid="stButton"] button:hover { background: rgba(0, 255, 157, 0.2) !important; }
+    div[data-testid="stHorizontalBlock"]:has(.tx-row) div[data-testid="column"]:nth-child(3) div[data-testid="stButton"] button:hover { background: rgba(255, 77, 77, 0.2) !important; }
 }
 
 /* Mobile Adjustments */
@@ -487,11 +493,20 @@ div[data-testid="stHorizontalBlock"]:has(.tx-row) div[data-testid="column"]:nth-
     div[data-testid="stForm"]:has(.add-tx-card) .stButton { width: 100% !important; justify-content: center !important; }
     div[data-testid="stForm"]:has(.add-tx-card) .stButton > button { width: 100% !important; max-width: none !important; }
 
-    /* Swipe Hint Arrow */
-    div[data-testid="stHorizontalBlock"]:has(.tx-row) > div[data-testid="column"]:nth-child(1)::after {
-        content: '❮'; position: absolute; right: 6px; top: 50%; transform: translateY(-50%); color: rgba(255,255,255,0.2); font-size: 10px; pointer-events: none;
+    /* Slightly smaller swipe distance on mobile (60px per button) */
+    div[data-testid="stHorizontalBlock"]:has(.tx-row).swiped-left {
+        transform: translateX(-120px) !important; 
     }
-    
+    div[data-testid="stHorizontalBlock"]:has(.tx-row) > div[data-testid="column"]:nth-child(1) { 
+        padding: 12px 14px !important; 
+    }
+    div[data-testid="stHorizontalBlock"]:has(.tx-row) > div[data-testid="column"]:nth-child(2) { 
+        right: -60px !important; width: 60px !important; flex: 0 0 60px !important;
+    }
+    div[data-testid="stHorizontalBlock"]:has(.tx-row) > div[data-testid="column"]:nth-child(3) { 
+        right: -120px !important; width: 60px !important; flex: 0 0 60px !important;
+    }
+
     /* Dashboard Mobile Stats */
     .stats-layer-inner { gap: 6px !important; }
     .stats-layer { margin-top: -60px !important; margin-bottom: 18px; } 
@@ -513,8 +528,7 @@ div[data-testid="stForm"]:has(.edit-form-marker) {
     border-radius: 8px !important; padding: 12px 16px !important; margin-bottom: 6px !important;
     box-shadow: 0 4px 15px rgba(0, 255, 157, 0.1) !important;
 }
-div[data-testid="stForm"]:has(.edit-form-marker) div[data-baseweb="select"] > div { background: rgba(255,255,255,0.03) !important;
-border: 1px solid rgba(255,255,255,0.1) !important; }
+div[data-testid="stForm"]:has(.edit-form-marker) div[data-baseweb="select"] > div { background: rgba(255,255,255,0.03) !important; border: 1px solid rgba(255,255,255,0.1) !important; }
 
 /* IN-PLACE DELETE DIALOG (Replaces Row smoothly) */
 div[data-testid="stVerticalBlockBorderWrapper"]:has(.del-warn-marker) {
@@ -524,26 +538,19 @@ div[data-testid="stVerticalBlockBorderWrapper"]:has(.del-warn-marker) {
     box-shadow: 0 4px 15px rgba(255, 77, 77, 0.1) !important;
 }
 div[data-testid="stVerticalBlockBorderWrapper"]:has(.del-warn-marker) div[data-testid="stHorizontalBlock"] {
-    display: flex !important;
-    flex-direction: row !important; align-items: center !important; gap: 8px !important;
+    display: flex !important; flex-direction: row !important; align-items: center !important; gap: 8px !important;
 }
-div[data-testid="stVerticalBlockBorderWrapper"]:has(.del-warn-marker) div[data-testid="column"]:nth-child(1) { flex: 1 1 auto !important;
-}
+div[data-testid="stVerticalBlockBorderWrapper"]:has(.del-warn-marker) div[data-testid="column"]:nth-child(1) { flex: 1 1 auto !important; }
 div[data-testid="stVerticalBlockBorderWrapper"]:has(.del-warn-marker) div[data-testid="column"]:nth-child(2) { flex: 0 0 80px !important; }
-div[data-testid="stVerticalBlockBorderWrapper"]:has(.del-warn-marker) div[data-testid="column"]:nth-child(3) { flex: 0 0 80px !important;
-}
+div[data-testid="stVerticalBlockBorderWrapper"]:has(.del-warn-marker) div[data-testid="column"]:nth-child(3) { flex: 0 0 80px !important; }
 div[data-testid="stVerticalBlockBorderWrapper"]:has(.del-warn-marker) .stButton > button {
     border-radius: 6px !important; font-weight: 600 !important; width: 100% !important; padding: 4px !important;
     height: 32px !important; min-height: 32px !important; font-size: 0.9rem !important; transition: all 0.2s !important;
 }
-div[data-testid="stVerticalBlockBorderWrapper"]:has(.del-warn-marker) div[data-testid="column"]:nth-child(2) .stButton > button { background: rgba(255, 77, 77, 0.1) !important; color: #ff4d4d !important;
-border: 1px solid rgba(255, 77, 77, 0.3) !important; }
-div[data-testid="stVerticalBlockBorderWrapper"]:has(.del-warn-marker) div[data-testid="column"]:nth-child(2) .stButton > button:hover { background: #ff4d4d !important; color: white !important;
-}
-div[data-testid="stVerticalBlockBorderWrapper"]:has(.del-warn-marker) div[data-testid="column"]:nth-child(3) .stButton > button { background: rgba(255, 255, 255, 0.05) !important; color: #cbd5e1 !important;
-border: 1px solid rgba(255, 255, 255, 0.1) !important; }
-div[data-testid="stVerticalBlockBorderWrapper"]:has(.del-warn-marker) div[data-testid="column"]:nth-child(3) .stButton > button:hover { background: rgba(255, 255, 255, 0.15) !important;
-color: white !important; }
+div[data-testid="stVerticalBlockBorderWrapper"]:has(.del-warn-marker) div[data-testid="column"]:nth-child(2) .stButton > button { background: rgba(255, 77, 77, 0.1) !important; color: #ff4d4d !important; border: 1px solid rgba(255, 77, 77, 0.3) !important; }
+div[data-testid="stVerticalBlockBorderWrapper"]:has(.del-warn-marker) div[data-testid="column"]:nth-child(2) .stButton > button:hover { background: #ff4d4d !important; color: white !important; }
+div[data-testid="stVerticalBlockBorderWrapper"]:has(.del-warn-marker) div[data-testid="column"]:nth-child(3) .stButton > button { background: rgba(255, 255, 255, 0.05) !important; color: #cbd5e1 !important; border: 1px solid rgba(255, 255, 255, 0.1) !important; }
+div[data-testid="stVerticalBlockBorderWrapper"]:has(.del-warn-marker) div[data-testid="column"]:nth-child(3) .stButton > button:hover { background: rgba(255, 255, 255, 0.15) !important; color: white !important; }
 </style>
 """, unsafe_allow_html=True)
 
@@ -859,7 +866,7 @@ def build_portfolio_history(crypto_df, fiat_df, last_prices, hist_dict):
 
 def calculate_portfolio(crypto_df, fiat_df, live_prices, live_changes, base_prices):
     if crypto_df.empty:
-        return pd.DataFrame(columns=['Ticker','Holdings','Stable_Amt','AVG','Live','PnL','PnL %','Value','Price7d','Price30d','Price90d','PriceYTD', 'Change24h']), 0, 0, 0
+        return pd.DataFrame(columns=['Ticker','Holdings','Stable_Amt','AVG','Live','PnL','PnL %','Value','Price7d','Price30d','Price90d','PriceYTD', 'Change24h', 'Change7d', 'Change30d', 'Change90d', 'ChangeYTD']), 0, 0, 0
    
     crypto_df = crypto_df.copy()
     crypto_df['Ticker'] = crypto_df['Ticker'].astype(str).str.upper()
@@ -885,9 +892,22 @@ def calculate_portfolio(crypto_df, fiat_df, live_prices, live_changes, base_pric
         bp = base_prices.get(ticker, {'7d': live_price, '30d': live_price, '90d': live_price, 'ytd': live_price})
         c24h = live_changes.get(ticker, 0.0)
         
-        portfolio.append({'Ticker':ticker,'Holdings':total_holdings,'Stable_Amt':total_invested,'AVG':avg_price,'Live':live_price,'PnL':pnl,'PnL %':pnl_pct,'Value':value, 'Price7d':bp['7d'], 'Price30d':bp['30d'], 'Price90d':bp['90d'], 'PriceYTD':bp['ytd'], 'Change24h':c24h})
+        def calc_pct(base_val):
+            return ((live_price - base_val) / base_val * 100) if base_val > 0 else 0.0
+
+        c7 = calc_pct(bp['7d'])
+        c30 = calc_pct(bp['30d'])
+        c90 = calc_pct(bp['90d'])
+        cytd = calc_pct(bp['ytd'])
+        
+        portfolio.append({
+            'Ticker':ticker, 'Holdings':total_holdings, 'Stable_Amt':total_invested, 'AVG':avg_price, 'Live':live_price, 
+            'PnL':pnl, 'PnL %':pnl_pct, 'Value':value, 
+            'Price7d':bp['7d'], 'Price30d':bp['30d'], 'Price90d':bp['90d'], 'PriceYTD':bp['ytd'], 
+            'Change24h':c24h, 'Change7d': c7, 'Change30d': c30, 'Change90d': c90, 'ChangeYTD': cytd
+        })
     
-    portfolio.append({'Ticker':'STABLES','Holdings':stable_holdings,'Stable_Amt':stable_holdings,'AVG':1.0,'Live':1.0,'PnL':0,'PnL %':0,'Value':stable_holdings, 'Price7d':1.0, 'Price30d':1.0, 'Price90d':1.0, 'PriceYTD':1.0, 'Change24h': 0.0})
+    portfolio.append({'Ticker':'STABLES','Holdings':stable_holdings,'Stable_Amt':stable_holdings,'AVG':1.0,'Live':1.0,'PnL':0,'PnL %':0,'Value':stable_holdings, 'Price7d':1.0, 'Price30d':1.0, 'Price90d':1.0, 'PriceYTD':1.0, 'Change24h': 0.0, 'Change7d': 0.0, 'Change30d': 0.0, 'Change90d': 0.0, 'ChangeYTD': 0.0})
     df_port = pd.DataFrame(portfolio)
     df_port = df_port.sort_values(by='Stable_Amt', ascending=False).reset_index(drop=True)
     total_value = df_port['Value'].sum()
@@ -979,6 +999,15 @@ def format_price(val):
             return f"{val:,.2f}"
     except:
         return str(val)
+
+def format_metric(val):
+    try:
+        val = float(val)
+        sign = "▲" if val >= 0 else "▼"
+        color = "#00ff9d" if val >= 0 else "#ff4d4d"
+        return f"<span style='color:{color};'>{sign} {abs(val):.2f}%</span>"
+    except:
+        return "..."
 
 # ====================== SESSION STATE ======================
 if 'crypto_df' not in st.session_state:
@@ -1995,10 +2024,11 @@ with tab_home:
         avg_price_formatted = format_price(avg_price)
         chart_color = border_color
 
-        c24 = r.get('Change24h', 0.0)
-        c24_sign = "▲" if c24 >= 0 else "▼"
-        c24_color = "#00ff9d" if c24 >= 0 else "#ff4d4d"
-        c24_formatted = f"<span style='color:{c24_color};'>{c24_sign} {abs(c24):.2f}%</span>"
+        c24_formatted = format_metric(r.get('Change24h', 0.0))
+        c7_formatted = format_metric(r.get('Change7d', 0.0))
+        c30_formatted = format_metric(r.get('Change30d', 0.0))
+        c90_formatted = format_metric(r.get('Change90d', 0.0))
+        cytd_formatted = format_metric(r.get('ChangeYTD', 0.0))
 
         hist_data = hist_dict.get(ticker, {})
         chart_labels, chart_prices = [], []
@@ -2028,10 +2058,10 @@ with tab_home:
         
         <div class="metrics-row">
             <div class="metric-col"><span class="metric-lbl">24H</span><span class="metric-val" id="change-24h-{ticker}">{c24_formatted}</span></div>
-            <div class="metric-col"><span class="metric-lbl">7D</span><span class="metric-val" id="change-7d-{ticker}">...</span></div>
-            <div class="metric-col"><span class="metric-lbl">30D</span><span class="metric-val" id="change-30d-{ticker}">...</span></div>
-            <div class="metric-col"><span class="metric-lbl">90D</span><span class="metric-val" id="change-90d-{ticker}">...</span></div>
-            <div class="metric-col"><span class="metric-lbl">YTD</span><span class="metric-val" id="change-ytd-{ticker}">...</span></div>
+            <div class="metric-col"><span class="metric-lbl">7D</span><span class="metric-val" id="change-7d-{ticker}">{c7_formatted}</span></div>
+            <div class="metric-col"><span class="metric-lbl">30D</span><span class="metric-val" id="change-30d-{ticker}">{c30_formatted}</span></div>
+            <div class="metric-col"><span class="metric-lbl">90D</span><span class="metric-val" id="change-90d-{ticker}">{c90_formatted}</span></div>
+            <div class="metric-col"><span class="metric-lbl">YTD</span><span class="metric-val" id="change-ytd-{ticker}">{cytd_formatted}</span></div>
         </div>
         
         <div class="card-content">
@@ -2489,16 +2519,6 @@ with tab_home:
                             pnlPctEl.style.color = color;
                         }}
                         
-                        const p7d = parseFloat(card.getAttribute('data-price-7d'));
-                        const p30d = parseFloat(card.getAttribute('data-price-30d'));
-                        const p90d = parseFloat(card.getAttribute('data-price-90d'));
-                        const pytd = parseFloat(card.getAttribute('data-price-ytd'));
-                        
-                        updateMetricUI(card, ticker, '7d', p7d, price);
-                        updateMetricUI(card, ticker, '30d', p30d, price);
-                        updateMetricUI(card, ticker, '90d', p90d, price);
-                        updateMetricUI(card, ticker, 'ytd', pytd, price);
-
                         if (window.chartCache && window.chartCache[ticker] && window.chartCache[ticker].chartObj) {{
                             const chart = window.chartCache[ticker].chartObj;
                             const dataLen = chart.data.datasets[0].data.length;
@@ -2766,16 +2786,6 @@ with tab_home:
         const border = card.getAttribute('data-border');
         card.style.setProperty('--border', border);
         
-        const p7d = parseFloat(card.getAttribute('data-price-7d'));
-        const p30d = parseFloat(card.getAttribute('data-price-30d'));
-        const p90d = parseFloat(card.getAttribute('data-price-90d'));
-        const pytd = parseFloat(card.getAttribute('data-price-ytd'));
-        
-        updateMetricUI(card, ticker, '7d', p7d, currentPrice);
-        updateMetricUI(card, ticker, '30d', p30d, currentPrice);
-        updateMetricUI(card, ticker, '90d', p90d, currentPrice);
-        updateMetricUI(card, ticker, 'ytd', pytd, currentPrice);
-
         const front = card.querySelector('.flip-card-front');
         front.addEventListener('click', (e) => {{
             e.stopPropagation();
@@ -2869,75 +2879,81 @@ with tab_crypto:
     /* ==============================================================
        NATIVE SWIPE-TO-REVEAL TRANSACTION ROWS
        ============================================================== */
+    /* Wrapper hides everything that overflows, making buttons completely invisible initially */
     div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row) {
         background: #0f172a !important; 
         border: 1px solid rgba(255,255,255,0.05) !important; 
         border-radius: 12px !important; 
         padding: 0 !important; 
         margin-bottom: 8px !important; 
-        transition: background 0.3s ease; 
-        overflow: hidden !important; /* Crucial for hiding buttons */
+        overflow: hidden !important; 
         position: relative !important;
-        touch-action: pan-y !important; 
+        touch-action: pan-y !important; /* Block horizontal scrolling by browser, rely on JS */
     }
-    div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row):hover { background: rgba(30, 41, 59, 0.8) !important; }
-    div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row) div[data-testid="stVerticalBlock"] { gap: 0 !important; }
+    div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row) div[data-testid="stVerticalBlock"] {
+        gap: 0 !important;
+    }
 
     /* The Sliding Track */
     div[data-testid="stHorizontalBlock"]:has(.tx-row) {
-        display: flex !important; flex-direction: row !important; flex-wrap: nowrap !important; align-items: stretch !important; 
-        width: 100% !important; gap: 0 !important; box-sizing: border-box !important;
+        display: flex !important; 
+        flex-direction: row !important; 
+        flex-wrap: nowrap !important; 
+        width: 100% !important; 
+        gap: 0 !important; 
         position: relative !important;
         transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1) !important;
         cursor: pointer !important;
-        overflow: visible !important; /* Stop inner scrolling */
+        overflow: visible !important; /* Let buttons extend past right edge */
     }
 
-    /* The Swiped State (Triggered by JS or Hover) */
+    /* The Swiped State */
     div[data-testid="stHorizontalBlock"]:has(.tx-row).swiped-left {
-        transform: translateX(-100px) !important; 
+        transform: translateX(-130px) !important; /* Slide left exactly 130px (65px * 2) */
     }
 
-    /* Column 1: Info Box (Takes exactly 100% of the visible container) */
+    /* Column 1: Info Box (Takes exactly 100% of wrapper width) */
     div[data-testid="stHorizontalBlock"]:has(.tx-row) > div[data-testid="column"]:nth-child(1) { 
-        flex: 1 1 100% !important; width: 100% !important; min-width: 100% !important; 
-        padding: 12px 16px !important; box-sizing: border-box !important;
+        flex: 0 0 100% !important; 
+        width: 100% !important; 
+        min-width: 100% !important; 
+        padding: 12px 16px !important; 
+        box-sizing: border-box !important;
     }
 
     /* Columns 2 & 3: Action Buttons (Absolutely positioned OFF-SCREEN to the right) */
     div[data-testid="stHorizontalBlock"]:has(.tx-row) > div[data-testid="column"]:nth-child(2) { 
-        position: absolute !important; right: -50px !important; top: 0 !important; bottom: 0 !important; 
-        width: 50px !important; flex: 0 0 50px !important; display: flex !important; justify-content: center !important; align-items: center !important;
-        background: rgba(0, 255, 157, 0.1) !important; border-left: 1px solid rgba(255,255,255,0.05) !important;
+        position: absolute !important; right: -65px !important; top: 0 !important; bottom: 0 !important; 
+        width: 65px !important; height: 100% !important; flex: 0 0 65px !important;
+        background: rgba(0, 255, 157, 0.1) !important;
+        border-left: 1px solid rgba(255,255,255,0.05) !important;
     }
     div[data-testid="stHorizontalBlock"]:has(.tx-row) > div[data-testid="column"]:nth-child(3) { 
-        position: absolute !important; right: -100px !important; top: 0 !important; bottom: 0 !important; 
-        width: 50px !important; flex: 0 0 50px !important; display: flex !important; justify-content: center !important; align-items: center !important;
-        background: rgba(255, 77, 77, 0.1) !important; border-left: 1px solid rgba(255,255,255,0.05) !important;
+        position: absolute !important; right: -130px !important; top: 0 !important; bottom: 0 !important; 
+        width: 65px !important; height: 100% !important; flex: 0 0 65px !important;
+        background: rgba(255, 77, 77, 0.1) !important;
+        border-left: 1px solid rgba(255,255,255,0.05) !important;
     }
 
-    /* Purge Streamlit Button Padding & Sizing */
-    div[data-testid="stHorizontalBlock"]:has(.tx-row) div[data-testid="stButton"] {
-        width: 100% !important; height: 100% !important; display: flex !important; align-items: center !important; justify-content: center !important;
-    }
+    /* Purge Streamlit Button Padding to stretch fully in cells */
+    div[data-testid="stHorizontalBlock"]:has(.tx-row) div[data-testid="stButton"],
     div[data-testid="stHorizontalBlock"]:has(.tx-row) div[data-testid="stButton"] button {
-        width: 32px !important; height: 32px !important; min-height: 32px !important; max-height: 32px !important;
-        margin: 0 auto !important; padding: 0 !important; 
-        border: 1px solid rgba(255,255,255,0.1) !important; border-radius: 8px !important; 
+        width: 100% !important; height: 100% !important; min-height: 100% !important; 
+        margin: 0 !important; padding: 0 !important; 
+        border: none !important; border-radius: 0 !important; 
         box-shadow: none !important; background: transparent !important; 
         display: flex !important; align-items: center !important; justify-content: center !important;
-        transition: all 0.2s ease !important;
     }
-    div[data-testid="stHorizontalBlock"]:has(.tx-row) div[data-testid="column"]:nth-child(2) div[data-testid="stButton"] button p { color: #00ff9d !important; font-size: 1.1rem !important; margin: 0; padding: 0; }
-    div[data-testid="stHorizontalBlock"]:has(.tx-row) div[data-testid="column"]:nth-child(3) div[data-testid="stButton"] button p { color: #ff4d4d !important; font-size: 1.1rem !important; margin: 0; padding: 0; }
+    div[data-testid="stHorizontalBlock"]:has(.tx-row) div[data-testid="column"]:nth-child(2) div[data-testid="stButton"] button p { font-size: 1.2rem !important; color: #00ff9d !important; margin: 0; padding: 0; }
+    div[data-testid="stHorizontalBlock"]:has(.tx-row) div[data-testid="column"]:nth-child(3) div[data-testid="stButton"] button p { font-size: 1.2rem !important; color: #ff4d4d !important; margin: 0; padding: 0; }
 
     /* PC Hover effect */
     @media (hover: hover) and (pointer: fine) {
         div[data-testid="stHorizontalBlock"]:has(.tx-row):hover {
-            transform: translateX(-100px) !important;
+            transform: translateX(-130px) !important;
         }
-        div[data-testid="stHorizontalBlock"]:has(.tx-row) div[data-testid="column"]:nth-child(2) div[data-testid="stButton"] button:hover { background: rgba(0, 255, 157, 0.2) !important; border-color: #00ff9d !important; }
-        div[data-testid="stHorizontalBlock"]:has(.tx-row) div[data-testid="column"]:nth-child(3) div[data-testid="stButton"] button:hover { background: rgba(255, 77, 77, 0.2) !important; border-color: #ff4d4d !important; }
+        div[data-testid="stHorizontalBlock"]:has(.tx-row) div[data-testid="column"]:nth-child(2) div[data-testid="stButton"] button:hover { background: rgba(0, 255, 157, 0.2) !important; }
+        div[data-testid="stHorizontalBlock"]:has(.tx-row) div[data-testid="column"]:nth-child(3) div[data-testid="stButton"] button:hover { background: rgba(255, 77, 77, 0.2) !important; }
     }
 
     /* Mobile Adjustments */
@@ -2949,11 +2965,20 @@ with tab_crypto:
         div[data-testid="stForm"]:has(.add-tx-card) .stButton { width: 100% !important; justify-content: center !important; }
         div[data-testid="stForm"]:has(.add-tx-card) .stButton > button { width: 100% !important; max-width: none !important; }
 
-        /* Swipe Hint Arrow */
-        div[data-testid="stHorizontalBlock"]:has(.tx-row) > div[data-testid="column"]:nth-child(1)::after {
-            content: '❮'; position: absolute; right: 6px; top: 50%; transform: translateY(-50%); color: rgba(255,255,255,0.2); font-size: 10px; pointer-events: none;
+        /* Slightly smaller swipe distance on mobile (60px per button) */
+        div[data-testid="stHorizontalBlock"]:has(.tx-row).swiped-left {
+            transform: translateX(-120px) !important; 
         }
-        
+        div[data-testid="stHorizontalBlock"]:has(.tx-row) > div[data-testid="column"]:nth-child(1) { 
+            padding: 12px 14px !important; 
+        }
+        div[data-testid="stHorizontalBlock"]:has(.tx-row) > div[data-testid="column"]:nth-child(2) { 
+            right: -60px !important; width: 60px !important; flex: 0 0 60px !important;
+        }
+        div[data-testid="stHorizontalBlock"]:has(.tx-row) > div[data-testid="column"]:nth-child(3) { 
+            right: -120px !important; width: 60px !important; flex: 0 0 60px !important;
+        }
+
         /* Dashboard Mobile Stats */
         .stats-layer-inner { gap: 6px !important; }
         .stats-layer { margin-top: -60px !important; margin-bottom: 18px; } 
@@ -2975,8 +3000,7 @@ with tab_crypto:
         border-radius: 8px !important; padding: 12px 16px !important; margin-bottom: 6px !important;
         box-shadow: 0 4px 15px rgba(0, 255, 157, 0.1) !important;
     }
-    div[data-testid="stForm"]:has(.edit-form-marker) div[data-baseweb="select"] > div { background: rgba(255,255,255,0.03) !important;
-border: 1px solid rgba(255,255,255,0.1) !important; }
+    div[data-testid="stForm"]:has(.edit-form-marker) div[data-baseweb="select"] > div { background: rgba(255,255,255,0.03) !important; border: 1px solid rgba(255,255,255,0.1) !important; }
 
     /* IN-PLACE DELETE DIALOG (Replaces Row smoothly) */
     div[data-testid="stVerticalBlockBorderWrapper"]:has(.del-warn-marker) {
@@ -2986,26 +3010,19 @@ border: 1px solid rgba(255,255,255,0.1) !important; }
         box-shadow: 0 4px 15px rgba(255, 77, 77, 0.1) !important;
     }
     div[data-testid="stVerticalBlockBorderWrapper"]:has(.del-warn-marker) div[data-testid="stHorizontalBlock"] {
-        display: flex !important;
-        flex-direction: row !important; align-items: center !important; gap: 8px !important;
+        display: flex !important; flex-direction: row !important; align-items: center !important; gap: 8px !important;
     }
-    div[data-testid="stVerticalBlockBorderWrapper"]:has(.del-warn-marker) div[data-testid="column"]:nth-child(1) { flex: 1 1 auto !important;
-    }
+    div[data-testid="stVerticalBlockBorderWrapper"]:has(.del-warn-marker) div[data-testid="column"]:nth-child(1) { flex: 1 1 auto !important; }
     div[data-testid="stVerticalBlockBorderWrapper"]:has(.del-warn-marker) div[data-testid="column"]:nth-child(2) { flex: 0 0 80px !important; }
-    div[data-testid="stVerticalBlockBorderWrapper"]:has(.del-warn-marker) div[data-testid="column"]:nth-child(3) { flex: 0 0 80px !important;
-    }
+    div[data-testid="stVerticalBlockBorderWrapper"]:has(.del-warn-marker) div[data-testid="column"]:nth-child(3) { flex: 0 0 80px !important; }
     div[data-testid="stVerticalBlockBorderWrapper"]:has(.del-warn-marker) .stButton > button {
         border-radius: 6px !important; font-weight: 600 !important; width: 100% !important; padding: 4px !important;
         height: 32px !important; min-height: 32px !important; font-size: 0.9rem !important; transition: all 0.2s !important;
     }
-    div[data-testid="stVerticalBlockBorderWrapper"]:has(.del-warn-marker) div[data-testid="column"]:nth-child(2) .stButton > button { background: rgba(255, 77, 77, 0.1) !important; color: #ff4d4d !important;
-    border: 1px solid rgba(255, 77, 77, 0.3) !important; }
-    div[data-testid="stVerticalBlockBorderWrapper"]:has(.del-warn-marker) div[data-testid="column"]:nth-child(2) .stButton > button:hover { background: #ff4d4d !important; color: white !important;
-    }
-    div[data-testid="stVerticalBlockBorderWrapper"]:has(.del-warn-marker) div[data-testid="column"]:nth-child(3) .stButton > button { background: rgba(255, 255, 255, 0.05) !important; color: #cbd5e1 !important;
-    border: 1px solid rgba(255, 255, 255, 0.1) !important; }
-    div[data-testid="stVerticalBlockBorderWrapper"]:has(.del-warn-marker) div[data-testid="column"]:nth-child(3) .stButton > button:hover { background: rgba(255, 255, 255, 0.15) !important;
-    color: white !important; }
+    div[data-testid="stVerticalBlockBorderWrapper"]:has(.del-warn-marker) div[data-testid="column"]:nth-child(2) .stButton > button { background: rgba(255, 77, 77, 0.1) !important; color: #ff4d4d !important; border: 1px solid rgba(255, 77, 77, 0.3) !important; }
+    div[data-testid="stVerticalBlockBorderWrapper"]:has(.del-warn-marker) div[data-testid="column"]:nth-child(2) .stButton > button:hover { background: #ff4d4d !important; color: white !important; }
+    div[data-testid="stVerticalBlockBorderWrapper"]:has(.del-warn-marker) div[data-testid="column"]:nth-child(3) .stButton > button { background: rgba(255, 255, 255, 0.05) !important; color: #cbd5e1 !important; border: 1px solid rgba(255, 255, 255, 0.1) !important; }
+    div[data-testid="stVerticalBlockBorderWrapper"]:has(.del-warn-marker) div[data-testid="column"]:nth-child(3) .stButton > button:hover { background: rgba(255, 255, 255, 0.15) !important; color: white !important; }
     </style>
     """, unsafe_allow_html=True)
 
@@ -3138,14 +3155,14 @@ border: 1px solid rgba(255,255,255,0.1) !important; }
                         <div class="tx-row" style="display: flex; justify-content: space-between; align-items: center; width: 100%; height: 100%; min-height: 48px;">
                             <div style="display: flex; align-items: center; gap: 12px; overflow: hidden; flex: 1;">
                                 <img src="{logo_url}" style="width: 32px; height: 32px; border-radius: 50%; object-fit: contain; flex-shrink: 0; {bg_style}" onerror="this.src='https://via.placeholder.com/32/1e2a44/ffffff?text={r['Ticker'][0]}';">
-                                <div style="display: flex; flex-direction: column; overflow: hidden; min-width: 0;">
-                                    <span style="font-weight: 700; font-size: 1rem; color: #ffffff; white-space: nowrap; text-overflow: ellipsis; overflow: hidden; line-height: 1.2;">{r['Ticker']}</span>
-                                    <span style="font-size: 0.75rem; color: #94a3b8; white-space: nowrap; text-overflow: ellipsis; overflow: hidden; line-height: 1.2;">{date_str}</span>
+                                <div style="display: flex; flex-direction: column; overflow: hidden; min-width: 0; padding-bottom: 2px;">
+                                    <span style="font-weight: 700; font-size: 1rem; color: #ffffff; white-space: nowrap; text-overflow: ellipsis; overflow: hidden; line-height: 1.3;">{r['Ticker']}</span>
+                                    <span style="font-size: 0.75rem; color: #94a3b8; white-space: nowrap; text-overflow: ellipsis; overflow: hidden; line-height: 1.3;">{date_str}</span>
                                 </div>
                             </div>
-                            <div style="display: flex; flex-direction: column; align-items: flex-end; justify-content: center; overflow: hidden; padding-left: 4px; flex-shrink: 0;">
-                                <span style="font-weight: 700; font-size: 1rem; color: {color}; white-space: nowrap; line-height: 1.2;">{sign}{amount_formatted}</span>
-                                <span style="font-size: 0.75rem; color: #cbd5e1; white-space: nowrap; line-height: 1.2;">{action_text} {invested_formatted}</span>
+                            <div style="display: flex; flex-direction: column; align-items: flex-end; justify-content: center; overflow: hidden; padding-left: 4px; padding-bottom: 2px; flex-shrink: 0;">
+                                <span style="font-weight: 700; font-size: 1rem; color: {color}; white-space: nowrap; line-height: 1.3;">{sign}{amount_formatted}</span>
+                                <span style="font-size: 0.75rem; color: #cbd5e1; white-space: nowrap; line-height: 1.3;">{action_text}: {invested_formatted}</span>
                             </div>
                         </div>
                         """, unsafe_allow_html=True)
@@ -3298,14 +3315,14 @@ with tab_fiat:
                         <div class="tx-row" style="display: flex; justify-content: space-between; align-items: center; width: 100%; height: 100%; min-height: 48px;">
                             <div style="display: flex; align-items: center; gap: 12px; overflow: hidden; flex: 1;">
                                 <img src="{logo_url}" style="width: 32px; height: 32px; border-radius: 50%; object-fit: contain; flex-shrink: 0; background-color:#ffffff;" onerror="this.src='https://via.placeholder.com/32/1e2a44/ffffff?text={stable_ticker[0]}';">
-                                <div style="display: flex; flex-direction: column; overflow: hidden; min-width: 0;">
-                                    <span style="font-weight: 700; font-size: 1rem; color: #ffffff; white-space: nowrap; text-overflow: ellipsis; overflow: hidden; line-height: 1.2;">{date_str}</span>
-                                    <span style="font-size: 0.75rem; color: #94a3b8; white-space: nowrap; text-overflow: ellipsis; overflow: hidden; line-height: 1.2;">{fiat_formatted}</span>
+                                <div style="display: flex; flex-direction: column; overflow: hidden; min-width: 0; padding-bottom: 2px;">
+                                    <span style="font-weight: 700; font-size: 1rem; color: #ffffff; white-space: nowrap; text-overflow: ellipsis; overflow: hidden; line-height: 1.3;">{date_str}</span>
+                                    <span style="font-size: 0.75rem; color: #94a3b8; white-space: nowrap; text-overflow: ellipsis; overflow: hidden; line-height: 1.3;">{fiat_formatted}</span>
                                 </div>
                             </div>
-                            <div style="display: flex; flex-direction: column; align-items: flex-end; justify-content: center; overflow: hidden; padding-left: 4px; flex-shrink: 0;">
-                                <span style="font-weight: 700; font-size: 1rem; color: #00ff9d; white-space: nowrap; text-overflow: ellipsis; overflow: hidden; line-height: 1.2;">{stable_formatted}</span>
-                                <span style="font-size: 0.75rem; color: #cbd5e1; white-space: nowrap; text-overflow: ellipsis; overflow: hidden; line-height: 1.2;">Fee: {fee_val:,.2f} EUR</span>
+                            <div style="display: flex; flex-direction: column; align-items: flex-end; justify-content: center; overflow: hidden; padding-left: 4px; padding-bottom: 2px; flex-shrink: 0;">
+                                <span style="font-weight: 700; font-size: 1rem; color: #00ff9d; white-space: nowrap; text-overflow: ellipsis; overflow: hidden; line-height: 1.3;">{stable_formatted}</span>
+                                <span style="font-size: 0.75rem; color: #cbd5e1; white-space: nowrap; text-overflow: ellipsis; overflow: hidden; line-height: 1.3;">Fee: {fee_val:,.2f} EUR</span>
                             </div>
                         </div>
                         """, unsafe_allow_html=True)
