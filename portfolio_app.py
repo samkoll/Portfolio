@@ -406,40 +406,89 @@ div[data-testid="stForm"]:has(.add-tx-card) .stButton > button { background: #1e
 div[data-testid="stForm"]:has(.add-tx-card) .stButton > button:hover { transform: translateY(-2px) !important; box-shadow: 0 8px 20px rgba(255, 255, 255, 0.2) !important; color: white !important; }
 
 /* ==============================================================
-   NEW COMPACT HTML-GRID TRANSACTION ROWS (SWIPE TO REVEAL)
+   NATIVE SWIPE-TO-REVEAL TRANSACTION ROWS
    ============================================================== */
 div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row) {
-    background: #0f172a !important; border: 1px solid rgba(255,255,255,0.05) !important; border-radius: 12px !important; 
-    padding: 0 !important; /* Zero padding to let swipe go edge-to-edge */
-    margin-bottom: 8px !important; transition: background 0.3s ease; overflow: hidden !important;
+    background: #0f172a !important; 
+    border: 1px solid rgba(255,255,255,0.05) !important; 
+    border-radius: 12px !important; 
+    padding: 0 !important; 
+    margin-bottom: 8px !important; 
+    overflow: hidden !important; /* Hides the buttons initially */
+    position: relative !important;
+    touch-action: pan-y !important; /* Allows vertical scrolling, maps horizontal to swipe */
 }
-div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row):hover { background: rgba(30, 41, 59, 0.8) !important; }
-div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row) div[data-testid="stVerticalBlock"] { gap: 0 !important; }
+div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row) div[data-testid="stVerticalBlock"] {
+    gap: 0 !important;
+}
 
+/* The Sliding Track */
 div[data-testid="stHorizontalBlock"]:has(.tx-row) {
-    display: flex !important; flex-direction: row !important; flex-wrap: nowrap !important; align-items: stretch !important; 
-    width: 100% !important; gap: 0 !important; box-sizing: border-box !important;
-}
-div[data-testid="stHorizontalBlock"]:has(.tx-row) > div[data-testid="column"] { padding: 0 !important; margin: 0 !important; min-width: 0 !important; }
-
-/* --- PC LAYOUT (Default) --- */
-@media (min-width: 769px) {
-    div[data-testid="stHorizontalBlock"]:has(.tx-row) > div[data-testid="column"]:nth-child(1) { 
-        flex: 1 1 auto !important; width: auto !important; padding: 12px 16px !important;
-    }
-    div[data-testid="stHorizontalBlock"]:has(.tx-row) > div[data-testid="column"]:nth-child(2),
-    div[data-testid="stHorizontalBlock"]:has(.tx-row) > div[data-testid="column"]:nth-child(3) { 
-        flex: 0 0 45px !important; width: 45px !important; display: flex !important; justify-content: center !important; align-items: center !important; 
-    }
-    div[data-testid="stHorizontalBlock"]:has(.tx-row) div[data-testid="stButton"] button {
-        background: transparent !important; border: 1px solid rgba(255,255,255,0.05) !important; color: #94a3b8 !important; border-radius: 8px !important; box-shadow: none !important; height: 32px !important; width: 32px !important; padding: 0 !important; display: flex !important; align-items: center !important; justify-content: center !important; transition: all 0.2s ease !important;
-    }
-    div[data-testid="stHorizontalBlock"]:has(.tx-row) div[data-testid="stButton"] button p { font-size: 1.1rem !important; margin: 0; padding: 0; }
-    div[data-testid="stHorizontalBlock"]:has(.tx-row) div[data-testid="column"]:nth-child(2) div[data-testid="stButton"] button:hover { border-color: #00ff9d !important; color: #00ff9d !important; background: rgba(0, 255, 157, 0.1) !important; }
-    div[data-testid="stHorizontalBlock"]:has(.tx-row) div[data-testid="column"]:nth-child(3) div[data-testid="stButton"] button:hover { border-color: #ff4d4d !important; color: #ff4d4d !important; background: rgba(255, 77, 77, 0.1) !important; }
+    display: flex !important; 
+    flex-direction: row !important; 
+    flex-wrap: nowrap !important; 
+    width: 100% !important; 
+    gap: 0 !important; 
+    position: relative !important;
+    transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1) !important;
+    cursor: pointer !important;
 }
 
-/* --- MOBILE LAYOUT (SWIPE TO REVEAL) --- */
+/* The Swiped State (Triggered by JS or Hover) */
+div[data-testid="stHorizontalBlock"]:has(.tx-row).swiped-left {
+    transform: translateX(-130px) !important; 
+}
+
+/* Column 1: Info Box (Takes exactly 100% of the visible container) */
+div[data-testid="stHorizontalBlock"]:has(.tx-row) > div[data-testid="column"]:nth-child(1) { 
+    flex: 1 1 100% !important; 
+    width: 100% !important; 
+    min-width: 100% !important; 
+    padding: 12px 16px !important; 
+    box-sizing: border-box !important;
+}
+
+/* Columns 2 & 3: Action Buttons (Absolutely positioned OFF-SCREEN to the right) */
+div[data-testid="stHorizontalBlock"]:has(.tx-row) > div[data-testid="column"]:nth-child(2) { 
+    position: absolute !important; right: -65px !important; top: 0 !important; bottom: 0 !important; 
+    width: 65px !important; flex: 0 0 65px !important;
+    background: rgba(0, 255, 157, 0.1) !important;
+    border-left: 1px solid rgba(255,255,255,0.05) !important;
+}
+div[data-testid="stHorizontalBlock"]:has(.tx-row) > div[data-testid="column"]:nth-child(3) { 
+    position: absolute !important; right: -130px !important; top: 0 !important; bottom: 0 !important; 
+    width: 65px !important; flex: 0 0 65px !important;
+    background: rgba(255, 77, 77, 0.1) !important;
+    border-left: 1px solid rgba(255,255,255,0.05) !important;
+}
+
+/* Purge Streamlit Button Padding to stretch beautifully */
+div[data-testid="stHorizontalBlock"]:has(.tx-row) div[data-testid="stButton"],
+div[data-testid="stHorizontalBlock"]:has(.tx-row) div[data-testid="stButton"] button {
+    width: 100% !important; height: 100% !important; 
+    min-height: 100% !important; 
+    margin: 0 !important; padding: 0 !important; 
+    border: none !important; border-radius: 0 !important; 
+    box-shadow: none !important; background: transparent !important; 
+    display: flex !important; align-items: center !important; justify-content: center !important;
+}
+div[data-testid="stHorizontalBlock"]:has(.tx-row) div[data-testid="column"]:nth-child(2) div[data-testid="stButton"] button p { 
+    font-size: 1.2rem !important; color: #00ff9d !important; margin: 0; padding: 0; 
+}
+div[data-testid="stHorizontalBlock"]:has(.tx-row) div[data-testid="column"]:nth-child(3) div[data-testid="stButton"] button p { 
+    font-size: 1.2rem !important; color: #ff4d4d !important; margin: 0; padding: 0; 
+}
+
+/* PC Hover effect */
+@media (hover: hover) and (pointer: fine) {
+    div[data-testid="stHorizontalBlock"]:has(.tx-row):hover {
+        transform: translateX(-130px) !important;
+    }
+    div[data-testid="stHorizontalBlock"]:has(.tx-row) div[data-testid="column"]:nth-child(2) div[data-testid="stButton"] button:hover { background: rgba(0, 255, 157, 0.2) !important; }
+    div[data-testid="stHorizontalBlock"]:has(.tx-row) div[data-testid="column"]:nth-child(3) div[data-testid="stButton"] button:hover { background: rgba(255, 77, 77, 0.2) !important; }
+}
+
+/* Mobile Adjustments */
 @media (max-width: 768px) {
     .glossy-header { margin-top: 0px !important; margin-bottom: 16px !important; padding: 20px 16px !important; font-size: 22px !important; min-height: 90px; }
     .home-header { margin-bottom: 0 !important; }
@@ -448,35 +497,19 @@ div[data-testid="stHorizontalBlock"]:has(.tx-row) > div[data-testid="column"] { 
     div[data-testid="stForm"]:has(.add-tx-card) .stButton { width: 100% !important; justify-content: center !important; }
     div[data-testid="stForm"]:has(.add-tx-card) .stButton > button { width: 100% !important; max-width: none !important; }
 
-    /* The Scrollable Row */
-    div[data-testid="stHorizontalBlock"]:has(.tx-row) {
-        overflow-x: auto !important; scroll-snap-type: x mandatory !important; scrollbar-width: none !important; -ms-overflow-style: none !important; scroll-behavior: smooth !important;
+    /* Slightly smaller swipe distance on mobile */
+    div[data-testid="stHorizontalBlock"]:has(.tx-row).swiped-left {
+        transform: translateX(-120px) !important; 
     }
-    div[data-testid="stHorizontalBlock"]:has(.tx-row)::-webkit-scrollbar { display: none !important; }
-    
-    /* Main Info Box (100vw) */
     div[data-testid="stHorizontalBlock"]:has(.tx-row) > div[data-testid="column"]:nth-child(1) { 
-        flex: 0 0 100% !important; width: 100% !important; scroll-snap-align: start !important; padding: 12px 14px !important; position: relative;
+        padding: 12px 14px !important; 
     }
-    /* Swipe Hint Arrow */
-    div[data-testid="stHorizontalBlock"]:has(.tx-row) > div[data-testid="column"]:nth-child(1)::after {
-        content: '❮'; position: absolute; right: 6px; top: 50%; transform: translateY(-50%); color: rgba(255,255,255,0.2); font-size: 10px; pointer-events: none;
-    }
-    /* Hidden Actions */
     div[data-testid="stHorizontalBlock"]:has(.tx-row) > div[data-testid="column"]:nth-child(2) { 
-        flex: 0 0 65px !important; width: 65px !important; scroll-snap-align: end !important; background: rgba(0, 255, 157, 0.1) !important; border-left: 1px solid rgba(255,255,255,0.05);
+        right: -60px !important; width: 60px !important; flex: 0 0 60px !important;
     }
     div[data-testid="stHorizontalBlock"]:has(.tx-row) > div[data-testid="column"]:nth-child(3) { 
-        flex: 0 0 65px !important; width: 65px !important; scroll-snap-align: end !important; background: rgba(255, 77, 77, 0.1) !important; border-left: 1px solid rgba(255,255,255,0.05);
+        right: -120px !important; width: 60px !important; flex: 0 0 60px !important;
     }
-    
-    /* Fill Action Zones with Buttons */
-    div[data-testid="stHorizontalBlock"]:has(.tx-row) div[data-testid="stButton"],
-    div[data-testid="stHorizontalBlock"]:has(.tx-row) div[data-testid="stButton"] > button {
-        width: 100% !important; height: 100% !important; min-height: 56px !important; border-radius: 0 !important; border: none !important; box-shadow: none !important; background: transparent !important; display: flex !important; align-items: center !important; justify-content: center !important;
-    }
-    div[data-testid="stHorizontalBlock"]:has(.tx-row) div[data-testid="column"]:nth-child(2) div[data-testid="stButton"] button p { color: #00ff9d !important; font-size: 1.2rem !important; }
-    div[data-testid="stHorizontalBlock"]:has(.tx-row) div[data-testid="column"]:nth-child(3) div[data-testid="stButton"] button p { color: #ff4d4d !important; font-size: 1.2rem !important; }
 
     /* Dashboard Mobile Stats */
     .stats-layer-inner { gap: 6px !important; }
@@ -491,6 +524,46 @@ div[data-testid="stHorizontalBlock"]:has(.tx-row) > div[data-testid="column"] { 
     .usdc-banner-amount { font-size: 1.1rem; }
     .stable-dropdown-wrapper { width: 92%; margin: -8px auto 12px auto !important; }
 }
+
+/* IN-PLACE EDIT FORM (Replaces Row smoothly) */
+div[data-testid="stForm"]:has(.edit-form-marker) {
+    background: rgba(15, 23, 42, 0.95) !important;
+    border: 1px solid #00ff9d !important;
+    border-radius: 8px !important; padding: 12px 16px !important; margin-bottom: 6px !important;
+    box-shadow: 0 4px 15px rgba(0, 255, 157, 0.1) !important;
+}
+div[data-testid="stForm"]:has(.edit-form-marker) div[data-baseweb="select"] > div { background: rgba(255,255,255,0.03) !important;
+border: 1px solid rgba(255,255,255,0.1) !important; }
+
+/* IN-PLACE DELETE DIALOG (Replaces Row smoothly) */
+div[data-testid="stVerticalBlockBorderWrapper"]:has(.del-warn-marker) {
+    border-color: rgba(255, 77, 77, 0.3) !important;
+    background: rgba(15, 23, 42, 0.95) !important;
+    border-radius: 8px !important; padding: 8px 12px !important; margin-bottom: 6px !important;
+    box-shadow: 0 4px 15px rgba(255, 77, 77, 0.1) !important;
+}
+div[data-testid="stVerticalBlockBorderWrapper"]:has(.del-warn-marker) div[data-testid="stHorizontalBlock"] {
+    display: flex !important;
+    flex-direction: row !important; align-items: center !important; gap: 8px !important;
+}
+div[data-testid="stVerticalBlockBorderWrapper"]:has(.del-warn-marker) div[data-testid="column"]:nth-child(1) { flex: 1 1 auto !important;
+}
+div[data-testid="stVerticalBlockBorderWrapper"]:has(.del-warn-marker) div[data-testid="column"]:nth-child(2) { flex: 0 0 80px !important; }
+div[data-testid="stVerticalBlockBorderWrapper"]:has(.del-warn-marker) div[data-testid="column"]:nth-child(3) { flex: 0 0 80px !important;
+}
+div[data-testid="stVerticalBlockBorderWrapper"]:has(.del-warn-marker) .stButton > button {
+    border-radius: 6px !important; font-weight: 600 !important; width: 100% !important; padding: 4px !important;
+    height: 32px !important; min-height: 32px !important; font-size: 0.9rem !important; transition: all 0.2s !important;
+}
+div[data-testid="stVerticalBlockBorderWrapper"]:has(.del-warn-marker) div[data-testid="column"]:nth-child(2) .stButton > button { background: rgba(255, 77, 77, 0.1) !important; color: #ff4d4d !important;
+border: 1px solid rgba(255, 77, 77, 0.3) !important; }
+div[data-testid="stVerticalBlockBorderWrapper"]:has(.del-warn-marker) div[data-testid="column"]:nth-child(2) .stButton > button:hover { background: #ff4d4d !important; color: white !important;
+}
+div[data-testid="stVerticalBlockBorderWrapper"]:has(.del-warn-marker) div[data-testid="column"]:nth-child(3) .stButton > button { background: rgba(255, 255, 255, 0.05) !important; color: #cbd5e1 !important;
+border: 1px solid rgba(255, 255, 255, 0.1) !important; }
+div[data-testid="stVerticalBlockBorderWrapper"]:has(.del-warn-marker) div[data-testid="column"]:nth-child(3) .stButton > button:hover { background: rgba(255, 255, 255, 0.15) !important;
+color: white !important; }
+
 </style>
 """, unsafe_allow_html=True)
 
@@ -1006,38 +1079,61 @@ components.html("""
         if(n1) n1.addEventListener('click', () => switchTab(1));
         if(n2) n2.addEventListener('click', () => switchTab(2));
         
-        let startX = 0, startY = 0, endX = 0, endY = 0;
+        let startX = 0, startY = 0;
         parentDoc.addEventListener('touchstart', e => {
             startX = e.changedTouches[0].screenX;
             startY = e.changedTouches[0].screenY;
         }, {passive: true});
         
         parentDoc.addEventListener('touchend', e => {
-            endX = e.changedTouches[0].screenX;
-            endY = e.changedTouches[0].screenY;
+            const endX = e.changedTouches[0].screenX;
+            const endY = e.changedTouches[0].screenY;
+            const xDiff = endX - startX;
+            const yDiff = endY - startY;
             
-            const xDiff = Math.abs(endX - startX);
-            const yDiff = Math.abs(endY - startY);
+            // 1. SWIPE-TO-REVEAL ROWS
+            const row = e.target.closest('div[data-testid="stHorizontalBlock"]');
+            const isTxRow = row && row.querySelector('.tx-row');
             
-             if (xDiff > yDiff && xDiff > 80) {
-                const isScrollable = e.target.closest('.scroll-wrapper') || e.target.closest('.charts-scroll-wrapper') || e.target.closest('canvas') || e.target.closest('div[data-testid="stHorizontalBlock"]');
-                if(isScrollable) return; // Prevent tab switch when swiping rows or charts
+            if (isTxRow) {
+                if (Math.abs(xDiff) > Math.abs(yDiff) && Math.abs(xDiff) > 30) {
+                    // Swipe
+                    if (xDiff < 0) { row.classList.add('swiped-left'); } 
+                    else { row.classList.remove('swiped-left'); }
+                    return; // Prevent tab swipe
+                } else if (Math.abs(xDiff) < 10 && Math.abs(yDiff) < 10) {
+                    // Tap
+                    if (!e.target.closest('button')) {
+                        parentDoc.querySelectorAll('.swiped-left').forEach(el => {
+                            if (el !== row) el.classList.remove('swiped-left');
+                        });
+                        row.classList.toggle('swiped-left');
+                    }
+                    return; // Prevent tab swipe
+                }
+            }
+
+            // 2. TAB SWIPE
+            if (Math.abs(xDiff) > Math.abs(yDiff) && Math.abs(xDiff) > 80) {
+                const isScrollable = e.target.closest('.scroll-wrapper') || e.target.closest('.charts-scroll-wrapper') || e.target.closest('canvas');
+                if(isScrollable) return;
 
                 let currentTab = 0;
                 const tabs = parentDoc.querySelectorAll('button[data-baseweb="tab"]');
                 tabs.forEach((t, i) => {
-                    if(t.getAttribute('aria-selected') === 'true') {
-                        currentTab = i;
-                    }
+                    if(t.getAttribute('aria-selected') === 'true') currentTab = i;
                 });
-                if (endX < startX && currentTab < 2) { 
-                    switchTab(currentTab + 1);
-                }
-                if (endX > startX && currentTab > 0) { 
-                    switchTab(currentTab - 1);
-                }
+                if (xDiff < 0 && currentTab < 2) { switchTab(currentTab + 1); }
+                if (xDiff > 0 && currentTab > 0) { switchTab(currentTab - 1); }
             }
         }, {passive: true});
+        
+        // Close rows if clicked outside
+        parentDoc.addEventListener('click', e => {
+            if (!e.target.closest('div[data-testid="stHorizontalBlock"]')) {
+                parentDoc.querySelectorAll('.swiped-left').forEach(el => el.classList.remove('swiped-left'));
+            }
+        });
         
         setTimeout(() => {
             let currentTab = 0;
@@ -2809,40 +2905,89 @@ box-shadow: 0 8px 20px rgba(255, 255, 255, 0.2) !important; color: white !import
 }
 
     /* ==============================================================
-       NEW COMPACT HTML-GRID TRANSACTION ROWS (SWIPE TO REVEAL)
+       NATIVE SWIPE-TO-REVEAL TRANSACTION ROWS
        ============================================================== */
     div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row) {
-        background: #0f172a !important; border: 1px solid rgba(255,255,255,0.05) !important; border-radius: 12px !important; 
-        padding: 0 !important; /* Zero padding to let swipe go edge-to-edge */
-        margin-bottom: 8px !important; transition: background 0.3s ease; overflow: hidden !important;
+        background: #0f172a !important; 
+        border: 1px solid rgba(255,255,255,0.05) !important; 
+        border-radius: 12px !important; 
+        padding: 0 !important; 
+        margin-bottom: 8px !important; 
+        overflow: hidden !important; /* Hides the buttons initially */
+        position: relative !important;
+        touch-action: pan-y !important; /* Allows vertical scrolling, maps horizontal to swipe */
     }
-    div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row):hover { background: rgba(30, 41, 59, 0.8) !important; }
-    div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row) div[data-testid="stVerticalBlock"] { gap: 0 !important; }
+    div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row) div[data-testid="stVerticalBlock"] {
+        gap: 0 !important;
+    }
 
+    /* The Sliding Track */
     div[data-testid="stHorizontalBlock"]:has(.tx-row) {
-        display: flex !important; flex-direction: row !important; flex-wrap: nowrap !important; align-items: stretch !important; 
-        width: 100% !important; gap: 0 !important; box-sizing: border-box !important;
-    }
-    div[data-testid="stHorizontalBlock"]:has(.tx-row) > div[data-testid="column"] { padding: 0 !important; margin: 0 !important; min-width: 0 !important; }
-
-    /* --- PC LAYOUT (Default) --- */
-    @media (min-width: 769px) {
-        div[data-testid="stHorizontalBlock"]:has(.tx-row) > div[data-testid="column"]:nth-child(1) { 
-            flex: 1 1 auto !important; width: auto !important; padding: 12px 16px !important;
-        }
-        div[data-testid="stHorizontalBlock"]:has(.tx-row) > div[data-testid="column"]:nth-child(2),
-        div[data-testid="stHorizontalBlock"]:has(.tx-row) > div[data-testid="column"]:nth-child(3) { 
-            flex: 0 0 45px !important; width: 45px !important; display: flex !important; justify-content: center !important; align-items: center !important; 
-        }
-        div[data-testid="stHorizontalBlock"]:has(.tx-row) div[data-testid="stButton"] button {
-            background: transparent !important; border: 1px solid rgba(255,255,255,0.05) !important; color: #94a3b8 !important; border-radius: 8px !important; box-shadow: none !important; height: 32px !important; width: 32px !important; padding: 0 !important; display: flex !important; align-items: center !important; justify-content: center !important; transition: all 0.2s ease !important;
-        }
-        div[data-testid="stHorizontalBlock"]:has(.tx-row) div[data-testid="stButton"] button p { font-size: 1.1rem !important; margin: 0; padding: 0; }
-        div[data-testid="stHorizontalBlock"]:has(.tx-row) div[data-testid="column"]:nth-child(2) div[data-testid="stButton"] button:hover { border-color: #00ff9d !important; color: #00ff9d !important; background: rgba(0, 255, 157, 0.1) !important; }
-        div[data-testid="stHorizontalBlock"]:has(.tx-row) div[data-testid="column"]:nth-child(3) div[data-testid="stButton"] button:hover { border-color: #ff4d4d !important; color: #ff4d4d !important; background: rgba(255, 77, 77, 0.1) !important; }
+        display: flex !important; 
+        flex-direction: row !important; 
+        flex-wrap: nowrap !important; 
+        width: 100% !important; 
+        gap: 0 !important; 
+        position: relative !important;
+        transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1) !important;
+        cursor: pointer !important;
     }
 
-    /* --- MOBILE LAYOUT (SWIPE TO REVEAL) --- */
+    /* The Swiped State (Triggered by JS or Hover) */
+    div[data-testid="stHorizontalBlock"]:has(.tx-row).swiped-left {
+        transform: translateX(-130px) !important; 
+    }
+
+    /* Column 1: Info Box (Takes exactly 100% of the visible container) */
+    div[data-testid="stHorizontalBlock"]:has(.tx-row) > div[data-testid="column"]:nth-child(1) { 
+        flex: 1 1 100% !important; 
+        width: 100% !important; 
+        min-width: 100% !important; 
+        padding: 12px 16px !important; 
+        box-sizing: border-box !important;
+    }
+
+    /* Columns 2 & 3: Action Buttons (Absolutely positioned OFF-SCREEN to the right) */
+    div[data-testid="stHorizontalBlock"]:has(.tx-row) > div[data-testid="column"]:nth-child(2) { 
+        position: absolute !important; right: -65px !important; top: 0 !important; bottom: 0 !important; 
+        width: 65px !important; flex: 0 0 65px !important;
+        background: rgba(0, 255, 157, 0.1) !important;
+        border-left: 1px solid rgba(255,255,255,0.05) !important;
+    }
+    div[data-testid="stHorizontalBlock"]:has(.tx-row) > div[data-testid="column"]:nth-child(3) { 
+        position: absolute !important; right: -130px !important; top: 0 !important; bottom: 0 !important; 
+        width: 65px !important; flex: 0 0 65px !important;
+        background: rgba(255, 77, 77, 0.1) !important;
+        border-left: 1px solid rgba(255,255,255,0.05) !important;
+    }
+
+    /* Purge Streamlit Button Padding to stretch beautifully */
+    div[data-testid="stHorizontalBlock"]:has(.tx-row) div[data-testid="stButton"],
+    div[data-testid="stHorizontalBlock"]:has(.tx-row) div[data-testid="stButton"] button {
+        width: 100% !important; height: 100% !important; 
+        min-height: 100% !important; 
+        margin: 0 !important; padding: 0 !important; 
+        border: none !important; border-radius: 0 !important; 
+        box-shadow: none !important; background: transparent !important; 
+        display: flex !important; align-items: center !important; justify-content: center !important;
+    }
+    div[data-testid="stHorizontalBlock"]:has(.tx-row) div[data-testid="column"]:nth-child(2) div[data-testid="stButton"] button p { 
+        font-size: 1.2rem !important; color: #00ff9d !important; margin: 0; padding: 0; 
+    }
+    div[data-testid="stHorizontalBlock"]:has(.tx-row) div[data-testid="column"]:nth-child(3) div[data-testid="stButton"] button p { 
+        font-size: 1.2rem !important; color: #ff4d4d !important; margin: 0; padding: 0; 
+    }
+
+    /* PC Hover effect */
+    @media (hover: hover) and (pointer: fine) {
+        div[data-testid="stHorizontalBlock"]:has(.tx-row):hover {
+            transform: translateX(-130px) !important;
+        }
+        div[data-testid="stHorizontalBlock"]:has(.tx-row) div[data-testid="column"]:nth-child(2) div[data-testid="stButton"] button:hover { background: rgba(0, 255, 157, 0.2) !important; }
+        div[data-testid="stHorizontalBlock"]:has(.tx-row) div[data-testid="column"]:nth-child(3) div[data-testid="stButton"] button:hover { background: rgba(255, 77, 77, 0.2) !important; }
+    }
+
+    /* Mobile Adjustments */
     @media (max-width: 768px) {
         .glossy-header { margin-top: 0px !important; margin-bottom: 16px !important; padding: 20px 16px !important; font-size: 22px !important; min-height: 90px; }
         .home-header { margin-bottom: 0 !important; }
@@ -2851,35 +2996,19 @@ box-shadow: 0 8px 20px rgba(255, 255, 255, 0.2) !important; color: white !import
         div[data-testid="stForm"]:has(.add-tx-card) .stButton { width: 100% !important; justify-content: center !important; }
         div[data-testid="stForm"]:has(.add-tx-card) .stButton > button { width: 100% !important; max-width: none !important; }
 
-        /* The Scrollable Row */
-        div[data-testid="stHorizontalBlock"]:has(.tx-row) {
-            overflow-x: auto !important; scroll-snap-type: x mandatory !important; scrollbar-width: none !important; -ms-overflow-style: none !important; scroll-behavior: smooth !important;
+        /* Slightly smaller swipe distance on mobile */
+        div[data-testid="stHorizontalBlock"]:has(.tx-row).swiped-left {
+            transform: translateX(-120px) !important; 
         }
-        div[data-testid="stHorizontalBlock"]:has(.tx-row)::-webkit-scrollbar { display: none !important; }
-        
-        /* Main Info Box (100vw) */
         div[data-testid="stHorizontalBlock"]:has(.tx-row) > div[data-testid="column"]:nth-child(1) { 
-            flex: 0 0 100% !important; width: 100% !important; scroll-snap-align: start !important; padding: 12px 14px !important; position: relative;
+            padding: 12px 14px !important; 
         }
-        /* Swipe Hint Arrow */
-        div[data-testid="stHorizontalBlock"]:has(.tx-row) > div[data-testid="column"]:nth-child(1)::after {
-            content: '❮'; position: absolute; right: 6px; top: 50%; transform: translateY(-50%); color: rgba(255,255,255,0.2); font-size: 10px; pointer-events: none;
-        }
-        /* Hidden Actions */
         div[data-testid="stHorizontalBlock"]:has(.tx-row) > div[data-testid="column"]:nth-child(2) { 
-            flex: 0 0 65px !important; width: 65px !important; scroll-snap-align: end !important; background: rgba(0, 255, 157, 0.1) !important; border-left: 1px solid rgba(255,255,255,0.05);
+            right: -60px !important; width: 60px !important; flex: 0 0 60px !important;
         }
         div[data-testid="stHorizontalBlock"]:has(.tx-row) > div[data-testid="column"]:nth-child(3) { 
-            flex: 0 0 65px !important; width: 65px !important; scroll-snap-align: end !important; background: rgba(255, 77, 77, 0.1) !important; border-left: 1px solid rgba(255,255,255,0.05);
+            right: -120px !important; width: 60px !important; flex: 0 0 60px !important;
         }
-        
-        /* Fill Action Zones with Buttons */
-        div[data-testid="stHorizontalBlock"]:has(.tx-row) div[data-testid="stButton"],
-        div[data-testid="stHorizontalBlock"]:has(.tx-row) div[data-testid="stButton"] > button {
-            width: 100% !important; height: 100% !important; min-height: 56px !important; border-radius: 0 !important; border: none !important; box-shadow: none !important; background: transparent !important; display: flex !important; align-items: center !important; justify-content: center !important;
-        }
-        div[data-testid="stHorizontalBlock"]:has(.tx-row) div[data-testid="column"]:nth-child(2) div[data-testid="stButton"] button p { color: #00ff9d !important; font-size: 1.2rem !important; }
-        div[data-testid="stHorizontalBlock"]:has(.tx-row) div[data-testid="column"]:nth-child(3) div[data-testid="stButton"] button p { color: #ff4d4d !important; font-size: 1.2rem !important; }
 
         /* Dashboard Mobile Stats */
         .stats-layer-inner { gap: 6px !important; }
@@ -2894,6 +3023,45 @@ box-shadow: 0 8px 20px rgba(255, 255, 255, 0.2) !important; color: white !import
         .usdc-banner-amount { font-size: 1.1rem; }
         .stable-dropdown-wrapper { width: 92%; margin: -8px auto 12px auto !important; }
     }
+
+    /* IN-PLACE EDIT FORM (Replaces Row smoothly) */
+    div[data-testid="stForm"]:has(.edit-form-marker) {
+        background: rgba(15, 23, 42, 0.95) !important;
+        border: 1px solid #00ff9d !important;
+        border-radius: 8px !important; padding: 12px 16px !important; margin-bottom: 6px !important;
+        box-shadow: 0 4px 15px rgba(0, 255, 157, 0.1) !important;
+    }
+    div[data-testid="stForm"]:has(.edit-form-marker) div[data-baseweb="select"] > div { background: rgba(255,255,255,0.03) !important;
+border: 1px solid rgba(255,255,255,0.1) !important; }
+
+    /* IN-PLACE DELETE DIALOG (Replaces Row smoothly) */
+    div[data-testid="stVerticalBlockBorderWrapper"]:has(.del-warn-marker) {
+        border-color: rgba(255, 77, 77, 0.3) !important;
+        background: rgba(15, 23, 42, 0.95) !important;
+        border-radius: 8px !important; padding: 8px 12px !important; margin-bottom: 6px !important;
+        box-shadow: 0 4px 15px rgba(255, 77, 77, 0.1) !important;
+    }
+    div[data-testid="stVerticalBlockBorderWrapper"]:has(.del-warn-marker) div[data-testid="stHorizontalBlock"] {
+        display: flex !important;
+        flex-direction: row !important; align-items: center !important; gap: 8px !important;
+    }
+    div[data-testid="stVerticalBlockBorderWrapper"]:has(.del-warn-marker) div[data-testid="column"]:nth-child(1) { flex: 1 1 auto !important;
+    }
+    div[data-testid="stVerticalBlockBorderWrapper"]:has(.del-warn-marker) div[data-testid="column"]:nth-child(2) { flex: 0 0 80px !important; }
+    div[data-testid="stVerticalBlockBorderWrapper"]:has(.del-warn-marker) div[data-testid="column"]:nth-child(3) { flex: 0 0 80px !important;
+    }
+    div[data-testid="stVerticalBlockBorderWrapper"]:has(.del-warn-marker) .stButton > button {
+        border-radius: 6px !important; font-weight: 600 !important; width: 100% !important; padding: 4px !important;
+        height: 32px !important; min-height: 32px !important; font-size: 0.9rem !important; transition: all 0.2s !important;
+    }
+    div[data-testid="stVerticalBlockBorderWrapper"]:has(.del-warn-marker) div[data-testid="column"]:nth-child(2) .stButton > button { background: rgba(255, 77, 77, 0.1) !important; color: #ff4d4d !important;
+    border: 1px solid rgba(255, 77, 77, 0.3) !important; }
+    div[data-testid="stVerticalBlockBorderWrapper"]:has(.del-warn-marker) div[data-testid="column"]:nth-child(2) .stButton > button:hover { background: #ff4d4d !important; color: white !important;
+    }
+    div[data-testid="stVerticalBlockBorderWrapper"]:has(.del-warn-marker) div[data-testid="column"]:nth-child(3) .stButton > button { background: rgba(255, 255, 255, 0.05) !important; color: #cbd5e1 !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important; }
+    div[data-testid="stVerticalBlockBorderWrapper"]:has(.del-warn-marker) div[data-testid="column"]:nth-child(3) .stButton > button:hover { background: rgba(255, 255, 255, 0.15) !important;
+    color: white !important; }
     </style>
     """, unsafe_allow_html=True)
 
@@ -3019,21 +3187,21 @@ box-shadow: 0 8px 20px rgba(255, 255, 255, 0.2) !important; color: white !import
             else:
                 # NEW HTML-GRID COMPACT ROW DISPLAY
                 with st.container(border=True):
-                    col_info, col_edit, col_del = st.columns([1, 0.1, 0.1])
+                    col_info, col_edit, col_del = st.columns(3)
                     
                     with col_info:
                         st.markdown(f"""
-                        <div class="tx-row" style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+                        <div class="tx-row" style="display: flex; justify-content: space-between; align-items: center; width: 100%; height: 100%; min-height: 48px;">
                             <div style="display: flex; align-items: center; gap: 12px; overflow: hidden; flex: 1;">
                                 <img src="{logo_url}" style="width: 32px; height: 32px; border-radius: 50%; object-fit: contain; flex-shrink: 0; {bg_style}" onerror="this.src='https://via.placeholder.com/32/1e2a44/ffffff?text={r['Ticker'][0]}';">
                                 <div style="display: flex; flex-direction: column; overflow: hidden; min-width: 0; padding-bottom: 2px;">
-                                    <span style="font-weight: 700; font-size: 1rem; color: #ffffff; white-space: nowrap; text-overflow: ellipsis; overflow: hidden; line-height: 1.3;">{r['Ticker']}</span>
-                                    <span style="font-size: 0.75rem; color: #94a3b8; white-space: nowrap; text-overflow: ellipsis; overflow: hidden; line-height: 1.3;">{date_str}</span>
+                                    <span style="font-weight: 700; font-size: 1rem; color: #ffffff; white-space: nowrap; text-overflow: ellipsis; overflow: hidden; line-height: 1.2;">{r['Ticker']}</span>
+                                    <span style="font-size: 0.75rem; color: #94a3b8; white-space: nowrap; text-overflow: ellipsis; overflow: hidden; line-height: 1.2;">{date_str}</span>
                                 </div>
                             </div>
-                            <div style="display: flex; flex-direction: column; align-items: flex-end; justify-content: center; overflow: hidden; padding-left: 4px; padding-bottom: 2px; flex-shrink: 0;">
-                                <span style="font-weight: 700; font-size: 1rem; color: {color}; white-space: nowrap; line-height: 1.3;">{sign}{amount_formatted}</span>
-                                <span style="font-size: 0.75rem; color: #cbd5e1; white-space: nowrap; line-height: 1.3;">{action_text}: {invested_formatted}</span>
+                            <div style="display: flex; flex-direction: column; align-items: flex-end; justify-content: center; overflow: hidden; padding-left: 4px; flex-shrink: 0;">
+                                <span style="font-weight: 700; font-size: 1rem; color: {color}; white-space: nowrap; line-height: 1.2;">{sign}{amount_formatted}</span>
+                                <span style="font-size: 0.75rem; color: #cbd5e1; white-space: nowrap; line-height: 1.2;">{action_text} {invested_formatted}</span>
                             </div>
                         </div>
                         """, unsafe_allow_html=True)
@@ -3087,125 +3255,4 @@ with tab_fiat:
             f4, f5, f6 = st.columns(3)
             with f4: fee = st.number_input("Fee (EUR)", value=1.0, step=0.01)
             with f5: stable_ticker = st.selectbox("Received Stablecoin", STABLECOINS_LIST, index=0)
-            with f6: stable_amt = st.number_input("Stablecoin Amount", value=44.67, step=0.01)
-            
-            action_col1, action_col2 = st.columns(2)
-            with action_col1:
-                st.markdown("<div style='color: transparent;'>Spacing</div>", unsafe_allow_html=True)
-            with action_col2:
-                submitted_fiat = st.form_submit_button("Add Entry")
-                
-            if submitted_fiat:
-                czk_eur = round(czk / eur, 5) if eur > 0 else 0.0
-                new_row = pd.DataFrame([{"Datum": date_to_excel_serial(selected_date), "CZK": czk, "EUR": eur, "Fee": fee, "CZK/EUR": czk_eur, "Stable_Amt": stable_amt, "Stable_Ticker": stable_ticker, "NI": "", "GG": "", "ER": ""}])
-                st.session_state.fiat_df = pd.concat([st.session_state.fiat_df, new_row], ignore_index=True)
-                save_fiat(st.session_state.fiat_df)
-                st.session_state.fiat_table_version += 1
-                st.session_state.ui_version += 1
-                st.success(f"✅ Executed fiat deposit!")
-                st.rerun()
-
-    df_fiat_display = st.session_state.fiat_df.copy()
-    df_fiat_display['orig_idx'] = df_fiat_display.index
-    df_fiat_display = df_fiat_display.dropna(how='all')
-    df_fiat_display = df_fiat_display.sort_values(by='Datum', ascending=False)
-
-    st.markdown("<h4 style='color: white; margin-top: 10px; margin-bottom: 10px;'>Fiat History</h4>", unsafe_allow_html=True)
-
-    # 2. SCROLLABLE FIAT TRANSACTION LIST
-    with st.container(height=650, border=False):
-        for i, r in df_fiat_display.iterrows():
-            orig_idx = r['orig_idx']
-            stable_ticker = r.get('Stable_Ticker', 'USDC')
-            logo_url = get_ticker_logo(stable_ticker)
-            
-            stable_amt = r.get('Stable_Amt', 0.0)
-            czk_val = r.get('CZK', 0.0)
-            eur_val = r.get('EUR', 0.0)
-            fee_val = r.get('Fee', 0.0)
-            
-            stable_formatted = f"+{stable_amt:,.2f} {stable_ticker}"
-            fiat_formatted = f"CZK: {czk_val:,.2f} / EUR: {eur_val:,.2f}"
-            date_str = format_datum(r['Datum'])
-
-            if st.session_state.get('confirm_delete_fiat') == orig_idx:
-                with st.container(border=True):
-                    st.markdown("<div class='del-warn-marker'></div>", unsafe_allow_html=True)
-                    c_txt, c_yes, c_no = st.columns([2, 1, 1])
-                    with c_txt: st.markdown("<span style='color: #ff4d4d; font-size: 1rem; font-weight: 600;'>Delete entry?</span>", unsafe_allow_html=True)
-                    with c_yes:
-                        if st.button("Delete", key=f"yes_fiat_del_{orig_idx}", use_container_width=True):
-                            st.session_state.fiat_df = st.session_state.fiat_df.drop(orig_idx).reset_index(drop=True)
-                            save_fiat(st.session_state.fiat_df)
-                            st.session_state['confirm_delete_fiat'] = None
-                            st.session_state.fiat_table_version += 1
-                            st.session_state.ui_version += 1
-                            st.rerun()
-                    with c_no:
-                        if st.button("Cancel", key=f"no_fiat_del_{orig_idx}", use_container_width=True):
-                            st.session_state['confirm_delete_fiat'] = None
-                            st.rerun()
-            elif st.session_state.get('edit_fiat_row') == orig_idx:
-                with st.form(f"edit_fiat_form_{orig_idx}", border=False):
-                    st.markdown("<div class='edit-form-marker'></div><h5 style='color: #00ff9d; margin-top: 0px; margin-bottom: 10px;'>✎ Edit Fiat Details</h5>", unsafe_allow_html=True)
-                    
-                    e_f1, e_f2, e_f3 = st.columns(3)
-                    with e_f1: new_date = st.date_input("Date", value=datetime(1899, 12, 30) + timedelta(days=int(r['Datum'])))
-                    with e_f2: new_czk = st.number_input("CZK", value=float(czk_val), step=0.01)
-                    with e_f3: new_eur = st.number_input("EUR", value=float(eur_val), step=0.01)
-                    
-                    e_f4, e_f5, e_f6 = st.columns(3)
-                    with e_f4: new_fee = st.number_input("Fee", value=float(fee_val), step=0.01)
-                    with e_f5: new_stable_ticker = st.selectbox("Stablecoin", STABLECOINS_LIST, index=STABLECOINS_LIST.index(stable_ticker) if stable_ticker in STABLECOINS_LIST else 0)
-                    with e_f6: new_stable = st.number_input("Stable Amount", value=float(stable_amt), step=0.01)
-                     
-                    e_save, e_cancel = st.columns(2)
-                    with e_save: 
-                        if st.form_submit_button("💾 Save Changes"):
-                            new_czk_eur = round(new_czk / new_eur, 5) if new_eur > 0 else 0.0
-                            
-                            st.session_state.fiat_df.loc[orig_idx] = {"Datum": date_to_excel_serial(new_date), "CZK": new_czk, "EUR": new_eur, "Fee": new_fee, "CZK/EUR": new_czk_eur, "Stable_Amt": new_stable, "Stable_Ticker": new_stable_ticker, "NI": r.get('NI', ""), "GG": r.get('GG', ""), "ER": r.get('ER', "")}
-                            save_fiat(st.session_state.fiat_df)
-                            st.session_state['edit_fiat_row'] = None
-                            st.session_state.fiat_table_version += 1
-                            st.session_state.ui_version += 1
-                            st.success("✅ Entry updated!")
-                            st.rerun()
-                            
-                    with e_cancel:
-                        if st.form_submit_button("❌ Cancel"):
-                            st.session_state['edit_fiat_row'] = None
-                            st.rerun()
-            else:
-                # NEW HTML-GRID COMPACT ROW DISPLAY
-                with st.container(border=True):
-                    col_info, col_edit, col_del = st.columns([1, 0.1, 0.1])
-                    
-                    with col_info:
-                        st.markdown(f"""
-                        <div class="tx-row" style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
-                            <div style="display: flex; align-items: center; gap: 12px; overflow: hidden; flex: 1;">
-                                <img src="{logo_url}" style="width: 32px; height: 32px; border-radius: 50%; object-fit: contain; flex-shrink: 0; background-color:#ffffff;" onerror="this.src='https://via.placeholder.com/32/1e2a44/ffffff?text={stable_ticker[0]}';">
-                                <div style="display: flex; flex-direction: column; overflow: hidden; min-width: 0; padding-bottom: 2px;">
-                                    <span style="font-weight: 700; font-size: 1rem; color: #ffffff; white-space: nowrap; text-overflow: ellipsis; overflow: hidden; line-height: 1.3;">{date_str}</span>
-                                    <span style="font-size: 0.75rem; color: #94a3b8; white-space: nowrap; text-overflow: ellipsis; overflow: hidden; line-height: 1.3;">{fiat_formatted}</span>
-                                </div>
-                            </div>
-                            <div style="display: flex; flex-direction: column; align-items: flex-end; justify-content: center; overflow: hidden; padding-left: 4px; padding-bottom: 2px; flex-shrink: 0;">
-                                <span style="font-weight: 700; font-size: 1rem; color: #00ff9d; white-space: nowrap; text-overflow: ellipsis; overflow: hidden; line-height: 1.3;">{stable_formatted}</span>
-                                <span style="font-size: 0.75rem; color: #cbd5e1; white-space: nowrap; text-overflow: ellipsis; overflow: hidden; line-height: 1.3;">Fee: {fee_val:,.2f} EUR</span>
-                            </div>
-                        </div>
-                        """, unsafe_allow_html=True)
-                        
-                    with col_edit:
-                        if st.button("✎", key=f"edit_fiat_btn_{orig_idx}"):
-                            st.session_state['edit_fiat_row'] = orig_idx
-                            st.session_state['confirm_delete_fiat'] = None
-                            st.rerun()
-                            
-                    with col_del:
-                        if st.button("✕", key=f"del_fiat_btn_{orig_idx}"):
-                            st.session_state['confirm_delete_fiat'] = orig_idx
-                            st.session_state['edit_fiat_row'] = None
-                            st.rerun()
+            with f6:
