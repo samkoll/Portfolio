@@ -2789,7 +2789,7 @@ with tab_home:
         window.chartCache = {{}};
     }}
     window.oldRefreshKey = refreshKey;
-})();
+}})();
 </script>
 </body>
 </html>
