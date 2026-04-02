@@ -314,7 +314,7 @@ div[data-testid="stTabs"] > div[role="tabpanel"] {
     border-color: rgba(38, 161, 123, 0.4);
 }
 .usdc-banner-left { display: flex; align-items: center; gap: 12px; }
-.usdc-banner-left img, .usdc-banner-left svg { width: 28px; height: 28px; border-radius: 50%; object-fit: contain; opacity: 0.85; }
+.usdc-banner-left svg { width: 28px; height: 28px; border-radius: 50%; object-fit: contain; opacity: 0.85; }
 .usdc-banner-title { font-size: 1.05rem; font-weight: 600; color: #e2e8f0; display: flex; align-items: center; gap: 8px; }
 .usdc-banner-subtitle { font-size: 0.75rem; font-weight: 500; color: #64748b; }
 .usdc-banner-amount { font-size: 1.2rem; font-weight: 600; color: #e2e8f0; }
@@ -370,13 +370,10 @@ div[data-testid="stForm"]:has(.add-tx-card) .stTextInput input, div[data-testid=
     background: rgba(255,255,255,0.03) !important; border: 1px solid rgba(255,255,255,0.1) !important; color: #fff !important; border-radius: 8px !important; margin-bottom: 0px !important;
 }
 div[data-testid="stForm"]:has(.add-tx-card) div[data-testid="stHorizontalBlock"]:has(> div[data-testid="column"]:nth-child(4)) { display: flex !important; gap: 12px !important; }
-div[data-testid="stForm"]:has(.add-tx-card) div[data-testid="stHorizontalBlock"]:has(> div[data-testid="column"]:nth-child(2):last-child) { display: flex !important; flex-direction: row !important; justify-content: space-between !important; align-items: center !important; margin-top: 12px !important; gap: 12px !important; }
-div[data-testid="stForm"]:has(.add-tx-card) div[data-testid="stHorizontalBlock"]:has(> div[data-testid="column"]:nth-child(2):last-child) > div[data-testid="column"]:nth-child(1) { flex: 0 0 auto !important; width: auto !important; }
-div[data-testid="stForm"]:has(.add-tx-card) div[data-testid="stHorizontalBlock"]:has(> div[data-testid="column"]:nth-child(2):last-child) > div[data-testid="column"]:nth-child(2) { flex: 1 1 auto !important; width: auto !important; }
 
 /* BEAUTIFUL BUY/SELL SWITCH */
 div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] {
-    background: rgba(0,0,0,0.3) !important; padding: 6px !important; border-radius: 12px !important; display: flex !important; flex-direction: row !important; gap: 8px !important; align-items: center !important; margin: 0 !important; height: 48px !important; border: 1px solid rgba(255,255,255,0.05) !important; min-width: 200px !important;
+    background: rgba(0,0,0,0.3) !important; padding: 6px !important; border-radius: 12px !important; display: flex !important; flex-direction: row !important; gap: 8px !important; align-items: center !important; margin: 0 !important; height: 48px !important; border: 1px solid rgba(255,255,255,0.05) !important;
 }
 div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label {
     margin: 0 !important; cursor: pointer !important; padding: 0 !important; border-radius: 8px !important; border: 1px solid transparent !important; transition: all 0.3s ease !important; background: transparent !important; flex: 1 !important; display: flex !important; justify-content: center !important; align-items: center !important; height: 100% !important;
@@ -396,20 +393,14 @@ div[data-testid="stForm"]:has(.add-tx-card) .stButton > button:hover { transform
 /* ==============================================================
    HIGHLY COMPACT, IRONCLAD TRANSACTION ROWS (PC & MOBILE)
    ============================================================== */
-div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row-marker),
-div[data-testid="stVerticalBlockBorderWrapper"]:has(.del-replace) {
+div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row-marker) {
     background: #0f172a !important; border: 1px solid rgba(255,255,255,0.05) !important;
-    border-radius: 8px !important; padding: 6px 12px !important; margin-bottom: 6px !important;
-    position: relative !important; z-index: 2; overflow: visible !important;
+    border-radius: 8px !important; padding: 4px 8px !important; margin-bottom: 6px !important;
 }
 
-/* Allow absolute overlays to escape container */
-div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row-marker) > div[data-testid="stVerticalBlock"] {
-    overflow: visible !important; padding: 0 !important; gap: 0 !important;
-}
-/* Pop active editing row to front */
-div[data-testid="stVerticalBlockBorderWrapper"]:has(.edit-overlay) {
-    z-index: 100 !important; 
+/* Eliminate Streamlit's Internal Column Gaps */
+div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row-marker) div[data-testid="stVerticalBlock"] {
+    gap: 0 !important;
 }
 
 /* FORCE HORIZONTAL FLEX WRAPPER - STOPS STREAMLIT STACKING */
@@ -451,48 +442,33 @@ div[data-testid="stHorizontalBlock"]:has(.tx-row-marker) div[data-testid="column
 .mobile-tx-sub { font-size: 0.75rem !important; color: #94a3b8; line-height: 1.1; margin-top: 3px; margin-left: 2px; }
 .mobile-tx-amount { font-size: 1rem !important; font-weight: 700; line-height: 1.1; }
 
-/* ==============================================================
-   ABSOLUTE OVERLAY EDIT FORM
-   ============================================================== */
-div[data-testid="stForm"]:has(.edit-overlay) {
-    position: absolute !important;
-    top: -4px !important;
-    left: -4px !important;
-    width: calc(100% + 8px) !important;
-    z-index: 9999 !important;
-    background: rgba(15, 23, 42, 0.95) !important;
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
-    border: 1px solid #00ff9d !important;
-    border-radius: 10px !important;
-    padding: 12px 16px !important;
-    margin: 0 !important;
-    box-shadow: 0 20px 40px rgba(0,0,0,0.8) !important;
+/* IN-PLACE EDIT FORM (Replaces Row smoothly) */
+div[data-testid="stForm"]:has(.edit-form-marker) {
+    background: rgba(15, 23, 42, 0.95) !important; border: 1px solid #00ff9d !important;
+    border-radius: 8px !important; padding: 12px 16px !important; margin-bottom: 6px !important;
+    box-shadow: 0 4px 15px rgba(0, 255, 157, 0.1) !important;
 }
-div[data-testid="stForm"]:has(.edit-overlay) div[data-baseweb="select"] > div { background: rgba(255,255,255,0.03) !important; border: 1px solid rgba(255,255,255,0.1) !important; }
+div[data-testid="stForm"]:has(.edit-form-marker) div[data-baseweb="select"] > div { background: rgba(255,255,255,0.03) !important; border: 1px solid rgba(255,255,255,0.1) !important; }
 
-/* ==============================================================
-   REPLACE DELETE WARNING (Doesn't push screen, exactly matches row size)
-   ============================================================== */
-div[data-testid="stHorizontalBlock"]:has(.del-replace) {
-    display: flex !important; flex-direction: row !important; align-items: center !important; justify-content: space-between !important; padding: 2px 0 !important; gap: 12px !important;
+/* IN-PLACE DELETE DIALOG (Replaces Row smoothly) */
+div[data-testid="stVerticalBlockBorderWrapper"]:has(.del-warn-marker) {
+    border-color: rgba(255, 77, 77, 0.3) !important; background: rgba(15, 23, 42, 0.95) !important;
+    border-radius: 8px !important; padding: 8px 12px !important; margin-bottom: 6px !important;
+    box-shadow: 0 4px 15px rgba(255, 77, 77, 0.1) !important;
 }
-div[data-testid="stHorizontalBlock"]:has(.del-replace) > div[data-testid="column"] { min-width: 0 !important; padding: 0 !important; }
-div[data-testid="stHorizontalBlock"]:has(.del-replace) > div[data-testid="column"]:nth-child(1) { flex: 1 1 auto !important; }
-div[data-testid="stHorizontalBlock"]:has(.del-replace) > div[data-testid="column"]:nth-child(2) { flex: 0 0 80px !important; }
-div[data-testid="stHorizontalBlock"]:has(.del-replace) > div[data-testid="column"]:nth-child(3) { flex: 0 0 80px !important; }
-
-div[data-testid="stHorizontalBlock"]:has(.del-replace) .stButton > button {
-    border-radius: 6px !important; font-weight: 600 !important; transition: all 0.2s !important; width: 100% !important; padding: 4px !important; height: 32px !important; min-height: 32px !important; font-size: 0.9rem !important;
+div[data-testid="stVerticalBlockBorderWrapper"]:has(.del-warn-marker) div[data-testid="stHorizontalBlock"] {
+    display: flex !important; flex-direction: row !important; align-items: center !important; gap: 8px !important;
 }
-div[data-testid="stHorizontalBlock"]:has(.del-replace) div[data-testid="column"]:nth-child(2) .stButton > button {
-    background: rgba(255, 77, 77, 0.1) !important; color: #ff4d4d !important; border: 1px solid rgba(255, 77, 77, 0.3) !important;
+div[data-testid="stVerticalBlockBorderWrapper"]:has(.del-warn-marker) div[data-testid="column"]:nth-child(1) { flex: 1 1 auto !important; }
+div[data-testid="stVerticalBlockBorderWrapper"]:has(.del-warn-marker) div[data-testid="column"]:nth-child(2) { flex: 0 0 80px !important; }
+div[data-testid="stVerticalBlockBorderWrapper"]:has(.del-warn-marker) div[data-testid="column"]:nth-child(3) { flex: 0 0 80px !important; }
+div[data-testid="stVerticalBlockBorderWrapper"]:has(.del-warn-marker) .stButton > button {
+    border-radius: 6px !important; font-weight: 600 !important; width: 100% !important; padding: 4px !important; height: 32px !important; min-height: 32px !important; font-size: 0.9rem !important; transition: all 0.2s !important;
 }
-div[data-testid="stHorizontalBlock"]:has(.del-replace) div[data-testid="column"]:nth-child(2) .stButton > button:hover { background: #ff4d4d !important; color: white !important; }
-div[data-testid="stHorizontalBlock"]:has(.del-replace) div[data-testid="column"]:nth-child(3) .stButton > button {
-    background: rgba(255, 255, 255, 0.05) !important; color: #cbd5e1 !important; border: 1px solid rgba(255, 255, 255, 0.1) !important;
-}
-div[data-testid="stHorizontalBlock"]:has(.del-replace) div[data-testid="column"]:nth-child(3) .stButton > button:hover { background: rgba(255, 255, 255, 0.15) !important; color: white !important; }
+div[data-testid="stVerticalBlockBorderWrapper"]:has(.del-warn-marker) div[data-testid="column"]:nth-child(2) .stButton > button { background: rgba(255, 77, 77, 0.1) !important; color: #ff4d4d !important; border: 1px solid rgba(255, 77, 77, 0.3) !important; }
+div[data-testid="stVerticalBlockBorderWrapper"]:has(.del-warn-marker) div[data-testid="column"]:nth-child(2) .stButton > button:hover { background: #ff4d4d !important; color: white !important; }
+div[data-testid="stVerticalBlockBorderWrapper"]:has(.del-warn-marker) div[data-testid="column"]:nth-child(3) .stButton > button { background: rgba(255, 255, 255, 0.05) !important; color: #cbd5e1 !important; border: 1px solid rgba(255, 255, 255, 0.1) !important; }
+div[data-testid="stVerticalBlockBorderWrapper"]:has(.del-warn-marker) div[data-testid="column"]:nth-child(3) .stButton > button:hover { background: rgba(255, 255, 255, 0.15) !important; color: white !important; }
 
 /* ==============================================================
    MOBILE OVERRIDES
@@ -501,24 +477,20 @@ div[data-testid="stHorizontalBlock"]:has(.del-replace) div[data-testid="column"]
     .glossy-header { margin-top: 0px !important; margin-bottom: 16px !important; padding: 20px 16px !important; font-size: 22px !important; min-height: 90px; }
     .home-header { margin-bottom: 0 !important; }
     
-    div[data-testid="stForm"]:has(.add-tx-card) div[data-testid="stHorizontalBlock"] { display: flex !important; flex-direction: row !important; flex-wrap: wrap !important; gap: 12px !important; }
-    div[data-testid="stForm"]:has(.add-tx-card) div[data-testid="stHorizontalBlock"]:has(> div[data-testid="column"]:nth-child(4)) > div[data-testid="column"], div[data-testid="stForm"]:has(.add-tx-card) div[data-testid="stHorizontalBlock"]:has(> div[data-testid="column"]:nth-child(3)) > div[data-testid="column"], div[data-testid="stForm"]:has(.add-tx-card) div[data-testid="stHorizontalBlock"]:has(> div[data-testid="column"]:nth-child(2):last-child) > div[data-testid="column"] { min-width: calc(50% - 12px) !important; width: calc(50% - 12px) !important; flex: 1 1 calc(50% - 12px) !important; }
     div[data-testid="stForm"]:has(.add-tx-card) input { padding: 6px !important; font-size: 0.95rem !important; }
-    div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] { min-width: 0 !important; width: 100% !important; }
-    div[data-testid="stForm"]:has(.add-tx-card) .stButton { display: flex !important; justify-content: flex-end !important; width: 100% !important; }
-    div[data-testid="stForm"]:has(.add-tx-card) .stButton > button { width: 100% !important; max-width: 120px !important; padding: 0 16px !important; }
+    div[data-testid="stForm"]:has(.add-tx-card) .stButton { width: 100% !important; justify-content: center !important; }
+    div[data-testid="stForm"]:has(.add-tx-card) .stButton > button { width: 100% !important; max-width: none !important; }
 
     /* Ultra Compact Mobile Rows */
-    div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row-marker),
-    div[data-testid="stVerticalBlockBorderWrapper"]:has(.del-replace) {
+    div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row-marker) {
         padding: 4px 6px !important; margin-bottom: 6px !important;
     }
-    div[data-testid="stHorizontalBlock"]:has(.tx-row-marker) { gap: 2px !important; }
+    div[data-testid="stHorizontalBlock"]:has(.tx-row-marker) { gap: 4px !important; }
     div[data-testid="stHorizontalBlock"]:has(.tx-row-marker) > div[data-testid="column"]:nth-child(1) { flex: 0 0 24px !important; width: 24px !important; }
-    div[data-testid="stHorizontalBlock"]:has(.tx-row-marker) > div[data-testid="column"]:nth-child(4) { flex: 0 0 24px !important; width: 24px !important; }
-    div[data-testid="stHorizontalBlock"]:has(.tx-row-marker) > div[data-testid="column"]:nth-child(5) { flex: 0 0 24px !important; width: 24px !important; }
+    div[data-testid="stHorizontalBlock"]:has(.tx-row-marker) > div[data-testid="column"]:nth-child(4) { flex: 0 0 26px !important; width: 26px !important; }
+    div[data-testid="stHorizontalBlock"]:has(.tx-row-marker) > div[data-testid="column"]:nth-child(5) { flex: 0 0 26px !important; width: 26px !important; }
     
-    div[data-testid="stHorizontalBlock"]:has(.tx-row-marker) div[data-testid="stButton"] button { width: 24px !important; height: 24px !important; }
+    div[data-testid="stHorizontalBlock"]:has(.tx-row-marker) div[data-testid="stButton"] button { width: 26px !important; height: 26px !important; }
     div[data-testid="stHorizontalBlock"]:has(.tx-row-marker) div[data-testid="stButton"] button p { font-size: 0.9rem !important; }
     
     .mobile-logo { width: 22px !important; height: 22px !important; margin-top: 2px !important; }
@@ -534,7 +506,6 @@ div[data-testid="stHorizontalBlock"]:has(.del-replace) div[data-testid="column"]
     .dash-label { font-size: clamp(8px, 2.5vw, 10px) !important; bottom: 8px !important; white-space: nowrap !important; letter-spacing: 0.5px !important; }
     
     .usdc-banner { padding: 8px 14px; width: 92%; margin: 4px auto 8px auto !important; }
-    .usdc-banner-left img, .usdc-banner-left svg { width: 24px; height: 24px; }
     .usdc-banner-title { font-size: 0.95rem; }
     .usdc-banner-subtitle { font-size: 0.7rem; }
     .usdc-banner-amount { font-size: 1.1rem; }
@@ -976,6 +947,7 @@ if 'crypto_df' not in st.session_state:
 if 'fiat_df' not in st.session_state:
     st.session_state.fiat_df = load_or_init_fiat()
 
+# --- HOTFIX: Force Live Session State Migration ---
 if not st.session_state.crypto_df.empty and 'USDC' in st.session_state.crypto_df.columns and 'Stable_Amt' not in st.session_state.crypto_df.columns:
     st.session_state.crypto_df.rename(columns={'USDC': 'Stable_Amt'}, inplace=True)
     st.session_state.crypto_df['Stable_Ticker'] = 'USDC'
@@ -1162,13 +1134,26 @@ with tab_home:
             stable_breakdown[t] = stable_breakdown.get(t, 0.0) - amt
             
     dropdown_html = ""
+    owned_stables = []
     for t in STABLECOINS_LIST:
         amt = stable_breakdown.get(t, 0.0)
         if amt > 0.01:
+            owned_stables.append(t)
             logo = get_ticker_logo(t)
             dropdown_html += f"<div class='st-item'><div class='st-item-left'><img src='{logo}' width='20' height='20' style='border-radius:50%;object-fit:contain;' onerror=\"this.src='https://via.placeholder.com/20/1e2a44/ffffff?text={t[0]}';\"><span>{t}</span></div><span class='val'>{format_holdings(amt, t)}</span></div>"
     if dropdown_html == "":
         dropdown_html = "<div class='st-item'><span>No Stablecoins</span><span class='val'>0.00</span></div>"
+
+    # Compile the Main Banner Icons
+    owned_stables.sort(key=lambda x: stable_breakdown.get(x, 0), reverse=True)
+    top_logos = [get_ticker_logo(t) for t in owned_stables[:3]]
+    
+    if top_logos:
+        logos_html = "".join([f"<img src='{l}' style='width:28px;height:28px;border-radius:50%;margin-left:-10px;border:2px solid #0f172a;'>" for l in top_logos])
+        logos_html = logos_html.replace("margin-left:-10px;", "margin-left:0;", 1)
+        main_icon_html = f"<div style='display:flex; align-items:center;'>{logos_html}</div>"
+    else:
+        main_icon_html = STABLECOIN_ICON
 
     # ================== 1. DASHBOARD OVERVIEW ==================
     value_box_html = f"""
@@ -1911,7 +1896,7 @@ with tab_home:
 <label for="stable-dropdown-toggle" style="display:block;cursor:pointer; -webkit-tap-highlight-color:transparent;">
     <div class="usdc-banner" style="--border: #26a17b;">
         <div class="usdc-banner-left">
-            {STABLECOIN_ICON}
+            {main_icon_html}
             <div class="usdc-banner-title">Stablecoins <span class="usdc-banner-subtitle">(Available Cash)</span></div>
         </div>
         <div class="usdc-banner-amount">{format_holdings(stables_holdings, 'STABLES')}</div>
@@ -2843,147 +2828,54 @@ with tab_crypto:
        NEW COMPACT EXPANDER FOR FORMS
        ============================================================== */
     div[data-testid="stExpander"] {
-        background: #0f172a !important;
-        border: 1px solid rgba(255,255,255,0.05) !important;
-        border-radius: 12px !important;
-        box-shadow: 0 4px 15px rgba(0,0,0,0.3) !important;
-        margin-bottom: 24px !important;
+        background: #0f172a !important; border: 1px solid rgba(255,255,255,0.05) !important;
+        border-radius: 12px !important; box-shadow: 0 4px 15px rgba(0,0,0,0.3) !important; margin-bottom: 24px !important;
     }
     div[data-testid="stExpander"] summary {
-        color: #00ff9d !important;
-        font-weight: 700 !important;
-        font-size: 1.1rem !important;
-        padding: 12px 16px !important;
-        background: transparent !important;
+        color: #00ff9d !important; font-weight: 700 !important; font-size: 1.05rem !important;
+        padding: 12px 16px !important; background: transparent !important; border-bottom: none !important;
     }
-    div[data-testid="stExpander"] summary svg {
-        color: #00ff9d !important;
-        fill: #00ff9d !important;
-    }
-    div[data-testid="stExpanderDetails"] {
-        padding: 0 16px 16px 16px !important;
-    }
-    /* Neutralize form border inside expander */
-    div[data-testid="stExpanderDetails"] div[data-testid="stForm"] {
-        padding: 0 !important;
-        border: none !important;
-        box-shadow: none !important;
-        margin-bottom: 0 !important;
-        background: transparent !important;
-    }
+    div[data-testid="stExpander"] summary svg { color: #00ff9d !important; fill: #00ff9d !important; }
+    div[data-testid="stExpanderDetails"] { padding: 0 16px 16px 16px !important; }
+    div[data-testid="stExpanderDetails"] div[data-testid="stForm"] { padding: 0 !important; border: none !important; box-shadow: none !important; margin-bottom: 0 !important; background: transparent !important; }
 
-    /* 1. INPUTS STYLING */
+    /* INPUTS STYLING */
     div[data-testid="stForm"]:has(.add-tx-card) label { font-size: 0.85rem !important; color: #94a3b8 !important; padding-bottom: 2px !important; }
-    
-    div[data-testid="stForm"]:has(.add-tx-card) .stTextInput input,
-    div[data-testid="stForm"]:has(.add-tx-card) .stNumberInput input,
-    div[data-testid="stForm"]:has(.add-tx-card) .stDateInput input,
-    div[data-testid="stForm"]:has(.add-tx-card) div[data-baseweb="select"] > div {
-        background: rgba(255,255,255,0.03) !important;
-        border: 1px solid rgba(255,255,255,0.1) !important;
-        color: #fff !important;
-        border-radius: 8px !important;
-        margin-bottom: 0px !important;
+    div[data-testid="stForm"]:has(.add-tx-card) .stTextInput input, div[data-testid="stForm"]:has(.add-tx-card) .stNumberInput input, div[data-testid="stForm"]:has(.add-tx-card) .stDateInput input, div[data-testid="stForm"]:has(.add-tx-card) div[data-baseweb="select"] > div {
+        background: rgba(255,255,255,0.03) !important; border: 1px solid rgba(255,255,255,0.1) !important; color: #fff !important; border-radius: 8px !important; margin-bottom: 0px !important;
     }
-
-    /* 1a. FIRST ROW (4 columns): Inputs */
-    div[data-testid="stForm"]:has(.add-tx-card) div[data-testid="stHorizontalBlock"]:has(> div[data-testid="column"]:nth-child(4)) {
-        display: flex !important;
-        gap: 12px !important;
-    }
-    
-    /* 1b. SECOND ROW (2 columns): Action (Switch + Button) */
-    div[data-testid="stForm"]:has(.add-tx-card) div[data-testid="stHorizontalBlock"]:has(> div[data-testid="column"]:nth-child(2):last-child) {
-        display: flex !important;
-        flex-direction: row !important;
-        justify-content: space-between !important;
-        align-items: center !important;
-        margin-top: 12px !important;
-        gap: 12px !important;
-    }
-    div[data-testid="stForm"]:has(.add-tx-card) div[data-testid="stHorizontalBlock"]:has(> div[data-testid="column"]:nth-child(2):last-child) > div[data-testid="column"]:nth-child(1) {
-        flex: 0 0 auto !important; width: auto !important;
-    }
-    div[data-testid="stForm"]:has(.add-tx-card) div[data-testid="stHorizontalBlock"]:has(> div[data-testid="column"]:nth-child(2):last-child) > div[data-testid="column"]:nth-child(2) {
-        flex: 1 1 auto !important; width: auto !important;
-    }
+    div[data-testid="stForm"]:has(.add-tx-card) div[data-testid="stHorizontalBlock"]:has(> div[data-testid="column"]:nth-child(4)) { display: flex !important; gap: 12px !important; }
 
     /* BEAUTIFUL BUY/SELL SWITCH */
     div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] {
-        background: rgba(0,0,0,0.3) !important;
-        padding: 6px !important;
-        border-radius: 12px !important;
-        display: flex !important;
-        flex-direction: row !important;
-        gap: 8px !important;
-        align-items: center !important;
-        margin: 0 !important;
-        height: 48px !important;
-        border: 1px solid rgba(255,255,255,0.05) !important;
-        min-width: 200px !important;
+        background: rgba(0,0,0,0.3) !important; padding: 6px !important; border-radius: 12px !important; display: flex !important; flex-direction: row !important; gap: 8px !important; align-items: center !important; margin: 0 !important; height: 48px !important; border: 1px solid rgba(255,255,255,0.05) !important;
     }
     div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label {
-        margin: 0 !important; cursor: pointer !important; padding: 0 !important; 
-        border-radius: 8px !important; border: 1px solid transparent !important; 
-        transition: all 0.3s ease !important; background: transparent !important;
-        flex: 1 !important; display: flex !important; justify-content: center !important;
-        align-items: center !important; height: 100% !important;
+        margin: 0 !important; cursor: pointer !important; padding: 0 !important; border-radius: 8px !important; border: 1px solid transparent !important; transition: all 0.3s ease !important; background: transparent !important; flex: 1 !important; display: flex !important; justify-content: center !important; align-items: center !important; height: 100% !important;
     }
     div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label:hover { background: rgba(255,255,255,0.05) !important; }
     div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label > div:first-child { display: none !important; } 
-    div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label p {
-        font-weight: bold !important; font-size: 1.05rem !important; color: #94a3b8 !important; margin: 0 !important; padding: 0 !important; white-space: nowrap !important; line-height: 1 !important;
-    }
-    /* Active Buy */
-    div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label:has(input:checked):first-child,
-    div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label[aria-checked="true"]:first-child {
-        background: rgba(0, 255, 157, 0.15) !important; border-color: #00ff9d !important;
-    }
-    div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label:has(input:checked):first-child p,
-    div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label[aria-checked="true"]:first-child p { color: #00ff9d !important; }
-    
-    /* Active Sell */
-    div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label:has(input:checked):last-child,
-    div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label[aria-checked="true"]:last-child {
-        background: rgba(255, 77, 77, 0.15) !important; border-color: #ff4d4d !important;
-    }
-    div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label:has(input:checked):last-child p,
-    div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label[aria-checked="true"]:last-child p { color: #ff4d4d !important; }
+    div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label p { font-weight: bold !important; font-size: 1.05rem !important; color: #94a3b8 !important; margin: 0 !important; padding: 0 !important; white-space: nowrap !important; line-height: 1 !important; }
+    div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label:has(input:checked):first-child, div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label[aria-checked="true"]:first-child { background: rgba(0, 255, 157, 0.15) !important; border-color: #00ff9d !important; }
+    div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label:has(input:checked):first-child p, div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label[aria-checked="true"]:first-child p { color: #00ff9d !important; }
+    div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label:has(input:checked):last-child, div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label[aria-checked="true"]:last-child { background: rgba(255, 77, 77, 0.15) !important; border-color: #ff4d4d !important; }
+    div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label:has(input:checked):last-child p, div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label[aria-checked="true"]:last-child p { color: #ff4d4d !important; }
 
-    /* 3. RIGHT ALIGNED SUBMIT BUTTON */
-    div[data-testid="stForm"]:has(.add-tx-card) .stButton {
-        display: flex !important; justify-content: flex-end !important; align-items: center !important;
-        margin: 0 !important; padding: 0 !important; width: 100% !important;
-    }
-    div[data-testid="stForm"]:has(.add-tx-card) .stButton > button {
-        background: #1e2a44 !important; color: #e0e0e0 !important; padding: 0 24px !important;
-        border-radius: 10px !important; font-size: 1.05rem !important; font-weight: 700 !important;
-        box-shadow: 0 4px 15px rgba(0,0,0,0.25) !important; transition: all 0.3s ease !important;
-        border: none !important; margin: 0 !important; width: auto !important;
-        height: 48px !important; min-height: 48px !important;
-    }
-    div[data-testid="stForm"]:has(.add-tx-card) .stButton > button:hover {
-        transform: translateY(-2px) !important;
-        box-shadow: 0 8px 20px rgba(255, 255, 255, 0.2) !important; color: white !important;
-    }
+    div[data-testid="stForm"]:has(.add-tx-card) .stButton { display: flex !important; justify-content: flex-end !important; align-items: center !important; margin: 0 !important; padding: 0 !important; width: 100% !important; }
+    div[data-testid="stForm"]:has(.add-tx-card) .stButton > button { background: #1e2a44 !important; color: #e0e0e0 !important; padding: 0 24px !important; border-radius: 10px !important; font-size: 1.05rem !important; font-weight: 700 !important; box-shadow: 0 4px 15px rgba(0,0,0,0.25) !important; transition: all 0.3s ease !important; border: none !important; margin: 0 !important; width: auto !important; height: 48px !important; min-height: 48px !important; }
+    div[data-testid="stForm"]:has(.add-tx-card) .stButton > button:hover { transform: translateY(-2px) !important; box-shadow: 0 8px 20px rgba(255, 255, 255, 0.2) !important; color: white !important; }
 
     /* ==============================================================
-       4. HIGHLY COMPACT TRANSACTION ROW STYLING 
+       HIGHLY COMPACT, IRONCLAD TRANSACTION ROWS (PC & MOBILE)
        ============================================================== */
-    div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row-marker),
-    div[data-testid="stVerticalBlockBorderWrapper"]:has(.del-replace) {
+    div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row-marker) {
         background: #0f172a !important; border: 1px solid rgba(255,255,255,0.05) !important;
-        border-radius: 8px !important; padding: 6px 12px !important; margin-bottom: 6px !important;
-        position: relative !important; z-index: 2; overflow: visible !important;
+        border-radius: 8px !important; padding: 4px 8px !important; margin-bottom: 6px !important;
     }
 
-    /* Allow absolute overlays to escape container */
-    div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row-marker) > div[data-testid="stVerticalBlock"] {
-        overflow: visible !important; padding: 0 !important; gap: 0 !important;
-    }
-    /* Pop active editing row to front */
-    div[data-testid="stVerticalBlockBorderWrapper"]:has(.edit-overlay) {
-        z-index: 100 !important; 
+    /* Eliminate Streamlit's Internal Column Gaps */
+    div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row-marker) div[data-testid="stVerticalBlock"] {
+        gap: 0 !important;
     }
 
     /* FORCE HORIZONTAL FLEX WRAPPER - STOPS STREAMLIT STACKING */
@@ -2994,7 +2886,7 @@ with tab_crypto:
     div[data-testid="stHorizontalBlock"]:has(.tx-row-marker) > div[data-testid="column"] {
         width: auto !important; min-width: 0 !important; padding: 0 !important; flex: none !important;
     }
-    
+
     /* Specific Column Sizing */
     div[data-testid="stHorizontalBlock"]:has(.tx-row-marker) > div[data-testid="column"]:nth-child(1) { flex: 0 0 32px !important; } /* Logo */
     div[data-testid="stHorizontalBlock"]:has(.tx-row-marker) > div[data-testid="column"]:nth-child(2) { flex: 1 1 auto !important; overflow: hidden; } /* Info */
@@ -3025,48 +2917,33 @@ with tab_crypto:
     .mobile-tx-sub { font-size: 0.75rem !important; color: #94a3b8; line-height: 1.1; margin-top: 3px; margin-left: 2px; }
     .mobile-tx-amount { font-size: 1rem !important; font-weight: 700; line-height: 1.1; }
 
-    /* ==============================================================
-       ABSOLUTE OVERLAY EDIT FORM
-       ============================================================== */
-    div[data-testid="stForm"]:has(.edit-overlay) {
-        position: absolute !important;
-        top: -4px !important;
-        left: -4px !important;
-        width: calc(100% + 8px) !important;
-        z-index: 9999 !important;
-        background: rgba(15, 23, 42, 0.95) !important;
-        backdrop-filter: blur(10px);
-        -webkit-backdrop-filter: blur(10px);
-        border: 1px solid #00ff9d !important;
-        border-radius: 10px !important;
-        padding: 12px 16px !important;
-        margin: 0 !important;
-        box-shadow: 0 20px 40px rgba(0,0,0,0.8) !important;
+    /* IN-PLACE EDIT FORM (Replaces Row smoothly) */
+    div[data-testid="stForm"]:has(.edit-form-marker) {
+        background: rgba(15, 23, 42, 0.95) !important; border: 1px solid #00ff9d !important;
+        border-radius: 8px !important; padding: 12px 16px !important; margin-bottom: 6px !important;
+        box-shadow: 0 4px 15px rgba(0, 255, 157, 0.1) !important;
     }
-    div[data-testid="stForm"]:has(.edit-overlay) div[data-baseweb="select"] > div { background: rgba(255,255,255,0.03) !important; border: 1px solid rgba(255,255,255,0.1) !important; }
+    div[data-testid="stForm"]:has(.edit-form-marker) div[data-baseweb="select"] > div { background: rgba(255,255,255,0.03) !important; border: 1px solid rgba(255,255,255,0.1) !important; }
 
-    /* ==============================================================
-       REPLACE DELETE WARNING (Doesn't push screen, exactly matches row size)
-       ============================================================== */
-    div[data-testid="stHorizontalBlock"]:has(.del-replace) {
-        display: flex !important; flex-direction: row !important; align-items: center !important; justify-content: space-between !important; padding: 2px 0 !important; gap: 12px !important;
+    /* IN-PLACE DELETE DIALOG (Replaces Row smoothly) */
+    div[data-testid="stVerticalBlockBorderWrapper"]:has(.del-warn-marker) {
+        border-color: rgba(255, 77, 77, 0.3) !important; background: rgba(15, 23, 42, 0.95) !important;
+        border-radius: 8px !important; padding: 8px 12px !important; margin-bottom: 6px !important;
+        box-shadow: 0 4px 15px rgba(255, 77, 77, 0.1) !important;
     }
-    div[data-testid="stHorizontalBlock"]:has(.del-replace) > div[data-testid="column"] { min-width: 0 !important; padding: 0 !important; }
-    div[data-testid="stHorizontalBlock"]:has(.del-replace) > div[data-testid="column"]:nth-child(1) { flex: 1 1 auto !important; }
-    div[data-testid="stHorizontalBlock"]:has(.del-replace) > div[data-testid="column"]:nth-child(2) { flex: 0 0 80px !important; }
-    div[data-testid="stHorizontalBlock"]:has(.del-replace) > div[data-testid="column"]:nth-child(3) { flex: 0 0 80px !important; }
-
-    div[data-testid="stHorizontalBlock"]:has(.del-replace) .stButton > button {
-        border-radius: 6px !important; font-weight: 600 !important; transition: all 0.2s !important; width: 100% !important; padding: 4px !important; height: 32px !important; min-height: 32px !important; font-size: 0.9rem !important;
+    div[data-testid="stVerticalBlockBorderWrapper"]:has(.del-warn-marker) div[data-testid="stHorizontalBlock"] {
+        display: flex !important; flex-direction: row !important; align-items: center !important; gap: 8px !important;
     }
-    div[data-testid="stHorizontalBlock"]:has(.del-replace) div[data-testid="column"]:nth-child(2) .stButton > button {
-        background: rgba(255, 77, 77, 0.1) !important; color: #ff4d4d !important; border: 1px solid rgba(255, 77, 77, 0.3) !important;
+    div[data-testid="stVerticalBlockBorderWrapper"]:has(.del-warn-marker) div[data-testid="column"]:nth-child(1) { flex: 1 1 auto !important; }
+    div[data-testid="stVerticalBlockBorderWrapper"]:has(.del-warn-marker) div[data-testid="column"]:nth-child(2) { flex: 0 0 80px !important; }
+    div[data-testid="stVerticalBlockBorderWrapper"]:has(.del-warn-marker) div[data-testid="column"]:nth-child(3) { flex: 0 0 80px !important; }
+    div[data-testid="stVerticalBlockBorderWrapper"]:has(.del-warn-marker) .stButton > button {
+        border-radius: 6px !important; font-weight: 600 !important; width: 100% !important; padding: 4px !important; height: 32px !important; min-height: 32px !important; font-size: 0.9rem !important; transition: all 0.2s !important;
     }
-    div[data-testid="stHorizontalBlock"]:has(.del-replace) div[data-testid="column"]:nth-child(2) .stButton > button:hover { background: #ff4d4d !important; color: white !important; }
-    div[data-testid="stHorizontalBlock"]:has(.del-replace) div[data-testid="column"]:nth-child(3) .stButton > button {
-        background: rgba(255, 255, 255, 0.05) !important; color: #cbd5e1 !important; border: 1px solid rgba(255, 255, 255, 0.1) !important;
-    }
-    div[data-testid="stHorizontalBlock"]:has(.del-replace) div[data-testid="column"]:nth-child(3) .stButton > button:hover { background: rgba(255, 255, 255, 0.15) !important; color: white !important; }
+    div[data-testid="stVerticalBlockBorderWrapper"]:has(.del-warn-marker) div[data-testid="column"]:nth-child(2) .stButton > button { background: rgba(255, 77, 77, 0.1) !important; color: #ff4d4d !important; border: 1px solid rgba(255, 77, 77, 0.3) !important; }
+    div[data-testid="stVerticalBlockBorderWrapper"]:has(.del-warn-marker) div[data-testid="column"]:nth-child(2) .stButton > button:hover { background: #ff4d4d !important; color: white !important; }
+    div[data-testid="stVerticalBlockBorderWrapper"]:has(.del-warn-marker) div[data-testid="column"]:nth-child(3) .stButton > button { background: rgba(255, 255, 255, 0.05) !important; color: #cbd5e1 !important; border: 1px solid rgba(255, 255, 255, 0.1) !important; }
+    div[data-testid="stVerticalBlockBorderWrapper"]:has(.del-warn-marker) div[data-testid="column"]:nth-child(3) .stButton > button:hover { background: rgba(255, 255, 255, 0.15) !important; color: white !important; }
 
     /* ==============================================================
        MOBILE OVERRIDES
@@ -3075,24 +2952,20 @@ with tab_crypto:
         .glossy-header { margin-top: 0px !important; margin-bottom: 16px !important; padding: 20px 16px !important; font-size: 22px !important; min-height: 90px; }
         .home-header { margin-bottom: 0 !important; }
         
-        div[data-testid="stForm"]:has(.add-tx-card) div[data-testid="stHorizontalBlock"] { display: flex !important; flex-direction: row !important; flex-wrap: wrap !important; gap: 12px !important; }
-        div[data-testid="stForm"]:has(.add-tx-card) div[data-testid="stHorizontalBlock"]:has(> div[data-testid="column"]:nth-child(4)) > div[data-testid="column"], div[data-testid="stForm"]:has(.add-tx-card) div[data-testid="stHorizontalBlock"]:has(> div[data-testid="column"]:nth-child(3)) > div[data-testid="column"], div[data-testid="stForm"]:has(.add-tx-card) div[data-testid="stHorizontalBlock"]:has(> div[data-testid="column"]:nth-child(2):last-child) > div[data-testid="column"] { min-width: calc(50% - 12px) !important; width: calc(50% - 12px) !important; flex: 1 1 calc(50% - 12px) !important; }
         div[data-testid="stForm"]:has(.add-tx-card) input { padding: 6px !important; font-size: 0.95rem !important; }
-        div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] { min-width: 0 !important; width: 100% !important; }
-        div[data-testid="stForm"]:has(.add-tx-card) .stButton { display: flex !important; justify-content: flex-end !important; width: 100% !important; }
-        div[data-testid="stForm"]:has(.add-tx-card) .stButton > button { width: 100% !important; max-width: 120px !important; padding: 0 16px !important; }
+        div[data-testid="stForm"]:has(.add-tx-card) .stButton { width: 100% !important; justify-content: center !important; }
+        div[data-testid="stForm"]:has(.add-tx-card) .stButton > button { width: 100% !important; max-width: none !important; }
 
         /* Ultra Compact Mobile Rows */
-        div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row-marker),
-        div[data-testid="stVerticalBlockBorderWrapper"]:has(.del-replace) {
+        div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row-marker) {
             padding: 4px 6px !important; margin-bottom: 6px !important;
         }
-        div[data-testid="stHorizontalBlock"]:has(.tx-row-marker) { gap: 2px !important; }
+        div[data-testid="stHorizontalBlock"]:has(.tx-row-marker) { gap: 4px !important; }
         div[data-testid="stHorizontalBlock"]:has(.tx-row-marker) > div[data-testid="column"]:nth-child(1) { flex: 0 0 24px !important; width: 24px !important; }
-        div[data-testid="stHorizontalBlock"]:has(.tx-row-marker) > div[data-testid="column"]:nth-child(4) { flex: 0 0 24px !important; width: 24px !important; }
-        div[data-testid="stHorizontalBlock"]:has(.tx-row-marker) > div[data-testid="column"]:nth-child(5) { flex: 0 0 24px !important; width: 24px !important; }
+        div[data-testid="stHorizontalBlock"]:has(.tx-row-marker) > div[data-testid="column"]:nth-child(4) { flex: 0 0 26px !important; width: 26px !important; }
+        div[data-testid="stHorizontalBlock"]:has(.tx-row-marker) > div[data-testid="column"]:nth-child(5) { flex: 0 0 26px !important; width: 26px !important; }
         
-        div[data-testid="stHorizontalBlock"]:has(.tx-row-marker) div[data-testid="stButton"] button { width: 24px !important; height: 24px !important; }
+        div[data-testid="stHorizontalBlock"]:has(.tx-row-marker) div[data-testid="stButton"] button { width: 26px !important; height: 26px !important; }
         div[data-testid="stHorizontalBlock"]:has(.tx-row-marker) div[data-testid="stButton"] button p { font-size: 0.9rem !important; }
         
         .mobile-logo { width: 22px !important; height: 22px !important; margin-top: 2px !important; }
@@ -3108,7 +2981,6 @@ with tab_crypto:
         .dash-label { font-size: clamp(8px, 2.5vw, 10px) !important; bottom: 8px !important; white-space: nowrap !important; letter-spacing: 0.5px !important; }
         
         .usdc-banner { padding: 8px 14px; width: 92%; margin: 4px auto 8px auto !important; }
-        .usdc-banner-left img, .usdc-banner-left svg { width: 24px; height: 24px; }
         .usdc-banner-title { font-size: 0.95rem; }
         .usdc-banner-subtitle { font-size: 0.7rem; }
         .usdc-banner-amount { font-size: 1.1rem; }
@@ -3182,11 +3054,12 @@ with tab_crypto:
             price_formatted = format_price(price)
             date_str = format_datum(r['Datum'])
 
+            # TRUE REPLACEMENT LOGIC - Only renders 1 state at a time
             if st.session_state.get('confirm_delete_crypto') == orig_idx:
                 with st.container(border=True):
-                    st.markdown("<div class='del-replace'></div>", unsafe_allow_html=True)
-                    c_txt, c_yes, c_no = st.columns(3)
-                    with c_txt: st.markdown("<h4 style='color: #ff4d4d; margin: 0; font-size: 1rem; font-weight: 600; line-height: 32px;'>Delete entry?</h4>", unsafe_allow_html=True)
+                    st.markdown("<div class='del-warn-marker'></div>", unsafe_allow_html=True)
+                    c_txt, c_yes, c_no = st.columns([2, 1, 1])
+                    with c_txt: st.markdown("<span style='color: #ff4d4d; font-size: 1rem; font-weight: 600;'>Delete entry?</span>", unsafe_allow_html=True)
                     with c_yes:
                         if st.button("Delete", key=f"yes_del_{orig_idx}", use_container_width=True):
                             st.session_state.crypto_df = st.session_state.crypto_df.drop(orig_idx).reset_index(drop=True)
@@ -3198,6 +3071,40 @@ with tab_crypto:
                     with c_no:
                         if st.button("Cancel", key=f"no_del_{orig_idx}", use_container_width=True):
                             st.session_state['confirm_delete_crypto'] = None
+                            st.rerun()
+            elif st.session_state.get('edit_crypto_row') == orig_idx:
+                with st.form(f"edit_crypto_form_{orig_idx}", border=False):
+                    st.markdown("<div class='edit-form-marker'></div><h5 style='color: #00ff9d; margin-top: 0px; margin-bottom: 10px;'>✎ Edit Row Details</h5>", unsafe_allow_html=True)
+                    
+                    e_r1c1, e_r1c2, e_r1c3 = st.columns([1,1,1])
+                    with e_r1c1: new_date = st.date_input("Date", value=datetime(1899, 12, 30) + timedelta(days=int(r['Datum'])))
+                    with e_r1c2: new_ticker = st.text_input("Ticker", value=r['Ticker']).upper().strip()
+                    with e_r1c3: new_stable_ticker = st.selectbox("Stablecoin", STABLECOINS_LIST, index=STABLECOINS_LIST.index(stable_ticker) if stable_ticker in STABLECOINS_LIST else 0)
+                    
+                    e_r2c1, e_r2c2 = st.columns(2)
+                    with e_r2c1: new_stable = st.number_input("Stable Amount", value=float(abs(stable_amt)), step=0.01)
+                    with e_r2c2: new_amount = st.number_input("Coin Amount", value=float(abs(r['Amount'])), step=0.000001, format="%.8f")
+                    
+                    tx_type_edit = st.radio("Type", ["Buy", "Sell"], horizontal=True, index=0 if is_buy else 1, label_visibility="collapsed")
+                     
+                    e_save, e_cancel = st.columns(2)
+                    with e_save: 
+                        if st.form_submit_button("💾 Save Changes"):
+                            final_stable = new_stable if tx_type_edit == "Buy" else -new_stable
+                            final_amount = new_amount if tx_type_edit == "Buy" else -new_amount
+                            new_price = round(new_stable / new_amount, 8) if new_amount > 0 else 0.0
+                            
+                            st.session_state.crypto_df.loc[orig_idx] = {"Datum": date_to_excel_serial(new_date), "Stable_Amt": final_stable, "Stable_Ticker": new_stable_ticker, "Ticker": new_ticker, "Amount": final_amount, "Price": new_price}
+                            save_crypto(st.session_state.crypto_df)
+                            st.session_state['edit_crypto_row'] = None
+                            st.session_state.crypto_table_version += 1
+                            st.session_state.ui_version += 1
+                            st.success("✅ Transaction updated!")
+                            st.rerun()
+                            
+                    with e_cancel:
+                        if st.form_submit_button("❌ Cancel"):
+                            st.session_state['edit_crypto_row'] = None
                             st.rerun()
             else:
                 # Standard Compact Row Display
@@ -3226,52 +3133,15 @@ with tab_crypto:
                         
                     with col_edit:
                         if st.button("✎", key=f"edit_btn_{orig_idx}"):
-                            if st.session_state.get('edit_crypto_row') == orig_idx:
-                                st.session_state['edit_crypto_row'] = None
-                            else:
-                                st.session_state['edit_crypto_row'] = orig_idx
+                            st.session_state['edit_crypto_row'] = orig_idx
+                            st.session_state['confirm_delete_crypto'] = None
                             st.rerun()
                             
                     with col_del:
                         if st.button("✕", key=f"del_btn_{orig_idx}"):
                             st.session_state['confirm_delete_crypto'] = orig_idx
+                            st.session_state['edit_crypto_row'] = None
                             st.rerun()
-
-                # 3. ROLL OUT EDIT FORM Directly Attached (Absolute Overlay)
-                if st.session_state.get('edit_crypto_row') == orig_idx:
-                    with st.form(f"edit_crypto_form_{orig_idx}", border=False):
-                        st.markdown("<div class='edit-overlay form-compact-marker'></div><h5 style='color: #00ff9d; margin-top: 0px; margin-bottom: 10px;'>✎ Edit Row Details</h5>", unsafe_allow_html=True)
-                        
-                        e_r1c1, e_r1c2, e_r1c3 = st.columns([1,1,1])
-                        with e_r1c1: new_date = st.date_input("Date", value=datetime(1899, 12, 30) + timedelta(days=int(r['Datum'])))
-                        with e_r1c2: new_ticker = st.text_input("Ticker", value=r['Ticker']).upper().strip()
-                        with e_r1c3: new_stable_ticker = st.selectbox("Stablecoin", STABLECOINS_LIST, index=STABLECOINS_LIST.index(stable_ticker) if stable_ticker in STABLECOINS_LIST else 0)
-                        
-                        e_r2c1, e_r2c2 = st.columns(2)
-                        with e_r2c1: new_stable = st.number_input("Stable Amount", value=float(abs(stable_amt)), step=0.01)
-                        with e_r2c2: new_amount = st.number_input("Coin Amount", value=float(abs(r['Amount'])), step=0.000001, format="%.8f")
-                        
-                        tx_type_edit = st.radio("Type", ["Buy", "Sell"], horizontal=True, index=0 if is_buy else 1, label_visibility="collapsed")
-                         
-                        e_save, e_cancel = st.columns(2)
-                        with e_save: 
-                            if st.form_submit_button("💾 Save Changes"):
-                                final_stable = new_stable if tx_type_edit == "Buy" else -new_stable
-                                final_amount = new_amount if tx_type_edit == "Buy" else -new_amount
-                                new_price = round(new_stable / new_amount, 8) if new_amount > 0 else 0.0
-                                
-                                st.session_state.crypto_df.loc[orig_idx] = {"Datum": date_to_excel_serial(new_date), "Stable_Amt": final_stable, "Stable_Ticker": new_stable_ticker, "Ticker": new_ticker, "Amount": final_amount, "Price": new_price}
-                                save_crypto(st.session_state.crypto_df)
-                                st.session_state['edit_crypto_row'] = None
-                                st.session_state.crypto_table_version += 1
-                                st.session_state.ui_version += 1
-                                st.success("✅ Transaction updated!")
-                                st.rerun()
-                                
-                        with e_cancel:
-                            if st.form_submit_button("❌ Cancel"):
-                                st.session_state['edit_crypto_row'] = None
-                                st.rerun()
 
 with tab_fiat:
     total_czk = pd.to_numeric(st.session_state.fiat_df['CZK'], errors='coerce').fillna(0).sum()
@@ -3353,9 +3223,9 @@ with tab_fiat:
 
             if st.session_state.get('confirm_delete_fiat') == orig_idx:
                 with st.container(border=True):
-                    st.markdown("<div class='del-replace'></div>", unsafe_allow_html=True)
-                    c_txt, c_yes, c_no = st.columns(3)
-                    with c_txt: st.markdown("<h4 style='color: #ff4d4d; margin: 0; font-size: 1rem; font-weight: 600; line-height: 32px;'>Delete entry?</h4>", unsafe_allow_html=True)
+                    st.markdown("<div class='del-warn-marker'></div>", unsafe_allow_html=True)
+                    c_txt, c_yes, c_no = st.columns([2, 1, 1])
+                    with c_txt: st.markdown("<span style='color: #ff4d4d; font-size: 1rem; font-weight: 600;'>Delete entry?</span>", unsafe_allow_html=True)
                     with c_yes:
                         if st.button("Delete", key=f"yes_fiat_del_{orig_idx}", use_container_width=True):
                             st.session_state.fiat_df = st.session_state.fiat_df.drop(orig_idx).reset_index(drop=True)
@@ -3367,6 +3237,37 @@ with tab_fiat:
                     with c_no:
                         if st.button("Cancel", key=f"no_fiat_del_{orig_idx}", use_container_width=True):
                             st.session_state['confirm_delete_fiat'] = None
+                            st.rerun()
+            elif st.session_state.get('edit_fiat_row') == orig_idx:
+                with st.form(f"edit_fiat_form_{orig_idx}", border=False):
+                    st.markdown("<div class='edit-form-marker'></div><h5 style='color: #00ff9d; margin-top: 0px; margin-bottom: 10px;'>✎ Edit Fiat Details</h5>", unsafe_allow_html=True)
+                    
+                    e_f1, e_f2, e_f3 = st.columns(3)
+                    with e_f1: new_date = st.date_input("Date", value=datetime(1899, 12, 30) + timedelta(days=int(r['Datum'])))
+                    with e_f2: new_czk = st.number_input("CZK", value=float(czk_val), step=0.01)
+                    with e_f3: new_eur = st.number_input("EUR", value=float(eur_val), step=0.01)
+                    
+                    e_f4, e_f5, e_f6 = st.columns(3)
+                    with e_f4: new_fee = st.number_input("Fee", value=float(fee_val), step=0.01)
+                    with e_f5: new_stable_ticker = st.selectbox("Stablecoin", STABLECOINS_LIST, index=STABLECOINS_LIST.index(stable_ticker) if stable_ticker in STABLECOINS_LIST else 0)
+                    with e_f6: new_stable = st.number_input("Stable Amount", value=float(stable_amt), step=0.01)
+                     
+                    e_save, e_cancel = st.columns(2)
+                    with e_save: 
+                        if st.form_submit_button("💾 Save Changes"):
+                            new_czk_eur = round(new_czk / new_eur, 5) if new_eur > 0 else 0.0
+                            
+                            st.session_state.fiat_df.loc[orig_idx] = {"Datum": date_to_excel_serial(new_date), "CZK": new_czk, "EUR": new_eur, "Fee": new_fee, "CZK/EUR": new_czk_eur, "Stable_Amt": new_stable, "Stable_Ticker": new_stable_ticker, "NI": r.get('NI', ""), "GG": r.get('GG', ""), "ER": r.get('ER', "")}
+                            save_fiat(st.session_state.fiat_df)
+                            st.session_state['edit_fiat_row'] = None
+                            st.session_state.fiat_table_version += 1
+                            st.session_state.ui_version += 1
+                            st.success("✅ Entry updated!")
+                            st.rerun()
+                            
+                    with e_cancel:
+                        if st.form_submit_button("❌ Cancel"):
+                            st.session_state['edit_fiat_row'] = None
                             st.rerun()
             else:
                 # Standard Compact Row Display
@@ -3394,46 +3295,12 @@ with tab_fiat:
                         
                     with col_edit:
                         if st.button("✎", key=f"edit_fiat_btn_{orig_idx}"):
-                            if st.session_state.get('edit_fiat_row') == orig_idx:
-                                st.session_state['edit_fiat_row'] = None
-                            else:
-                                st.session_state['edit_fiat_row'] = orig_idx
+                            st.session_state['edit_fiat_row'] = orig_idx
+                            st.session_state['confirm_delete_fiat'] = None
                             st.rerun()
                             
                     with col_del:
                         if st.button("✕", key=f"del_fiat_btn_{orig_idx}"):
                             st.session_state['confirm_delete_fiat'] = orig_idx
+                            st.session_state['edit_fiat_row'] = None
                             st.rerun()
-
-                # 3. ROLL OUT EDIT FORM Directly Attached (Absolute Overlay)
-                if st.session_state.get('edit_fiat_row') == orig_idx:
-                    with st.form(f"edit_fiat_form_{orig_idx}", border=False):
-                        st.markdown("<div class='edit-overlay form-compact-marker'></div><h5 style='color: #00ff9d; margin-top: 0px; margin-bottom: 10px;'>✎ Edit Fiat Details</h5>", unsafe_allow_html=True)
-                        
-                        e_f1, e_f2, e_f3 = st.columns(3)
-                        with e_f1: new_date = st.date_input("Date", value=datetime(1899, 12, 30) + timedelta(days=int(r['Datum'])))
-                        with e_f2: new_czk = st.number_input("CZK", value=float(czk_val), step=0.01)
-                        with e_f3: new_eur = st.number_input("EUR", value=float(eur_val), step=0.01)
-                        
-                        e_f4, e_f5, e_f6 = st.columns(3)
-                        with e_f4: new_fee = st.number_input("Fee", value=float(fee_val), step=0.01)
-                        with e_f5: new_stable_ticker = st.selectbox("Stablecoin", STABLECOINS_LIST, index=STABLECOINS_LIST.index(stable_ticker) if stable_ticker in STABLECOINS_LIST else 0)
-                        with e_f6: new_stable = st.number_input("Stable Amount", value=float(stable_amt), step=0.01)
-                         
-                        e_save, e_cancel = st.columns(2)
-                        with e_save: 
-                            if st.form_submit_button("💾 Save Changes"):
-                                new_czk_eur = round(new_czk / new_eur, 5) if new_eur > 0 else 0.0
-                                
-                                st.session_state.fiat_df.loc[orig_idx] = {"Datum": date_to_excel_serial(new_date), "CZK": new_czk, "EUR": new_eur, "Fee": new_fee, "CZK/EUR": new_czk_eur, "Stable_Amt": new_stable, "Stable_Ticker": new_stable_ticker, "NI": r.get('NI', ""), "GG": r.get('GG', ""), "ER": r.get('ER', "")}
-                                save_fiat(st.session_state.fiat_df)
-                                st.session_state['edit_fiat_row'] = None
-                                st.session_state.fiat_table_version += 1
-                                st.session_state.ui_version += 1
-                                st.success("✅ Entry updated!")
-                                st.rerun()
-                                
-                        with e_cancel:
-                            if st.form_submit_button("❌ Cancel"):
-                                st.session_state['edit_fiat_row'] = None
-                                st.rerun()
