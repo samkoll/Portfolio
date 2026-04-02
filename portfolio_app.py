@@ -338,7 +338,7 @@ div[data-testid="stTabs"] > div[role="tabpanel"] {
     padding: 12px 20px; margin-top: 4px; box-shadow: 0 10px 20px rgba(0,0,0,0.3);
 }
 .st-item { display: flex; justify-content: space-between; align-items: center; font-size: 0.95rem;
-color: #94a3b8; padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,0.05); }
+    color: #94a3b8; padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,0.05); }
 .st-item:last-child { border-bottom: none; }
 .st-item .val { color: #e2e8f0; font-weight: 600;
 }
@@ -351,7 +351,7 @@ color: #94a3b8; padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,0.05);
 }
 .dashboard-toggle:not(:checked) ~ .stable-dropdown-wrapper .stable-dropdown .st-item .val { font-size: 0 !important; }
 .dashboard-toggle:not(:checked) ~ .stable-dropdown-wrapper .stable-dropdown .st-item .val::after { content: '***';
-font-size: 0.9rem; color: #e2e8f0; }
+    font-size: 0.9rem; color: #e2e8f0; }
 
 /* GLOBALLY HIDE NUMBER INPUT STEP BUTTONS (+ / -) */
 button[aria-label="Step Up"],
@@ -367,77 +367,161 @@ input[type="number"] { -moz-appearance: textfield;
    COMPACT EXPANDER FOR FORMS
    ============================================================== */
 div[data-testid="stExpander"] {
-    background: #0f172a !important; border: 1px solid rgba(255,255,255,0.05) !important;
+    background: #0f172a !important;
+    border: 1px solid rgba(255,255,255,0.05) !important;
     border-radius: 12px !important; box-shadow: 0 4px 15px rgba(0,0,0,0.3) !important; margin-bottom: 24px !important;
 }
 div[data-testid="stExpander"] summary {
     color: #ffffff !important; font-weight: 700 !important; font-size: 1.05rem !important;
-    padding: 12px 16px !important; background: transparent !important; border-bottom: none !important;
+    padding: 12px 16px !important;
+    background: transparent !important; border-bottom: none !important;
 }
-div[data-testid="stExpander"] summary svg { color: #ffffff !important; fill: #ffffff !important; }
+div[data-testid="stExpander"] summary svg { color: #ffffff !important; fill: #ffffff !important;
+}
 div[data-testid="stExpanderDetails"] { padding: 0 16px 16px 16px !important; }
-div[data-testid="stExpanderDetails"] div[data-testid="stForm"] { padding: 0 !important; border: none !important; box-shadow: none !important; margin-bottom: 0 !important; background: transparent !important; }
+div[data-testid="stExpanderDetails"] div[data-testid="stForm"] { padding: 0 !important; border: none !important; box-shadow: none !important;
+    margin-bottom: 0 !important; background: transparent !important; }
 
 /* INPUTS STYLING */
-div[data-testid="stForm"]:has(.add-tx-card) label { font-size: 0.85rem !important; color: #94a3b8 !important; padding-bottom: 2px !important; }
+div[data-testid="stForm"]:has(.add-tx-card) label { font-size: 0.85rem !important; color: #94a3b8 !important;
+    padding-bottom: 2px !important; }
 div[data-testid="stForm"]:has(.add-tx-card) .stTextInput input, div[data-testid="stForm"]:has(.add-tx-card) .stNumberInput input, div[data-testid="stForm"]:has(.add-tx-card) .stDateInput input, div[data-testid="stForm"]:has(.add-tx-card) div[data-baseweb="select"] > div {
-    background: rgba(255,255,255,0.03) !important; border: 1px solid rgba(255,255,255,0.1) !important; color: #fff !important; border-radius: 8px !important; margin-bottom: 0px !important;
+    background: rgba(255,255,255,0.03) !important;
+    border: 1px solid rgba(255,255,255,0.1) !important; color: #fff !important; border-radius: 8px !important; margin-bottom: 0px !important;
 }
-div[data-testid="stForm"]:has(.add-tx-card) div[data-testid="stHorizontalBlock"]:has(> div[data-testid="column"]:nth-child(4)) { display: flex !important; gap: 12px !important; }
+div[data-testid="stForm"]:has(.add-tx-card) div[data-testid="stHorizontalBlock"]:has(> div[data-testid="column"]:nth-child(4)) { display: flex !important; gap: 12px !important;
+}
 
 /* BEAUTIFUL BUY/SELL SWITCH */
 div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] {
-    background: rgba(0,0,0,0.3) !important; padding: 6px !important; border-radius: 12px !important; display: flex !important; flex-direction: row !important; gap: 8px !important; align-items: center !important; margin: 0 !important; height: 48px !important; border: 1px solid rgba(255,255,255,0.05) !important;
+    background: rgba(0,0,0,0.3) !important; padding: 6px !important; border-radius: 12px !important;
+    display: flex !important; flex-direction: row !important; gap: 8px !important; align-items: center !important; margin: 0 !important; height: 48px !important;
+    border: 1px solid rgba(255,255,255,0.05) !important;
 }
 div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label {
-    margin: 0 !important; cursor: pointer !important; padding: 0 !important; border-radius: 8px !important; border: 1px solid transparent !important; transition: all 0.3s ease !important; background: transparent !important; flex: 1 !important; display: flex !important; justify-content: center !important; align-items: center !important; height: 100% !important;
+    margin: 0 !important; cursor: pointer !important;
+    padding: 0 !important; border-radius: 8px !important; border: 1px solid transparent !important; transition: all 0.3s ease !important; background: transparent !important;
+    flex: 1 !important; display: flex !important; justify-content: center !important; align-items: center !important; height: 100% !important;
 }
 div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label:hover { background: rgba(255,255,255,0.05) !important; }
-div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label > div:first-child { display: none !important; } 
-div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label p { font-weight: bold !important; font-size: 1.05rem !important; color: #94a3b8 !important; margin: 0 !important; padding: 0 !important; white-space: nowrap !important; line-height: 1 !important; }
-div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label:has(input:checked):first-child { background: rgba(0, 255, 157, 0.15) !important; border-color: #00ff9d !important; }
-div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label:has(input:checked):first-child p { color: #00ff9d !important; }
-div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label:has(input:checked):last-child { background: rgba(255, 77, 77, 0.15) !important; border-color: #ff4d4d !important; }
+div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label > div:first-child { display: none !important;
+} 
+div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label p { font-weight: bold !important; font-size: 1.05rem !important; color: #94a3b8 !important; margin: 0 !important;
+    padding: 0 !important; white-space: nowrap !important; line-height: 1 !important; }
+div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label:has(input:checked):first-child { background: rgba(0, 255, 157, 0.15) !important;
+    border-color: #00ff9d !important; }
+div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label:has(input:checked):first-child p { color: #00ff9d !important;
+}
+div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label:has(input:checked):last-child { background: rgba(255, 77, 77, 0.15) !important; border-color: #ff4d4d !important;
+}
 div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label:has(input:checked):last-child p { color: #ff4d4d !important; }
 
-div[data-testid="stForm"]:has(.add-tx-card) .stButton { display: flex !important; justify-content: flex-end !important; align-items: center !important; margin: 0 !important; padding: 0 !important; width: 100% !important; }
-div[data-testid="stForm"]:has(.add-tx-card) .stButton > button { background: #1e2a44 !important; color: #e0e0e0 !important; padding: 0 24px !important; border-radius: 10px !important; font-size: 1.05rem !important; font-weight: 700 !important; box-shadow: 0 4px 15px rgba(0,0,0,0.25) !important; transition: all 0.3s ease !important; border: none !important; margin: 0 !important; width: auto !important; height: 48px !important; min-height: 48px !important; }
-div[data-testid="stForm"]:has(.add-tx-card) .stButton > button:hover { transform: translateY(-2px) !important; box-shadow: 0 8px 20px rgba(255, 255, 255, 0.2) !important; color: white !important; }
+div[data-testid="stForm"]:has(.add-tx-card) .stButton { display: flex !important; justify-content: flex-end !important; align-items: center !important;
+    margin: 0 !important; padding: 0 !important; width: 100% !important; }
+div[data-testid="stForm"]:has(.add-tx-card) .stButton > button { background: #1e2a44 !important; color: #e0e0e0 !important;
+    padding: 0 24px !important; border-radius: 10px !important; font-size: 1.05rem !important; font-weight: 700 !important; box-shadow: 0 4px 15px rgba(0,0,0,0.25) !important;
+    transition: all 0.3s ease !important; border: none !important; margin: 0 !important; width: auto !important; height: 48px !important; min-height: 48px !important;
+}
+div[data-testid="stForm"]:has(.add-tx-card) .stButton > button:hover { transform: translateY(-2px) !important; box-shadow: 0 8px 20px rgba(255, 255, 255, 0.2) !important; color: white !important;
+}
 
 /* ==============================================================
-   COMPACT TRANSACTION ROWS (NO BUTTONS)
+   COMPACT TRANSACTION ROWS & INLINE ACTION BUTTONS
    ============================================================== */
 div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row) {
-    background: #0f172a !important; 
+    background: #0f172a !important;
     border: 1px solid rgba(255,255,255,0.05) !important; 
     border-radius: 12px !important; 
-    padding: 12px 16px !important; 
+    padding: 8px 12px !important; 
     margin-bottom: 8px !important; 
-    transition: background 0.3s ease; 
+    transition: background 0.3s ease;
 }
 div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row):hover { background: rgba(30, 41, 59, 0.8) !important; }
 
+/* OVERRIDE STREAMLIT MOBILE COLUMN STACKING FOR TX ROWS */
+div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row) div[data-testid="stHorizontalBlock"] {
+    align-items: center !important;
+    gap: 0 !important;
+    flex-direction: row !important;
+    flex-wrap: nowrap !important;
+}
+/* Left side takes most space */
+div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row) div[data-testid="column"]:nth-child(1) {
+    width: 86% !important;
+    flex: 1 1 auto !important;
+}
+/* Right side buttons take fixed tiny space */
+div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row) div[data-testid="column"]:nth-child(2),
+div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row) div[data-testid="column"]:nth-child(3) {
+    width: auto !important;
+    flex: 0 0 35px !important;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+/* SLEEK NATIVE BUTTON STYLING */
+div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row) div[data-testid="column"]:nth-child(2) button,
+div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row) div[data-testid="column"]:nth-child(3) button {
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    color: #64748b !important;
+    padding: 0px !important;
+    margin: 0px !important;
+    min-height: 30px !important;
+    height: 30px !important;
+    width: 30px !important;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    transition: all 0.2s ease;
+    border-radius: 50% !important;
+}
+div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row) div[data-testid="column"]:nth-child(2) button:hover {
+    color: #00ff9d !important;
+    background: rgba(0, 255, 157, 0.1) !important;
+    transform: scale(1.1);
+}
+div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row) div[data-testid="column"]:nth-child(3) button:hover {
+    color: #ff4d4d !important;
+    background: rgba(255, 77, 77, 0.1) !important;
+    transform: scale(1.1);
+}
+div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row) div[data-testid="column"] button p {
+    font-size: 1.1rem !important;
+    margin: 0 !important;
+}
+
 /* Mobile Adjustments */
 @media (max-width: 768px) {
-    .glossy-header { margin-top: 0px !important; margin-bottom: 16px !important; padding: 20px 16px !important; font-size: 22px !important; min-height: 90px; }
+    .glossy-header { margin-top: 0px !important;
+        margin-bottom: 16px !important; padding: 20px 16px !important; font-size: 22px !important; min-height: 90px;
+    }
     .home-header { margin-bottom: 0 !important; }
     
-    div[data-testid="stForm"]:has(.add-tx-card) input { padding: 6px !important; font-size: 0.95rem !important; }
-    div[data-testid="stForm"]:has(.add-tx-card) .stButton { width: 100% !important; justify-content: center !important; }
-    div[data-testid="stForm"]:has(.add-tx-card) .stButton > button { width: 100% !important; max-width: none !important; }
+    div[data-testid="stForm"]:has(.add-tx-card) input { padding: 6px !important;
+        font-size: 0.95rem !important; }
+    div[data-testid="stForm"]:has(.add-tx-card) .stButton { width: 100% !important; justify-content: center !important;
+    }
+    div[data-testid="stForm"]:has(.add-tx-card) .stButton > button { width: 100% !important; max-width: none !important;
+    }
 
     div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row) {
-        padding: 12px 14px !important;
+        padding: 8px 10px !important;
     }
     
     /* Dashboard Mobile Stats */
     .stats-layer-inner { gap: 6px !important; }
     .stats-layer { margin-top: -60px !important; margin-bottom: 18px; } 
-    .glossy-box.swapped { height: 80px !important; min-height: 80px !important; max-height: 80px !important; padding: 0 !important; min-width: 0 !important; }
+    .glossy-box.swapped { height: 80px !important; min-height: 80px !important; max-height: 80px !important; padding: 0 !important;
+        min-width: 0 !important; }
     .dash-value { font-size: clamp(11px, 3.5vw, 15px) !important; top: 24px !important; } 
-    .dash-label { font-size: clamp(8px, 2.5vw, 10px) !important; bottom: 8px !important; white-space: nowrap !important; letter-spacing: 0.5px !important; }
+    .dash-label { font-size: clamp(8px, 2.5vw, 10px) !important; bottom: 8px !important; white-space: nowrap !important;
+        letter-spacing: 0.5px !important; }
     
-    .usdc-banner { padding: 8px 14px; width: 92%; margin: 4px auto 8px auto !important; }
+    .usdc-banner { padding: 8px 14px; width: 92%;
+        margin: 4px auto 8px auto !important; }
     .usdc-banner-title { font-size: 0.95rem; }
     .usdc-banner-subtitle { font-size: 0.7rem; }
     .usdc-banner-amount { font-size: 1.1rem; }
@@ -709,6 +793,7 @@ def build_portfolio_history(crypto_df, fiat_df, last_prices, hist_dict):
     if not crypto.empty and not crypto_assets.empty:
         invested_daily = crypto_assets.groupby(['Date', 'Ticker'])['Stable_Amt'].sum().unstack(fill_value=0)
         invested_daily = invested_daily.reindex(date_range, fill_value=0).fillna(0)
+    
         cum_invested = invested_daily.cumsum()
         pnl_df = (cum_holdings[common_cols] * prices_df[common_cols]) - cum_invested[common_cols]
 
@@ -773,7 +858,6 @@ def calculate_portfolio(crypto_df, fiat_df, live_prices, live_changes, base_pric
     for ticker in coin_tickers:
         sub = crypto_df[crypto_df['Ticker'] == ticker]
         total_holdings = sub['Amount'].sum()
-    
         total_invested = sub['Stable_Amt'].sum()
         avg_price = total_invested / total_holdings if total_holdings > 0 else 0
         live_price = live_prices.get(ticker, 0.0)
@@ -930,6 +1014,10 @@ if 'refresh_key' not in st.session_state:
     st.session_state.refresh_key = random.randint(100000, 999999)
 if 'portfolio_cache' not in st.session_state:
     st.session_state.portfolio_cache = {}
+if 'edit_crypto_id' not in st.session_state:
+    st.session_state.edit_crypto_id = None
+if 'edit_fiat_id' not in st.session_state:
+    st.session_state.edit_fiat_id = None
 
 def glossy_header(title: str, icon_svg: str):
     html = f"""<div class="glossy-header">{icon_svg}<span style="margin-left:12px;">{title}</span></div>"""
@@ -1004,6 +1092,7 @@ components.html("""
                         currentTab = i;
                     }
                 });
+ 
                 if (xDiff < 0 && currentTab < 2) { switchTab(currentTab + 1); }
                 if (xDiff > 0 && currentTab > 0) { switchTab(currentTab - 1); }
             }
@@ -1170,7 +1259,7 @@ with tab_home:
         hist_inv_js = ",\n".join(hist_inv_js_list)
         hist_btc_js = ",\n".join(hist_btc_js_list)
     else:
-        hist_val_js, hist_inv_js, hist_btc_js = "", "", ""
+         hist_val_js, hist_inv_js, hist_btc_js = "", "", ""
 
     pie_data_js_lines = []
     for _, r in df_port.iterrows():
@@ -1701,7 +1790,7 @@ with tab_home:
                 
                 const screenW = window.parent ? window.parent.innerWidth : window.innerWidth;
                 const screenH = window.parent ? window.parent.innerHeight : window.innerHeight;
-                
+
                 if (el.classList.contains('expanded-chart')) {{
                     overlay.classList.remove('active');
                     const origTop = parseFloat(el.getAttribute('data-orig-top')) || 0;
@@ -1733,9 +1822,11 @@ with tab_home:
                         c.style.pointerEvents = 'none';
                     }}
                 }});
+
                 const chartRect = el.getBoundingClientRect();
                 let visualTop = chartRect.top;
                 let visualLeft = chartRect.left;
+
                 if (parentIframe) {{
                     const iframeRect = parentIframe.getBoundingClientRect();
                     visualTop += iframeRect.top;
@@ -1804,7 +1895,7 @@ with tab_home:
             setupDoubleTap('daily-wrapper');
             setupDoubleTap('allocation-container');
             setupDoubleTap('inv-val-container');
-            
+
             document.getElementById('chart-overlay').addEventListener('click', () => {{
                 document.querySelectorAll('.expanded-chart').forEach(el => {{
                     if (el.classList.contains('expanded-chart')) {{
@@ -2324,7 +2415,6 @@ with tab_home:
         const mappedTickers = tickers.map(t => symbolMap[t.toUpperCase()] || t.toUpperCase());
 
         const url = `https://min-api.cryptocompare.com/data/pricemultifull?fsyms=${{mappedTickers.join(',')}}&tsyms=USD`;
-
         try {{
             const resp = await fetch(url, {{ headers: {{ 'User-Agent': 'Mozilla/5.0' }} }});
             const data = await resp.json();
@@ -2483,10 +2573,10 @@ with tab_home:
                         if (typeof hcWin.pnlDataMap !== 'undefined') {{
                             Object.keys(hcWin.pnlDataMap).forEach(key => {{
                                 hcWin.pnlDataMap[key].forEach(pt => {{
-                                       if (tickerDiffs[pt.name] !== undefined) {{
+                                        if (tickerDiffs[pt.name] !== undefined) {{
                                         pt.y += tickerDiffs[pt.name];
                                      }}
-                                }});
+                                 }});
                             }});
                         }}
                         pnlChart.redraw(true);
@@ -2498,7 +2588,7 @@ with tab_home:
                                 point.update({{y: tickerRoi[point.name]}}, false);
                              }}
                          }});
-                        roiChart.redraw(true);
+                         roiChart.redraw(true);
                     }}
                     
                     if (dailyChart && dailyChart.series[0]) {{
@@ -2506,7 +2596,7 @@ with tab_home:
                             if (ticker24h[point.name] !== undefined) {{
                                 const val = ticker24h[point.name];
                                 const color = val >= 0 ? 'rgba(0, 255, 157, 0.65)' : 'rgba(255, 77, 77, 0.65)'; 
-                                point.update({{y: val, color: color}}, false);
+                                 point.update({{y: val, color: color}}, false);
                             }}
                         }});
                         dailyChart.redraw(true);
@@ -2518,20 +2608,20 @@ with tab_home:
                                 const points = s.points;
                                 if (points && points.length > 0) {{
                                     const lastPoint = points[points.length - 1];
-                                    lastPoint.update({{y: tickerValues[s.name]}}, false);
+                                     lastPoint.update({{y: tickerValues[s.name]}}, false);
                                  }}
                              }}
-                        }});
-                        allocChart.redraw(true);
+                         }});
+                         allocChart.redraw(true);
                     }}
 
                     if (invValChart && invValChart.series[1]) {{
                         invValChart.series[1].points.forEach(point => {{
                             if (tickerValues[point.name] !== undefined) {{
-                                point.update({{y: tickerValues[point.name]}}, false);
+                                 point.update({{y: tickerValues[point.name]}}, false);
                             }}
                          }});
-                        invValChart.redraw(true);
+                         invValChart.redraw(true);
                     }}
                 }}
             }} catch (e) {{
@@ -2602,6 +2692,7 @@ with tab_home:
         }}
         
         prices[prices.length - 1] = currentPrice;
+
         const ctx = canvas.getContext('2d');
         if (chartCache[ticker] && chartCache[ticker].chartObj) {{
             chartCache[ticker].chartObj.destroy();
@@ -2629,6 +2720,7 @@ with tab_home:
                 type: 'line'
             }}
         ];
+
         const newChart = new Chart(ctx, {{
             type: 'line',
             data: {{
@@ -2641,14 +2733,14 @@ with tab_home:
                 plugins: {{
                     legend: {{ display: false }},
                     tooltip: {{ mode: 'index', intersect: false }}
-                  }},
+                }},
                 scales: {{
                      x: {{ ticks: {{ color: '#ccc', maxRotation: 45, autoSkip: true, maxTicksLimit: 6 }}, grid: {{ color: 'rgba(255,255,255,0.1)' }} }},
-                    y: {{ position: 'right', ticks: {{ color: '#ccc' }}, grid: {{ color: 'rgba(255,255,255,0.1)' }} 
-                }}
+                    y: {{ position: 'right', ticks: {{ color: '#ccc' }}, grid: {{ color: 'rgba(255,255,255,0.1)' }} }} 
                 }}
             }}
          }});
+
         chartCache[ticker] = {{ chartObj: newChart, data: {{labels, prices}} }};
         if (loadingDiv) loadingDiv.style.display = 'none';
     }}
@@ -2697,7 +2789,7 @@ with tab_home:
         window.chartCache = {{}};
     }}
     window.oldRefreshKey = refreshKey;
-}})();
+})();
 </script>
 </body>
 </html>
@@ -2707,99 +2799,12 @@ with tab_home:
 with tab_crypto:
     glossy_header("Crypto Transactions", CRYPTO_ICON)
 
-    st.markdown("""
-    <style>
-    /* ==============================================================
-       COMPACT EXPANDER FOR FORMS
-       ============================================================== */
-    div[data-testid="stExpander"] {
-        background: #0f172a !important;
-        border: 1px solid rgba(255,255,255,0.05) !important;
-        border-radius: 12px !important; box-shadow: 0 4px 15px rgba(0,0,0,0.3) !important; margin-bottom: 24px !important;
-    }
-    div[data-testid="stExpander"] summary {
-        color: #ffffff !important; font-weight: 700 !important; font-size: 1.05rem !important;
-        padding: 12px 16px !important; background: transparent !important; border-bottom: none !important;
-    }
-    div[data-testid="stExpander"] summary svg { color: #ffffff !important; fill: #ffffff !important; }
-    div[data-testid="stExpanderDetails"] { padding: 0 16px 16px 16px !important; }
-    div[data-testid="stExpanderDetails"] div[data-testid="stForm"] { padding: 0 !important; border: none !important; box-shadow: none !important; margin-bottom: 0 !important; background: transparent !important; }
-
-    /* INPUTS STYLING */
-    div[data-testid="stForm"]:has(.add-tx-card) label { font-size: 0.85rem !important; color: #94a3b8 !important; padding-bottom: 2px !important; }
-    div[data-testid="stForm"]:has(.add-tx-card) .stTextInput input, div[data-testid="stForm"]:has(.add-tx-card) .stNumberInput input, div[data-testid="stForm"]:has(.add-tx-card) .stDateInput input, div[data-testid="stForm"]:has(.add-tx-card) div[data-baseweb="select"] > div {
-        background: rgba(255,255,255,0.03) !important; border: 1px solid rgba(255,255,255,0.1) !important; color: #fff !important; border-radius: 8px !important; margin-bottom: 0px !important;
-    }
-    div[data-testid="stForm"]:has(.add-tx-card) div[data-testid="stHorizontalBlock"]:has(> div[data-testid="column"]:nth-child(4)) { display: flex !important; gap: 12px !important; }
-
-    /* BEAUTIFUL BUY/SELL SWITCH */
-    div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] {
-        background: rgba(0,0,0,0.3) !important; padding: 6px !important; border-radius: 12px !important; display: flex !important; flex-direction: row !important; gap: 8px !important; align-items: center !important; margin: 0 !important; height: 48px !important; border: 1px solid rgba(255,255,255,0.05) !important;
-    }
-    div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label {
-        margin: 0 !important; cursor: pointer !important; padding: 0 !important; border-radius: 8px !important; border: 1px solid transparent !important; transition: all 0.3s ease !important; background: transparent !important; flex: 1 !important; display: flex !important; justify-content: center !important; align-items: center !important; height: 100% !important;
-    }
-    div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label:hover { background: rgba(255,255,255,0.05) !important; }
-    div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label > div:first-child { display: none !important; } 
-    div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label p { font-weight: bold !important; font-size: 1.05rem !important; color: #94a3b8 !important; margin: 0 !important; padding: 0 !important; white-space: nowrap !important; line-height: 1 !important; }
-    div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label:has(input:checked):first-child { background: rgba(0, 255, 157, 0.15) !important; border-color: #00ff9d !important; }
-    div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label:has(input:checked):first-child p { color: #00ff9d !important; }
-    div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label:has(input:checked):last-child { background: rgba(255, 77, 77, 0.15) !important; border-color: #ff4d4d !important; }
-    div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label:has(input:checked):last-child p { color: #ff4d4d !important; }
-
-    div[data-testid="stForm"]:has(.add-tx-card) .stButton { display: flex !important; justify-content: flex-end !important; align-items: center !important; margin: 0 !important; padding: 0 !important; width: 100% !important; }
-    div[data-testid="stForm"]:has(.add-tx-card) .stButton > button { background: #1e2a44 !important; color: #e0e0e0 !important; padding: 0 24px !important; border-radius: 10px !important; font-size: 1.05rem !important; font-weight: 700 !important; box-shadow: 0 4px 15px rgba(0,0,0,0.25) !important; transition: all 0.3s ease !important; border: none !important; margin: 0 !important; width: auto !important; height: 48px !important; min-height: 48px !important; }
-    div[data-testid="stForm"]:has(.add-tx-card) .stButton > button:hover { transform: translateY(-2px) !important; box-shadow: 0 8px 20px rgba(255, 255, 255, 0.2) !important; color: white !important; }
-
-    /* ==============================================================
-       COMPACT TRANSACTION ROWS (NO BUTTONS)
-       ============================================================== */
-    div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row) {
-        background: #0f172a !important; 
-        border: 1px solid rgba(255,255,255,0.05) !important; 
-        border-radius: 12px !important; 
-        padding: 12px 16px !important; 
-        margin-bottom: 8px !important; 
-        transition: background 0.3s ease; 
-    }
-    div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row):hover { background: rgba(30, 41, 59, 0.8) !important; }
-
-    /* Mobile Adjustments */
-    @media (max-width: 768px) {
-        .glossy-header { margin-top: 0px !important; margin-bottom: 16px !important; padding: 20px 16px !important; font-size: 22px !important; min-height: 90px; }
-        .home-header { margin-bottom: 0 !important; }
-        
-        div[data-testid="stForm"]:has(.add-tx-card) input { padding: 6px !important; font-size: 0.95rem !important; }
-        div[data-testid="stForm"]:has(.add-tx-card) .stButton { width: 100% !important; justify-content: center !important; }
-        div[data-testid="stForm"]:has(.add-tx-card) .stButton > button { width: 100% !important; max-width: none !important; }
-
-        div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row) {
-            padding: 12px 14px !important;
-        }
-        
-        /* Dashboard Mobile Stats */
-        .stats-layer-inner { gap: 6px !important; }
-        .stats-layer { margin-top: -60px !important; margin-bottom: 18px; } 
-        .glossy-box.swapped { height: 80px !important; min-height: 80px !important; max-height: 80px !important; padding: 0 !important; min-width: 0 !important; }
-        .dash-value { font-size: clamp(11px, 3.5vw, 15px) !important; top: 24px !important; } 
-        .dash-label { font-size: clamp(8px, 2.5vw, 10px) !important; bottom: 8px !important; white-space: nowrap !important; letter-spacing: 0.5px !important; }
-        
-        .usdc-banner { padding: 8px 14px; width: 92%; margin: 4px auto 8px auto !important; }
-        .usdc-banner-title { font-size: 0.95rem; }
-        .usdc-banner-subtitle { font-size: 0.7rem; }
-        .usdc-banner-amount { font-size: 1.1rem; }
-        .stable-dropdown-wrapper { width: 92%; margin: -8px auto 12px auto !important; }
-    }
-    </style>
-    """, unsafe_allow_html=True)
-
     # 1. ADD NEW TRANSACTION CARD (TUCKED IN EXPANDER)
     with st.expander("Add Transaction", expanded=False):
         with st.form("add_crypto", border=False):
             st.markdown("<div class='add-tx-card'></div>", unsafe_allow_html=True) # Hidden hook for CSS overrides
             
             # Row 1: Inputs
-        
             r1c1, r1c2, r1c3, r1c4 = st.columns(4)
             with r1c1: selected_date = st.date_input("Date", value=date(2026, 3, 25))
             with r1c2: ticker = st.text_input("Coin Ticker", value="BTC").upper().strip()
@@ -2840,41 +2845,107 @@ with tab_crypto:
     with st.container(height=650, border=False):
         for i, r in df_display.iterrows():
             orig_idx = r['orig_idx']
-            logo_url = get_ticker_logo(r['Ticker'])
-            amount = r['Amount']
-            stable_amt = r.get('Stable_Amt', 0.0)
-            stable_ticker = r.get('Stable_Ticker', 'USDC')
-            is_buy = amount >= 0
             
-            abs_amount = abs(amount)
-            abs_stable = abs(stable_amt)
-            price = abs_stable / abs_amount if abs_amount > 0 else 0
-            
-            sign = "+" if is_buy else "-"
-            color = "#00ff9d" if is_buy else "#ff4d4d"
-            action_text = "Spent" if is_buy else "Received"
-            bg_style = "background-color:#ffffff;" if r['Ticker'] in STABLECOINS_LIST else ""
-            
-            invested_formatted = f"{abs_stable:,.2f} {stable_ticker}"
-            amount_formatted = format_holdings(abs_amount, r['Ticker'])
-            date_str = format_datum(r['Datum'])
+            # --- EDIT MODE INLINE FORM ---
+            if st.session_state.edit_crypto_id == orig_idx:
+                with st.container(border=True):
+                    st.markdown("<div class='tx-row'><strong>Edit Transaction</strong></div>", unsafe_allow_html=True)
+                    with st.form(f"edit_c_form_{orig_idx}", border=False):
+                        st.markdown("<div class='add-tx-card'></div>", unsafe_allow_html=True)
+                        c_date = parse_excel_date(r['Datum'])
+                        c_ticker = r['Ticker']
+                        c_st_ticker = r.get('Stable_Ticker', 'USDC')
+                        c_st_amt = abs(r.get('Stable_Amt', 0.0))
+                        c_amount = abs(r['Amount'])
+                        c_is_buy = r['Amount'] >= 0
 
-            with st.container(border=True):
-                st.markdown(f"""
-                <div class="tx-row" style="display: flex; justify-content: space-between; align-items: center; width: 100%; height: 100%;">
-                    <div style="display: flex; align-items: center; gap: 14px; overflow: hidden; flex: 1;">
-                        <img src="{logo_url}" style="width: 34px; height: 34px; border-radius: 50%; object-fit: contain; flex-shrink: 0; {bg_style}" onerror="this.src='https://via.placeholder.com/34/1e2a44/ffffff?text={r['Ticker'][0]}';">
-                        <div style="display: flex; flex-direction: column; overflow: hidden; min-width: 0; padding-bottom: 2px;">
-                            <span style="font-weight: 700; font-size: 1.1rem; color: #ffffff; white-space: nowrap; text-overflow: ellipsis; overflow: hidden; line-height: 1.3;">{r['Ticker']}</span>
-                            <span style="font-size: 0.8rem; color: #94a3b8; white-space: nowrap; text-overflow: ellipsis; overflow: hidden; line-height: 1.3;">{date_str}</span>
+                        ec1, ec2, ec3, ec4 = st.columns(4)
+                        with ec1: ed_date = st.date_input("Date", value=c_date, key=f"ed_{orig_idx}")
+                        with ec2: ed_ticker = st.text_input("Coin", value=c_ticker, key=f"et_{orig_idx}").upper().strip()
+                        with ec3: 
+                            idx_st = STABLECOINS_LIST.index(c_st_ticker) if c_st_ticker in STABLECOINS_LIST else 0
+                            ed_st_ticker = st.selectbox("Stablecoin", STABLECOINS_LIST, index=idx_st, key=f"est_{orig_idx}")
+                        with ec4:
+                            ed_st_amt = st.number_input("Stable Amount", value=float(c_st_amt), step=0.01, key=f"esa_{orig_idx}")
+                            ed_c_amt = st.number_input("Coin Amount", value=float(c_amount), step=0.000001, format="%.8f", key=f"eca_{orig_idx}")
+
+                        eact1, eact2, eact3 = st.columns([2, 1, 1])
+                        with eact1: ed_type = st.radio("Type", ["Buy", "Sell"], index=0 if c_is_buy else 1, horizontal=True, key=f"er_{orig_idx}", label_visibility="collapsed")
+                        with eact2: btn_save = st.form_submit_button("Save")
+                        with eact3: btn_cancel = st.form_submit_button("Cancel")
+
+                        if btn_save:
+                            f_st_amt = ed_st_amt if ed_type == "Buy" else -ed_st_amt
+                            f_c_amt = ed_c_amt if ed_type == "Buy" else -ed_c_amt
+                            f_price = round(ed_st_amt / ed_c_amt, 8) if ed_c_amt > 0 else 0.0
+
+                            st.session_state.crypto_df.loc[orig_idx, "Datum"] = date_to_excel_serial(ed_date)
+                            st.session_state.crypto_df.loc[orig_idx, "Ticker"] = ed_ticker
+                            st.session_state.crypto_df.loc[orig_idx, "Stable_Ticker"] = ed_st_ticker
+                            st.session_state.crypto_df.loc[orig_idx, "Stable_Amt"] = f_st_amt
+                            st.session_state.crypto_df.loc[orig_idx, "Amount"] = f_c_amt
+                            st.session_state.crypto_df.loc[orig_idx, "Price"] = f_price
+
+                            save_crypto(st.session_state.crypto_df)
+                            st.session_state.edit_crypto_id = None
+                            st.session_state.crypto_table_version += 1
+                            st.rerun()
+
+                        if btn_cancel:
+                            st.session_state.edit_crypto_id = None
+                            st.rerun()
+            else:
+                # --- STANDARD ROW WITH ACTION BUTTONS ---
+                logo_url = get_ticker_logo(r['Ticker'])
+                amount = r['Amount']
+                stable_amt = r.get('Stable_Amt', 0.0)
+                stable_ticker = r.get('Stable_Ticker', 'USDC')
+                is_buy = amount >= 0
+                
+                abs_amount = abs(amount)
+                abs_stable = abs(stable_amt)
+                
+                sign = "+" if is_buy else "-"
+                color = "#00ff9d" if is_buy else "#ff4d4d"
+                action_text = "Spent" if is_buy else "Received"
+                bg_style = "background-color:#ffffff;" if r['Ticker'] in STABLECOINS_LIST else ""
+                
+                invested_formatted = f"{abs_stable:,.2f} {stable_ticker}"
+                amount_formatted = format_holdings(abs_amount, r['Ticker'])
+                date_str = format_datum(r['Datum'])
+
+                with st.container(border=True):
+                    # 3-Column inline layout forced via CSS overrides to stay intact on mobile
+                    col_html, col_edit, col_del = st.columns([0.86, 0.07, 0.07])
+                    
+                    with col_html:
+                        st.markdown(f"""
+                        <div class="tx-row" style="display: flex; justify-content: space-between; align-items: center; width: 100%; height: 100%;">
+                            <div style="display: flex; align-items: center; gap: 14px; overflow: hidden; flex: 1;">
+                                <img src="{logo_url}" style="width: 34px; height: 34px; border-radius: 50%; object-fit: contain; flex-shrink: 0; {bg_style}" onerror="this.src='https://via.placeholder.com/34/1e2a44/ffffff?text={r['Ticker'][0]}';">
+                                <div style="display: flex; flex-direction: column; overflow: hidden; min-width: 0; padding-bottom: 2px;">
+                                    <span style="font-weight: 700; font-size: 1.1rem; color: #ffffff; white-space: nowrap; text-overflow: ellipsis; overflow: hidden; line-height: 1.3;">{r['Ticker']}</span>
+                                    <span style="font-size: 0.8rem; color: #94a3b8; white-space: nowrap; text-overflow: ellipsis; overflow: hidden; line-height: 1.3;">{date_str}</span>
+                                </div>
+                            </div>
+                            <div style="display: flex; flex-direction: column; align-items: flex-end; justify-content: center; overflow: hidden; padding-left: 8px; flex-shrink: 0;">
+                                <span style="font-weight: 700; font-size: 1.1rem; color: {color}; white-space: nowrap; line-height: 1.3;">{sign}{amount_formatted}</span>
+                                <span style="font-size: 0.8rem; color: #cbd5e1; white-space: nowrap; line-height: 1.3;">{action_text} {invested_formatted}</span>
+                            </div>
                         </div>
-                    </div>
-                    <div style="display: flex; flex-direction: column; align-items: flex-end; justify-content: center; overflow: hidden; padding-left: 8px; flex-shrink: 0;">
-                        <span style="font-weight: 700; font-size: 1.1rem; color: {color}; white-space: nowrap; line-height: 1.3;">{sign}{amount_formatted}</span>
-                        <span style="font-size: 0.8rem; color: #cbd5e1; white-space: nowrap; line-height: 1.3;">{action_text} {invested_formatted}</span>
-                    </div>
-                </div>
-                """, unsafe_allow_html=True)
+                        """, unsafe_allow_html=True)
+                    
+                    with col_edit:
+                        if st.button("✎", key=f"edit_c_{orig_idx}"):
+                            st.session_state.edit_crypto_id = orig_idx
+                            st.rerun()
+                            
+                    with col_del:
+                        if st.button("✕", key=f"del_c_{orig_idx}"):
+                            st.session_state.crypto_df.drop(orig_idx, inplace=True)
+                            save_crypto(st.session_state.crypto_df)
+                            st.session_state.crypto_table_version += 1
+                            st.rerun()
 
 with tab_fiat:
     total_czk = pd.to_numeric(st.session_state.fiat_df['CZK'], errors='coerce').fillna(0).sum()
@@ -2882,7 +2953,7 @@ with tab_fiat:
     total_stables = pd.to_numeric(st.session_state.fiat_df['Stable_Amt'], errors='coerce').fillna(0).sum()
     fees_eur = pd.to_numeric(st.session_state.fiat_df['Fee'], errors='coerce').fillna(0).sum()
     fees_czk = (pd.to_numeric(st.session_state.fiat_df['Fee'], errors='coerce').fillna(0) *
-             pd.to_numeric(st.session_state.fiat_df['CZK/EUR'], errors='coerce').fillna(0)).sum()
+         pd.to_numeric(st.session_state.fiat_df['CZK/EUR'], errors='coerce').fillna(0)).sum()
 
     glossy_header("Fiat Transactions", FIAT_ICON)
 
@@ -2942,31 +3013,91 @@ with tab_fiat:
     with st.container(height=650, border=False):
         for i, r in df_fiat_display.iterrows():
             orig_idx = r['orig_idx']
-            stable_ticker = r.get('Stable_Ticker', 'USDC')
-            logo_url = get_ticker_logo(stable_ticker)
-            
-            stable_amt = r.get('Stable_Amt', 0.0)
-            czk_val = r.get('CZK', 0.0)
-            eur_val = r.get('EUR', 0.0)
-            fee_val = r.get('Fee', 0.0)
-            
-            stable_formatted = f"+{stable_amt:,.2f} {stable_ticker}"
-            fiat_formatted = f"CZK: {czk_val:,.2f} / EUR: {eur_val:,.2f}"
-            date_str = format_datum(r['Datum'])
 
-            with st.container(border=True):
-                st.markdown(f"""
-                <div class="tx-row" style="display: flex; justify-content: space-between; align-items: center; width: 100%; height: 100%;">
-                    <div style="display: flex; align-items: center; gap: 12px; overflow: hidden; flex: 1;">
-                        <img src="{logo_url}" style="width: 32px; height: 32px; border-radius: 50%; object-fit: contain; flex-shrink: 0; background-color:#ffffff;" onerror="this.src='https://via.placeholder.com/32/1e2a44/ffffff?text={stable_ticker[0]}';">
-                        <div style="display: flex; flex-direction: column; overflow: hidden; min-width: 0; padding-bottom: 2px;">
-                            <span style="font-weight: 700; font-size: 1rem; color: #ffffff; white-space: nowrap; text-overflow: ellipsis; overflow: hidden; line-height: 1.3;">{date_str}</span>
-                            <span style="font-size: 0.75rem; color: #94a3b8; white-space: nowrap; text-overflow: ellipsis; overflow: hidden; line-height: 1.3;">{fiat_formatted}</span>
+            # --- EDIT MODE INLINE FORM ---
+            if st.session_state.edit_fiat_id == orig_idx:
+                with st.container(border=True):
+                    st.markdown("<div class='tx-row'><strong>Edit Fiat Deposit</strong></div>", unsafe_allow_html=True)
+                    with st.form(f"edit_f_form_{orig_idx}", border=False):
+                        st.markdown("<div class='add-tx-card'></div>", unsafe_allow_html=True)
+                        
+                        ef1, ef2, ef3 = st.columns(3)
+                        with ef1: ed_f_date = st.date_input("Date", value=parse_excel_date(r['Datum']), key=f"efd_{orig_idx}")
+                        with ef2: ed_czk = st.number_input("CZK Invested", value=float(r.get('CZK', 0.0)), step=0.01, key=f"efczk_{orig_idx}")
+                        with ef3: ed_eur = st.number_input("EUR Equivalent", value=float(r.get('EUR', 0.0)), step=0.01, key=f"efeur_{orig_idx}")
+                        
+                        ef4, ef5, ef6 = st.columns(3)
+                        with ef4: ed_fee = st.number_input("Fee (EUR)", value=float(r.get('Fee', 0.0)), step=0.01, key=f"effee_{orig_idx}")
+                        with ef5: 
+                            idx_st = STABLECOINS_LIST.index(r.get('Stable_Ticker', 'USDC')) if r.get('Stable_Ticker', 'USDC') in STABLECOINS_LIST else 0
+                            ed_f_st_ticker = st.selectbox("Received Stablecoin", STABLECOINS_LIST, index=idx_st, key=f"efstt_{orig_idx}")
+                        with ef6: ed_f_st_amt = st.number_input("Stable Amount", value=float(r.get('Stable_Amt', 0.0)), step=0.01, key=f"efsta_{orig_idx}")
+                        
+                        eact1, eact2, eact3 = st.columns([2, 1, 1])
+                        with eact1: st.markdown("<div style='color: transparent;'>Spacing</div>", unsafe_allow_html=True)
+                        with eact2: btn_f_save = st.form_submit_button("Save")
+                        with eact3: btn_f_cancel = st.form_submit_button("Cancel")
+
+                        if btn_f_save:
+                            czk_eur = round(ed_czk / ed_eur, 5) if ed_eur > 0 else 0.0
+                            st.session_state.fiat_df.loc[orig_idx, "Datum"] = date_to_excel_serial(ed_f_date)
+                            st.session_state.fiat_df.loc[orig_idx, "CZK"] = ed_czk
+                            st.session_state.fiat_df.loc[orig_idx, "EUR"] = ed_eur
+                            st.session_state.fiat_df.loc[orig_idx, "Fee"] = ed_fee
+                            st.session_state.fiat_df.loc[orig_idx, "CZK/EUR"] = czk_eur
+                            st.session_state.fiat_df.loc[orig_idx, "Stable_Amt"] = ed_f_st_amt
+                            st.session_state.fiat_df.loc[orig_idx, "Stable_Ticker"] = ed_f_st_ticker
+
+                            save_fiat(st.session_state.fiat_df)
+                            st.session_state.edit_fiat_id = None
+                            st.session_state.fiat_table_version += 1
+                            st.rerun()
+
+                        if btn_f_cancel:
+                            st.session_state.edit_fiat_id = None
+                            st.rerun()
+            else:
+                # --- STANDARD ROW WITH ACTION BUTTONS ---
+                stable_ticker = r.get('Stable_Ticker', 'USDC')
+                logo_url = get_ticker_logo(stable_ticker)
+                
+                stable_amt = r.get('Stable_Amt', 0.0)
+                czk_val = r.get('CZK', 0.0)
+                eur_val = r.get('EUR', 0.0)
+                fee_val = r.get('Fee', 0.0)
+                
+                stable_formatted = f"+{stable_amt:,.2f} {stable_ticker}"
+                fiat_formatted = f"CZK: {czk_val:,.2f} / EUR: {eur_val:,.2f}"
+                date_str = format_datum(r['Datum'])
+
+                with st.container(border=True):
+                    col_html, col_edit, col_del = st.columns([0.86, 0.07, 0.07])
+                    
+                    with col_html:
+                        st.markdown(f"""
+                        <div class="tx-row" style="display: flex; justify-content: space-between; align-items: center; width: 100%; height: 100%;">
+                            <div style="display: flex; align-items: center; gap: 12px; overflow: hidden; flex: 1;">
+                                <img src="{logo_url}" style="width: 32px; height: 32px; border-radius: 50%; object-fit: contain; flex-shrink: 0; background-color:#ffffff;" onerror="this.src='https://via.placeholder.com/32/1e2a44/ffffff?text={stable_ticker[0]}';">
+                                <div style="display: flex; flex-direction: column; overflow: hidden; min-width: 0; padding-bottom: 2px;">
+                                    <span style="font-weight: 700; font-size: 1rem; color: #ffffff; white-space: nowrap; text-overflow: ellipsis; overflow: hidden; line-height: 1.3;">{date_str}</span>
+                                    <span style="font-size: 0.75rem; color: #94a3b8; white-space: nowrap; text-overflow: ellipsis; overflow: hidden; line-height: 1.3;">{fiat_formatted}</span>
+                                </div>
+                            </div>
+                            <div style="display: flex; flex-direction: column; align-items: flex-end; justify-content: center; overflow: hidden; padding-left: 4px; padding-bottom: 2px; flex-shrink: 0;">
+                                <span style="font-weight: 700; font-size: 1rem; color: #00ff9d; white-space: nowrap; text-overflow: ellipsis; overflow: hidden; line-height: 1.3;">{stable_formatted}</span>
+                                <span style="font-size: 0.75rem; color: #cbd5e1; white-space: nowrap; text-overflow: ellipsis; overflow: hidden; line-height: 1.3;">Fee: {fee_val:,.2f} EUR</span>
+                            </div>
                         </div>
-                    </div>
-                    <div style="display: flex; flex-direction: column; align-items: flex-end; justify-content: center; overflow: hidden; padding-left: 4px; padding-bottom: 2px; flex-shrink: 0;">
-                        <span style="font-weight: 700; font-size: 1rem; color: #00ff9d; white-space: nowrap; text-overflow: ellipsis; overflow: hidden; line-height: 1.3;">{stable_formatted}</span>
-                        <span style="font-size: 0.75rem; color: #cbd5e1; white-space: nowrap; text-overflow: ellipsis; overflow: hidden; line-height: 1.3;">Fee: {fee_val:,.2f} EUR</span>
-                    </div>
-                </div>
-                """, unsafe_allow_html=True)
+                        """, unsafe_allow_html=True)
+                        
+                    with col_edit:
+                        if st.button("✎", key=f"edit_f_{orig_idx}"):
+                            st.session_state.edit_fiat_id = orig_idx
+                            st.rerun()
+                            
+                    with col_del:
+                        if st.button("✕", key=f"del_f_{orig_idx}"):
+                            st.session_state.fiat_df.drop(orig_idx, inplace=True)
+                            save_fiat(st.session_state.fiat_df)
+                            st.session_state.fiat_table_version += 1
+                            st.rerun()
