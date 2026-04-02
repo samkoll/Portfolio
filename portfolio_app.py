@@ -710,7 +710,7 @@ def get_with_retry(url: str, headers: dict, timeout: int = 12, retries: int = 4)
                 return None  
             return data
         except Exception:
-             if attempt == retries - 1:
+            if attempt == retries - 1:
                 return None
             time.sleep(1.0 ** attempt)
     return None
@@ -1316,7 +1316,7 @@ with tab_home:
                 lines.append(f"{{ name: '{ticker}', y: {val}, color: '{c}99' }}")
             return ",\n".join(lines)
 
-         pnl_all = pnl_df_active.iloc[-1]
+        pnl_all = pnl_df_active.iloc[-1]
         
         idx_1d = -2 if len(pnl_df_active) >= 2 else 0
         idx_7d = -8 if len(pnl_df_active) >= 8 else 0
