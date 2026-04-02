@@ -16,6 +16,11 @@ st.set_page_config(page_title="Portfolio", layout="wide", page_icon="logo.png")
 # ====================== GLOBAL CSS ======================
 st.markdown("""
 <style>
+/* Hide Native Streamlit Top Header */
+header[data-testid="stHeader"] {
+    display: none !important;
+}
+
 .stApp {
     background: linear-gradient(180deg, #0f1724 0%, #0a0f1c 100%) !important;
 }
@@ -24,7 +29,7 @@ st.markdown("""
 div[data-testid="stMainBlockContainer"] {
     padding-left: 14px !important;
     padding-right: 14px !important;
-    padding-top: 0px !important;
+    padding-top: 12px !important;
     padding-bottom: 90px !important; /* Added to clear bottom nav dock */
     max-width: 100% !important;
 }
@@ -225,8 +230,8 @@ div[data-testid="stTabs"] > div[role="tabpanel"] {
     justify-content: center;
     gap: 16px;
     width: 100% !important;
-    margin-top: 68px;
-    margin-bottom: 38px;
+    margin-top: 0px !important;
+    margin-bottom: 24px !important;
 }
 
 /* PC Hover and Sync with Dashboard Toggle */
@@ -294,9 +299,10 @@ div[data-testid="stTabs"] > div[role="tabpanel"] {
     border-radius: 12px;
     box-shadow: 0 4px 12px rgba(0,0,0,0.15);
     padding: 10px 20px;
-    width: 90%; 
+    width: auto; 
+    min-width: 250px;
     max-width: 400px; 
-    margin: -15px auto 12px auto !important;
+    margin: 12px 0 24px 24px !important; /* Sorted left for PC */
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -820,7 +826,6 @@ components.html("""
     <script>
     (function() {
         const parentDoc = window.parent.document;
-        
         function switchTab(index) {
             const tabs = parentDoc.querySelectorAll('button[data-baseweb="tab"]');
             if (tabs && tabs.length > index) {
@@ -847,12 +852,10 @@ components.html("""
 
         // Swipe logic
         let startX = 0, startY = 0, endX = 0, endY = 0;
-        
         parentDoc.addEventListener('touchstart', e => {
             startX = e.changedTouches[0].screenX;
             startY = e.changedTouches[0].screenY;
         }, {passive: true});
-
         parentDoc.addEventListener('touchend', e => {
             endX = e.changedTouches[0].screenX;
             endY = e.changedTouches[0].screenY;
@@ -874,7 +877,6 @@ components.html("""
                         currentTab = i;
                     }
                 });
-
                 if (endX < startX && currentTab < 2) { // Swipe Left (Next tab)
                     switchTab(currentTab + 1);
                 }
@@ -883,7 +885,6 @@ components.html("""
                 }
             }
         }, {passive: true});
-        
         // Sync initial active state after load/rerun
         setTimeout(() => {
             let currentTab = 0;
@@ -895,7 +896,6 @@ components.html("""
                 updateActiveNav(currentTab);
             }
         }, 500);
-
     })();
     </script>
 """, height=0, width=0)
@@ -929,7 +929,7 @@ with tab_home:
             st.session_state.crypto_df, st.session_state.fiat_df, live_prices, base_prices
         )
         history_data_raw, allocation_series_js, pnl_df = build_portfolio_history(
-            st.session_state.crypto_df, st.session_state.fiat_df, live_prices, hist_dict
+             st.session_state.crypto_df, st.session_state.fiat_df, live_prices, hist_dict
         )
 
         # Assign to the instant bypass vault
@@ -1407,7 +1407,7 @@ with tab_home:
                 }},
                 plotOptions: {{ bar: {{ borderRadius: 4, borderWidth: 0, pointPadding: 0.1, groupPadding: 0.1, maxPointWidth: 35, shadow: {{ color: 'rgba(0,0,0,0.3)', offsetX: 1, offsetY: 2, width: 4 }}, dataLabels: {{ enabled: true, inside: false, crop: false, overflow: 'allow', style: {{ color: '#fff', textOutline: '2px #0f172a', fontWeight: 'bold', fontSize: '11px' }}, formatter: function() {{ return document.body.classList.contains('privacy-mode') ? '***' : formatMoneyStr(this.y); }} }} }} }},
                 credits: {{ enabled: false }},
-                series: [{{ name: 'PnL', data: window.pnlDataMap['all'] }}]
+                series: [{{ name: 'PnL', data: JSON.parse(JSON.stringify(window.pnlDataMap['all'])) }}]
             }});
 
             document.querySelectorAll('.pnl-controls button').forEach(btn => {{
@@ -1418,7 +1418,8 @@ with tab_home:
                     const range = btn.getAttribute('data-range');
                     const chart = Highcharts.charts.find(c => c && c.renderTo.id === 'pnl-container');
                     if (chart && window.pnlDataMap[range]) {{
-                        chart.series[0].setData(window.pnlDataMap[range], true, {{ duration: 500 }}, true);
+                        // Crucial: Use deep cloned object to prevent Highcharts from mutating shared reference which breaks the ALL button
+                        chart.series[0].setData(JSON.parse(JSON.stringify(window.pnlDataMap[range])), true, {{ duration: 500 }}, true);
                     }}
                 }});
             }});
@@ -1538,7 +1539,6 @@ with tab_home:
             function toggleExpandChart(wrapperId) {{
                 // BLOCK PC COMPLETELY - Only runs on Mobile
                 if (window.innerWidth > 768) return;
-            
                 const el = document.getElementById(wrapperId);
                 const overlay = document.getElementById('chart-overlay');
                 const wrapper = document.getElementById('chartsScrollContainer');
@@ -1557,13 +1557,10 @@ with tab_home:
                     // CLOSING MECHANICS 
                     // ==========================================
                     overlay.classList.remove('active');
-                    
                     const origTop = parseFloat(el.getAttribute('data-orig-top')) || 0;
                     const origLeft = parseFloat(el.getAttribute('data-orig-left')) || 0;
-
                     // Instantly remove class so background crossfades cleanly during the travel
                     el.classList.remove('expanded-chart');
-
                     // Transition smoothly to original slot
                     el.style.transition = 'transform 0.4s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.4s ease, box-shadow 0.4s ease';
                     el.style.transform = `translate(${{origLeft}}px, ${{origTop}}px) scale(1)`;
@@ -1585,7 +1582,6 @@ with tab_home:
                     }};
                     el.addEventListener('transitionend', finishClose);
                     el._closeTimeout = setTimeout(() => {{ finishClose(); }}, 450); // Fallback
-
                     return;
                 }}
                 
@@ -1601,7 +1597,6 @@ with tab_home:
                         c.style.pointerEvents = 'none';
                     }}
                 }});
-
                 const chartRect = el.getBoundingClientRect();
                 let visualTop = chartRect.top;
                 let visualLeft = chartRect.left;
@@ -1890,7 +1885,7 @@ with tab_home:
         background: #0f172a;
         box-shadow: 0 8px 24px rgba(0,0,0,0.3);
         border: 2px solid transparent;
-        overflow: hidden; 
+        overflow: hidden;
     }}
     .flip-card-front {{
         display: flex;
@@ -2188,7 +2183,6 @@ with tab_home:
             let tickerDiffs = {{}};
             let tickerRoi = {{}};
             let ticker24h = {{}};
-            
             cards.forEach(card => {{
                 const ticker = card.getAttribute('data-ticker');
                 const sym = symbolMap[ticker.toUpperCase()] || ticker.toUpperCase();
@@ -2216,7 +2210,6 @@ with tab_home:
                         const pnl = value - invested;
                         const pnlPct = invested > 0 ? (pnl / invested) * 100 : 0;
                         tickerRoi[ticker] = pnlPct;
-                        
                         const valStr = '$' + value.toLocaleString('en-US', {{minimumFractionDigits: 2, maximumFractionDigits: 2}});
                         const pnlStr = (pnl >= 0 ? '▲ $' : '▼ $') + Math.abs(pnl).toLocaleString('en-US', {{minimumFractionDigits: 2, maximumFractionDigits: 2}});
                         const pnlPctStr = (pnl >= 0 ? '▲ ' : '▼ ') + Math.abs(pnlPct).toFixed(2) + '%';
@@ -2224,7 +2217,6 @@ with tab_home:
                         
                         const valEl = card.querySelector('.total-value');
                         if (valEl) valEl.innerText = valStr;
-                        
                         const pnlEl = card.querySelector('.card-pnl');
                         if (pnlEl) {{
                             pnlEl.innerText = pnlStr;
@@ -2247,7 +2239,6 @@ with tab_home:
                         updateMetricUI(card, ticker, '30d', p30d, price);
                         updateMetricUI(card, ticker, '90d', p90d, price);
                         updateMetricUI(card, ticker, 'ytd', pytd, price);
-                        
                         // Update sparkline chart
                         if (window.chartCache && window.chartCache[ticker] && window.chartCache[ticker].chartObj) {{
                             const chart = window.chartCache[ticker].chartObj;
@@ -2279,7 +2270,6 @@ with tab_home:
             const totalPnL = totalCoinValue - totalCoinInvested;
             const totalInvestedBase = totalPortfolioValue - totalPnL;
             const totalPnLPct = totalInvestedBase !== 0 ? (totalPnL / totalInvestedBase) * 100 : 0;
-            
             const dashValStr = '$' + totalPortfolioValue.toLocaleString('en-US', {{minimumFractionDigits: 2, maximumFractionDigits: 2}});
             const dashPnlStr = (totalPnL >= 0 ? '▲ $' : '▼ $') + Math.abs(totalPnL).toLocaleString('en-US', {{minimumFractionDigits: 2, maximumFractionDigits: 2}});
             const dashPnlPctStr = (totalPnL >= 0 ? '▲ ' : '▼ ') + Math.abs(totalPnLPct).toFixed(2) + '%';
@@ -2291,8 +2281,10 @@ with tab_home:
             const dPnlPct = parentDoc.getElementById('dash-pnl-pct');
             
             if (dValue) dValue.innerText = dashValStr;
-            if (dPnl) {{ dPnl.innerText = dashPnlStr; dPnl.style.color = dashColor; }}
-            if (dPnlPct) {{ dPnlPct.innerText = dashPnlPctStr; dPnlPct.style.color = dashColor; }}
+            if (dPnl) {{ dPnl.innerText = dashPnlStr;
+            dPnl.style.color = dashColor; }}
+            if (dPnlPct) {{ dPnlPct.innerText = dashPnlPctStr;
+            dPnlPct.style.color = dashColor; }}
 
             // ==========================================
             // DYNAMICALLY UPDATE HIGHCHARTS (SYNCED)
@@ -2321,7 +2313,7 @@ with tab_home:
                     if (pieChart && pieChart.series[0]) {{
                         pieChart.series[0].points.forEach(point => {{
                             if (tickerValues[point.name] !== undefined) {{
-                                 point.update({{y: tickerValues[point.name]}}, false);
+                                  point.update({{y: tickerValues[point.name]}}, false);
                             }}
                         }});
                         pieChart.redraw(true);
@@ -2344,14 +2336,13 @@ with tab_home:
                                 point.update({{y: point.y + tickerDiffs[point.name]}}, false);
                             }}
                         }});
-                        
                         if (typeof hcWin.pnlDataMap !== 'undefined') {{
                             Object.keys(hcWin.pnlDataMap).forEach(key => {{
                                 hcWin.pnlDataMap[key].forEach(pt => {{
-                                     if (tickerDiffs[pt.name] !== undefined) {{
+                                      if (tickerDiffs[pt.name] !== undefined) {{
                                         pt.y += tickerDiffs[pt.name];
                                      }}
-                                }});
+                                 }});
                             }});
                         }}
                         pnlChart.redraw(true);
@@ -2363,14 +2354,14 @@ with tab_home:
                             if (tickerRoi[point.name] !== undefined) {{
                                 point.update({{y: tickerRoi[point.name]}}, false);
                              }}
-                        }});
+                         }});
                         roiChart.redraw(true);
                     }}
                     
                     // 5. Daily 24h Chart
                     if (dailyChart && dailyChart.series[0]) {{
                          dailyChart.series[0].points.forEach(point => {{
-                            if (ticker24h[point.name] !== undefined) {{
+                             if (ticker24h[point.name] !== undefined) {{
                                 const val = ticker24h[point.name];
                                 const color = val >= 0 ? 'rgba(0, 255, 157, 0.65)' : 'rgba(255, 77, 77, 0.65)'; 
                                 point.update({{y: val, color: color}}, false);
@@ -2382,13 +2373,13 @@ with tab_home:
                     // 6. Asset Allocation Chart
                     if (allocChart) {{
                         allocChart.series.forEach(s => {{
-                             if (tickerValues[s.name] !== undefined) {{
+                            if (tickerValues[s.name] !== undefined) {{
                                 const points = s.points;
                                 if (points && points.length > 0) {{
                                     const lastPoint = points[points.length - 1];
                                     lastPoint.update({{y: tickerValues[s.name]}}, false);
                                  }}
-                            }}
+                             }}
                         }});
                         allocChart.redraw(true);
                     }}
@@ -2396,7 +2387,7 @@ with tab_home:
                     // 7. Invested vs Value Chart (Series 1 is 'Current Value')
                     if (invValChart && invValChart.series[1]) {{
                         invValChart.series[1].points.forEach(point => {{
-                             if (tickerValues[point.name] !== undefined) {{
+                            if (tickerValues[point.name] !== undefined) {{
                                 point.update({{y: tickerValues[point.name]}}, false);
                             }}
                          }});
@@ -2434,7 +2425,7 @@ with tab_home:
                 card.classList.add('flipped');
                 card.classList.add('touch-hover');
                 const currentPrice = parseFloat(card.getAttribute('data-current-price'));
-                const avgPrice = parseFloat(card.getAttribute('data-avg-price'));
+                 const avgPrice = parseFloat(card.getAttribute('data-avg-price'));
                 const chartColor = card.getAttribute('data-chart-color');
                 if (!chartCache[ticker] || !chartCache[ticker].chartObj) {{
                      renderChart(card, ticker, currentPrice, avgPrice, chartColor);
@@ -2595,7 +2586,7 @@ with tab_home:
                 plugins: {{
                     legend: {{ display: false }},
                     tooltip: {{ mode: 'index', intersect: false }}
-                }},
+                 }},
                 scales: {{
                      x: {{ ticks: {{ color: '#ccc', maxRotation: 45, autoSkip: true, maxTicksLimit: 6 }}, grid: {{ color: 'rgba(255,255,255,0.1)' }} }},
                     y: {{ position: 'right', ticks: {{ color: '#ccc' }}, grid: {{ color: 'rgba(255,255,255,0.1)' }} }}
@@ -2636,13 +2627,11 @@ with tab_home:
                 }}
             }}
         }});
-        
         const backDiv = card.querySelector('.flip-card-back');
         backDiv.addEventListener('click', (e) => {{
             card.classList.remove('flipped');
             card.classList.remove('touch-hover');
         }});
-        
         const extBtn = card.querySelector('.tv-external-btn');
         if (extBtn) {{
             extBtn.addEventListener('click', (e) => {{
@@ -2748,10 +2737,8 @@ with tab_crypto:
         align-items: center !important;
         height: 100% !important;
     }
-    div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label:hover { background: rgba(255,255,255,0.05) !important;
-    }
-    div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label > div:first-child { display: none !important;
-    } 
+    div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label:hover { background: rgba(255,255,255,0.05) !important; }
+    div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label > div:first-child { display: none !important; } 
     div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label p {
         font-weight: bold !important;
         font-size: 1.05rem !important; color: #94a3b8 !important; margin: 0 !important; padding: 0 !important; white-space: nowrap !important; line-height: 1 !important;
@@ -2763,8 +2750,7 @@ with tab_crypto:
         border-color: #00ff9d !important;
     }
     div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label:has(input:checked):first-child p,
-    div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label[aria-checked="true"]:first-child p { color: #00ff9d !important;
-    }
+    div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label[aria-checked="true"]:first-child p { color: #00ff9d !important; }
     
     /* Active Sell */
     div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label:has(input:checked):last-child,
@@ -2773,8 +2759,7 @@ with tab_crypto:
         border-color: #ff4d4d !important;
     }
     div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label:has(input:checked):last-child p,
-    div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label[aria-checked="true"]:last-child p { color: #ff4d4d !important;
-    }
+    div[data-testid="stForm"]:has(.add-tx-card) div[role="radiogroup"] label[aria-checked="true"]:last-child p { color: #ff4d4d !important; }
 
     /* 3. RIGHT ALIGNED SUBMIT BUTTON */
     div[data-testid="stForm"]:has(.add-tx-card) .stButton {
@@ -2807,8 +2792,7 @@ with tab_crypto:
         position: relative;
         z-index: 2;
     }
-    div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row) > div { padding: 0 !important;
-    } 
+    div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row) > div { padding: 0 !important; } 
     
     div[data-testid="stVerticalBlockBorderWrapper"]:has(.tx-row) div[data-testid="stButton"] button {
         background: rgba(255,255,255,0.05) !important;
@@ -2823,8 +2807,7 @@ with tab_crypto:
     }
 
     /* 5. SMOOTH EDIT ROLLOUT */
-    @keyframes rollDown { from { opacity: 0;
-        transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes rollDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
     div[data-testid="stForm"]:has(.edit-rollout) {
         animation: rollDown 0.3s ease forwards !important;
         background: rgba(0,0,0,0.2) !important;
@@ -2877,12 +2860,10 @@ with tab_crypto:
        7. MOBILE OVERRIDES (IRONCLAD)
        ============================================================== */
     @media (max-width: 768px) {
-        .stApp { padding-top: 72px !important;
-        }
-        .glossy-header { margin-top: 48px !important; margin-bottom: 24px !important;
-        padding: 20px 16px !important; font-size: 22px !important; min-height: 90px; }
-        .home-header { margin-bottom: 0 !important;
-        }
+        .glossy-header { margin-top: 12px !important; margin-bottom: 24px !important;
+        padding: 20px 16px !important;
+        font-size: 22px !important; min-height: 90px; }
+        .home-header { margin-bottom: 0 !important; }
         
         /* Fix Add Form Mobile Grid */
         /* Force all horizontal blocks inside the form to flex explicitly */
@@ -2900,7 +2881,8 @@ with tab_crypto:
             flex: 1 1 calc(50% - 12px) !important;
         }
         div[data-testid="stForm"]:has(.add-tx-card) input { padding: 6px !important;
-        font-size: 0.95rem !important; }
+        font-size: 0.95rem !important;
+        }
         
         /* The 2-column action row -> map to the 50/50 split below inputs (Switch left, Button right) */
         div[data-testid="stForm"]:has(.add-tx-card) div[data-testid="stHorizontalBlock"]:has(> div[data-testid="column"]:nth-child(2):last-child) > div[data-testid="column"] {
@@ -2955,9 +2937,11 @@ with tab_crypto:
         .mobile-tx-ticker { font-size: 0.95rem !important;
         margin-left: 2px !important;}
         .mobile-tx-amount { font-size: 0.95rem !important;
-        white-space: nowrap !important; }
+        white-space: nowrap !important;
+        }
         .mobile-tx-sub { font-size: 0.7rem !important;
-        white-space: nowrap !important; margin-left: 2px !important;}
+        white-space: nowrap !important;
+        margin-left: 2px !important;}
         
         /* Dashboard Mobile Stats Override Fix */
         .stats-layer-inner { gap: 6px !important;
@@ -2965,7 +2949,8 @@ with tab_crypto:
         .stats-layer { margin-top: -60px !important; margin-bottom: 18px;
         } 
         .glossy-box.swapped { height: 80px !important;
-        min-height: 80px !important; max-height: 80px !important; padding: 0 !important; min-width: 0 !important;
+        min-height: 80px !important; max-height: 80px !important;
+        padding: 0 !important; min-width: 0 !important;
         }
         .dash-value { font-size: clamp(11px, 3.5vw, 15px) !important;
         top: 24px !important; } 
@@ -2974,7 +2959,7 @@ with tab_crypto:
         
         /* Restyled Subdued USDC Banner Mobile */
         .usdc-banner { padding: 8px 14px;
-        width: 92%; margin: -12px auto 12px auto !important; }
+        width: 92%; margin: 12px auto 16px auto !important; }
         .usdc-banner-left img { width: 24px;
         height: 24px; }
         .usdc-banner-title { font-size: 0.95rem;
@@ -3120,7 +3105,7 @@ with tab_crypto:
                         with e_r2c2: new_amount = st.number_input("Coin Amount", value=float(abs(r['Amount'])), step=0.000001, format="%.8f")
                         
                         tx_type_edit = st.radio("Type", ["Buy", "Sell"], horizontal=True, index=0 if is_buy else 1, label_visibility="collapsed")
-                        
+                         
                         e_save, e_cancel = st.columns(2)
                         with e_save: 
                             if st.form_submit_button("💾 Save Changes"):
@@ -3147,7 +3132,7 @@ with tab_fiat:
     total_usdc = pd.to_numeric(st.session_state.fiat_df['USDC'], errors='coerce').fillna(0).sum()
     fees_eur = pd.to_numeric(st.session_state.fiat_df['Fee'], errors='coerce').fillna(0).sum()
     fees_czk = (pd.to_numeric(st.session_state.fiat_df['Fee'], errors='coerce').fillna(0) *
-                pd.to_numeric(st.session_state.fiat_df['CZK/EUR'], errors='coerce').fillna(0)).sum()
+             pd.to_numeric(st.session_state.fiat_df['CZK/EUR'], errors='coerce').fillna(0)).sum()
 
     glossy_header("Fiat Transactions", FIAT_ICON)
 
